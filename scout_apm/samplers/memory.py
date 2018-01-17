@@ -7,17 +7,17 @@ class Memory(object):
     # the slow converters. Doesn't feel like this should go here
     # though...more of a utility.
     @classmethod
-    def rss_to_mb(klass, rss):
+    def rss_to_mb(cls, rss):
         kilobyte_adjust = 1024 if (platform.system == 'Darwin') else 1
         return float(rss) / 1024 / kilobyte_adjust
 
     @classmethod
-    def rss(klass):
+    def rss(cls):
         return resource.getrusage(resource.RUSAGE_SELF).maxrss
 
     @classmethod
-    def rss_in_mb(klass):
-        return klass.rss_to_mb(klass.rss())
+    def rss_in_mb(cls):
+        return cls.rss_to_mb(cls.rss())
 
     def metric_type(self):
         return "Memory"
