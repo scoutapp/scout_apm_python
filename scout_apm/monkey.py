@@ -4,75 +4,75 @@
 # inlined due to python3 issues with setup.py, we should gut this out and simplify it
 import pdb
 
+
 class AbstractProxy(object):
     """Delegates all operations (except ``.__subject__``) to another object"""
     __slots__ = ()
 
-    def __call__(self,*args,**kw):
-        return self.__subject__(*args,**kw)
+    def __call__(self, *args, **kw):
+        return self.__subject__(*args, **kw)
 
     def __getattribute__(self, attr, oga=object.__getattribute__):
-        subject = oga(self,'__subject__')
-        if attr=='__subject__':
+        subject = oga(self, '__subject__')
+        if attr == '__subject__':
             return subject
-        return getattr(subject,attr)
+        return getattr(subject, attr)
 
-    def __setattr__(self,attr,val, osa=object.__setattr__):
-        if attr=='__subject__':
-            osa(self,attr,val)
+    def __setattr__(self, attr, val, osa=object.__setattr__):
+        if attr == '__subject__':
+            osa(self, attr, val)
         else:
-            setattr(self.__subject__,attr,val)
+            setattr(self.__subject__, attr, val)
 
-    def __delattr__(self,attr, oda=object.__delattr__):
-        if attr=='__subject__':
-            oda(self,attr)
+    def __delattr__(self, attr, oda=object.__delattr__):
+        if attr == '__subject__':
+            oda(self, attr)
         else:
-            delattr(self.__subject__,attr)
+            delattr(self.__subject__, attr)
 
     def __nonzero__(self):
         return bool(self.__subject__)
 
-    def __getitem__(self,arg):
+    def __getitem__(self, arg):
         return self.__subject__[arg]
 
-    def __setitem__(self,arg,val):
+    def __setitem__(self, arg, val):
         self.__subject__[arg] = val
 
-    def __delitem__(self,arg):
+    def __delitem__(self, arg):
         del self.__subject__[arg]
 
-    def __getslice__(self,i,j):
+    def __getslice__(self, i, j):
         return self.__subject__[i:j]
 
-
-    def __setslice__(self,i,j,val):
+    def __setslice__(self, i, j, val):
         self.__subject__[i:j] = val
 
-    def __delslice__(self,i,j):
+    def __delslice__(self, i, j):
         del self.__subject__[i:j]
 
-    def __contains__(self,ob):
+    def __contains__(self, ob):
         return ob in self.__subject__
 
     for name in 'repr str hash len abs complex int long float iter oct hex'.split():
-        exec("def __%s__(self): return %s(self.__subject__)" % (name,name))
+        exec("def __%s__(self): return %s(self.__subject__)" % (name, name))
 
     for name in 'cmp', 'coerce', 'divmod':
-        exec("def __%s__(self,ob): return %s(self.__subject__,ob)" % (name,name))
-
-    for name,op in [
-        ('lt','<'), ('gt','>'), ('le','<='), ('ge','>='),
-        ('eq','=='), ('ne','!=')
-    ]:
-        exec("def __%s__(self,ob): return self.__subject__ %s ob" % (name,op))
-
-    for name,op in [('neg','-'), ('pos','+'), ('invert','~')]:
-        exec("def __%s__(self): return %s self.__subject__" % (name,op))
+        exec("def __%s__(self,ob): return %s(self.__subject__,ob)" % (name, name))
 
     for name, op in [
-        ('or','|'),  ('and','&'), ('xor','^'), ('lshift','<<'), ('rshift','>>'),
-        ('add','+'), ('sub','-'), ('mul','*'), ('div','/'), ('mod','%'),
-        ('truediv','/'), ('floordiv','//')
+        ('lt', '<'), ('gt', '>'), ('le', '<='), ('ge', '>='),
+        ('eq', '=='), ('ne', '!=')
+    ]:
+        exec("def __%s__(self,ob): return self.__subject__ %s ob" % (name, op))
+
+    for name, op in [('neg', '-'), ('pos', '+'), ('invert', '~')]:
+        exec("def __%s__(self): return %s self.__subject__" % (name, op))
+
+    for name, op in [
+        ('or', '|'),  ('and', '&'), ('xor', '^'), ('lshift', '<<'),
+        ('rshift', '>>'), ('add', '+'), ('sub', '-'), ('mul', '*'),
+        ('div', '/'), ('mod', '%'), ('truediv', '/'), ('floordiv', '//')
     ]:
         exec((
             "def __%(name)s__(self,ob):\n"
@@ -84,23 +84,23 @@ class AbstractProxy(object):
             "def __i%(name)s__(self,ob):\n"
             "    self.__subject__ %(op)s=ob\n"
             "    return self\n"
-        )  % locals())
+        ) % locals())
 
     del name, op
 
     # Oddball signatures
 
-    def __rdivmod__(self,ob):
+    def __rdivmod__(self, ob):
         return divmod(ob, self.__subject__)
 
-    def __pow__(self,*args):
+    def __pow__(self, *args):
         return pow(self.__subject__,*args)
 
-    def __ipow__(self,ob):
+    def __ipow__(self, ob):
         self.__subject__ **= ob
         return self
 
-    def __rpow__(self,ob):
+    def __rpow__(self, ob):
         return pow(ob, self.__subject__)
 
 
@@ -109,7 +109,7 @@ class ObjectProxy(AbstractProxy):
 
     __slots__ = "__subject__"
 
-    def __init__(self,subject):
+    def __init__(self, subject):
         self.__subject__ = subject
 
 
@@ -119,12 +119,11 @@ class CallbackProxy(AbstractProxy):
     __slots__ = '__callback__'
 
     def __init__(self, func):
-        set_callback(self,func)
+        set_callback(self, func)
 
 set_callback = CallbackProxy.__callback__.__set__
 get_callback = CallbackProxy.__callback__.__get__
 CallbackProxy.__subject__ = property(lambda self, gc=get_callback: gc(self)())
-
 
 
 class LazyProxy(CallbackProxy):
@@ -133,6 +132,7 @@ class LazyProxy(CallbackProxy):
 
 get_cache = LazyProxy.__cache__.__get__
 set_cache = LazyProxy.__cache__.__set__
+
 
 def __subject__(self, get_cache=get_cache, set_cache=set_cache):
     try:
@@ -151,32 +151,33 @@ class AbstractWrapper(AbstractProxy):
 
     def __getattribute__(self, attr, oga=object.__getattribute__):
         if attr.startswith('__'):
-            subject = oga(self,'__subject__')
-            if attr=='__subject__':
+            subject = oga(self, '__subject__')
+            if attr == '__subject__':
                 return subject
-            return getattr(subject,attr)
-        return oga(self,attr)
+            return getattr(subject, attr)
+        return oga(self, attr)
 
-    def __getattr__(self,attr, oga=object.__getattribute__):
-        return getattr(oga(self,'__subject__'), attr)
+    def __getattr__(self, attr, oga=object.__getattribute__):
+        return getattr(oga(self, '__subject__'), attr)
 
-    def __setattr__(self,attr,val, osa=object.__setattr__):
+    def __setattr__(self, attr, val, osa=object.__setattr__):
         if (
-            attr=='__subject__'
-            or hasattr(type(self),attr) and not attr.startswith('__')
+            attr == '__subject__' or
+            hasattr(type(self), attr) and not attr.startswith('__')
         ):
-            osa(self,attr,val)
+            osa(self, attr, val)
         else:
-            setattr(self.__subject__,attr,val)
+            setattr(self.__subject__, attr, val)
 
-    def __delattr__(self,attr, oda=object.__delattr__):
+    def __delattr__(self, attr, oda=object.__delattr__):
         if (
-            attr=='__subject__'
-            or hasattr(type(self),attr) and not attr.startswith('__')
+            attr == '__subject__' or
+            hasattr(type(self), attr) and not attr.startswith('__')
         ):
-            oda(self,attr)
+            oda(self, attr)
         else:
-            delattr(self.__subject__,attr)
+            delattr(self.__subject__, attr)
+
 
 class ObjectWrapper(ObjectProxy, AbstractWrapper):      __slots__ = ()
 class CallbackWrapper(CallbackProxy, AbstractWrapper):  __slots__ = ()
@@ -186,7 +187,7 @@ class LazyWrapper(LazyProxy, AbstractWrapper):          __slots__ = ()
 #  MONKEYS DOWN HERE  #
 #######################
 
-# The linter is dumb
+
 # pylint: disable=E1001,E1002
 class CallableProxy(ObjectWrapper):
     __slots__ = ('_eop_wrapper_')
@@ -218,8 +219,11 @@ class UnboundMethodProxy(CallableProxy):
         return BoundMethodProxy(self.__subject__.__get__(instance, owner), instance or owner, self._eop_wrapper_)
 
     def __getattribute__(self, attr, oga=object.__getattribute__):
-        """We need to return our own version of __get__ or we may end up never being called if
-        the member we are wrapping is wrapped again by someone else"""
+        """
+        We need to return our own version of __get__ or we may end up
+        never being called if the member we are wrapping is wrapped
+        again by someone else
+        """
         if attr == '__get__':
             return oga(self, attr)
         return super(UnboundMethodProxy, self).__getattribute__(attr)
@@ -230,6 +234,6 @@ def monkeypatch_method(cls, method_name=None):
         method_to_patch = method_name or func.__name__
         original = cls.__dict__[method_to_patch]
         replacement = UnboundMethodProxy(original, func)
-        type.__setattr__(cls, method_to_patch, replacement)  # Avoid any overrides
+        type.__setattr__(cls, method_to_patch, replacement)  # Avoid overrides
         return func
     return decorator
