@@ -26,11 +26,11 @@ def patch_function_list(functions, action_type, format_string):
 
 def wrap_middleware_with_tracers(request_handler):
     # XXX: Figure out why request middleware isn't getting instrumented
-    patch_function_list(request_handler._request_middleware, 'MIDDLEWARE_REQUEST', 'Middleware: %s (request)')
-    patch_function_list(request_handler._view_middleware, 'MIDDLEWARE_VIEW', 'Middleware: %s (view)')
-    patch_function_list(request_handler._template_response_middleware, 'MIDDLEWARE_TEMPLATE_RESPONSE', 'Middleware: %s (template response)')
-    patch_function_list(request_handler._response_middleware, 'MIDDLEWARE_RESPONSE', 'Middleware: %s (response)')
-    patch_function_list(request_handler._exception_middleware, 'MIDDLEWARE_EXCEPTION', 'Middleware: %s (exeption)')
+    patch_function_list(request_handler._request_middleware, 'Middleware/Request', 'Middleware: %s (request)')
+    patch_function_list(request_handler._view_middleware, 'Middleware/View', 'Middleware: %s (view)')
+    patch_function_list(request_handler._template_response_middleware, 'Middleware/Template/Response', 'Middleware: %s (template response)')
+    patch_function_list(request_handler._response_middleware, 'Middleware/Response', 'Middleware: %s (response)')
+    patch_function_list(request_handler._exception_middleware, 'Middleware/Exception', 'Middleware: %s (exeption)')
 
 # The linter thinks the methods we monkeypatch are not used
 # pylint: disable=W0612
@@ -88,7 +88,7 @@ def intercept_resolver_and_view():
 
         def resolve(self, path):
             callbacks = self.other.resolve(path)
-            callbacks.func = self.trace_view_function(callbacks.func, ('VIEW', {"path": path, "name": callbacks._func_path}))
+            callbacks.func = self.trace_view_function(callbacks.func, ('Controller', {"path": path, "name": callbacks._func_path}))
             return callbacks
 
         # XXX: Can this maybe be a callback that takes the span, and the req and the args?
@@ -98,7 +98,11 @@ def intercept_resolver_and_view():
                 def tracing_function(original, *args, **kwargs):
                     entry_type, detail = info
 
-                    span = TrackedRequest.instance().start_span(operation=entry_type)
+                    operation = entry_type
+                    if detail["name"] is not None:
+                        operation = operation + "/" + detail["name"]
+
+                    span = TrackedRequest.instance().start_span(operation=operation)
                     for key in detail:
                         span.note(key, detail[key])
 
@@ -108,7 +112,7 @@ def intercept_resolver_and_view():
                     # Extract headers
                     regex = re.compile('^HTTP_')
                     headers = dict((regex.sub('', header), value) for (header, value)
-                        in request.META.items() if header.startswith('HTTP_'))
+                                   in request.META.items() if header.startswith('HTTP_'))
 
                     span.note("remote_addr", request.META["REMOTE_ADDR"])
 

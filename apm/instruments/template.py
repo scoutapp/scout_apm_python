@@ -31,7 +31,7 @@ class DecoratingParserProxy(object):
     def wrap_compile_function(self, name, tag_compiler):
         def compile(*args, **kwargs):
             node = tag_compiler(*args, **kwargs)
-            node.render = trace_function(node.render, ('TEMPLATE_TAG', {"name": name}))
+            node.render = trace_function(node.render, ('Template/Tag', {"name": name}))
             return node
         return compile
 
@@ -71,20 +71,21 @@ class TemplateInstrument:
         @trace_method(Template)
         def __init__(self, *args, **kwargs):
             name = args[2] if len(args) >= 3 else '<Unknown Template>'
-            return ('TEMPLATE_COMPILE', {"name": name})
+            return ('Template/Compile', {"name": name})
 
         @trace_method(Template)
         def render(self, *args, **kwargs):
             name = self.name if self.name is not None else '<Unknown Template>'
-            return ('TEMPLATE_RENDER', {"name": name})
+            return ('Template/Render', {"name": name})
 
         @trace_method(BlockNode)
         def render(self, *args, **kwargs):
-            return ('BLOCK_RENDER', {name: self.name})
+            return ('Block/Render', {"name": self.name})
 
         print("Monkey patched Templates")
 
         # XXX: Figure this out, causes exception that the "resolve_context" key isn't in dict
+        # Also will need to figure out the name hash
         #  @trace_method(TemplateResponse)
         #  def resolve_context(self, *args, **kwargs):
-            #  return ('TEMPLATE_CONTEXT', 'Resolve context', {})
+            #  return ('Template/Context', {})

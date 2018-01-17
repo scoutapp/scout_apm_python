@@ -1,15 +1,8 @@
 from __future__ import absolute_import
 
-from collections import defaultdict
-
 from apm.monkey import monkeypatch_method, CallableProxy
 from apm.tracked_request import TrackedRequest
 
-import time
-
-from datetime import datetime
-import re
-import pdb
 
 # The linter thinks the methods we monkeypatch are not used
 # pylint: disable=W0612
@@ -21,8 +14,12 @@ def trace_method(cls, method_name=None):
         def tracing_method(original, self, *args, **kwargs):
             entry_type, detail = info_func(self, *args, **kwargs)
 
+            operation = entry_type
+            if detail["name"] is not None:
+                operation = operation + "/" + detail["name"]
+
             tr = TrackedRequest.instance()
-            span = tr.start_span(operation=entry_type)
+            span = tr.start_span(operation=operation)
 
             for key in detail:
                 span.note(key, detail[key])
@@ -44,7 +41,12 @@ def trace_function(func, info):
             else:
                 entry_type, detail = info
 
-            span = TrackedRequest.instance().start_span(operation=entry_type)
+            operation = entry_type
+            if detail["name"] is not None:
+                operation = operation + "/" + detail["name"]
+
+            span = TrackedRequest.instance().start_span(operation=operation)
+
             for key in detail:
                 span.note(key, detail[key])
 

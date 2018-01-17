@@ -57,6 +57,7 @@ class TrackedRequest(ThreadLocalSingleton):
 
     def start_span(self, operation=None):
         maybe_parent = self.current_span()
+
         if maybe_parent is not None:
             parent_id = maybe_parent.span_id
         else:
@@ -167,8 +168,6 @@ class CoreAgentSocket:
         self.socket.connect(server_address)
 
     def send(self, body):
-        print(threading.current_thread(), "Socket send:", body)
-
         self.socket.sendall(self.message_length(body))
         self.socket.sendall(body.encode())
 

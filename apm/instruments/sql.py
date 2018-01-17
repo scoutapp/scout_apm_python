@@ -25,7 +25,7 @@ DOCS!
 class _DetailedTracingCursorWrapper(CursorWrapper):
     def execute(self, sql, params=()):
         tr = TrackedRequest.instance()
-        span = tr.start_span(operation="SQL")
+        span = tr.start_span(operation="SQL/query")
         span.note("query", sql)
 
         try:
@@ -35,7 +35,7 @@ class _DetailedTracingCursorWrapper(CursorWrapper):
             print(span.dump())
 
     def executemany(self, sql, param_list):
-        span = TrackedRequest.instance().start_span(operation="SQLMANY")
+        span = TrackedRequest.instance().start_span(operation="SQL/many")
         span.note("query", sql)
 
         try:
