@@ -5,9 +5,9 @@ from django.core.handlers.base import BaseHandler
 from django.core.handlers.wsgi import WSGIHandler
 from django.urls import resolvers
 
-from apm.monkey import monkeypatch_method, CallableProxy
-from apm.stacktracer import trace_function
-from apm.tracked_request import TrackedRequest
+from scout_apm.monkey import monkeypatch_method, CallableProxy
+from scout_apm.stacktracer import trace_function
+from scout_apm.tracked_request import TrackedRequest
 import re
 
 import pdb

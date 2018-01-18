@@ -16,8 +16,8 @@ except ImportError:
     from django.db.backends.util import CursorWrapper
 
 from datetime import datetime
-from apm.monkey import monkeypatch_method
-from apm.tracked_request import TrackedRequest
+from scout_apm.monkey import monkeypatch_method
+from scout_apm.tracked_request import TrackedRequest
 
 """
 DOCS!

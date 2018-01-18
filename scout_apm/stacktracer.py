@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
-from apm.monkey import monkeypatch_method, CallableProxy
-from apm.tracked_request import TrackedRequest
+from scout_apm.monkey import monkeypatch_method, CallableProxy
+from scout_apm.tracked_request import TrackedRequest
 
 
 # The linter thinks the methods we monkeypatch are not used

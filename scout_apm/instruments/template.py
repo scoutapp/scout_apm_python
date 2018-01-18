@@ -8,7 +8,7 @@ from django.template import Library, Template
 from django.template.response import TemplateResponse
 from django.template.loader_tags import BlockNode
 
-from apm.stacktracer import trace_method, trace_function
+from scout_apm.stacktracer import trace_method, trace_function
 
 register = Library()
 

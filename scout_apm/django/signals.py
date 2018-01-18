@@ -1,5 +1,5 @@
 from django.core.signals import request_started, request_finished
-from apm.tracked_request import TrackedRequest
+from scout_apm.tracked_request import TrackedRequest
 
 
 class DjangoSignals:
