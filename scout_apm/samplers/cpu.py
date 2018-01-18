@@ -1,4 +1,5 @@
 from datetime import datetime
+from datetime import timedelta
 from textwrap import dedent
 
 import psutil
@@ -31,7 +32,7 @@ class Cpu(object):
         cpu_times = psutil.cpu_times()
 
         wall_clock_elapsed = now - self.last_run
-        if wall_clock_elapsed < 0:
+        if wall_clock_elapsed < timedelta(0):
             self.save_times(now, cpu_times)
             # TODO: these print lines need a proper logger
             print(dedent(
@@ -41,13 +42,13 @@ class Cpu(object):
                          last_run: {last_run},
                          total time: {wall_clock_elapsed}.
                          """
-                         )).format(human_name=self.human_name(),
-                                   now=now,
-                                   last_run=self.last_run)
+                         ).format(human_name=self.human_name(),
+                                  now=now,
+                                  last_run=self.last_run))
             return None
 
-        utime_elapsed = self.cpu_times.user - self.last_cpu_times.user
-        stime_elapsed = self.cpu_times.system - self.last_cpu_times.system
+        utime_elapsed = cpu_times.user - self.last_cpu_times.user
+        stime_elapsed = cpu_times.system - self.last_cpu_times.system
         process_elapsed = utime_elapsed + stime_elapsed
 
         # This can happen right after a fork.  This class starts up in
@@ -63,14 +64,14 @@ class Cpu(object):
                          This is normal to see when starting a
                          forking web server.
                          """
-                        )).format(human_name=self.human_name(),
-                                  utime_elapsed=utime_elapsed,
-                                  stime_elapsed=stime_elapsed,
-                                  process_elapsed=process_elapsed)
+                        ).format(human_name=self.human_name(),
+                                 utime_elapsed=utime_elapsed,
+                                 stime_elapsed=stime_elapsed,
+                                 process_elapsed=process_elapsed))
             return None
 
         # Normalized to # of processors
-        normalized_wall_clock_elapsed = wall_clock_elapsed * self.num_processors
+        normalized_wall_clock_elapsed = (wall_clock_elapsed * self.num_processors).total_seconds()
 
         # If somehow we run for 0 seconds between calls, don't try to divide by 0
         res = None
@@ -86,10 +87,10 @@ class Cpu(object):
                          {human_name}: Negative CPU.
                          {process_elapsed} / {normalized_wall_clock_elapsed} * 100 ==> {res}
                          """
-                         )).format(human_name=self.human_name(),
-                                   process_elapsed=process_elapsed,
-                                   normalized_wall_clock_elapsed=normalized_wall_clock_elapsed,
-                                   res=res)
+                         ).format(human_name=self.human_name(),
+                                  process_elapsed=process_elapsed,
+                                  normalized_wall_clock_elapsed=normalized_wall_clock_elapsed,
+                                  res=res))
             return None
 
         self.save_times(now, cpu_times)
@@ -98,9 +99,9 @@ class Cpu(object):
                      """
                      {human_name}: {res} [{num_processors} CPU(s)]
                      """
-                     )).format(human_name=self.human_name(),
-                               res=res,
-                               num_processors=self.num_processors)
+                     ).format(human_name=self.human_name(),
+                              res=res,
+                              num_processors=self.num_processors))
 
         return res
 

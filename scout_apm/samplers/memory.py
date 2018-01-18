@@ -6,18 +6,18 @@ class Memory(object):
     # Account for Darwin returning maxrss in bytes and Linux in KB. Used by
     # the slow converters. Doesn't feel like this should go here
     # though...more of a utility.
-    @classmethod
-    def rss_to_mb(cls, rss):
+    @staticmethod
+    def rss_to_mb(rss):
         kilobyte_adjust = 1024 if (platform.system == 'Darwin') else 1
         return float(rss) / 1024 / kilobyte_adjust
 
-    @classmethod
-    def rss(cls):
-        return resource.getrusage(resource.RUSAGE_SELF).maxrss
+    @staticmethod
+    def rss():
+        return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
 
-    @classmethod
-    def rss_in_mb(cls):
-        return cls.rss_to_mb(cls.rss())
+    @staticmethod
+    def rss_in_mb():
+        return Memory.rss_to_mb(Memory.rss())
 
     def metric_type(self):
         return "Memory"
@@ -37,5 +37,5 @@ class Memory(object):
 
     def run(self):
         res = self.__class__.rss_in_mb()
-        print("{human_name}: #{res}").format(human_name=self.human_name(),
-                                             res=res)
+        print("{human_name}: #{res}".format(human_name=self.human_name(),
+                                            res=res))
