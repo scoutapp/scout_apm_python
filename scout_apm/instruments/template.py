@@ -45,7 +45,8 @@ def load(parser, token):
 class TemplateInstrument:
     # The linter thinks the methods we monkeypatch are not used
     # pylint: disable=W0612
-    def init():
+    @staticmethod
+    def install():
         # Our eventual aim is to patch the render() method on the Node objects
         # corresponding to custom template tags. However we have to jump through
         # a number of hoops in order to get access to the object.

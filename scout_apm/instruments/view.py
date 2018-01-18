@@ -131,7 +131,8 @@ def intercept_resolver_and_view():
     resolvers.RegexURLResolver = ProxyRegexURLResolver
 
 class ViewInstrument:
-    def init():
+    @staticmethod
+    def install():
         intercept_middleware()
         intercept_resolver_and_view()
         print("Monkey patched View")

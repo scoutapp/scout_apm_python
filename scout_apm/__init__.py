@@ -6,9 +6,9 @@ from .instruments.template import TemplateInstrument
 from .instruments.view import ViewInstrument
 
 print('APM Launching on PID:', getpid())
-SQLInstrument.init()
-TemplateInstrument.init()
-ViewInstrument.init()
-DjangoSignals.init()
+SQLInstrument.install()
+TemplateInstrument.install()
+ViewInstrument.install()
+DjangoSignals.install()
 
 
