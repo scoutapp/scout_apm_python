@@ -39,3 +39,4 @@ class Memory(object):
         res = self.__class__.rss_in_mb()
         print("{human_name}: #{res}".format(human_name=self.human_name(),
                                             res=res))
+        res
