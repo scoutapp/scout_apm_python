@@ -1,8 +1,19 @@
 import os
+from .yaml_file import YamlFile
 
 class ScoutConfig():
-    def __init__(self):
-        self.layers = [ScoutConfigEnv(), ScoutConfigFile(), ScoutConfigDefaults(), ScoutConfigNull()]
+    def __init__(self, config_file=None):
+        # We have to ask the ENV configuration for where the config file even
+        # *is*, so allow this to be created with or without a file
+        if config_file is None:
+            self.layers = [ScoutConfigEnv(), ScoutConfigDefaults(), ScoutConfigNull()]
+        else:
+            self.layers = [
+                ScoutConfigEnv(),
+                ScoutConfigFile(config_file),
+                ScoutConfigDefaults(),
+                ScoutConfigNull()]
+
         print('Init ScoutConfig')
 
     def value(self, key):
@@ -25,19 +36,18 @@ class ScoutConfigEnv():
         return env_key
 
 class ScoutConfigFile():
-    def __init__(self):
-        print('ScoutConfigFile')
+    def __init__(self, config_file='scout_apm.yml'):
+        self.data = YamlFile(config_file).parse()
 
     def has_key(self, key):
-        return None
+        return key in self.data
 
     def value(self, key):
-        raise 'Omg dont use this.'
+        return self.data[key]
 
 
 class ScoutConfigDefaults():
     def __init__(self):
-        print('ScoutConfigDefaults')
         self.defaults = {
                 'core_agent_socket': '/tmp/core_agent_socket'
                 }
@@ -51,9 +61,6 @@ class ScoutConfigDefaults():
 
 # Always returns None to any key
 class ScoutConfigNull():
-    def __init__(self):
-        print("ScoutConfigNull")
-
     def has_key(self, key):
         return True
 
