@@ -1,6 +1,7 @@
 import socket
 import time
 import json
+import struct
 
 # Make this a thread local - so each thread has its own socket. Can't be global
 # though w/o otherwise locking it.
@@ -11,7 +12,7 @@ class CoreAgentSocket:
         self.server_address = server_address
 
     def open(self):
-        print('CoreAgentSocket open')
+        print('CoreAgentSocket connecting to', self.server_address)
         try:
             self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             self.socket.connect(self.server_address)
@@ -23,14 +24,23 @@ class CoreAgentSocket:
 
     def send(self, command):
         msg = command.message()
-        print("Sending message:", msg)
         data = json.dumps(msg)
         self.socket.sendall(self.message_length(data))
         self.socket.sendall(data.encode())
+        return self.read_response()
 
     def message_length(self, body):
         length = len(body)
         return length.to_bytes(4, 'big')
+
+    def read_response(self):
+        raw_size = self.socket.recv(4)
+        size = struct.unpack('<I', raw_size)[0]
+
+        message = self.socket.recv(size)
+        print('Received response:', message)
+        return message
+
 
     def close(self):
         self.socket.close()
@@ -48,11 +58,11 @@ class RetryingCoreAgentSocket:
         try:
             self.socket.send(body)
         except ConnectionRefusedError as err:
-            print("ConnectionRefusedError,", err)
+            print('ConnectionRefusedError,', err)
             self.open()
             self.send(self, body)
         except OSError as err:
-            print("OSError,", err)
+            print('OSError,', err)
 
     def open(self):
         print('RetryingCoreAgentSocket open')

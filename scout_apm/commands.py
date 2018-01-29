@@ -1,6 +1,7 @@
+import json
+
 class StartSpan:
     def __init__(self, request_id, span_id, parent, operation):
-        print('StartSpan Command')
         self.request_id = request_id
         self.span_id = span_id
         self.parent = parent
@@ -8,16 +9,15 @@ class StartSpan:
 
     def message(self):
         return {'StartSpan': {
-                'request_id': self.request_id,
-                'span_id': self.span_id,
-                'parent_id': self.parent,
-                'operation': self.operation,
+            'request_id': self.request_id,
+            'span_id': self.span_id,
+            'parent_id': self.parent,
+            'operation': self.operation,
         }}
 
 
 class StopSpan:
     def __init__(self, request_id, span_id):
-        print('StopSpan Command')
         self.request_id = request_id
         self.span_id = span_id
 
@@ -30,7 +30,6 @@ class StopSpan:
 
 class StartRequest:
     def __init__(self, request_id):
-        print('StartRequest Command')
         self.request_id = request_id
 
     def message(self):
@@ -41,7 +40,6 @@ class StartRequest:
 
 class FinishRequest:
     def __init__(self, request_id):
-        print('FinishRequest Command')
         self.request_id = request_id
 
     def message(self):
@@ -54,6 +52,10 @@ class CoreAgentVersion:
     def message(self):
         return {'CoreAgentVersion': {}}
 
+class CoreAgentVersionResponse:
+    def __init__(self, message):
+        self.loaded = json.loads(message)
+        self.version = self.loaded['CoreAgentVersion']['version']
 
 class CoreAgentShutdown:
     def message(self):
@@ -62,7 +64,6 @@ class CoreAgentShutdown:
 
 class BatchedCommand:
     def __init__(self, commands):
-        print('Batched Command')
         self.commands = commands
 
     def message(self):

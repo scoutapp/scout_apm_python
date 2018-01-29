@@ -46,25 +46,54 @@ import hashlib
 import platform
 import tarfile
 import urllib.request
+import subprocess
+
+from scout_apm.context import agent_context
+from scout_apm.socket import CoreAgentSocket
+from scout_apm.commands import CoreAgentVersion, CoreAgentVersionResponse, CoreAgentShutdown
 
 
-class CoreAgent:
+class CoreAgentManager:
+    def launch(self):
+        # Kill any existing core agent
+        probe = CoreAgentProbe()
+        if probe.is_running():
+            print('Trying to shutdown an already-running CoreAgent')
+            probe.shutdown()
+
+        # Launch the CoreAgent we want
+        executable = '/Users/cschneid/Projects/core-agent/target/debug/core-agent'
+        self.run(executable)
+        print('Launching')
+
+    def run(self, executable):
+        subprocess.Popen(
+                [
+                    executable, 'daemon',
+                    '--api-key', 'Qnk5SKpNEeboPdeJkhae',
+                    '--log-level', 'info',
+                    '--app-name', 'CoreAgent'
+                ])
+
     def download(self):
-        print('Downloading: {full_url} to {filepath}'.format(full_url=self.full_url(),
-                                                             filepath=self.core_filepath()))
+        print('Downloading: {full_url} to {filepath}'.format(
+            full_url=self.full_url(),
+            filepath=self.core_filepath()))
         urllib.request.urlretrieve(self.full_url(), self.core_filepath())
 
     def full_url(self):
-        return '{root_url}/{binary_name}.tgz'.format(root_url=self.root_url(),
-                                                 binary_name=self.binary_name())
+        return '{root_url}/{binary_name}.tgz'.format(
+                root_url=self.root_url(),
+                binary_name=self.binary_name())
 
     def root_url(self):
         return 'https://scoutapp.com'
 
     def binary_name(self):
-        return 'scout_apm_core-{version}-{platform}-{arch}'.format(version=self.core_agent_version(),
-                                                                   platform=self.platform(),
-                                                                   arch=self.arch())
+        return 'scout_apm_core-{version}-{platform}-{arch}'.format(
+                version=self.core_agent_version(),
+                platform=self.platform(),
+                arch=self.arch())
 
     def platform_supported(self):
         return True
@@ -111,28 +140,46 @@ class CoreAgent:
         f.close()
         return hash.hexdigest()
 
-    def launch():
-        print('Launch!')
 
 class CoreAgentProbe():
-    def __init__(self, socket_path):
-        print("Determine if socket exists, then ask it about itself")
+    def is_running(self):
+        return self.version() is not None
 
     # Returns a CoreAgentVersion or None
     def version(self):
-        print("version")
+        try:
+            socket = self.build_socket()
+            response = socket.send(CoreAgentVersion())
+            self.version = CoreAgentVersionResponse(response).version
+            print('version:', self.version)
+            return self.version
+        except Exception as e:
+            print('Existing CoreAgent is not running')
+            return None
+
+    def shutdown(self):
+        socket = self.build_socket()
+        socket.send(CoreAgentShutdown())
+        print('Shut down existing CoreAgent')
+
+    def build_socket(self):
+        socket_path = agent_context.config.value('core_agent_socket')
+        socket = CoreAgentSocket(socket_path)
+        socket.open()
+        return socket
+
 
 # Core Agent per app
-latest_version = CoreAgentManager().latest_version()
-probe = CoreAgentProbe(socket_path)
-version = probe.version()
-if version is not None:
-    if version.is_not_newest()
-        probe.shudown()
-
-CoreAgentManager().download()
-CoreAgentManager().unpack()
-CoreAgentManager().launch(socket_path, app_name)
-
-# when app stops
-CoreAgentManager.shutdown()
+# latest_version = CoreAgentManager().latest_version()
+# probe = CoreAgentProbe(socket_path)
+# version = probe.version()
+# if version is not None:
+#     if version.is_not_newest()
+#         probe.shudown()
+#
+# CoreAgentManager().download()
+# CoreAgentManager().unpack()
+# CoreAgentManager().launch(socket_path, app_name)
+#
+# # when app stops
+# CoreAgentManager.shutdown()

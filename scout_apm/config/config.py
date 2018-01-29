@@ -49,8 +49,8 @@ class ScoutConfigFile():
 class ScoutConfigDefaults():
     def __init__(self):
         self.defaults = {
-                'core_agent_socket': '/tmp/core_agent_socket'
-                }
+                'core_agent_socket': '/tmp/scout_core_agent'
+        }
 
     def has_key(self, key):
         return key in self.defaults

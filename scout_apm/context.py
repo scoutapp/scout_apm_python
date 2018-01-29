@@ -6,7 +6,7 @@ from .socket import CoreAgentSocket, RetryingCoreAgentSocket
 
 class AgentContext:
     def __init__(self, conf, socket):
-        self.conf = conf
+        self.config = conf
         self.socket = socket
 
 
