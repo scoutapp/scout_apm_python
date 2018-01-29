@@ -7,8 +7,8 @@ import json
 
 
 class CoreAgentSocket:
-    def __init__(self):
-        self.server_address = '/tmp/scout_core_agent'
+    def __init__(self, server_address='/tmp/scout_core_agent'):
+        self.server_address = server_address
 
     def open(self):
         print('CoreAgentSocket open')
@@ -67,6 +67,7 @@ class RetryingCoreAgentSocket:
 
     def close(self):
         self.socket.close()
+
 
 class BatchingCoreAgentSocket:
     """

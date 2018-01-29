@@ -1,6 +1,3 @@
-import json
-
-
 class StartSpan:
     def __init__(self, request_id, span_id, parent, operation):
         print('StartSpan Command')
@@ -10,14 +7,12 @@ class StartSpan:
         self.operation = operation
 
     def message(self):
-        return {
-            'StartSpan': {
+        return {'StartSpan': {
                 'request_id': self.request_id,
                 'span_id': self.span_id,
                 'parent_id': self.parent,
                 'operation': self.operation,
-            }
-        }
+        }}
 
 
 class StopSpan:
@@ -50,9 +45,19 @@ class FinishRequest:
         self.request_id = request_id
 
     def message(self):
-        return { 'FinishRequest': {
+        return {'FinishRequest': {
             'request_id': self.request_id,
         }}
+
+
+class CoreAgentVersion:
+    def message(self):
+        return {'CoreAgentVersion': {}}
+
+
+class CoreAgentShutdown:
+    def message(self):
+        return {'CoreAgentShutdown': {}}
 
 
 class BatchedCommand:
@@ -63,6 +68,4 @@ class BatchedCommand:
     def message(self):
         messages = map(lambda cmd: cmd.message(), self.commands)
         return {'BatchedCommand': messages}
-
-
 

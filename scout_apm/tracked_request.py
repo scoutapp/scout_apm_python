@@ -10,6 +10,7 @@ import threading
 
 from .commands import StartSpan, StopSpan, StartRequest, FinishRequest
 from .socket import CoreAgentSocket, RetryingCoreAgentSocket
+from scout_apm.context import agent_context
 
 
 class ThreadLocalSingleton(object):
@@ -34,7 +35,7 @@ class TrackedRequest(ThreadLocalSingleton):
         self.req_id = 'req-' + str(uuid4())
         self.notes = dict()
         self.spans = []
-        self.socket = RetryingCoreAgentSocket(CoreAgentSocket())
+        self.socket = agent_context.socket
         self.socket.open()
         print("Starting request:", self.req_id)
         self.send_start_request()
