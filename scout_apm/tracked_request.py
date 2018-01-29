@@ -7,9 +7,9 @@ Can be marked with notes
 from uuid import uuid4
 from datetime import datetime
 import threading
-import json
 
-import socket
+from .commands import StartSpan, StopSpan, StartRequest, FinishRequest
+from .socket import CoreAgentSocket, RetryingCoreAgentSocket
 
 
 class ThreadLocalSingleton(object):
@@ -34,24 +34,16 @@ class TrackedRequest(ThreadLocalSingleton):
         self.req_id = 'req-' + str(uuid4())
         self.notes = dict()
         self.spans = []
-        self.socket = CoreAgentSocket()
+        self.socket = RetryingCoreAgentSocket(CoreAgentSocket())
+        self.socket.open()
         print("Starting request:", self.req_id)
         self.send_start_request()
 
     def send_start_request(self):
-        self.socket.send(json.dumps({
-            'StartRequest': {
-                'request_id': self.req_id,
-            }
-        }))
+        self.socket.send(StartRequest(self.req_id))
 
     def send_finish_request(self):
-        self.socket.send(json.dumps({
-            'FinishRequest': {
-                'request_id': self.req_id,
-            }
-        }))
-
+        self.socket.send(FinishRequest(self.req_id))
 
     def note(self, key, value):
         self.notes[key] = value
@@ -84,9 +76,9 @@ class TrackedRequest(ThreadLocalSingleton):
         else:
             return None
 
-    ### Request is done, release any info we have about it.
+    # Request is done, release any info we have about it.
     def finish(self):
-        print("Stopping request:", self.req_id)
+        print('Stopping request:', self.req_id)
         self.send_finish_request()
         self.socket.close()
         self.release()
@@ -101,9 +93,10 @@ class TrackedRequest(ThreadLocalSingleton):
             return TrackedRequest()
         return TrackedRequest()
 
+
 class Span:
     def __init__(self, socket, request_id=None, operation=None, parent=None):
-        self.span_id = "span-" + str(uuid4())
+        self.span_id = 'span-' + str(uuid4())
         self.request_id = request_id
         self.operation = operation
         self.parent = parent
@@ -118,27 +111,15 @@ class Span:
         if self.request_id is None:
             return
 
-        self.socket.send(json.dumps({
-            'StartSpan': {
-                'request_id': self.request_id,
-                'span_id': self.span_id,
-                'parent_id': self.parent,
-                'operation': self.operation,
-            }
-        }))
+        self.socket.send(StartSpan(self.request_id, self.span_id, self.parent, self.operation))
 
     def send_stop_span(self):
-        self.socket.send(json.dumps({
-            'StopSpan': {
-                'request_id': self.request_id,
-                'span_id': self.span_id,
-            }
-        }))
+        self.socket.send(StopSpan(self.request_id, self.span_id))
 
     def dump(self):
         if self.end_time is None:
             print(self.operation)
-        return "request=%s operation=%s id=%s parent=%s notes=%s start_time=%s end_time=%s" % (
+        return 'request=%s operation=%s id=%s parent=%s notes=%s start_time=%s end_time=%s' % (
                 self.request_id,
                 self.operation,
                 self.span_id,
@@ -162,20 +143,3 @@ class Span:
 
     def note(self, key, value):
         self.notes[key] = value
-
-class CoreAgentSocket:
-    def __init__(self):
-        server_address = '/tmp/core_agent_socket'
-        self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        self.socket.connect(server_address)
-
-    def send(self, body):
-        self.socket.sendall(self.message_length(body))
-        self.socket.sendall(body.encode())
-
-    def message_length(self, body):
-        length = len(body)
-        return length.to_bytes(4, 'big')
-
-    def close(self):
-        self.socket.close()

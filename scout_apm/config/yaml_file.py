@@ -1,12 +1,13 @@
 import yaml
 
+
 class YamlFile():
     def __init__(self, file_name):
         self.file_name = file_name
 
     def parse(self):
         self.data = self.yaml_data()
-        print("Read config:", self.data)
+        print('Read config:', self.data)
         return self.data
 
     def file_data(self):
