@@ -13,6 +13,8 @@
 #   * Core Agent updates itself?
 #   * support "download" from a local file path
 #   * forking webservers? Don't download for each fork
+#     * apache/mod_wsgi
+#     * gunicorn
 #
 #  Error cases:
 #    * download fails
@@ -95,9 +97,8 @@ class CoreAgentManager:
                     '--socket', self.socket_path()
                 ])
 
-
     def socket_path(self):
-        print("Socket path", agent_context.config.value('socket_path'))
+        print('Socket path', agent_context.config.value('socket_path'))
         return agent_context.config.value('socket_path')
 
     def atexit(self, directory):
@@ -107,14 +108,10 @@ class CoreAgentManager:
         shutil.rmtree(directory)
 
 
-
-
-
 class CoreAgentDownloader():
     def __init__(self):
         self.destination = tempfile.mkdtemp()
-        self.package_location = self.destination + "/download.tgz"
-        # TODO: Add at_exit hook to delete this dir?
+        self.package_location = self.destination + '/download.tgz'
 
     def download(self):
         self.download_package()
@@ -152,7 +149,7 @@ class CoreAgentDownloader():
 
     def binary_name(self):
         return 'scout_apm_core-{version}-{platform}-{arch}'.format(
-                version=self.core_agent_version(),
+                version=self.download_version(),
                 platform=self.platform(),
                 arch=self.arch())
 
@@ -174,9 +171,8 @@ class CoreAgentDownloader():
         else:
             return 'unknown'
 
-    def core_agent_version(self):
-        # TODO: Override with config
-        return 'latest'
+    def download_version(self):
+        return agent_context.config.value('download_version')
 
 
 class CoreAgentManifest:
@@ -186,7 +182,6 @@ class CoreAgentManifest:
 
     def parse(self):
         self.json = json.loads(self.raw)
-        print("parsed manifest:", self.json)
         self.version = self.json['version']
         self.executable = self.json['core_binary']
         self.sha256 = self.json['core_binary_sha256']
