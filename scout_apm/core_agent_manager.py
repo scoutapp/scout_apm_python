@@ -1,7 +1,8 @@
 # TODO:
-#   * How to ask an existing agent who it is & what version
-#   * Should we politely ask an existing agent to shutdown?
+#   x How to ask an existing agent who it is & what version
+#   x Should we politely ask an existing agent to shutdown?
 #   * Core agent stdin/stdout? - should close, or try to proxy back to python?
+#       - popen is keeping it linked to the same stdin/out
 #   * Where do we download to
 #   * Where do we unpack the binary
 #   * What to do if we don't have the arch/version hosted?
@@ -11,6 +12,13 @@
 #   * How to shut down python
 #   * Core Agent updates itself?
 #   * support "download" from a local file path
+#
+#  Error cases:
+#    * download fails
+#    * disk space runs out (download or unpack)
+#    * download doesn't verify sha
+#    * core agent doesn't launch
+#    * Unknown platform
 #
 #  Build process
 #    * for each environment,
@@ -47,6 +55,8 @@ import platform
 import tarfile
 import urllib.request
 import subprocess
+import tempfile
+import json
 
 from scout_apm.context import agent_context
 from scout_apm.socket import CoreAgentSocket
@@ -55,14 +65,19 @@ from scout_apm.commands import CoreAgentVersion, CoreAgentVersionResponse, CoreA
 
 class CoreAgentManager:
     def launch(self):
-        # Kill any existing core agent
+        # Kill any running core agent
         probe = CoreAgentProbe()
         if probe.is_running():
             print('Trying to shutdown an already-running CoreAgent')
             probe.shutdown()
 
+        # Obtain the CoreAgent we want
+        downloader = CoreAgentDownloader()
+        downloader.download()
+        print('Downloaded CoreAgent version:', downloader.version)
+        executable = downloader.executable
+
         # Launch the CoreAgent we want
-        executable = '/Users/cschneid/Projects/core-agent/target/debug/core-agent'
         self.run(executable)
         print('Launching')
 
@@ -73,13 +88,49 @@ class CoreAgentManager:
                     '--api-key', 'Qnk5SKpNEeboPdeJkhae',
                     '--log-level', 'info',
                     '--app-name', 'CoreAgent'
+                    # TODO: Add the socket path
                 ])
 
+
+class CoreAgentDownloader():
+    def __init__(self):
+        self.destination = tempfile.mkdtemp()
+        self.package_location = self.destination + "/download.tgz"
+        # TODO: Add at_exit hook to delete this dir?
+
     def download(self):
+        self.download_package()
+        self.untar()
+        self.verify()
+
+    def download_package(self):
         print('Downloading: {full_url} to {filepath}'.format(
             full_url=self.full_url(),
-            filepath=self.core_filepath()))
-        urllib.request.urlretrieve(self.full_url(), self.core_filepath())
+            filepath=self.package_location))
+        urllib.request.urlretrieve(self.full_url(), self.package_location)
+
+    def untar(self):
+        t = tarfile.open(self.package_location, 'r')
+        t.extractall(self.destination)
+
+    # Read the manifest, check the sha256 checksum, and set variables needed
+    def verify(self):
+        manifest = CoreAgentManifest(self.destination + '/manifest.txt')
+        executable = self.destination + '/' + manifest.executable
+        if self.sha256_checksum(executable) == manifest.sha256:
+            self.version = manifest.version
+            self.executable = executable
+            return True
+        else:
+            raise 'Failed to verify'
+
+    def sha256_checksum(self, filename, block_size=65536):
+        print("Sha256 checksum called with", filename)
+        sha256 = hashlib.sha256()
+        with open(filename, 'rb') as f:
+            for block in iter(lambda: f.read(block_size), b''):
+                sha256.update(block)
+        return sha256.hexdigest()
 
     def full_url(self):
         return '{root_url}/{binary_name}.tgz'.format(
@@ -87,16 +138,14 @@ class CoreAgentManager:
                 binary_name=self.binary_name())
 
     def root_url(self):
-        return 'https://scoutapp.com'
+        return "http://localhost:6000/core-agent"
+        # return 'https://scoutapp.com'
 
     def binary_name(self):
         return 'scout_apm_core-{version}-{platform}-{arch}'.format(
                 version=self.core_agent_version(),
                 platform=self.platform(),
                 arch=self.arch())
-
-    def platform_supported(self):
-        return True
 
     def platform(self):
         system_name = platform.system()
@@ -107,9 +156,6 @@ class CoreAgentManager:
         else:
             return 'unknown'
 
-    def arch_supported(self):
-        return True
-
     def arch(self):
         arch = platform.machine()
         if arch == 'i386':
@@ -119,26 +165,22 @@ class CoreAgentManager:
         else:
             return 'unknown'
 
-    def core_filepath(self):
-        return '/tmp/{binary_name}'.format(binary_name=self.binary_name())
-
     def core_agent_version(self):
+        # TODO: Override with config
         return 'latest'
 
-    def untar(self):
-        t = tarfile.open(self.core_filepath(), 'r')
-        t.extractall('outdir')
 
-    def sha256_sum(self):
-        f = open(self.core_filepath(), 'rb')
-        hash = hashlib.sha256()
-        if f.multiple_chunks():
-            for chunk in f.chunks():
-                hash.update(chunk)
-        else:
-            hash.update(f.read())
-        f.close()
-        return hash.hexdigest()
+class CoreAgentManifest:
+    def __init__(self, path):
+        self.raw = open(path).read()
+        self.parse()
+
+    def parse(self):
+        self.json = json.loads(self.raw)
+        print("parsed manifest:", self.json)
+        self.version = self.json['version']
+        self.executable = self.json['core_binary']
+        self.sha256 = self.json['core_binary_sha256']
 
 
 class CoreAgentProbe():
