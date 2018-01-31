@@ -49,7 +49,8 @@ class ScoutConfigFile():
 class ScoutConfigDefaults():
     def __init__(self):
         self.defaults = {
-                'core_agent_socket': '/tmp/scout_core_agent'
+                'core_agent_socket': '/tmp/scout_core_agent',
+                'download_url': 'https://downloads.scoutapp.com',
         }
 
     def has_key(self, key):

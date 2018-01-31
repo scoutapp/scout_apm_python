@@ -57,6 +57,8 @@ import urllib.request
 import subprocess
 import tempfile
 import json
+import atexit
+import shutil
 
 from scout_apm.context import agent_context
 from scout_apm.socket import CoreAgentSocket
@@ -77,6 +79,8 @@ class CoreAgentManager:
         print('Downloaded CoreAgent version:', downloader.version)
         executable = downloader.executable
 
+        atexit.register(self.atexit, downloader.destination)
+
         # Launch the CoreAgent we want
         self.run(executable)
         print('Launching')
@@ -90,6 +94,15 @@ class CoreAgentManager:
                     '--app-name', 'CoreAgent'
                     # TODO: Add the socket path
                 ])
+
+    def atexit(self, directory):
+        print("Atexit shutting down agent")
+        CoreAgentProbe().shutdown()
+        print("Atexit deleting directory:", directory)
+        shutil.rmtree(directory)
+
+
+
 
 
 class CoreAgentDownloader():
@@ -117,20 +130,12 @@ class CoreAgentDownloader():
     def verify(self):
         manifest = CoreAgentManifest(self.destination + '/manifest.txt')
         executable = self.destination + '/' + manifest.executable
-        if self.sha256_checksum(executable) == manifest.sha256:
+        if SHA256.digest(executable) == manifest.sha256:
             self.version = manifest.version
             self.executable = executable
             return True
         else:
             raise 'Failed to verify'
-
-    def sha256_checksum(self, filename, block_size=65536):
-        print("Sha256 checksum called with", filename)
-        sha256 = hashlib.sha256()
-        with open(filename, 'rb') as f:
-            for block in iter(lambda: f.read(block_size), b''):
-                sha256.update(block)
-        return sha256.hexdigest()
 
     def full_url(self):
         return '{root_url}/{binary_name}.tgz'.format(
@@ -138,8 +143,7 @@ class CoreAgentDownloader():
                 binary_name=self.binary_name())
 
     def root_url(self):
-        return "http://localhost:6000/core-agent"
-        # return 'https://scoutapp.com'
+        return agent_context.config.value('download_url')
 
     def binary_name(self):
         return 'scout_apm_core-{version}-{platform}-{arch}'.format(
@@ -200,9 +204,12 @@ class CoreAgentProbe():
             return None
 
     def shutdown(self):
-        socket = self.build_socket()
-        socket.send(CoreAgentShutdown())
-        print('Shut down existing CoreAgent')
+        try:
+            socket = self.build_socket()
+            socket.send(CoreAgentShutdown())
+            print('Shut down existing CoreAgent')
+        except:
+            print('Attempted, but failed to shutdown core agent. Maybe it\'s already stopped?')
 
     def build_socket(self):
         socket_path = agent_context.config.value('core_agent_socket')
@@ -211,17 +218,11 @@ class CoreAgentProbe():
         return socket
 
 
-# Core Agent per app
-# latest_version = CoreAgentManager().latest_version()
-# probe = CoreAgentProbe(socket_path)
-# version = probe.version()
-# if version is not None:
-#     if version.is_not_newest()
-#         probe.shudown()
-#
-# CoreAgentManager().download()
-# CoreAgentManager().unpack()
-# CoreAgentManager().launch(socket_path, app_name)
-#
-# # when app stops
-# CoreAgentManager.shutdown()
+class SHA256:
+    @staticmethod
+    def digest(filename, block_size=65536):
+        sha256 = hashlib.sha256()
+        with open(filename, 'rb') as f:
+            for block in iter(lambda: f.read(block_size), b''):
+                sha256.update(block)
+        return sha256.hexdigest()
