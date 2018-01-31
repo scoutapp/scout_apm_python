@@ -14,7 +14,6 @@ TemplateInstrument.install()
 ViewInstrument.install()
 DjangoSignals.install()
 
-
 CoreAgentManager().launch()
 
 # XXX: This blocks manage.py's web server, since it starts a permanent thread

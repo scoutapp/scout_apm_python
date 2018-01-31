@@ -15,5 +15,5 @@ this = sys.modules[__name__]
 
 # Initialize the Context object for the rest of the system to use
 conf = ScoutConfig()
-socket = RetryingCoreAgentSocket(CoreAgentSocket())
+socket = RetryingCoreAgentSocket(CoreAgentSocket(conf.value('socket_path')))
 this.agent_context = AgentContext(conf, socket)

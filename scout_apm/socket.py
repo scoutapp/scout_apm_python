@@ -8,14 +8,14 @@ import struct
 
 
 class CoreAgentSocket:
-    def __init__(self, server_address='/tmp/scout_core_agent'):
-        self.server_address = server_address
+    def __init__(self, socket_path='/tmp/scout_core_agent'):
+        self.socket_path = socket_path
 
     def open(self):
-        print('CoreAgentSocket connecting to', self.server_address)
+        print('CoreAgentSocket connecting to', self.socket_path)
         try:
             self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            self.socket.connect(self.server_address)
+            self.socket.connect(self.socket_path)
             print('CoreAgentSocket Opened Successfully')
             return True
         except ConnectionRefusedError:
@@ -36,11 +36,8 @@ class CoreAgentSocket:
     def read_response(self):
         raw_size = self.socket.recv(4)
         size = struct.unpack('<I', raw_size)[0]
-
         message = self.socket.recv(size)
-        print('Received response:', message)
         return message
-
 
     def close(self):
         self.socket.close()
@@ -77,12 +74,3 @@ class RetryingCoreAgentSocket:
 
     def close(self):
         self.socket.close()
-
-
-class BatchingCoreAgentSocket:
-    """
-    Wraps a socket with batching logic.
-
-    It stores messages until a `flush` command is sent. Then it wraps the
-    messages in a "CommandBatch" type, and sends the entire set.
-    """

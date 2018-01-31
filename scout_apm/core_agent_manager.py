@@ -3,15 +3,16 @@
 #   x Should we politely ask an existing agent to shutdown?
 #   * Core agent stdin/stdout? - should close, or try to proxy back to python?
 #       - popen is keeping it linked to the same stdin/out
-#   * Where do we download to
-#   * Where do we unpack the binary
+#   x Where do we download to
+#   x Where do we unpack the binary
 #   * What to do if we don't have the arch/version hosted?
-#   * What workflow for self-launching core agent?
+#   * What workflow for user-launched core agent?
 #   * Build script to build different versions
 #   * Launch style - fork/exec w/ command line options
 #   * How to shut down python
 #   * Core Agent updates itself?
 #   * support "download" from a local file path
+#   * forking webservers? Don't download for each fork
 #
 #  Error cases:
 #    * download fails
@@ -39,16 +40,15 @@
 #       core_binary_sha256: 0123456ABCDEFG...
 #     }
 #
-#
-#           - detect version (default or specified in config)
+#           x detect version (default or specified in config)
 #           - specify SSL CA file?
-#           - where to download from/to
-#           - platform
-#           - architecture
-#           - root url for tgz
-#           - proxy (python urllib reads from http_proxy/https_proxy env var)
-#           - sha256sum the downloaded file, compare to metadata
-#           - launch - how?
+#           x where to download from/to
+#           x platform
+#           x architecture
+#           x root url for tgz
+#           x proxy (python urllib reads from http_proxy/https_proxy env var)
+#           x sha256sum the downloaded file, compare to metadata
+#           x launch - how?
 
 import hashlib
 import platform
@@ -74,12 +74,12 @@ class CoreAgentManager:
             probe.shutdown()
 
         # Obtain the CoreAgent we want
-        downloader = CoreAgentDownloader()
-        downloader.download()
-        print('Downloaded CoreAgent version:', downloader.version)
-        executable = downloader.executable
+        self.downloader = CoreAgentDownloader()
+        self.downloader.download()
+        print('Downloaded CoreAgent version:', self.downloader.version)
+        executable = self.downloader.executable
 
-        atexit.register(self.atexit, downloader.destination)
+        atexit.register(self.atexit, self.downloader.destination)
 
         # Launch the CoreAgent we want
         self.run(executable)
@@ -91,14 +91,19 @@ class CoreAgentManager:
                     executable, 'daemon',
                     '--api-key', 'Qnk5SKpNEeboPdeJkhae',
                     '--log-level', 'info',
-                    '--app-name', 'CoreAgent'
-                    # TODO: Add the socket path
+                    '--app-name', 'CoreAgent',
+                    '--socket', self.socket_path()
                 ])
 
+
+    def socket_path(self):
+        print("Socket path", agent_context.config.value('socket_path'))
+        return agent_context.config.value('socket_path')
+
     def atexit(self, directory):
-        print("Atexit shutting down agent")
+        print('Atexit shutting down agent')
         CoreAgentProbe().shutdown()
-        print("Atexit deleting directory:", directory)
+        print('Atexit deleting directory:', directory)
         shutil.rmtree(directory)
 
 

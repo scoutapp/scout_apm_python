@@ -1,6 +1,7 @@
 import os
 from .yaml_file import YamlFile
 
+
 class ScoutConfig():
     def __init__(self, config_file=None):
         # We have to ask the ENV configuration for where the config file even
@@ -34,6 +35,7 @@ class ScoutConfigEnv():
     def modify_key(self, key):
         env_key = ('SCOUT_' + key).upper()
         return env_key
+
 
 class ScoutConfigFile():
     def __init__(self, config_file='scout_apm.yml'):
