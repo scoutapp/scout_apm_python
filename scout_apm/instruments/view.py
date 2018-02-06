@@ -91,20 +91,21 @@ def intercept_resolver_and_view():
             callbacks.func = self.trace_view_function(callbacks.func, ('Controller', {"path": path, "name": callbacks._func_path}))
             return callbacks
 
-        # XXX: Can this maybe be a callback that takes the span, and the req and the args?
-        # Rather than a full reimpl of this?
+        # XXX: This is duplicate code w/ StackTracer class.  Can this maybe be
+        # a callback that takes the span, and the req and the args?  Rather
+        # than a full reimpl of this?
         def trace_view_function(self, func, info):
             try:
                 def tracing_function(original, *args, **kwargs):
                     entry_type, detail = info
 
                     operation = entry_type
-                    if detail["name"] is not None:
-                        operation = operation + "/" + detail["name"]
+                    if detail['name'] is not None:
+                        operation = operation + '/' + detail['name']
 
                     span = TrackedRequest.instance().start_span(operation=operation)
                     for key in detail:
-                        span.note(key, detail[key])
+                        span.tag(key, detail[key])
 
                     # And the custom View stuff
                     request = args[0]
@@ -114,7 +115,7 @@ def intercept_resolver_and_view():
                     headers = dict((regex.sub('', header), value) for (header, value)
                                    in request.META.items() if header.startswith('HTTP_'))
 
-                    span.note("remote_addr", request.META["REMOTE_ADDR"])
+                    span.tag('remote_addr', request.META['REMOTE_ADDR'])
 
                     try:
                         return original(*args, **kwargs)
@@ -130,10 +131,11 @@ def intercept_resolver_and_view():
 
     resolvers.RegexURLResolver = ProxyRegexURLResolver
 
+
 class ViewInstrument:
     @staticmethod
     def install():
         intercept_middleware()
         intercept_resolver_and_view()
-        print("Monkey patched View")
+        print('Monkey patched View')
 
