@@ -8,8 +8,15 @@ python:
   - "pypy"
   - "pypy3"
 
+env:
+  # Repeat this line to test against different versions
+  - DJANGO_VERSION=1.11.7
+
+before_install:
+    - "export PYTHONPATH=$PYTHONPATH:$(pwd)"
+
 install:
-  - pip install .
   - pip install -r requirements.txt
+  - pip install Django==$DJANGO_VERSION
 
 script: pytest
