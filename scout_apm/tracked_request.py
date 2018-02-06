@@ -1,15 +1,18 @@
 """
 Represents a single whole request.
-
-Can be marked with notes
 """
 
 from uuid import uuid4
 from datetime import datetime
 import threading
 
-from .commands import StartSpan, StopSpan, StartRequest, FinishRequest
-from .socket import CoreAgentSocket, RetryingCoreAgentSocket
+from .commands import (
+        StartSpan,
+        StopSpan,
+        StartRequest,
+        FinishRequest,
+        TagSpan,
+        TagRequest)
 from scout_apm.context import agent_context
 
 
@@ -33,11 +36,10 @@ class TrackedRequest(ThreadLocalSingleton):
     def __init__(self):
         super(TrackedRequest, self).__init__()
         self.req_id = 'req-' + str(uuid4())
-        self.notes = dict()
         self.spans = []
         self.socket = agent_context.socket
         self.socket.open()
-        print("Starting request:", self.req_id)
+        print('Starting request:', self.req_id)
         self.send_start_request()
 
     def send_start_request(self):
@@ -46,8 +48,8 @@ class TrackedRequest(ThreadLocalSingleton):
     def send_finish_request(self):
         self.socket.send(FinishRequest(self.req_id))
 
-    def note(self, key, value):
-        self.notes[key] = value
+    def tag(self, key, value):
+        self.socket.send(TagRequest(self.request_id, key, value))
 
     def start_span(self, operation=None):
         maybe_parent = self.current_span()
@@ -101,7 +103,6 @@ class Span:
         self.request_id = request_id
         self.operation = operation
         self.parent = parent
-        self.notes = dict()
         self.start_time = datetime.now()
         self.end_time = None
         self.socket = socket
@@ -112,7 +113,12 @@ class Span:
         if self.request_id is None:
             return
 
-        self.socket.send(StartSpan(self.request_id, self.span_id, self.parent, self.operation))
+        self.socket.send(StartSpan(
+            self.request_id,
+            self.span_id,
+            self.parent,
+            self.operation
+        ))
 
     def send_stop_span(self):
         self.socket.send(StopSpan(self.request_id, self.span_id))
@@ -120,12 +126,11 @@ class Span:
     def dump(self):
         if self.end_time is None:
             print(self.operation)
-        return 'request=%s operation=%s id=%s parent=%s notes=%s start_time=%s end_time=%s' % (
+        return 'request=%s operation=%s id=%s parent=%s start_time=%s end_time=%s' % (
                 self.request_id,
                 self.operation,
                 self.span_id,
                 self.parent,
-                self.notes,
                 self.start_time.isoformat(),
                 self.end_time.isoformat()
             )
@@ -134,6 +139,9 @@ class Span:
         self.end_time = datetime.now()
         self.send_stop_span()
 
+    def tag(self, key, value):
+        self.socket.send(TagSpan(self.request_id, self.span_id, key, value))
+
     # In seconds
     def duration(self):
         if self.end_time is not None:
@@ -141,6 +149,3 @@ class Span:
         else:
             # Current, running duration
             (datetime.now() - self.start_time).total_seconds()
-
-    def note(self, key, value):
-        self.notes[key] = value
