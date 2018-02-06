@@ -91,15 +91,24 @@ class CoreAgentManager:
         subprocess.Popen(
                 [
                     executable, 'daemon',
-                    '--api-key', 'Qnk5SKpNEeboPdeJkhae',
-                    '--log-level', 'info',
-                    '--app-name', 'CoreAgent',
+                    '--api-key', self.api_key(),
+                    '--log-level', self.log_level(),
+                    '--app-name', self.app_name(),
                     '--socket', self.socket_path()
                 ])
 
     def socket_path(self):
         print('Socket path', agent_context.config.value('socket_path'))
         return agent_context.config.value('socket_path')
+
+    def log_level(self):
+        return 'debug'
+
+    def app_name(self):
+        return 'CoreAgent'
+
+    def api_key(self):
+        return 'Qnk5SKpNEeboPdeJkhae'
 
     def atexit(self, directory):
         print('Atexit shutting down agent')
