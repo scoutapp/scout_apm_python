@@ -9,7 +9,7 @@ python:
   - "pypy3"
 
 install:
-  - pip install .
+  - python setup.py install
   - pip install -r requirements.txt
 
 script: pytest

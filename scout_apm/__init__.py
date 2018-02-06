@@ -7,6 +7,7 @@ from scout_apm.instruments.view import ViewInstrument
 from scout_apm.samplers.samplers import Samplers
 from scout_apm.core_agent_manager import CoreAgentManager
 
+
 def install():
     print('APM Launching on PID:', getpid())
     SQLInstrument.install()
