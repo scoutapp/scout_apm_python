@@ -51,10 +51,14 @@ class ScoutConfig():
             'download_version',
         ]
 
+
 class ScoutConfigEnv():
     """
-    Reads configuration from environment by prefixing the key desired with SCOUT_
-    Example: the `log_level` config looks for SCOUT_LOG_LEVEL environment variable
+    Reads configuration from environment by prefixing the key
+    requested with "SCOUT_"
+
+    Example: the `log_level` config looks for SCOUT_LOG_LEVEL
+    environment variable
     """
 
     def name(self):
