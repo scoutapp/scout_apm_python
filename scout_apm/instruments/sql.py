@@ -1,6 +1,3 @@
-"""
-DOCS!
-"""
 from __future__ import absolute_import
 
 try:
@@ -15,34 +12,30 @@ except ImportError:
     # Backwards compatibility for Django <1.9
     from django.db.backends.util import CursorWrapper
 
-from datetime import datetime
 from scout_apm.monkey import monkeypatch_method
 from scout_apm.tracked_request import TrackedRequest
 
-"""
-DOCS!
-"""
+
 class _DetailedTracingCursorWrapper(CursorWrapper):
     def execute(self, sql, params=()):
         tr = TrackedRequest.instance()
-        span = tr.start_span(operation="SQL/query")
-        span.note("query", sql)
+        span = tr.start_span(operation='SQL/query')
+        span.tag('db.statement', sql)
 
         try:
             return self.cursor.execute(sql, params)
         finally:
             tr.stop_span()
-            print(span.dump())
 
     def executemany(self, sql, param_list):
-        span = TrackedRequest.instance().start_span(operation="SQL/many")
-        span.note("query", sql)
+        span = TrackedRequest.instance().start_span(operation='SQL/many')
+        span.tag('db.statement', sql)
 
         try:
             return self.cursor.executemany(sql, param_list)
         finally:
             TrackedRequest.instance().stop_span()
-            print(span.dump())
+
 
 # pylint: disable=too-few-public-methods
 class SQLInstrument:
@@ -53,13 +46,12 @@ class SQLInstrument:
     @staticmethod
     def install():
         """
-        DOCS!
+        Installs ScoutApm SQL Instrumentation by monkeypatching the `cursor`
+        method of BaseDatabaseWrapper, to return a wrapper that instruments any
+        calls going through it.
         """
         @monkeypatch_method(BaseDatabaseWrapper)
         def cursor(original, self, *args, **kwargs):
-            """
-            DOCS!
-            """
             result = original(*args, **kwargs)
             return _DetailedTracingCursorWrapper(result, self)
 
