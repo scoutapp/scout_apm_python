@@ -6,7 +6,7 @@ from time import sleep
 
 from .cpu import Cpu
 from .memory import Memory
-from scout_apm.tracked_request import CoreAgentSocket
+from scout_apm.context import agent_context
 
 
 class Samplers():
@@ -17,7 +17,7 @@ class Samplers():
     def samplers():
         print('Starting Samplers')
 
-        socket = CoreAgentSocket()
+        socket = agent_context.socket
         instances = [Cpu(), Memory()]
 
         while True:
