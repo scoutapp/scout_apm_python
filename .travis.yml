@@ -14,9 +14,9 @@ env:
 
 matrix:
   exclude:
-    - python: 2.7
+    - python: "2.7"
       env: DJANGO_VERSION=2.0.2
-    - python: pypy
+    - python: "pypy"
       env: DJANGO_VERSION=2.0.2
 
 before_install:
