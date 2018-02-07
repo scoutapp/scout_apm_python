@@ -52,16 +52,22 @@
 #           x sha256sum the downloaded file, compare to metadata
 #           x launch - how?
 
+# Python Built-Ins
 import hashlib
 import platform
 import tarfile
-import urllib.request
 import subprocess
 import tempfile
 import json
 import atexit
 import shutil
 
+
+# 3rd Party
+import requests
+
+
+# APM Modules
 from scout_apm.context import agent_context
 from scout_apm.socket import CoreAgentSocket
 from scout_apm.commands import CoreAgentVersion, CoreAgentVersionResponse, CoreAgentShutdown
@@ -131,7 +137,10 @@ class CoreAgentDownloader():
         print('Downloading: {full_url} to {filepath}'.format(
             full_url=self.full_url(),
             filepath=self.package_location))
-        urllib.request.urlretrieve(self.full_url(), self.package_location)
+        req = requests.get(self.full_url(), stream=True)
+        with open(self.package_location) as f:
+            for chunk in req.iter_content(1024 * 1000):
+                f.write(chunk)
 
     def untar(self):
         t = tarfile.open(self.package_location, 'r')
