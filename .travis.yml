@@ -10,7 +10,7 @@ python:
 env:
   # Repeat this line to test against different versions
   - DJANGO_VERSION=1.11.10
-  - DJANGO_VERSION=2.0.3
+  - DJANGO_VERSION=2.0.2
 
 before_install:
     - "export PYTHONPATH=$PYTHONPATH:$(pwd)"
