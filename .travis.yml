@@ -23,7 +23,7 @@ before_install:
     - "export PYTHONPATH=$PYTHONPATH:$(pwd)"
 
 install:
-  - pip install -r requirements.txt
+  - pip install -e .
   - pip install Django==$DJANGO_VERSION
 
 script: pytest
