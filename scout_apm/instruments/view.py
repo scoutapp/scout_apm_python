@@ -1,18 +1,24 @@
+# Python Built-Ins
 from __future__ import absolute_import
+import re
 
-from django.core import urlresolvers
+# Django
 from django.core.handlers.base import BaseHandler
 from django.core.handlers.wsgi import WSGIHandler
 from django.urls import resolvers
 
+try:
+    # Django 1.x
+    from django.core import urlresolvers
+except ImportError:
+    # Django 2.x - https://docs.djangoproject.com/en/2.0/releases/2.0/
+    from django.urls import urlresolvers
+
+# APM Modules
 from scout_apm.monkey import monkeypatch_method, CallableProxy
 from scout_apm.stacktracer import trace_function
 from scout_apm.tracked_request import TrackedRequest
-import re
 
-import pdb
-
-import traceback
 
 def patch_function_list(functions, action_type, format_string):
     for i, func in enumerate(functions):
@@ -57,6 +63,7 @@ def intercept_middleware():
         original(*args, **kwargs)
         wrap_middleware_with_tracers(self)
         middleware_patched = True
+
 
 def intercept_resolver_and_view():
     # The only way we can really wrap the view method is by replacing the implementation
@@ -138,4 +145,3 @@ class ViewInstrument:
         intercept_middleware()
         intercept_resolver_and_view()
         print('Monkey patched View')
-
