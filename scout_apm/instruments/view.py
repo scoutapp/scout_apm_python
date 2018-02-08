@@ -11,8 +11,7 @@ try:
     # Django 1.x
     from django.core import urlresolvers
 except ImportError:
-    # Django 2.x - https://docs.djangoproject.com/en/2.0/releases/2.0/
-    from django.urls import urlresolvers
+    pass
 
 # APM Modules
 from scout_apm.monkey import monkeypatch_method, CallableProxy
