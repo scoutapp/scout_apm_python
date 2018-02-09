@@ -138,7 +138,7 @@ class CoreAgentDownloader():
             full_url=self.full_url(),
             filepath=self.package_location))
         req = requests.get(self.full_url(), stream=True)
-        with open(self.package_location) as f:
+        with open(self.package_location, 'wb') as f:
             for chunk in req.iter_content(1024 * 1000):
                 f.write(chunk)
 
