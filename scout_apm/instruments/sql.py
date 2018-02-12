@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+import logging
 
 try:
     from django.db.backends.base.base import BaseDatabaseWrapper
@@ -14,6 +15,8 @@ except ImportError:
 
 from scout_apm.monkey import monkeypatch_method
 from scout_apm.tracked_request import TrackedRequest
+
+logger = logging.getLogger(__name__)
 
 
 class _DetailedTracingCursorWrapper(CursorWrapper):
@@ -55,4 +58,4 @@ class SQLInstrument:
             result = original(*args, **kwargs)
             return _DetailedTracingCursorWrapper(result, self)
 
-        print('Monkey patched SQL')
+        logger.info('Monkey patched SQL')

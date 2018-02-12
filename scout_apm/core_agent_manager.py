@@ -54,6 +54,7 @@
 
 # Python Built-Ins
 import hashlib
+import logging
 import platform
 import tarfile
 import subprocess
@@ -72,26 +73,29 @@ from scout_apm.context import agent_context
 from scout_apm.socket import CoreAgentSocket
 from scout_apm.commands import CoreAgentVersion, CoreAgentVersionResponse, CoreAgentShutdown
 
+# Logging
+logger = logging.getLogger(__name__)
+
 
 class CoreAgentManager:
     def launch(self):
         # Kill any running core agent
         probe = CoreAgentProbe()
         if probe.is_running():
-            print('Trying to shutdown an already-running CoreAgent')
+            logger.info('Trying to shutdown an already-running CoreAgent')
             probe.shutdown()
 
         # Obtain the CoreAgent we want
         self.downloader = CoreAgentDownloader()
         self.downloader.download()
-        print('Downloaded CoreAgent version:', self.downloader.version)
+        logger.info('Downloaded CoreAgent version:', self.downloader.version)
         executable = self.downloader.executable
 
         atexit.register(self.atexit, self.downloader.destination)
 
         # Launch the CoreAgent we want
         self.run(executable)
-        print('Launching')
+        logger.info('Launching')
 
     def run(self, executable):
         subprocess.Popen(
@@ -104,11 +108,11 @@ class CoreAgentManager:
                 ])
 
     def socket_path(self):
-        print('Socket path', agent_context.config.value('socket_path'))
+        logger.info('Socket path', agent_context.config.value('socket_path'))
         return agent_context.config.value('socket_path')
 
     def log_level(self):
-        return 'debug'
+        return 'error'
 
     def app_name(self):
         return 'CoreAgent'
@@ -117,9 +121,9 @@ class CoreAgentManager:
         return 'Qnk5SKpNEeboPdeJkhae'
 
     def atexit(self, directory):
-        print('Atexit shutting down agent')
+        logger.info('Atexit shutting down agent')
         CoreAgentProbe().shutdown()
-        print('Atexit deleting directory:', directory)
+        logger.info('Atexit deleting directory:', directory)
         shutil.rmtree(directory)
 
 
@@ -134,7 +138,7 @@ class CoreAgentDownloader():
         self.verify()
 
     def download_package(self):
-        print('Downloading: {full_url} to {filepath}'.format(
+        logger.info('Downloading: {full_url} to {filepath}'.format(
             full_url=self.full_url(),
             filepath=self.package_location))
         req = requests.get(self.full_url(), stream=True)
@@ -215,19 +219,19 @@ class CoreAgentProbe():
             socket = self.build_socket()
             response = socket.send(CoreAgentVersion())
             self.version = CoreAgentVersionResponse(response).version
-            print('version:', self.version)
+            logger.info('version:', self.version)
             return self.version
         except Exception as e:
-            print('Existing CoreAgent is not running')
+            logger.info('Existing CoreAgent is not running')
             return None
 
     def shutdown(self):
         try:
             socket = self.build_socket()
             socket.send(CoreAgentShutdown())
-            print('Shut down existing CoreAgent')
+            logger.info('Shut down existing CoreAgent')
         except:
-            print('Attempted, but failed to shutdown core agent. Maybe it\'s already stopped?')
+            logger.info('Attempted, but failed to shutdown core agent. Maybe it\'s already stopped?')
 
     def build_socket(self):
         socket_path = agent_context.config.value('core_agent_socket')

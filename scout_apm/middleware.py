@@ -1,6 +1,7 @@
 # DOCS: https://docs.djangoproject.com/en/1.11/topics/http/middleware/
 
 from datetime import datetime
+import logging
 import pdb
 
 #  from .instruments.sql import SQLInstrument;
@@ -9,6 +10,9 @@ import pdb
 #  SQLInstrument.init()
 #  TemplateInstrument.init()
 #  ViewInstrument.init()
+
+# Logging
+logger = logging.getLogger(__name__)
 
 
 class LogTimesMiddleware(object):
@@ -26,9 +30,9 @@ class LogTimesMiddleware(object):
         t2 = datetime.now()
         seconds_elapsed = (t2 - t1).total_seconds()
 
-        print("Called at: ", request.get_raw_uri()) # or path, or get_full_path() for just /polls/
-        print("Seconds for call was: ", seconds_elapsed)
-        print("Headers returned were: ", response._headers)
+        logger.info("Called at: ", request.get_raw_uri()) # or path, or get_full_path() for just /polls/
+        logger.info("Seconds for call was: ", seconds_elapsed)
+        logger.info("Headers returned were: ", response._headers)
 
         #  pdb.set_trace()
 
@@ -41,16 +45,16 @@ class LogTimesMiddleware(object):
     # (Pdb) p view_kwargs
     # {}
     def process_view(self, request, view_func, view_args, view_kwargs):
-        print("Process View Callback - Running: ", view_func.__code__.co_filename, " function: ", view_func.__code__.co_name)
+        logger.info("Process View Callback - Running: ", view_func.__code__.co_filename, " function: ", view_func.__code__.co_name)
 
         return None
 
     def process_exception(self, request, exception): # (only if the view raised an exception)
-        print("Raised an exception!")
+        logger.info("Raised an exception!")
         return None
 
     def process_template_response(self, request, response): # (only for template responses)
-        print("Going to render a template: ", response.template_name)
+        logger.info("Going to render a template: ", response.template_name)
         return response
 
 

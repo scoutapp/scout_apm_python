@@ -1,7 +1,11 @@
 from __future__ import absolute_import
+import logging
 
 from scout_apm.monkey import monkeypatch_method, CallableProxy
 from scout_apm.tracked_request import TrackedRequest
+
+# Logging
+logger = logging.getLogger(__name__)
 
 
 # The linter thinks the methods we monkeypatch are not used
@@ -28,7 +32,7 @@ def trace_method(cls, method_name=None):
                 return original(*args, **kwargs)
             finally:
                 TrackedRequest.instance().stop_span()
-                print(span.dump())
+                logger.info(span.dump())
         return tracing_method
     return decorator
 
@@ -54,7 +58,7 @@ def trace_function(func, info):
                 return original(*args, **kwargs)
             finally:
                 TrackedRequest.instance().stop_span()
-                print(span.dump())
+                logger.info(span.dump())
 
         return CallableProxy(func, tracing_function)
     except Exception:

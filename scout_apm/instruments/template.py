@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+import logging
 
 from django.template import defaulttags
 # XXX:Changed in Django 1.9
@@ -9,6 +10,8 @@ from django.template.response import TemplateResponse
 from django.template.loader_tags import BlockNode
 
 from scout_apm.stacktracer import trace_method, trace_function
+
+logger = logging.getLogger(__name__)
 
 register = Library()
 
@@ -83,7 +86,7 @@ class TemplateInstrument:
         def render(self, *args, **kwargs):
             return ('Block/Render', {"name": self.name})
 
-        print("Monkey patched Templates")
+        logger.info("Monkey patched Templates")
 
         # XXX: Figure this out, causes exception that the "resolve_context" key isn't in dict
         # Also will need to figure out the name hash

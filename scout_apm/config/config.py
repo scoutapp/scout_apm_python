@@ -1,5 +1,8 @@
+import logging
 import os
 from .yaml_file import YamlFile
+
+logger = logging.getLogger(__name__)
 
 
 class ScoutConfig():
@@ -27,7 +30,7 @@ class ScoutConfig():
                 ScoutConfigDefaults(),
                 ScoutConfigNull()]
 
-        print('Configuration Loaded:')
+        logger.info('Configuration Loaded:')
         self.log()
 
     def value(self, key):
@@ -41,8 +44,8 @@ class ScoutConfig():
     def log(self):
         for key in self.known_keys():
             layer = self.locate_layer_for_key(key)
-            print('{:9}: {} = {}'.format(layer.name(), key, layer.value(key)))
-        print('')
+            logger.info('{:9}: {} = {}'.format(layer.name(), key, layer.value(key)))
+        logger.info('')
 
     def known_keys(self):
         return [
