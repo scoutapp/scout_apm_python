@@ -49,9 +49,12 @@ class ScoutConfig():
 
     def known_keys(self):
         return [
-            'core_agent_socket',
+            'socket_path',
             'download_url',
             'download_version',
+            'log_level',
+            'name',
+            'key',
         ]
 
 
@@ -108,9 +111,11 @@ class ScoutConfigDefaults():
 
     def __init__(self):
         self.defaults = {
-                'core_agent_socket': '/tmp/scout_core_agent',
-                'download_url': 'http://localhost:6000',
+                'download_url': 'https://downloads.scoutapp.com',
                 'download_version': 'latest',
+                'key': 'Qnk5SKpNEeboPdeJkhae',
+                'log_level': 'info',
+                'name': 'CoreAgent',
                 'socket_path': '/tmp/scout_core_agent',
         }
 

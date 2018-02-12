@@ -112,13 +112,13 @@ class CoreAgentManager:
         return agent_context.config.value('socket_path')
 
     def log_level(self):
-        return 'error'
+        return agent_context.config.value('log_level')
 
     def app_name(self):
-        return 'CoreAgent'
+        return agent_context.config.value('name')
 
     def api_key(self):
-        return 'Qnk5SKpNEeboPdeJkhae'
+        return agent_context.config.value('key')
 
     def atexit(self, directory):
         logger.info('Atexit shutting down agent')
