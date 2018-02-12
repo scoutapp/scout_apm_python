@@ -1,3 +1,4 @@
+import logging
 import socket
 import time
 import json
@@ -6,20 +7,23 @@ import struct
 # Make this a thread local - so each thread has its own socket. Can't be global
 # though w/o otherwise locking it.
 
+# Logging
+logger = logging.getLogger(__name__)
+
 
 class CoreAgentSocket:
     def __init__(self, socket_path='/tmp/scout_core_agent'):
         self.socket_path = socket_path
 
     def open(self):
-        print('CoreAgentSocket connecting to', self.socket_path)
+        logger.info('CoreAgentSocket connecting to', self.socket_path)
         try:
             self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             self.socket.connect(self.socket_path)
-            print('CoreAgentSocket Opened Successfully')
+            logger.info('CoreAgentSocket Opened Successfully')
             return True
         except ConnectionRefusedError:
-            print('Connection refused error')
+            logger.info('Connection refused error')
             return None
 
     def send(self, command):
@@ -55,18 +59,18 @@ class RetryingCoreAgentSocket:
         try:
             self.socket.send(body)
         except ConnectionRefusedError as err:
-            print('ConnectionRefusedError,', err)
+            logger.info('ConnectionRefusedError,', err)
             self.open()
             self.send(self, body)
         except OSError as err:
-            print('OSError,', err)
+            logger.info('OSError,', err)
 
     def open(self):
-        print('RetryingCoreAgentSocket open')
+        logger.info('RetryingCoreAgentSocket open')
         delay = 1
         while True:
             if self.socket.open() is None:
-                print('RetryingCoreAgentSocket, sleeping for', delay)
+                logger.info('RetryingCoreAgentSocket, sleeping for', delay)
                 time.sleep(delay)
                 delay += 1
             else:

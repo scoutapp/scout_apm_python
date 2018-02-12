@@ -1,5 +1,6 @@
 # Python Built-Ins
 from __future__ import absolute_import
+import logging
 import re
 
 # Django
@@ -17,6 +18,9 @@ except ImportError:
 from scout_apm.monkey import monkeypatch_method, CallableProxy
 from scout_apm.stacktracer import trace_function
 from scout_apm.tracked_request import TrackedRequest
+
+# Logging
+logger = logging.getLogger(__name__)
 
 
 def patch_function_list(functions, action_type, format_string):
@@ -127,11 +131,11 @@ def intercept_resolver_and_view():
                         return original(*args, **kwargs)
                     finally:
                         TrackedRequest.instance().stop_span()
-                        print(span.dump())
+                        logger.info(span.dump())
 
                 return CallableProxy(func, tracing_function)
             except Exception as err:
-                print(err)
+                logger.info(err)
                 # If we can't wrap for any reason, just return the original
                 return func
 
@@ -143,4 +147,4 @@ class ViewInstrument:
     def install():
         intercept_middleware()
         intercept_resolver_and_view()
-        print('Monkey patched View')
+        logger.info('Monkey patched View')

@@ -1,3 +1,4 @@
+import logging
 from os import getpid
 from threading import Thread
 import json
@@ -8,6 +9,9 @@ from .cpu import Cpu
 from .memory import Memory
 from scout_apm.context import agent_context
 
+# Logging
+logger = logging.getLogger(__name__)
+
 
 class Samplers():
     def install():
@@ -15,7 +19,7 @@ class Samplers():
 
     @staticmethod
     def samplers():
-        print('Starting Samplers')
+        logger.info('Starting Samplers')
 
         socket = agent_context.socket
         instances = [Cpu(), Memory()]
@@ -37,6 +41,3 @@ class Samplers():
                         }
                     }))
             sleep(10)
-
-
-

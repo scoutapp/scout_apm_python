@@ -1,4 +1,7 @@
+import logging
 import yaml
+
+logger = logging.getLogger(__name__)
 
 
 class YamlFile():
@@ -7,7 +10,7 @@ class YamlFile():
 
     def parse(self):
         self.data = self.yaml_data()
-        print('Read config:', self.data)
+        logger.info('Read config:', self.data)
         return self.data
 
     def file_data(self):

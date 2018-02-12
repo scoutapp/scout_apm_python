@@ -2,6 +2,7 @@
 Represents a single whole request.
 """
 
+import logging
 from uuid import uuid4
 from datetime import datetime
 import threading
@@ -14,6 +15,9 @@ from .commands import (
         TagSpan,
         TagRequest)
 from scout_apm.context import agent_context
+
+# Logging
+logger = logging.getLogger(__name__)
 
 
 class ThreadLocalSingleton(object):
@@ -39,7 +43,7 @@ class TrackedRequest(ThreadLocalSingleton):
         self.spans = []
         self.socket = agent_context.socket
         self.socket.open()
-        print('Starting request:', self.req_id)
+        logger.info('Starting request:', self.req_id)
         self.send_start_request()
 
     def send_start_request(self):
@@ -81,7 +85,7 @@ class TrackedRequest(ThreadLocalSingleton):
 
     # Request is done, release any info we have about it.
     def finish(self):
-        print('Stopping request:', self.req_id)
+        logger.info('Stopping request:', self.req_id)
         self.send_finish_request()
         self.socket.close()
         self.release()
@@ -125,7 +129,7 @@ class Span:
 
     def dump(self):
         if self.end_time is None:
-            print(self.operation)
+            logger.info(self.operation)
         return 'request=%s operation=%s id=%s parent=%s start_time=%s end_time=%s' % (
                 self.request_id,
                 self.operation,

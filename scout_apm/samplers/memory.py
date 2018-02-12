@@ -1,5 +1,9 @@
+import logging
 import platform
 import resource
+
+# Logging
+logger = logging.getLogger(__name__)
 
 
 class Memory(object):
@@ -37,6 +41,6 @@ class Memory(object):
 
     def run(self):
         res = self.__class__.rss_in_mb()
-        print("{human_name}: #{res}".format(human_name=self.human_name(),
+        logger.info("{human_name}: #{res}".format(human_name=self.human_name(),
                                             res=res))
         res
