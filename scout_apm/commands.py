@@ -1,5 +1,6 @@
 # Python Modules
 import json
+import datetime
 import logging
 
 logger = logging.getLogger(__name__)
@@ -7,6 +8,7 @@ logger = logging.getLogger(__name__)
 
 class StartSpan:
     def __init__(self, request_id, span_id, parent, operation):
+        self.timestamp = datetime.datetime.utcnow()
         self.request_id = request_id
         self.span_id = span_id
         self.parent = parent
@@ -14,6 +16,7 @@ class StartSpan:
 
     def message(self):
         return {'StartSpan': {
+            'moment': self.timestamp.isoformat() + 'Z',
             'request_id': self.request_id,
             'span_id': self.span_id,
             'parent_id': self.parent,
@@ -23,11 +26,13 @@ class StartSpan:
 
 class StopSpan:
     def __init__(self, request_id, span_id):
+        self.timestamp = datetime.datetime.utcnow()
         self.request_id = request_id
         self.span_id = span_id
 
     def message(self):
         return {'StopSpan': {
+            'moment': self.timestamp.isoformat() + 'Z',
             'request_id': self.request_id,
             'span_id': self.span_id,
         }}
@@ -35,26 +40,31 @@ class StopSpan:
 
 class StartRequest:
     def __init__(self, request_id):
+        self.timestamp = datetime.datetime.utcnow()
         self.request_id = request_id
 
     def message(self):
         return {'StartRequest': {
+            'moment': self.timestamp.isoformat() + 'Z',
             'request_id': self.request_id,
         }}
 
 
 class FinishRequest:
     def __init__(self, request_id):
+        self.timestamp = datetime.datetime.utcnow()
         self.request_id = request_id
 
     def message(self):
         return {'FinishRequest': {
+            'moment': self.timestamp.isoformat() + 'Z',
             'request_id': self.request_id,
         }}
 
 
 class TagSpan:
     def __init__(self, request_id, span_id, tag, value):
+        self.timestamp = datetime.datetime.utcnow()
         self.request_id = request_id
         self.span_id = span_id
         self.tag = tag
@@ -62,6 +72,7 @@ class TagSpan:
 
     def message(self):
         return {'TagSpan': {
+            'moment': self.timestamp.isoformat() + 'Z',
             'request_id': self.request_id,
             'span_id': self.span_id,
             'tag': self.tag,
@@ -71,12 +82,14 @@ class TagSpan:
 
 class TagRequest:
     def __init__(self, request_id, tag, value):
+        self.timestamp = datetime.datetime.utcnow()
         self.request_id = request_id
         self.tag = tag
         self.value = value
 
     def message(self):
         return {'TagRequest': {
+            'moment': self.timestamp.isoformat() + 'Z',
             'request_id': self.request_id,
             'tag': self.tag,
             'value': self.value,
