@@ -55,6 +55,7 @@ class ScoutConfig():
             'log_level',
             'name',
             'key',
+            'manual_daemon',
         ]
 
 
