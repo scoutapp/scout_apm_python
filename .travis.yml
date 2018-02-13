@@ -1,28 +1,28 @@
 language: python
-python:
-  # - "2.7"
-  # - "3.4"
-  # - "3.5"
-  - "3.6"
-  # - "pypy"
-  # - "pypy3"
 
-env:
-  # Repeat this line to test against different versions
-  # - DJANGO_VERSION=1.11.10
-  # - DJANGO_VERSION=2.0.2
+cache: pip
 
-# matrix:
-  # exclude:
-    # - python: "2.7"
-      # env: DJANGO_VERSION=2.0.2
-    # - python: "pypy"
-      # env: DJANGO_VERSION=2.0.2
-
-# before_install:
-    # - "export PYTHONPATH=$PYTHONPATH:$(pwd)"
+before_install:
+  - python --version
+  - uname -a
+  - lsb_release -a
 
 install:
   - pip install tox
+  - virtualenv --version
+  - easy_install --version
+  - pip --version
+  - tox --version
 
-script: tox
+script:
+  - tox -v
+
+after_failure:
+  - more .tox/log/* | cat
+  - more .tox/*/log/* | cat
+
+notifications:
+  email:
+    on_success: never
+    on_failure: always
+
