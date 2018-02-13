@@ -11,3 +11,4 @@ __pycache__/
 src/*.egg-info/
 /.pytest_cache
 .tox/
+.coverage
