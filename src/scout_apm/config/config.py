@@ -1,5 +1,6 @@
 import logging
 import os
+
 from .yaml_file import YamlFile
 
 logger = logging.getLogger(__name__)
@@ -38,13 +39,16 @@ class ScoutConfig():
 
     def locate_layer_for_key(self, key):
         for layer in self.layers:
-            if layer.has_key(key):
+            if layer.has_config(key):
                 return layer
 
     def log(self):
         for key in self.known_keys():
             layer = self.locate_layer_for_key(key)
-            logger.info('{:9}: {} = {}'.format(layer.name(), key, layer.value(key)))
+            logger.info('{:9}: {} = {}'.format(
+                layer.name(),
+                key,
+                layer.value(key)))
         logger.info('')
 
     def known_keys(self):
@@ -71,7 +75,7 @@ class ScoutConfigEnv():
     def name(self):
         return 'ENV'
 
-    def has_key(self, key):
+    def has_config(self, key):
         env_key = self.modify_key(key)
         return env_key in os.environ
 
@@ -95,7 +99,7 @@ class ScoutConfigFile():
     def __init__(self, config_file='scout_apm.yml'):
         self.data = YamlFile(config_file).parse()
 
-    def has_key(self, key):
+    def has_config(self, key):
         return key in self.data
 
     def value(self, key):
@@ -120,7 +124,7 @@ class ScoutConfigDefaults():
                 'socket_path': '/tmp/scout_core_agent',
         }
 
-    def has_key(self, key):
+    def has_config(self, key):
         return key in self.defaults
 
     def value(self, key):
@@ -138,7 +142,7 @@ class ScoutConfigNull():
     def name(self):
         return 'Null'
 
-    def has_key(self, key):
+    def has_config(self, key):
         return True
 
     def value(self, key):

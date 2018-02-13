@@ -1,23 +1,26 @@
 # Python Built-Ins
 from __future__ import absolute_import
+
 import logging
-import re
+
+# APM Modules
+from scout_apm.monkey import CallableProxy, monkeypatch_method
+from scout_apm.stacktracer import trace_function
+from scout_apm.tracked_request import TrackedRequest
 
 # Django
 from django.core.handlers.base import BaseHandler
 from django.core.handlers.wsgi import WSGIHandler
 from django.urls import resolvers
 
-try:
-    # Django 1.x
-    from django.core import urlresolvers
-except ImportError:
-    pass
+# TODO: Figure out if we need this?
+#
+# try:
+#     # Django 1.x
+#     from django.core import urlresolvers
+# except ImportError:
+#     pass
 
-# APM Modules
-from scout_apm.monkey import monkeypatch_method, CallableProxy
-from scout_apm.stacktracer import trace_function
-from scout_apm.tracked_request import TrackedRequest
 
 # Logging
 logger = logging.getLogger(__name__)
@@ -29,7 +32,7 @@ def patch_function_list(functions, action_type, format_string):
             middleware_name = func.im_class.__name__
         else:
             middleware_name = func.__name__
-        info = (action_type, {"name": middleware_name})
+        info = (action_type, {'name': middleware_name})
         functions[i] = trace_function(func, info)
 
 
@@ -41,9 +44,12 @@ def wrap_middleware_with_tracers(request_handler):
     patch_function_list(request_handler._response_middleware, 'Middleware/Response', 'Middleware: %s (response)')
     patch_function_list(request_handler._exception_middleware, 'Middleware/Exception', 'Middleware: %s (exeption)')
 
+
 # The linter thinks the methods we monkeypatch are not used
 # pylint: disable=W0612
 middleware_patched = False
+
+
 def intercept_middleware():
     @monkeypatch_method(WSGIHandler)
     def __call__(original, self, *args, **kwargs):
@@ -69,18 +75,22 @@ def intercept_middleware():
 
 
 def intercept_resolver_and_view():
-    # The only way we can really wrap the view method is by replacing the implementation
-    # of RegexURLResolver.resolve. It would be nice if django had more configurability here, but it does not.
-    # However, we only want to replace it when invoked directly from the request handling stack, so we
-    # inspect the callstack in __new__ and return either a normal object, or an instance of our proxying
-    # class.
-    # XXX: Check against other djangos - `urlresolvers` from django.core vs the `urls.resolvers`
+    # The only way we can really wrap the view method is by replacing the
+    # implementation of RegexURLResolver.resolve. It would be nice if django
+    # had more configurability here, but it does not.  However, we only want to
+    # replace it when invoked directly from the request handling stack, so we
+    # inspect the callstack in __new__ and return either a normal object, or an
+    # instance of our proxying class.
+    # XXX: Check against other djangos - `urlresolvers` from django.core vs the
+    #     `urls.resolvers`
     real_resolver_cls = resolvers.RegexURLResolver
 
     class ProxyRegexURLResolverMetaClass(resolvers.RegexURLResolver.__class__):
         def __instancecheck__(self, instance):
-            # Some places in django do a type check against RegexURLResolver and behave differently based on the result, so we have to
-            # make sure the replacement class we plug in accepts instances of both the default and replaced types.
+            # Some places in django do a type check against RegexURLResolver
+            # and behave differently based on the result, so we have to make
+            # sure the replacement class we plug in accepts instances of both
+            # the default and replaced types.
             return isinstance(instance, real_resolver_cls) or super(ProxyRegexURLResolverMetaClass, self).__instancecheck__(instance)
 
     class ProxyRegexURLResolver(object):
@@ -91,7 +101,8 @@ def intercept_resolver_and_view():
             obj = super(ProxyRegexURLResolver, cls).__new__(cls)
             obj.other = real_object
             return obj
-            # XXX: this return is behind an if statement in speedbar, sometimes doesn't instrument. unsure why
+            # XXX: this return is behind an if statement in speedbar, sometimes
+            # doesn't instrument. unsure why
 
         def __getattr__(self, attr):
             return getattr(self.other, attr)
@@ -121,9 +132,9 @@ def intercept_resolver_and_view():
                     request = args[0]
 
                     # Extract headers
-                    regex = re.compile('^HTTP_')
-                    headers = dict((regex.sub('', header), value) for (header, value)
-                                   in request.META.items() if header.startswith('HTTP_'))
+                    #  regex = re.compile('^HTTP_')
+                    #  headers = dict((regex.sub('', header), value) for (header, value)
+                    #  in request.META.items() if header.startswith('HTTP_'))
 
                     span.tag('remote_addr', request.META['REMOTE_ADDR'])
 

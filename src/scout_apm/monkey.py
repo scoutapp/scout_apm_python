@@ -2,7 +2,6 @@
 
 # Originally taken from https://pypi.python.org/pypi/ProxyTypes
 # inlined due to python3 issues with setup.py, we should gut this out and simplify it
-import pdb
 
 
 class AbstractProxy(object):
@@ -55,19 +54,19 @@ class AbstractProxy(object):
         return ob in self.__subject__
 
     for name in 'repr str hash len abs complex int long float iter oct hex'.split():
-        exec("def __%s__(self): return %s(self.__subject__)" % (name, name))
+        exec('def __%s__(self): return %s(self.__subject__)' % (name, name))
 
     for name in 'cmp', 'coerce', 'divmod':
-        exec("def __%s__(self,ob): return %s(self.__subject__,ob)" % (name, name))
+        exec('def __%s__(self,ob): return %s(self.__subject__,ob)' % (name, name))
 
     for name, op in [
         ('lt', '<'), ('gt', '>'), ('le', '<='), ('ge', '>='),
         ('eq', '=='), ('ne', '!=')
     ]:
-        exec("def __%s__(self,ob): return self.__subject__ %s ob" % (name, op))
+        exec('def __%s__(self,ob): return self.__subject__ %s ob' % (name, op))
 
     for name, op in [('neg', '-'), ('pos', '+'), ('invert', '~')]:
-        exec("def __%s__(self): return %s self.__subject__" % (name, op))
+        exec('def __%s__(self): return %s self.__subject__' % (name, op))
 
     for name, op in [
         ('or', '|'),  ('and', '&'), ('xor', '^'), ('lshift', '<<'),
@@ -75,15 +74,15 @@ class AbstractProxy(object):
         ('div', '/'), ('mod', '%'), ('truediv', '/'), ('floordiv', '//')
     ]:
         exec((
-            "def __%(name)s__(self,ob):\n"
-            "    return self.__subject__ %(op)s ob\n"
-            "\n"
-            "def __r%(name)s__(self,ob):\n"
-            "    return ob %(op)s self.__subject__\n"
-            "\n"
-            "def __i%(name)s__(self,ob):\n"
-            "    self.__subject__ %(op)s=ob\n"
-            "    return self\n"
+            'def __%(name)s__(self,ob):\n'
+            '    return self.__subject__ %(op)s ob\n'
+            '\n'
+            'def __r%(name)s__(self,ob):\n'
+            '    return ob %(op)s self.__subject__\n'
+            '\n'
+            'def __i%(name)s__(self,ob):\n'
+            '    self.__subject__ %(op)s=ob\n'
+            '    return self\n'
         ) % locals())
 
     del name, op
@@ -94,7 +93,7 @@ class AbstractProxy(object):
         return divmod(ob, self.__subject__)
 
     def __pow__(self, *args):
-        return pow(self.__subject__,*args)
+        return pow(self.__subject__, *args)
 
     def __ipow__(self, ob):
         self.__subject__ **= ob
@@ -107,7 +106,7 @@ class AbstractProxy(object):
 class ObjectProxy(AbstractProxy):
     """Proxy for a specific object"""
 
-    __slots__ = "__subject__"
+    __slots__ = '__subject__'
 
     def __init__(self, subject):
         self.__subject__ = subject
@@ -121,6 +120,7 @@ class CallbackProxy(AbstractProxy):
     def __init__(self, func):
         set_callback(self, func)
 
+
 set_callback = CallbackProxy.__callback__.__set__
 get_callback = CallbackProxy.__callback__.__get__
 CallbackProxy.__subject__ = property(lambda self, gc=get_callback: gc(self)())
@@ -128,7 +128,8 @@ CallbackProxy.__subject__ = property(lambda self, gc=get_callback: gc(self)())
 
 class LazyProxy(CallbackProxy):
     """Proxy for a lazily-obtained object, that is cached on first use"""
-    __slots__ = "__cache__"
+    __slots__ = '__cache__'
+
 
 get_cache = LazyProxy.__cache__.__get__
 set_cache = LazyProxy.__cache__.__set__
@@ -140,6 +141,7 @@ def __subject__(self, get_cache=get_cache, set_cache=set_cache):
     except AttributeError:
         set_cache(self, get_callback(self)())
         return get_cache(self)
+
 
 LazyProxy.__subject__ = property(__subject__, set_cache)
 del __subject__
@@ -179,9 +181,17 @@ class AbstractWrapper(AbstractProxy):
             delattr(self.__subject__, attr)
 
 
-class ObjectWrapper(ObjectProxy, AbstractWrapper):      __slots__ = ()
-class CallbackWrapper(CallbackProxy, AbstractWrapper):  __slots__ = ()
-class LazyWrapper(LazyProxy, AbstractWrapper):          __slots__ = ()
+class ObjectWrapper(ObjectProxy, AbstractWrapper):
+    __slots__ = ()
+
+
+class CallbackWrapper(CallbackProxy, AbstractWrapper):
+    __slots__ = ()
+
+
+class LazyWrapper(LazyProxy, AbstractWrapper):
+    __slots__ = ()
+
 
 #######################
 #  MONKEYS DOWN HERE  #

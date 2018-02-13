@@ -1,6 +1,5 @@
-from datetime import datetime
-from datetime import timedelta
 import logging
+from datetime import datetime, timedelta
 from textwrap import dedent
 
 import psutil

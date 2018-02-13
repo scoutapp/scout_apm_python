@@ -1,11 +1,7 @@
-from os.path import basename
-from os.path import splitext
 from glob import glob
+from os.path import basename, splitext
 
-from setuptools import find_packages
-from setuptools import setup
-
-
+from setuptools import find_packages, setup
 
 setup(name='scout_apm',
       version='1.0.0a3',
