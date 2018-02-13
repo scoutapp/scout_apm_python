@@ -79,6 +79,11 @@ logger = logging.getLogger(__name__)
 
 class CoreAgentManager:
     def launch(self):
+        # Short circuit if the user wants to manage things themselves
+        if agent_context.config.value('manual_daemon'):
+            self.check_manual_daemon()
+            return
+
         # Kill any running core agent
         probe = CoreAgentProbe()
         if probe.is_running():
@@ -107,8 +112,15 @@ class CoreAgentManager:
                     '--socket', self.socket_path()
                 ])
 
+    def check_manual_daemon(self):
+        probe = CoreAgentProbe()
+        if probe.version() is not None:
+            logger.info('Using already-running CoreAgent, running version: {}'.format(version))
+        else:
+            logger.info('CoreAgent not found, not launching due to `manual_daemon` setting')
+
+
     def socket_path(self):
-        logger.info('Socket path', agent_context.config.value('socket_path'))
         return agent_context.config.value('socket_path')
 
     def log_level(self):
@@ -121,7 +133,7 @@ class CoreAgentManager:
         return agent_context.config.value('key')
 
     def atexit(self, directory):
-        logger.info('Atexit shutting down agent')
+        logger.info('At Exit shutting down agent')
         CoreAgentProbe().shutdown()
         logger.info('Atexit deleting directory:', directory)
         shutil.rmtree(directory)
