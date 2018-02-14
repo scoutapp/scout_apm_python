@@ -1,11 +1,11 @@
 language: python
 python:
-  # - "2.7"
-  # - "3.4"
-  # - "3.5"
+  - "2.7"
+  - "3.4"
+  - "3.5"
   - "3.6"
-  # - "pypy"
-  # - "pypy3"
+  - "pypy"
+  - "pypy3"
 
 cache: pip
 
@@ -16,6 +16,7 @@ before_install:
 
 install:
   - pip install tox
+  - pip install tox-travis
   - virtualenv --version
   - easy_install --version
   - pip --version
