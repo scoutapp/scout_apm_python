@@ -24,13 +24,13 @@ class Memory(object):
         return Memory.rss_to_mb(Memory.rss())
 
     def metric_type(self):
-        return "Memory"
+        return 'Memory'
 
     def metric_name(self):
-        return "Physical"
+        return 'Physical'
 
     def human_name(self):
-        return "Process Memory"
+        return 'Process Memory'
 
     def metrics(self):
         """
@@ -41,6 +41,7 @@ class Memory(object):
 
     def run(self):
         res = self.__class__.rss_in_mb()
-        logger.info("{human_name}: #{res}".format(human_name=self.human_name(),
-                                            res=res))
+        logger.info('{human_name}: #{res}'.format(
+            human_name=self.human_name(),
+            res=res))
         res

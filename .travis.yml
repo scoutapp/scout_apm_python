@@ -5,7 +5,14 @@ python:
   - "3.5"
   - "3.6"
   - "pypy"
-  - "pypy3"
+  # - "pypy3"
+
+cache: pip
+
+before_install:
+  - python --version
+  - uname -a
+  - lsb_release -a
 
 env:
   # Repeat this line to test against different versions
@@ -23,7 +30,29 @@ before_install:
     - "export PYTHONPATH=$PYTHONPATH:$(pwd)"
 
 install:
+<<<<<<< HEAD
   - pip install -e .
   - pip install Django==$DJANGO_VERSION
 
 script: pytest
+=======
+  - pip install tox
+  - pip install tox-travis
+  - virtualenv --version
+  - easy_install --version
+  - pip --version
+  - tox --version
+
+script:
+  - tox -v
+
+after_failure:
+  - more .tox/log/* | cat
+  - more .tox/*/log/* | cat
+
+notifications:
+  email:
+    on_success: never
+    on_failure: always
+
+>>>>>>> travis-setup

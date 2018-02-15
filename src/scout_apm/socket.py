@@ -1,8 +1,8 @@
+import json
 import logging
 import socket
-import time
-import json
 import struct
+import time
 
 # Make this a thread local - so each thread has its own socket. Can't be global
 # though w/o otherwise locking it.

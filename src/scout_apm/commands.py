@@ -1,6 +1,6 @@
 # Python Modules
-import json
 import datetime
+import json
 import logging
 
 logger = logging.getLogger(__name__)
@@ -119,4 +119,3 @@ class BatchedCommand:
     def message(self):
         messages = map(lambda cmd: cmd.message(), self.commands)
         return {'BatchedCommand': messages}
-

@@ -1,7 +1,9 @@
 from __future__ import absolute_import
 import logging
 
-from scout_apm.monkey import monkeypatch_method, CallableProxy
+import logging
+
+from scout_apm.monkey import CallableProxy, monkeypatch_method
 from scout_apm.tracked_request import TrackedRequest
 
 # Logging
@@ -64,4 +66,3 @@ def trace_function(func, info):
     except Exception:
         # If we can't wrap for any reason, just return the original
         return func
-

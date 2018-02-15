@@ -53,25 +53,24 @@
 #           x launch - how?
 
 # Python Built-Ins
+import atexit
 import hashlib
+import json
 import logging
 import platform
-import tarfile
-import subprocess
-import tempfile
-import json
-import atexit
 import shutil
-
+import subprocess
+import tarfile
+import tempfile
 
 # 3rd Party
 import requests
 
-
 # APM Modules
+from scout_apm.commands import (CoreAgentShutdown, CoreAgentVersion,
+                                CoreAgentVersionResponse)
 from scout_apm.context import agent_context
 from scout_apm.socket import CoreAgentSocket
-from scout_apm.commands import CoreAgentVersion, CoreAgentVersionResponse, CoreAgentShutdown
 
 # Logging
 logger = logging.getLogger(__name__)
@@ -114,12 +113,20 @@ class CoreAgentManager:
 
     def check_manual_daemon(self):
         probe = CoreAgentProbe()
+<<<<<<< HEAD:scout_apm/core_agent_manager.py
         if probe.version() is not None:
+=======
+        version = probe.version()
+        if version is not None:
+>>>>>>> travis-setup:src/scout_apm/core_agent_manager.py
             logger.info('Using already-running CoreAgent, running version: {}'.format(version))
         else:
             logger.info('CoreAgent not found, not launching due to `manual_daemon` setting')
 
+<<<<<<< HEAD:scout_apm/core_agent_manager.py
 
+=======
+>>>>>>> travis-setup:src/scout_apm/core_agent_manager.py
     def socket_path(self):
         return agent_context.config.value('socket_path')
 
@@ -242,7 +249,11 @@ class CoreAgentProbe():
             socket = self.build_socket()
             socket.send(CoreAgentShutdown())
             logger.info('Shut down existing CoreAgent')
+<<<<<<< HEAD:scout_apm/core_agent_manager.py
         except:
+=======
+        except Exception:
+>>>>>>> travis-setup:src/scout_apm/core_agent_manager.py
             logger.info('Attempted, but failed to shutdown core agent. Maybe it\'s already stopped?')
 
     def build_socket(self):

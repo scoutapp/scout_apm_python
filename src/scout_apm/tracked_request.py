@@ -3,18 +3,14 @@ Represents a single whole request.
 """
 
 import logging
-from uuid import uuid4
-from datetime import datetime
 import threading
+from datetime import datetime
+from uuid import uuid4
 
-from .commands import (
-        StartSpan,
-        StopSpan,
-        StartRequest,
-        FinishRequest,
-        TagSpan,
-        TagRequest)
 from scout_apm.context import agent_context
+
+from .commands import (FinishRequest, StartRequest, StartSpan, StopSpan,
+                       TagRequest, TagSpan)
 
 # Logging
 logger = logging.getLogger(__name__)

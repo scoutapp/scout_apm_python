@@ -1,15 +1,13 @@
 from __future__ import absolute_import
 import logging
 
-from django.template import defaulttags
+from scout_apm.stacktracer import trace_function, trace_method
+
 # XXX:Changed in Django 1.9
 # https://github.com/jazzband/django-debug-toolbar/issues/739
 #  from django.template.base import Library, Template
-from django.template import Library, Template
-from django.template.response import TemplateResponse
+from django.template import Library, Template, defaulttags
 from django.template.loader_tags import BlockNode
-
-from scout_apm.stacktracer import trace_method, trace_function
 
 logger = logging.getLogger(__name__)
 
@@ -75,21 +73,21 @@ class TemplateInstrument:
         @trace_method(Template)
         def __init__(self, *args, **kwargs):
             name = args[2] if len(args) >= 3 else '<Unknown Template>'
-            return ('Template/Compile', {"name": name})
+            return ('Template/Compile', {'name': name})
 
         @trace_method(Template)
         def render(self, *args, **kwargs):
             name = self.name if self.name is not None else '<Unknown Template>'
-            return ('Template/Render', {"name": name})
+            return ('Template/Render', {'name': name})
 
         @trace_method(BlockNode)
         def render(self, *args, **kwargs):
-            return ('Block/Render', {"name": self.name})
+            return ('Block/Render', {'name': self.name})
 
-        logger.info("Monkey patched Templates")
+        logger.info('Monkey patched Templates')
 
         # XXX: Figure this out, causes exception that the "resolve_context" key isn't in dict
         # Also will need to figure out the name hash
         #  @trace_method(TemplateResponse)
         #  def resolve_context(self, *args, **kwargs):
-            #  return ('Template/Context', {})
+        #  return ('Template/Context', {})

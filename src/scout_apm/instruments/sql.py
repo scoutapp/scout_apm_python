@@ -1,6 +1,11 @@
 from __future__ import absolute_import
 import logging
 
+import logging
+
+from scout_apm.monkey import monkeypatch_method
+from scout_apm.tracked_request import TrackedRequest
+
 try:
     from django.db.backends.base.base import BaseDatabaseWrapper
 except ImportError:
@@ -13,8 +18,7 @@ except ImportError:
     # Backwards compatibility for Django <1.9
     from django.db.backends.util import CursorWrapper
 
-from scout_apm.monkey import monkeypatch_method
-from scout_apm.tracked_request import TrackedRequest
+logger = logging.getLogger(__name__)
 
 logger = logging.getLogger(__name__)
 

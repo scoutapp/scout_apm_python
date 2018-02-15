@@ -1,7 +1,8 @@
 import logging
 
-from django.core.signals import request_started, request_finished
 from scout_apm.tracked_request import TrackedRequest
+
+from django.core.signals import request_finished, request_started
 
 logger = logging.getLogger(__name__)
 
@@ -25,4 +26,3 @@ class DjangoSignals:
 
     def stop_tracked_request(sender, **kwargs):
         TrackedRequest.instance().stop_span()
-
