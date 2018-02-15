@@ -39,7 +39,7 @@ class TrackedRequest(ThreadLocalSingleton):
         self.spans = []
         self.socket = agent_context.socket
         self.socket.open()
-        logger.info('Starting request:', self.req_id)
+        logger.info('Starting request: %s', self.req_id)
         self.send_start_request()
 
     def send_start_request(self):
@@ -81,7 +81,7 @@ class TrackedRequest(ThreadLocalSingleton):
 
     # Request is done, release any info we have about it.
     def finish(self):
-        logger.info('Stopping request:', self.req_id)
+        logger.info('Stopping request: %s', self.req_id)
         self.send_finish_request()
         self.socket.close()
         self.release()

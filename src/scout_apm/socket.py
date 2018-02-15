@@ -16,7 +16,7 @@ class CoreAgentSocket:
         self.socket_path = socket_path
 
     def open(self):
-        logger.info('CoreAgentSocket connecting to', self.socket_path)
+        logger.info('CoreAgentSocket connecting to %s', self.socket_path)
         try:
             self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             self.socket.connect(self.socket_path)
@@ -59,7 +59,7 @@ class RetryingCoreAgentSocket:
         try:
             self.socket.send(body)
         except ConnectionRefusedError as err:
-            logger.info('ConnectionRefusedError,', err)
+            logger.info('ConnectionRefusedError %s', err)
             self.open()
             self.send(self, body)
         except OSError as err:
@@ -70,7 +70,7 @@ class RetryingCoreAgentSocket:
         delay = 1
         while True:
             if self.socket.open() is None:
-                logger.info('RetryingCoreAgentSocket, sleeping for', delay)
+                logger.info('RetryingCoreAgentSocket, sleeping for %d', delay)
                 time.sleep(delay)
                 delay += 1
             else:

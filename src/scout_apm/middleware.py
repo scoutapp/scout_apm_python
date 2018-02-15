@@ -27,8 +27,8 @@ class LogTimesMiddleware(object):
         return response
 
     def process_view(self, request, view_func, view_args, view_kwargs):
-        logger.info('Process View Callback - Running: ', view_func.__code__.co_filename, ' function: ', view_func.__code__.co_name)
-
+        logger.info('Process View Callback - Running: %s function %s',
+                    view_func.__code__.co_filename, view_func.__code__.co_name)
         return None
 
     # (only if the view raised an exception)
@@ -38,5 +38,5 @@ class LogTimesMiddleware(object):
 
     # (only for template responses)
     def process_template_response(self, request, response):
-        logger.info('Going to render a template: ', response.template_name)
+        logger.info('Going to render a template: %s', response.template_name)
         return response
