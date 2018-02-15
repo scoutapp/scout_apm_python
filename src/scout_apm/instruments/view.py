@@ -1,7 +1,6 @@
 # Python Built-Ins
 from __future__ import absolute_import
 import logging
-import re
 
 # APM Modules
 from scout_apm.monkey import CallableProxy, monkeypatch_method
