@@ -30,12 +30,7 @@ before_install:
     - "export PYTHONPATH=$PYTHONPATH:$(pwd)"
 
 install:
-<<<<<<< HEAD
-  - pip install -e .
   - pip install Django==$DJANGO_VERSION
-
-script: pytest
-=======
   - pip install tox
   - pip install tox-travis
   - virtualenv --version
@@ -54,5 +49,3 @@ notifications:
   email:
     on_success: never
     on_failure: always
-
->>>>>>> travis-setup
