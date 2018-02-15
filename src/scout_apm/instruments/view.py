@@ -134,8 +134,13 @@ def intercept_resolver_and_view():
 
                     span.tag('remote_addr', request.META['REMOTE_ADDR'])
 
+                    logger.info('Before calling original view')
                     try:
                         return original(*args, **kwargs)
+                    except Exception as e:
+                        logger.info('***** Got the exception')
+                        TrackedRequest.instance().tag('error', 'true')
+                        raise e
                     finally:
                         TrackedRequest.instance().stop_span()
                         logger.info(span.dump())

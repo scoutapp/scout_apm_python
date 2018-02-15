@@ -49,7 +49,7 @@ class TrackedRequest(ThreadLocalSingleton):
         self.socket.send(FinishRequest(self.req_id))
 
     def tag(self, key, value):
-        self.socket.send(TagRequest(self.request_id, key, value))
+        self.socket.send(TagRequest(self.req_id, key, value))
 
     def start_span(self, operation=None):
         maybe_parent = self.current_span()

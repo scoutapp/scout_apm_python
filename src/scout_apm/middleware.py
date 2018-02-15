@@ -3,6 +3,8 @@
 import logging
 from datetime import datetime
 
+from scout_apm.tracked_request import TrackedRequest
+
 # Logging
 logger = logging.getLogger(__name__)
 
@@ -15,14 +17,18 @@ class LogTimesMiddleware(object):
     def __call__(self, request):
         t1 = datetime.now()
 
-        response = self.get_response(request)
+        try:
+            response = self.get_response(request)
+        except RuntimeError:
+            logger.info('Caught an exception in middleware')
 
-        t2 = datetime.now()
-        seconds_elapsed = (t2 - t1).total_seconds()
 
-        logger.info('Called at: ', request.get_raw_uri())
-        logger.info('Seconds for call was: ', seconds_elapsed)
-        logger.info('Headers returned were: ', response._headers)
+        #  t2 = datetime.now()
+        #  seconds_elapsed = (t2 - t1).total_seconds()
+
+        #  logger.info('Called at: %s', request.get_raw_uri())
+        #  logger.info('Seconds for call was: %s', seconds_elapsed)
+        #  logger.info('Headers returned were: %s', response._headers)
 
         return response
 
@@ -33,7 +39,8 @@ class LogTimesMiddleware(object):
 
     # (only if the view raised an exception)
     def process_exception(self, request, exception):
-        logger.info('Raised an exception!')
+        #  logger.info('**** Raised an exception!')
+        #  TrackedRequest.instance().tag('error', 'true')
         return None
 
     # (only for template responses)
