@@ -10,16 +10,13 @@ from scout_apm.tracked_request import TrackedRequest
 # Django
 from django.core.handlers.base import BaseHandler
 from django.core.handlers.wsgi import WSGIHandler
-from django.urls import resolvers
 
-# TODO: Figure out if we need this?
-#
-# try:
-#     # Django 1.x
-#     from django.core import urlresolvers
-# except ImportError:
-#     pass
-
+try:
+    # Django 1.x
+    from django.core import urlresolvers
+except ImportError:
+    # Django 2.x - https://docs.djangoproject.com/en/2.0/releases/2.0/
+    from django.urls import urlresolvers
 
 # Logging
 logger = logging.getLogger(__name__)
