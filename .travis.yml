@@ -30,7 +30,6 @@ before_install:
     - "export PYTHONPATH=$PYTHONPATH:$(pwd)"
 
 install:
-  - pip install Django==$DJANGO_VERSION
   - pip install tox
   - pip install tox-travis
   - virtualenv --version
