@@ -13,10 +13,10 @@ from django.core.handlers.wsgi import WSGIHandler
 
 try:
     # Django 1.x
-    from django.core import urlresolvers
+    from django.core import urlresolvers as resolvers
 except ImportError:
     # Django 2.x - https://docs.djangoproject.com/en/2.0/releases/2.0/
-    from django.urls import urlresolvers
+    from django.urls import resolvers
 
 # Logging
 logger = logging.getLogger(__name__)
