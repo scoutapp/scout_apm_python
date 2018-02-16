@@ -13,9 +13,6 @@ from .memory import Memory
 # Logging
 logger = logging.getLogger(__name__)
 
-# Logging
-logger = logging.getLogger(__name__)
-
 
 class Samplers():
     def install():
