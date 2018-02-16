@@ -92,7 +92,7 @@ class CoreAgentManager:
         # Obtain the CoreAgent we want
         self.downloader = CoreAgentDownloader()
         self.downloader.download()
-        logger.info('Downloaded CoreAgent version:', self.downloader.version)
+        logger.info('Downloaded CoreAgent version: %s', self.downloader.version)
         executable = self.downloader.executable
 
         atexit.register(self.atexit, self.downloader.destination)
@@ -115,7 +115,7 @@ class CoreAgentManager:
         probe = CoreAgentProbe()
         version = probe.version()
         if version is not None:
-            logger.info('Using already-running CoreAgent, running version: {}'.format(version))
+            logger.info('Using already-running CoreAgent, running version: %s', version)
         else:
             logger.info('CoreAgent not found, not launching due to `manual_daemon` setting')
 
@@ -134,7 +134,7 @@ class CoreAgentManager:
     def atexit(self, directory):
         logger.info('At Exit shutting down agent')
         CoreAgentProbe().shutdown()
-        logger.info('Atexit deleting directory:', directory)
+        logger.info('Atexit deleting directory: %s', directory)
         shutil.rmtree(directory)
 
 
