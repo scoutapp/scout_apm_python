@@ -14,7 +14,6 @@ before_install:
 
 install:
   - pip install tox
-  - pip install tox-travis
   - virtualenv --version
   - easy_install --version
   - pip --version
