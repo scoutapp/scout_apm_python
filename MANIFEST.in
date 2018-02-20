@@ -5,3 +5,4 @@ recursive-include tests *.py
 recursive-include docs *
 recursive-include ci *.py
 include tox.ini
+include Makefile
