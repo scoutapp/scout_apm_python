@@ -5,7 +5,14 @@ import logging
 import socket
 import struct
 import threading
-import queue
+
+try:
+    # Python 3.x
+    import queue
+except ImportError:
+    # Python 2.x
+    import Queue as queue
+
 import time
 
 # Make this a thread local - so each thread has its own socket. Can't be global
