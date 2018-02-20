@@ -17,7 +17,7 @@ isort:
 	sh -c "isort --skip-glob=.tox --recursive . "
 
 lint:
-	flake8 --exclude=.tox
+	tox -e check
 
 test: clean-pyc
 	tox -v --workdir /tmp/tox
