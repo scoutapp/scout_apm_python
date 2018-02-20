@@ -5,6 +5,7 @@ clean-pyc:
 	
 clean-cache:
 	find . -name '__pycache__' -exec rm -rf {} +
+	rm -rf .pytest_cache
 
 clean-build:
 	rm -rf build/

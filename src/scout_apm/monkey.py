@@ -1,5 +1,7 @@
 # pylint: skip-file
 
+from __future__ import absolute_import
+
 # Originally taken from https://pypi.python.org/pypi/ProxyTypes
 # inlined due to python3 issues with setup.py, we should gut this out and simplify it
 

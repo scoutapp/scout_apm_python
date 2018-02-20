@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 from django.apps import AppConfig
 from django.core.signals import request_finished, request_started
 
