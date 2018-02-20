@@ -83,7 +83,6 @@ class TrackedRequest(ThreadLocalSingleton):
     def finish(self):
         logger.info('Stopping request: %s', self.req_id)
         self.send_finish_request()
-        self.socket.close()
         self.release()
 
     # XXX: TrackedRequest knows too much about threads & making itself

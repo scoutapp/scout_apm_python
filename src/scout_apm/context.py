@@ -1,7 +1,7 @@
 import sys
 
 from .config.config import ScoutConfig
-from .socket import CoreAgentSocket, RetryingCoreAgentSocket
+from .socket import CoreAgentSocket, RetryingCoreAgentSocket, ThreadedSocket
 
 
 class AgentContext:
@@ -15,5 +15,5 @@ this = sys.modules[__name__]
 
 # Initialize the Context object for the rest of the system to use
 conf = ScoutConfig()
-socket = RetryingCoreAgentSocket(CoreAgentSocket(conf.value('socket_path')))
+socket = ThreadedSocket(RetryingCoreAgentSocket(CoreAgentSocket(conf.value('socket_path'))))
 this.agent_context = AgentContext(conf, socket)
