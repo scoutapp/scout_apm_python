@@ -3,8 +3,6 @@ from __future__ import absolute_import
 import logging
 import os
 
-from .yaml_file import YamlFile
-
 logger = logging.getLogger(__name__)
 
 
@@ -15,23 +13,12 @@ class ScoutConfig():
     Contains a list of configuration "layers". When a configuration key is
     looked up, each layer is asked in turn if it knows the value. The first one
     to answer affirmatively returns the value.
-
-    That means that Env overrides File overrides Default values.
     """
-    def __init__(self, config_file=None):
-        # We have to ask the ENV configuration for where the config file even
-        # *is*, so allow this to be created with or without a file
-        if config_file is None:
-            self.layers = [
-                ScoutConfigEnv(),
-                ScoutConfigDefaults(),
-                ScoutConfigNull()]
-        else:
-            self.layers = [
-                ScoutConfigEnv(),
-                ScoutConfigFile(config_file),
-                ScoutConfigDefaults(),
-                ScoutConfigNull()]
+    def __init__(self):
+        self.layers = [
+            ScoutConfigEnv(),
+            ScoutConfigDefaults(),
+            ScoutConfigNull()]
 
         logger.info('Configuration Loaded:')
         self.log()
@@ -90,24 +77,6 @@ class ScoutConfigEnv():
     def modify_key(self, key):
         env_key = ('SCOUT_' + key).upper()
         return env_key
-
-
-class ScoutConfigFile():
-    """
-    Reads configuration from a yaml file.
-    """
-
-    def name(self):
-        return 'File'
-
-    def __init__(self, config_file='scout_apm.yml'):
-        self.data = YamlFile(config_file).parse()
-
-    def has_config(self, key):
-        return key in self.data
-
-    def value(self, key):
-        return self.data[key]
 
 
 class ScoutConfigDefaults():
