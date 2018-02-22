@@ -109,11 +109,6 @@ class CoreAgentVersionResponse:
         self.version = self.loaded['CoreAgentVersion']['version']
 
 
-class CoreAgentShutdown:
-    def message(self):
-        return {'CoreAgentShutdown': {}}
-
-
 class BatchedCommand:
     def __init__(self, commands):
         self.commands = commands

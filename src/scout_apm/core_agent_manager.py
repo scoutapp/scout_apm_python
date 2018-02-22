@@ -1,22 +1,19 @@
 from __future__ import absolute_import
 
 # Python Built-Ins
-import atexit
 import hashlib
 import json
 import logging
+import os
 import platform
-import shutil
 import subprocess
 import tarfile
-import tempfile
+import time
 
 # 3rd Party
 import requests
 
 # APM Modules
-from scout_apm.commands import (CoreAgentShutdown, CoreAgentVersion,
-                                CoreAgentVersionResponse)
 from scout_apm.context import agent_context
 from scout_apm.socket import CoreAgentSocket
 
@@ -25,47 +22,50 @@ logger = logging.getLogger(__name__)
 
 
 class CoreAgentManager:
+    def __init__(self):
+        self.core_agent_bin_path = None
+        self.core_agent_bin_version = None
+        self.core_agent_dir = '{}/{}'.format(agent_context.config.value('core_agent_dir'),
+                                             self.core_agent_full_name())
+        self.downloader = CoreAgentDownloader(self.core_agent_dir,
+                                              self.core_agent_full_name())
+
     def launch(self):
-        # Short circuit if the user wants to manage things themselves
-        if agent_context.config.value('manual_daemon'):
-            self.check_manual_daemon()
+        if agent_context.config.value('core_agent_launch') is not True:
+            logger.debug("Not attempting to launch Core Agent "
+                         "due to 'core_agent_launch' setting.")
             return
 
-        # Kill any running core agent
-        probe = CoreAgentProbe()
-        if probe.is_running():
-            logger.info('Trying to shutdown an already-running CoreAgent')
-            probe.shutdown()
+        if self.verify() is not True:
+            if agent_context.config.value('core_agent_download') is True:
+                self.download()
+            else:
+                logger.debug("Not attempting to download Core Agent due "
+                             "to 'core_agent_download' setting.")
 
-        # Obtain the CoreAgent we want
-        self.downloader = CoreAgentDownloader()
+        if self.verify() is not True:
+            logger.debug("Failed to verify Core Agent. "
+                         "Not launching Core Agent.")
+            return False
+
+        return self.run()
+
+    def download(self):
         self.downloader.download()
-        logger.info('Downloaded CoreAgent version: %s', self.downloader.version)
-        executable = self.downloader.executable
 
-        atexit.register(self.atexit, self.downloader.destination)
-
-        # Launch the CoreAgent we want
-        self.run(executable)
-        logger.info('Launching')
-
-    def run(self, executable):
-        subprocess.Popen(
-                [
-                    executable, 'daemon',
-                    '--api-key', self.api_key(),
-                    '--log-level', self.log_level(),
-                    '--app-name', self.app_name(),
-                    '--socket', self.socket_path()
-                ])
-
-    def check_manual_daemon(self):
-        probe = CoreAgentProbe()
-        version = probe.version()
-        if version is not None:
-            logger.info('Using already-running CoreAgent, running version: %s', version)
-        else:
-            logger.info('CoreAgent not found, not launching due to `manual_daemon` setting')
+    def run(self):
+        try:
+            subprocess.Popen(
+                    [
+                        self.core_agent_bin_path, 'start',
+                        '--daemon',
+                        '--log-level', self.log_level(),
+                        '--socket', self.socket_path()
+                    ])
+        except Exception as e:
+            logger.error('Error running Core Agent: %s', repr(e))
+            return False
+        return True
 
     def socket_path(self):
         return agent_context.config.value('socket_path')
@@ -73,64 +73,9 @@ class CoreAgentManager:
     def log_level(self):
         return agent_context.config.value('log_level')
 
-    def app_name(self):
-        return agent_context.config.value('name')
-
-    def api_key(self):
-        return agent_context.config.value('key')
-
-    def atexit(self, directory):
-        logger.info('At Exit shutting down agent')
-        CoreAgentProbe().shutdown()
-        logger.info('Atexit deleting directory: %s', directory)
-        shutil.rmtree(directory)
-
-
-class CoreAgentDownloader():
-    def __init__(self):
-        self.destination = tempfile.mkdtemp()
-        self.package_location = self.destination + '/download.tgz'
-
-    def download(self):
-        self.download_package()
-        self.untar()
-        self.verify()
-
-    def download_package(self):
-        logger.info('Downloading: {full_url} to {filepath}'.format(
-            full_url=self.full_url(),
-            filepath=self.package_location))
-        req = requests.get(self.full_url(), stream=True)
-        with open(self.package_location, 'wb') as f:
-            for chunk in req.iter_content(1024 * 1000):
-                f.write(chunk)
-
-    def untar(self):
-        t = tarfile.open(self.package_location, 'r')
-        t.extractall(self.destination)
-
-    # Read the manifest, check the sha256 checksum, and set variables needed
-    def verify(self):
-        manifest = CoreAgentManifest(self.destination + '/manifest.txt')
-        executable = self.destination + '/' + manifest.executable
-        if SHA256.digest(executable) == manifest.sha256:
-            self.version = manifest.version
-            self.executable = executable
-            return True
-        else:
-            raise 'Failed to verify'
-
-    def full_url(self):
-        return '{root_url}/{binary_name}.tgz'.format(
-                root_url=self.root_url(),
-                binary_name=self.binary_name())
-
-    def root_url(self):
-        return agent_context.config.value('download_url')
-
-    def binary_name(self):
+    def core_agent_full_name(self):
         return 'scout_apm_core-{version}-{platform}-{arch}'.format(
-                version=self.download_version(),
+                version=self.core_agent_version(),
                 platform=self.platform(),
                 arch=self.arch())
 
@@ -152,46 +97,134 @@ class CoreAgentDownloader():
         else:
             return 'unknown'
 
-    def download_version(self):
-        return agent_context.config.value('download_version')
+    def core_agent_version(self):
+        return agent_context.config.value('core_agent_version')
+
+    def verify(self):
+        manifest = CoreAgentManifest(self.core_agent_dir + '/manifest.txt')
+        if manifest.is_valid() is not True:
+            logger.debug('Core Agent verification failed: '
+                         'CoreAgentManifest is not valid.')
+            self.core_agent_bin_path = None
+            self.core_agent_bin_version = None
+            return False
+
+        bin_path = self.core_agent_dir + '/' + manifest.bin_name
+        if SHA256.digest(bin_path) == manifest.sha256:
+            self.core_agent_bin_path = bin_path
+            self.core_agent_bin_version = manifest.bin_version
+            return True
+        else:
+            logger.debug('Core Agent verification failed: SHA mismatch.')
+            self.core_agent_bin_path = None
+            self.core_agent_bin_version = None
+            return False
+
+
+class CoreAgentDownloader():
+    def __init__(self, download_destination, core_agent_full_name):
+        self.stale_download_secs = 120
+        self.destination = download_destination
+        self.core_agent_full_name = core_agent_full_name
+        self.package_location = self.destination + '/{}.tgz'.format(self.core_agent_full_name)
+        self.download_lock_path = self.destination + '/download.lock'
+        self.download_lock_fd = None
+
+    def download(self):
+        self.create_core_agent_dir()
+        self.obtain_download_lock()
+        if self.download_lock_fd is not None:
+            try:
+                self.download_package()
+                self.untar()
+            except Exception as e:
+                logger.error('Exception raised while '
+                             'downloading Core Agent: %s', repr(e))
+            finally:
+                self.release_download_lock()
+
+    def create_core_agent_dir(self):
+        try:
+            os.makedirs(self.destination, 0o700)
+        except OSError:
+            pass
+
+    def obtain_download_lock(self):
+        self.clean_stale_download_lock()
+        try:
+            self.download_lock_fd = os.open(self.download_lock_path, os.O_RDWR | os.O_CREAT | os.O_EXCL | os.O_NONBLOCK)
+        except Exception as e:
+            logger.debug("Could not obtain download lock on %s: %s",
+                         self.download_lock_path,
+                         repr(e))
+            self.download_lock_fd = None
+
+    def clean_stale_download_lock(self):
+        try:
+            delta = time.time() - os.stat(self.download_lock_path).st_ctime
+            if delta > self.stale_download_secs:
+                logger.debug("Clearing stale download lock file.")
+                os.unlink(self.download_lock_path)
+        except Exception:
+            pass
+
+
+    def release_download_lock(self):
+        if self.download_lock_fd is not None:
+            os.unlink(self.download_lock_path)
+            os.close(self.download_lock_fd)
+
+    def download_package(self):
+        logger.info('Downloading: {full_url} to {filepath}'.format(
+            full_url=self.full_url(),
+            filepath=self.package_location))
+        req = requests.get(self.full_url(), stream=True)
+        with open(self.package_location, 'wb') as f:
+            for chunk in req.iter_content(1024 * 1000):
+                f.write(chunk)
+
+    def untar(self):
+        t = tarfile.open(self.package_location, 'r')
+        t.extractall(self.destination)
+
+    def full_url(self):
+        return '{root_url}/{core_agent_full_name}.tgz'.format(
+                root_url=self.root_url(),
+                core_agent_full_name=self.core_agent_full_name)
+
+    def root_url(self):
+        return agent_context.config.value('download_url')
 
 
 class CoreAgentManifest:
     def __init__(self, path):
-        self.raw = open(path).read()
-        self.parse()
+        self.manifest_path = path
+        self.bin_name = None
+        self.bin_version = None
+        self.sha256 = None
+        self.valid = False
+        try:
+            self.parse()
+        except Exception as e:
+            logger.debug('Error parsing Core Agent Manifest: %s', repr(e))
 
     def parse(self):
-        self.json = json.loads(self.raw)
-        self.version = self.json['version']
-        self.executable = self.json['core_binary']
-        self.sha256 = self.json['core_binary_sha256']
+        logger.debug('Parsing Core Agent'
+                     ' manifest path: %s', self.manifest_path)
+        with open(self.manifest_path) as manifest_file:
+            self.raw = manifest_file.read()
+            self.json = json.loads(self.raw)
+            self.bin_version = self.json['version']
+            self.bin_name = self.json['core_binary']
+            self.sha256 = self.json['core_binary_sha256']
+            self.valid = True
+            logger.debug("Core Agent manifest json: %s", self.json)
+
+    def is_valid(self):
+        return self.valid
 
 
 class CoreAgentProbe():
-    def is_running(self):
-        return self.version() is not None
-
-    # Returns a CoreAgentVersion or None
-    def version(self):
-        try:
-            socket = self.build_socket()
-            response = socket.send(CoreAgentVersion())
-            self.version = CoreAgentVersionResponse(response).version
-            logger.info('version:', self.version)
-            return self.version
-        except Exception:
-            logger.info('Existing CoreAgent is not running')
-            return None
-
-    def shutdown(self):
-        try:
-            socket = self.build_socket()
-            socket.send(CoreAgentShutdown())
-            logger.info('Shut down existing CoreAgent')
-        except Exception:
-            logger.info('Attempted, but failed to shutdown core agent. Maybe it\'s already stopped?')
-
     def build_socket(self):
         socket_path = agent_context.config.value('core_agent_socket')
         socket = CoreAgentSocket(socket_path)
@@ -202,8 +235,12 @@ class CoreAgentProbe():
 class SHA256:
     @staticmethod
     def digest(filename, block_size=65536):
-        sha256 = hashlib.sha256()
-        with open(filename, 'rb') as f:
-            for block in iter(lambda: f.read(block_size), b''):
-                sha256.update(block)
-        return sha256.hexdigest()
+        try:
+            sha256 = hashlib.sha256()
+            with open(filename, 'rb') as f:
+                for block in iter(lambda: f.read(block_size), b''):
+                    sha256.update(block)
+            return sha256.hexdigest()
+        except Exception as e:
+            logger.debug('Error on digest: %s', repr(e))
+            return None

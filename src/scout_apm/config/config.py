@@ -54,13 +54,16 @@ class ScoutConfig():
 
     def known_keys(self):
         return [
-            'socket_path',
+            'core_agent_dir',
+            'core_agent_download',
+            'core_agent_launch',
+            'core_agent_version',
             'download_url',
-            'download_version',
             'log_level',
             'name',
             'key',
             'manual_daemon',
+            'socket_path'
         ]
 
 
@@ -116,13 +119,19 @@ class ScoutConfigDefaults():
         return 'Defaults'
 
     def __init__(self):
+        self.core_agent_dir = '/tmp/scout_apm_core'
+        self.core_agent_version = 'latest'
         self.defaults = {
-                'download_url': 'https://downloads.scoutapp.com',
-                'download_version': 'latest',
-                'key': 'Qnk5SKpNEeboPdeJkhae',
+                'core_agent_dir': self.core_agent_dir,
+                'core_agent_download': True,
+                'core_agent_launch': True,
+                'core_agent_version': self.core_agent_version,
+                'download_url': 'https://download.scoutapp.com',
+                'key': '',
                 'log_level': 'info',
-                'name': 'CoreAgent',
-                'socket_path': '/tmp/scout_core_agent',
+                'name': '',
+                'socket_path': '{}/scout_apm_core-{}/'.format(self.core_agent_dir,
+                                                              self.core_agent_version)
         }
 
     def has_config(self, key):

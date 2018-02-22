@@ -16,6 +16,11 @@ setup(name='scout_apm',
       packages=find_packages('src'),
       package_dir={'': 'src'},
       py_modules=[splitext(basename(path))[0] for path in glob('src/*.py')],
+      entry_points={
+          'console_scripts': [
+              'core-agent-manager = scout_apm.cli.core_agent_manager:__main__'
+          ]
+      },
       install_requires=['psutil', 'PyYAML', 'requests'],
       keywords='apm performance monitoring development',
       classifiers=[
