@@ -4,5 +4,6 @@ include LICENSE
 recursive-include tests *.py
 recursive-include docs *
 recursive-include ci *.py
+recursive-include src  cli/*.py
 include tox.ini
 include Makefile

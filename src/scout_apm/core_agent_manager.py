@@ -5,7 +5,6 @@ import hashlib
 import json
 import logging
 import os
-import platform
 import subprocess
 import tarfile
 import time
@@ -26,9 +25,9 @@ class CoreAgentManager:
         self.core_agent_bin_path = None
         self.core_agent_bin_version = None
         self.core_agent_dir = '{}/{}'.format(agent_context.config.value('core_agent_dir'),
-                                             self.core_agent_full_name())
+                                             agent_context.config.core_agent_full_name())
         self.downloader = CoreAgentDownloader(self.core_agent_dir,
-                                              self.core_agent_full_name())
+                                              agent_context.config.core_agent_full_name())
 
     def launch(self):
         if agent_context.config.value('core_agent_launch') is not True:
@@ -72,33 +71,6 @@ class CoreAgentManager:
 
     def log_level(self):
         return agent_context.config.value('log_level')
-
-    def core_agent_full_name(self):
-        return 'scout_apm_core-{version}-{platform}-{arch}'.format(
-                version=self.core_agent_version(),
-                platform=self.platform(),
-                arch=self.arch())
-
-    def platform(self):
-        system_name = platform.system()
-        if system_name == 'Linux':
-            return 'linux'
-        elif system_name == 'Darwin':
-            return 'darwin'
-        else:
-            return 'unknown'
-
-    def arch(self):
-        arch = platform.machine()
-        if arch == 'i386':
-            return 'i386'
-        elif arch == 'x86_64':
-            return 'x86_64'
-        else:
-            return 'unknown'
-
-    def core_agent_version(self):
-        return agent_context.config.value('core_agent_version')
 
     def verify(self):
         manifest = CoreAgentManifest(self.core_agent_dir + '/manifest.txt')

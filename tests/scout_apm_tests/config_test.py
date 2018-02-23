@@ -1,10 +1,13 @@
 import scout_apm
 import os
+import re
 
 
 def test_defaults():
     conf = scout_apm.config.config.ScoutConfig()
-    assert('/tmp/scout_core_agent' == conf.value('socket_path'))
+    m = re.match(r'/tmp/scout_apm_core/scout_apm_core-latest-(linux|darwin|unknown)-(x86_64|i686|unknown)/core-agent\.sock',
+                 conf.value('socket_path'))
+    assert(m is not None)
 
 
 def test_env():

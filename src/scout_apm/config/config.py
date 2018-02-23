@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import logging
+import platform
 import os
 
 logger = logging.getLogger(__name__)
@@ -53,6 +54,32 @@ class ScoutConfig():
             'socket_path'
         ]
 
+    def core_agent_full_name(self):
+        return 'scout_apm_core-{version}-{platform}-{arch}'.format(
+                version=self.value('core_agent_version'),
+                platform=self.platform(),
+                arch=self.arch())
+
+    @classmethod
+    def platform(self):
+        system_name = platform.system()
+        if system_name == 'Linux':
+            return 'linux'
+        elif system_name == 'Darwin':
+            return 'darwin'
+        else:
+            return 'unknown'
+
+    @classmethod
+    def arch(self):
+        arch = platform.machine()
+        if arch == 'i686':
+            return 'i686'
+        elif arch == 'x86_64':
+            return 'x86_64'
+        else:
+            return 'unknown'
+
 
 class ScoutConfigEnv():
     """
@@ -99,8 +126,10 @@ class ScoutConfigDefaults():
                 'key': '',
                 'log_level': 'info',
                 'name': '',
-                'socket_path': '{}/scout_apm_core-{}/'.format(self.core_agent_dir,
-                                                              self.core_agent_version)
+                'socket_path': '{}/scout_apm_core-{}-{}-{}/core-agent.sock'.format(self.core_agent_dir,
+                                                              self.core_agent_version,
+                                                              ScoutConfig.platform(),
+                                                              ScoutConfig.arch())
         }
 
     def has_config(self, key):
