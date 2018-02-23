@@ -127,9 +127,9 @@ class ScoutConfigDefaults():
                 'log_level': 'info',
                 'name': '',
                 'socket_path': '{}/scout_apm_core-{}-{}-{}/core-agent.sock'.format(self.core_agent_dir,
-                                                              self.core_agent_version,
-                                                              ScoutConfig.platform(),
-                                                              ScoutConfig.arch())
+                                                                                   self.core_agent_version,
+                                                                                   ScoutConfig.platform(),
+                                                                                   ScoutConfig.arch())
         }
 
     def has_config(self, key):

@@ -25,7 +25,7 @@ if __name__ == '__main__':
 
     download_parser = subparsers.add_parser('download')
 
-    download_parser = subparsers.add_parser('launch')
+    launch_parser = subparsers.add_parser('launch')
 
     args = parser.parse_args()
 
