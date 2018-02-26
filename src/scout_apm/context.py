@@ -14,6 +14,6 @@ class AgentContext(ThreadLocalSingleton):
     def socket(self, *args, **kwargs):
         if self._socket is None:
             self._socket = ThreadedSocket(RetryingCoreAgentSocket(CoreAgentSocket(self.config.value('socket_path'))))
-            self._socket.send(Register(app=self.config.value('app'),
+            self._socket.send(Register(app=self.config.value('name'),
                                        key=self.config.value('key')))
         return self._socket
