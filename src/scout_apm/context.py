@@ -17,3 +17,7 @@ class AgentContext(ThreadLocalSingleton):
             self._socket.send(Register(app=self.config.value('name'),
                                        key=self.config.value('key')))
         return self._socket
+
+    def __del__(self):
+        if self._socket is not None:
+            self._socket.stop_thread()
