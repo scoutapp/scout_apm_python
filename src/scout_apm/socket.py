@@ -4,6 +4,7 @@ import json
 import logging
 import socket
 import struct
+import time
 import threading
 
 try:
@@ -13,17 +14,12 @@ except ImportError:
     # Python 2.x
     import Queue as queue
 
-import time
-
-# Make this a thread local - so each thread has its own socket. Can't be global
-# though w/o otherwise locking it.
-
 # Logging
 logger = logging.getLogger(__name__)
 
 
 class CoreAgentSocket:
-    def __init__(self, socket_path='/tmp/scout_core_agent'):
+    def __init__(self, socket_path):
         self.socket_path = socket_path
 
     def open(self):

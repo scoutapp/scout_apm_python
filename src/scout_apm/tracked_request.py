@@ -1,11 +1,11 @@
 from __future__ import absolute_import
 
 import logging
-import threading
 from datetime import datetime
 from uuid import uuid4
 
-from scout_apm.context import agent_context
+from scout_apm.context import AgentContext
+from scout_apm.thread_local import ThreadLocalSingleton
 
 from .commands import (FinishRequest, StartRequest, StartSpan, StopSpan,
                        TagRequest, TagSpan)
@@ -14,28 +14,17 @@ from .commands import (FinishRequest, StartRequest, StartSpan, StopSpan,
 logger = logging.getLogger(__name__)
 
 
-class ThreadLocalSingleton(object):
-    def __init__(self):
-        if not hasattr(self.__class__, '_thread_lookup'):
-            self.__class__._thread_lookup = threading.local()
-        self.__class__._thread_lookup.instance = self
-
-    def release(self):
-        if getattr(self.__class__._thread_lookup, 'instance', None) is self:
-            self.__class__._thread_lookup.instance = None
-
-
 class TrackedRequest(ThreadLocalSingleton):
     """
     This is a container which keeps track of all module instances for a single
     request. For convenience they are made available as attributes based on
     their keyname
     """
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         super(TrackedRequest, self).__init__()
         self.req_id = 'req-' + str(uuid4())
         self.spans = []
-        self.socket = agent_context.socket
+        self.socket = AgentContext.instance().socket()
         self.socket.open()
         logger.info('Starting request: %s', self.req_id)
         self.send_start_request()
@@ -82,16 +71,6 @@ class TrackedRequest(ThreadLocalSingleton):
         logger.info('Stopping request: %s', self.req_id)
         self.send_finish_request()
         self.release()
-
-    # XXX: TrackedRequest knows too much about threads & making itself
-    # Move this whole method somewhere else ( a RequestManager obj? )
-    @classmethod
-    def instance(cls):
-        if hasattr(cls, '_thread_lookup'):
-            if getattr(cls._thread_lookup, 'instance', None) is not None:
-                return getattr(cls._thread_lookup, 'instance', None)
-            return TrackedRequest()
-        return TrackedRequest()
 
 
 class Span:

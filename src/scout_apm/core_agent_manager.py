@@ -13,7 +13,7 @@ import time
 import requests
 
 # APM Modules
-from scout_apm.context import agent_context
+from scout_apm.context import AgentContext
 from scout_apm.socket import CoreAgentSocket
 
 # Logging
@@ -24,19 +24,19 @@ class CoreAgentManager:
     def __init__(self):
         self.core_agent_bin_path = None
         self.core_agent_bin_version = None
-        self.core_agent_dir = '{}/{}'.format(agent_context.config.value('core_agent_dir'),
-                                             agent_context.config.core_agent_full_name())
+        self.core_agent_dir = '{}/{}'.format(AgentContext.instance().config.value('core_agent_dir'),
+                                             AgentContext.instance().config.core_agent_full_name())
         self.downloader = CoreAgentDownloader(self.core_agent_dir,
-                                              agent_context.config.core_agent_full_name())
+                                              AgentContext.instance().config.core_agent_full_name())
 
     def launch(self):
-        if agent_context.config.value('core_agent_launch') is not True:
+        if AgentContext.instance().config.value('core_agent_launch') is not True:
             logger.debug("Not attempting to launch Core Agent "
                          "due to 'core_agent_launch' setting.")
             return
 
         if self.verify() is not True:
-            if agent_context.config.value('core_agent_download') is True:
+            if AgentContext.instance().config.value('core_agent_download') is True:
                 self.download()
             else:
                 logger.debug("Not attempting to download Core Agent due "
@@ -67,10 +67,10 @@ class CoreAgentManager:
         return True
 
     def socket_path(self):
-        return agent_context.config.value('socket_path')
+        return AgentContext.instance().config.value('socket_path')
 
     def log_level(self):
-        return agent_context.config.value('log_level')
+        return AgentContext.instance().config.value('log_level')
 
     def verify(self):
         manifest = CoreAgentManifest(self.core_agent_dir + '/manifest.txt')
@@ -165,7 +165,7 @@ class CoreAgentDownloader():
                 core_agent_full_name=self.core_agent_full_name)
 
     def root_url(self):
-        return agent_context.config.value('download_url')
+        return AgentContext.instance().config.value('download_url')
 
 
 class CoreAgentManifest:
@@ -198,7 +198,7 @@ class CoreAgentManifest:
 
 class CoreAgentProbe():
     def build_socket(self):
-        socket_path = agent_context.config.value('core_agent_socket')
+        socket_path = AgentContext.instance().config.value('core_agent_socket')
         socket = CoreAgentSocket(socket_path)
         socket.open()
         return socket

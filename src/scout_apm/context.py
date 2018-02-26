@@ -1,21 +1,16 @@
 from __future__ import absolute_import
 
-import sys
-
 from .config.config import ScoutConfig
 from .socket import CoreAgentSocket, RetryingCoreAgentSocket, ThreadedSocket
+from .thread_local import ThreadLocalSingleton
 
 
-class AgentContext:
-    def __init__(self, conf, socket):
-        self.config = conf
-        self.socket = socket
+class AgentContext(ThreadLocalSingleton):
+    def __init__(self, *args, **kwargs):
+        self.config = kwargs.get('config', ScoutConfig())
+        self._socket = None
 
-
-# this is a pointer to the module object instance itself.
-this = sys.modules[__name__]
-
-# Initialize the Context object for the rest of the system to use
-conf = ScoutConfig()
-socket = ThreadedSocket(RetryingCoreAgentSocket(CoreAgentSocket(conf.value('socket_path'))))
-this.agent_context = AgentContext(conf, socket)
+    def socket(self, *args, **kwargs):
+        if self._socket is None:
+            self._socket = ThreadedSocket(RetryingCoreAgentSocket(CoreAgentSocket(self.config.value('socket_path'))))
+        return self._socket

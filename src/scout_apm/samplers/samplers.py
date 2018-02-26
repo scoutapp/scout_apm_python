@@ -5,7 +5,7 @@ from os import getpid
 from threading import Thread
 from time import sleep
 
-from scout_apm.context import agent_context
+from scout_apm.context import AgentContext
 
 from .cpu import Cpu
 from .memory import Memory
@@ -22,7 +22,7 @@ class Samplers():
     def samplers():
         logger.info('Starting Samplers')
 
-        socket = agent_context.socket
+        socket = AgentContext.instance().socket()
         instances = [Cpu(), Memory()]
 
         while True:

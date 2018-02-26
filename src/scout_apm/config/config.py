@@ -1,8 +1,8 @@
 from __future__ import absolute_import
 
 import logging
-import platform
 import os
+import platform
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ class ScoutConfig():
                 arch=self.arch())
 
     @classmethod
-    def platform(self):
+    def platform(cls):
         system_name = platform.system()
         if system_name == 'Linux':
             return 'linux'
@@ -71,7 +71,7 @@ class ScoutConfig():
             return 'unknown'
 
     @classmethod
-    def arch(self):
+    def arch(cls):
         arch = platform.machine()
         if arch == 'i686':
             return 'i686'

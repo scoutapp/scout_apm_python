@@ -6,11 +6,6 @@ from os import getpid
 
 from scout_apm.core_agent_manager import CoreAgentManager
 
-# Import is unused, but needed. Importing this the first time sets up the
-# context, which must occur early in boot sequence.
-from scout_apm.context import agent_context  # noqa: F401
-
-
 logger = logging.getLogger(__name__)
 
 
