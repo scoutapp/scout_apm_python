@@ -8,6 +8,19 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+class Register:
+    def __init__(self, *args, **kwargs):
+        self.app = kwargs.get('app', None)
+        self.key = kwargs.get('key', None)
+
+    def message(self):
+        logging.info('Registering with app=%s key=%s' % (self.app, self.key))
+        return {
+            'app': self.app,
+            'key': self.key,
+        }
+
+
 class StartSpan:
     def __init__(self, *args, **kwargs):
         self.timestamp = kwargs.get('timestamp', datetime.utcnow())

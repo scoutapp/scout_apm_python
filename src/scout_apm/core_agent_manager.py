@@ -56,9 +56,7 @@ class CoreAgentManager:
         try:
             subprocess.Popen(
                     [
-                        self.core_agent_bin_path, 'daemon',
-                        '--api-key', '',
-                        '--app-name', '',
+                        self.core_agent_bin_path, 'start',
                         '--log-level', self.log_level(),
                         '--socket', self.socket_path()
                     ])
