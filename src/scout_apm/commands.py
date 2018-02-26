@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 # Python Modules
-import datetime
+from datetime import datetime
 import json
 import logging
 
@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 class StartSpan:
     def __init__(self, request_id, span_id, parent, operation):
-        self.timestamp = datetime.datetime.utcnow()
+        self.timestamp = datetime.utcnow()
         self.request_id = request_id
         self.span_id = span_id
         self.parent = parent
@@ -28,7 +28,7 @@ class StartSpan:
 
 class StopSpan:
     def __init__(self, request_id, span_id):
-        self.timestamp = datetime.datetime.utcnow()
+        self.timestamp = datetime.utcnow()
         self.request_id = request_id
         self.span_id = span_id
 
@@ -42,7 +42,7 @@ class StopSpan:
 
 class StartRequest:
     def __init__(self, request_id):
-        self.timestamp = datetime.datetime.utcnow()
+        self.timestamp = datetime.utcnow()
         self.request_id = request_id
 
     def message(self):
@@ -54,7 +54,7 @@ class StartRequest:
 
 class FinishRequest:
     def __init__(self, request_id):
-        self.timestamp = datetime.datetime.utcnow()
+        self.timestamp = datetime.utcnow()
         self.request_id = request_id
 
     def message(self):
@@ -66,7 +66,7 @@ class FinishRequest:
 
 class TagSpan:
     def __init__(self, request_id, span_id, tag, value):
-        self.timestamp = datetime.datetime.utcnow()
+        self.timestamp = datetime.utcnow()
         self.request_id = request_id
         self.span_id = span_id
         self.tag = tag
@@ -84,7 +84,7 @@ class TagSpan:
 
 class TagRequest:
     def __init__(self, request_id, tag, value):
-        self.timestamp = datetime.datetime.utcnow()
+        self.timestamp = datetime.utcnow()
         self.request_id = request_id
         self.tag = tag
         self.value = value
