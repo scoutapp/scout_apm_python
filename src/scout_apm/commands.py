@@ -9,12 +9,12 @@ logger = logging.getLogger(__name__)
 
 
 class StartSpan:
-    def __init__(self, request_id, span_id, parent, operation):
-        self.timestamp = datetime.utcnow()
-        self.request_id = request_id
-        self.span_id = span_id
-        self.parent = parent
-        self.operation = operation
+    def __init__(self, *args, **kwargs):
+        self.timestamp = kwargs.get('timestamp', datetime.utcnow())
+        self.request_id = kwargs.get('request_id', None)
+        self.span_id = kwargs.get('span_id', None)
+        self.parent = kwargs.get('parent', None)
+        self.operation = kwargs.get('operation', None)
 
     def message(self):
         return {'StartSpan': {
@@ -27,10 +27,10 @@ class StartSpan:
 
 
 class StopSpan:
-    def __init__(self, request_id, span_id):
-        self.timestamp = datetime.utcnow()
-        self.request_id = request_id
-        self.span_id = span_id
+    def __init__(self, *args, **kwargs):
+        self.timestamp = kwargs.get('timestamp', datetime.utcnow())
+        self.request_id = kwargs.get('request_id', None)
+        self.span_id = kwargs.get('span_id', None)
 
     def message(self):
         return {'StopSpan': {
@@ -41,9 +41,9 @@ class StopSpan:
 
 
 class StartRequest:
-    def __init__(self, request_id):
-        self.timestamp = datetime.utcnow()
-        self.request_id = request_id
+    def __init__(self, *args, **kwargs):
+        self.timestamp = kwargs.get('timestamp', datetime.utcnow())
+        self.request_id = kwargs.get('request_id', None)
 
     def message(self):
         return {'StartRequest': {
@@ -53,9 +53,9 @@ class StartRequest:
 
 
 class FinishRequest:
-    def __init__(self, request_id):
-        self.timestamp = datetime.utcnow()
-        self.request_id = request_id
+    def __init__(self, *args, **kwargs):
+        self.timestamp = kwargs.get('timestamp', datetime.utcnow())
+        self.request_id = kwargs.get('request_id', None)
 
     def message(self):
         return {'FinishRequest': {
@@ -65,12 +65,12 @@ class FinishRequest:
 
 
 class TagSpan:
-    def __init__(self, request_id, span_id, tag, value):
-        self.timestamp = datetime.utcnow()
-        self.request_id = request_id
-        self.span_id = span_id
-        self.tag = tag
-        self.value = value
+    def __init__(self, *args, **kwargs):
+        self.timestamp = kwargs.get('timestamp', datetime.utcnow())
+        self.request_id = kwargs.get('request_id', None)
+        self.span_id = kwargs.get('span_id', None)
+        self.tag = kwargs.get('tag', None)
+        self.value = kwargs.get('value', None)
 
     def message(self):
         return {'TagSpan': {
@@ -83,11 +83,11 @@ class TagSpan:
 
 
 class TagRequest:
-    def __init__(self, request_id, tag, value):
-        self.timestamp = datetime.utcnow()
-        self.request_id = request_id
-        self.tag = tag
-        self.value = value
+    def __init__(self, *args, **kwargs):
+        self.timestamp = kwargs.get('timestamp', datetime.utcnow())
+        self.request_id = kwargs.get('request_id', None)
+        self.tag = kwargs.get('tag', None)
+        self.value = kwargs.get('value', None)
 
     def message(self):
         return {'TagRequest': {
@@ -114,5 +114,42 @@ class BatchedCommand:
         self.commands = commands
 
     def message(self):
-        messages = map(lambda cmd: cmd.message(), self.commands)
+        messages = list(map(lambda cmd: cmd.message(), self.commands))
         return {'BatchedCommand': messages}
+
+    @classmethod
+    def from_tracked_request(cls, request):
+        commands = []
+        # Request Start
+        commands.append(StartRequest(timestamp=request.start_time,
+                                     request_id=request.req_id))
+        # Request Tags
+        for key in request.tags:
+            commands.append(TagRequest(timestamp=request.start_time,
+                                       request_id=request.req_id,
+                                       tag=key,
+                                       value=request.tags[key]))
+        # Spans
+        for span in request.spans:
+            # Span Start
+            commands.append(StartSpan(timestamp=span.start_time,
+                                      request_id=span.request_id,
+                                      span_id=span.span_id,
+                                      parent=span.parent,
+                                      operation=span.operation))
+            # Span Tags
+            for key in span.tags:
+                commands.append(TagSpan(timestamp=span.start_time,
+                                        request_id=request.req_id,
+                                        span_id=span.span_id,
+                                        tag=key,
+                                        value=span.tags[key]))
+            # Span End
+            commands.append(StopSpan(timestamp=span.end_time,
+                                     request_id=span.request_id,
+                                     span_id=span.span_id))
+        # Request Finish
+        commands.append(FinishRequest(timestamp=request.end_time,
+                                      request_id=request.req_id))
+        return BatchedCommand(commands)
+

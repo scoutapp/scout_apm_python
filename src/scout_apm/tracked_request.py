@@ -5,6 +5,7 @@ from datetime import datetime
 from uuid import uuid4
 
 from scout_apm.context import AgentContext
+from scout_apm.request_manager import RequestManager
 from scout_apm.thread_local import ThreadLocalSingleton
 
 from .commands import (FinishRequest, StartRequest, StartSpan, StopSpan,
@@ -21,22 +22,17 @@ class TrackedRequest(ThreadLocalSingleton):
     their keyname
     """
     def __init__(self, *args, **kwargs):
-        super(TrackedRequest, self).__init__()
         self.req_id = 'req-' + str(uuid4())
-        self.spans = []
-        self.socket = AgentContext.instance().socket()
-        self.socket.open()
+        self.start_time = kwargs.get('start_time', datetime.utcnow())
+        self.end_time = kwargs.get('end_time', None)
+        self.spans = kwargs.get('spans', [])
+        self.tags = kwargs.get('tags', {})
         logger.info('Starting request: %s', self.req_id)
-        self.send_start_request()
-
-    def send_start_request(self):
-        self.socket.send(StartRequest(self.req_id))
-
-    def send_finish_request(self):
-        self.socket.send(FinishRequest(self.req_id))
 
     def tag(self, key, value):
-        self.socket.send(TagRequest(self.req_id, key, value))
+        if hasattr(self.tags, key):
+            logger.debug('Overwriting previously set tag for request %s: %s' % self.req_id, key)
+        self.tags[key] = value
 
     def start_span(self, operation=None):
         maybe_parent = self.current_span()
@@ -47,7 +43,6 @@ class TrackedRequest(ThreadLocalSingleton):
             parent_id = None
 
         new_span = Span(
-            self.socket,
             request_id=self.req_id,
             operation=operation,
             parent=parent_id)
@@ -69,35 +64,21 @@ class TrackedRequest(ThreadLocalSingleton):
     # Request is done, release any info we have about it.
     def finish(self):
         logger.info('Stopping request: %s', self.req_id)
-        self.send_finish_request()
+        if self.end_time is None:
+            self.end_time = datetime.utcnow()
+        RequestManager.instance().add_request(self)
         self.release()
 
 
 class Span:
-    def __init__(self, socket, request_id=None, operation=None, parent=None):
-        self.span_id = 'span-' + str(uuid4())
-        self.request_id = request_id
-        self.operation = operation
-        self.parent = parent
-        self.start_time = datetime.now()
-        self.end_time = None
-        self.socket = socket
-
-        self.send_start_span()
-
-    def send_start_span(self):
-        if self.request_id is None:
-            return
-
-        self.socket.send(StartSpan(
-            self.request_id,
-            self.span_id,
-            self.parent,
-            self.operation
-        ))
-
-    def send_stop_span(self):
-        self.socket.send(StopSpan(self.request_id, self.span_id))
+    def __init__(self, *args, **kwargs):
+        self.span_id = kwargs.get('span_id', 'span-' + str(uuid4()))
+        self.start_time = kwargs.get('start_time', datetime.utcnow())
+        self.end_time = kwargs.get('end_time', None)
+        self.request_id = kwargs.get('request_id', None)
+        self.operation = kwargs.get('operation', None)
+        self.parent = kwargs.get('parent', None)
+        self.tags = kwargs.get('tags', {})
 
     def dump(self):
         if self.end_time is None:
@@ -112,11 +93,12 @@ class Span:
             )
 
     def stop(self):
-        self.end_time = datetime.now()
-        self.send_stop_span()
+        self.end_time = datetime.utcnow()
 
     def tag(self, key, value):
-        self.socket.send(TagSpan(self.request_id, self.span_id, key, value))
+        if hasattr(self.tags, key):
+            logger.debug('Overwriting previously set tag for span %s: %s' % self.span_id, key)
+        self.tags[key] = value
 
     # In seconds
     def duration(self):
@@ -124,4 +106,4 @@ class Span:
             (self.end_time - self.start_time).total_seconds()
         else:
             # Current, running duration
-            (datetime.now() - self.start_time).total_seconds()
+            (datetime.utcnow() - self.start_time).total_seconds()

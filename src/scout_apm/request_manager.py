@@ -1,0 +1,39 @@
+from __future__ import absolute_import
+
+import logging
+
+from scout_apm.context import AgentContext
+from scout_apm.thread_local import ThreadLocalSingleton
+
+from .commands import BatchedCommand
+
+# Logging
+logger = logging.getLogger(__name__)
+
+
+class RequestManager(ThreadLocalSingleton):
+    def __init__(self, *args, **kwargs):
+        self.request_buffer = RequestBuffer()
+
+    def add_request(self, request):
+        self.request_buffer.add_request(request)
+        self.request_buffer.flush()
+
+
+class RequestBuffer(ThreadLocalSingleton):
+    def __init__(self):
+        self._requests = []
+
+    # TODO: ensure there is a limit to the tracked requests in this buffer
+    def add_request(self, request):
+        self._requests.append(request)
+
+    def flush(self):
+        logger.debug('Flushing RequestBuffer')
+        for request in self._requests:
+            logger.debug('Flushing Request Id: %s' % request.req_id)
+            self.flush_request(request)
+
+    def flush_request(self, request):
+        batched_command = BatchedCommand.from_tracked_request(request)
+        AgentContext.instance().socket().send(batched_command)

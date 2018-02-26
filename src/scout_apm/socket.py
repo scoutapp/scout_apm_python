@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 class CoreAgentSocket:
     def __init__(self, socket_path):
         self.socket_path = socket_path
+        self.open()
 
     def open(self):
         logger.info('CoreAgentSocket connecting to %s', self.socket_path)
