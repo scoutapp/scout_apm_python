@@ -122,13 +122,13 @@ class CoreAgentVersionResponse:
         self.version = self.loaded['CoreAgentVersion']['version']
 
 
-class BatchedCommand:
+class BatchCommand:
     def __init__(self, commands):
         self.commands = commands
 
     def message(self):
         messages = list(map(lambda cmd: cmd.message(), self.commands))
-        return {'BatchedCommand': messages}
+        return {'BatchCommand': messages}
 
     @classmethod
     def from_tracked_request(cls, request):
@@ -164,5 +164,4 @@ class BatchedCommand:
         # Request Finish
         commands.append(FinishRequest(timestamp=request.end_time,
                                       request_id=request.req_id))
-        return BatchedCommand(commands)
-
+        return BatchCommand(commands)

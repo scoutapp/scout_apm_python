@@ -1,8 +1,6 @@
 from __future__ import absolute_import
 import logging
 
-import logging
-
 from scout_apm.monkey import CallableProxy, monkeypatch_method
 from scout_apm.tracked_request import TrackedRequest
 
@@ -39,7 +37,7 @@ def trace_method(cls, method_name=None):
     return decorator
 
 
-def trace_function(func, info):
+def trace_function(func, info, real_request):
     try:
         def tracing_function(original, *args, **kwargs):
             if callable(info):
@@ -51,7 +49,10 @@ def trace_function(func, info):
             if detail['name'] is not None:
                 operation = operation + '/' + detail['name']
 
-            span = TrackedRequest.instance().start_span(operation=operation)
+            tr = TrackedRequest.instance()
+            if real_request is True:
+                tr.mark_real_request()
+            span = tr.start_span(operation=operation)
 
             for key in detail:
                 span.tag(key, detail[key])

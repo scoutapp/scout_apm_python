@@ -5,7 +5,7 @@ import logging
 from scout_apm.context import AgentContext
 from scout_apm.thread_local import ThreadLocalSingleton
 
-from .commands import BatchedCommand
+from .commands import BatchCommand
 
 # Logging
 logger = logging.getLogger(__name__)
@@ -16,8 +16,9 @@ class RequestManager(ThreadLocalSingleton):
         self.request_buffer = RequestBuffer()
 
     def add_request(self, request):
-        self.request_buffer.add_request(request)
-        self.request_buffer.flush()
+        if request.is_real_request():
+            self.request_buffer.add_request(request)
+            self.request_buffer.flush()
 
 
 class RequestBuffer(ThreadLocalSingleton):
@@ -36,5 +37,5 @@ class RequestBuffer(ThreadLocalSingleton):
         self._requests.clear()
 
     def flush_request(self, request):
-        batched_command = BatchedCommand.from_tracked_request(request)
-        AgentContext.instance().socket().send(batched_command)
+        batch_command = BatchCommand.from_tracked_request(request)
+        AgentContext.instance().socket().send(batch_command)

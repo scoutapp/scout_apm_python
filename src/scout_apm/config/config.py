@@ -20,8 +20,6 @@ class ScoutConfig():
             ScoutConfigEnv(),
             ScoutConfigDefaults(),
             ScoutConfigNull()]
-
-        logger.info('Configuration Loaded:')
         self.log()
 
     def value(self, key):
@@ -33,9 +31,10 @@ class ScoutConfig():
                 return layer
 
     def log(self):
+        logger.debug('Configuration Loaded:')
         for key in self.known_keys():
             layer = self.locate_layer_for_key(key)
-            logger.info('{:9}: {} = {}'.format(
+            logger.debug('{:9}: {} = {}'.format(
                 layer.name(),
                 key,
                 layer.value(key)))

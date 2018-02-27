@@ -4,12 +4,8 @@ import logging
 from datetime import datetime
 from uuid import uuid4
 
-from scout_apm.context import AgentContext
 from scout_apm.request_manager import RequestManager
 from scout_apm.thread_local import ThreadLocalSingleton
-
-from .commands import (FinishRequest, StartRequest, StartSpan, StopSpan,
-                       TagRequest, TagSpan)
 
 # Logging
 logger = logging.getLogger(__name__)
@@ -27,7 +23,14 @@ class TrackedRequest(ThreadLocalSingleton):
         self.end_time = kwargs.get('end_time', None)
         self.spans = kwargs.get('spans', [])
         self.tags = kwargs.get('tags', {})
-        logger.info('Starting request: %s', self.req_id)
+        self.real_request = kwargs.get('real_request', False)
+        logger.debug('Starting request: %s', self.req_id)
+
+    def mark_real_request(self):
+        self.real_request = True
+
+    def is_real_request(self):
+        return self.real_request
 
     def tag(self, key, value):
         if hasattr(self.tags, key):
@@ -63,7 +66,7 @@ class TrackedRequest(ThreadLocalSingleton):
 
     # Request is done, release any info we have about it.
     def finish(self):
-        logger.info('Stopping request: %s', self.req_id)
+        logger.debug('Stopping request: %s', self.req_id)
         if self.end_time is None:
             self.end_time = datetime.utcnow()
         RequestManager.instance().add_request(self)
@@ -82,7 +85,7 @@ class Span:
 
     def dump(self):
         if self.end_time is None:
-            logger.info(self.operation)
+            logger.debug(self.operation)
         return 'request=%s operation=%s id=%s parent=%s start_time=%s end_time=%s' % (
                 self.request_id,
                 self.operation,

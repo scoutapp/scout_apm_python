@@ -24,32 +24,45 @@ class CoreAgentSocket:
         self.open()
 
     def open(self):
-        logger.info('CoreAgentSocket connecting to %s', self.socket_path)
+        logger.debug('CoreAgentSocket connecting to %s', self.socket_path)
         try:
             self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             self.socket.connect(self.socket_path)
-            logger.info('CoreAgentSocket Opened Successfully')
+            self.socket.settimeout(0.5)
+            logger.debug('CoreAgentSocket Opened Successfully')
             return True
         except ConnectionRefusedError:
-            logger.info('Connection refused error')
+            logger.debug('Connection refused error')
             return None
 
-    def send(self, command):
+    def send(self, command, async=True):
         msg = command.message()
         data = json.dumps(msg)
-        self.socket.sendall(self.message_length(data))
-        self.socket.sendall(data.encode())
-        return self.read_response()
+        try:
+            self.socket.sendall(self.message_length(data))
+            self.socket.sendall(data.encode())
+            if async is True:
+                return True
+            else:
+                return self.read_response()
+
+        except BrokenPipeError as e:
+            logger.debug("Broken Pipe: %s" % repr(e))
+            pass
 
     def message_length(self, body):
         length = len(body)
         return length.to_bytes(4, 'big')
 
     def read_response(self):
-        raw_size = self.socket.recv(4)
-        size = struct.unpack('<I', raw_size)[0]
-        message = self.socket.recv(size)
-        return message
+        try:
+            raw_size = self.socket.recv(4)
+            size = struct.unpack('<I', raw_size)[0]
+            message = self.socket.recv(size)
+            return message
+        except Exception as e:
+            logger.debug('Socket error on read response: %s' % repr(e))
+            return None
 
     def close(self):
         self.socket.close()
@@ -67,18 +80,18 @@ class RetryingCoreAgentSocket:
         try:
             self.underlying.send(body)
         except ConnectionRefusedError as err:
-            logger.info('ConnectionRefusedError %s', err)
+            logger.debug('ConnectionRefusedError %s', err)
             self.open()
             self.send(self, body)
         except OSError as err:
-            logger.info('OSError,', err)
+            logger.debug('OSError,', err)
 
     def open(self):
-        logger.info('RetryingCoreAgentSocket open')
+        logger.debug('RetryingCoreAgentSocket open')
         delay = 1
         while True:
             if self.underlying.open() is None:
-                logger.info('RetryingCoreAgentSocket, sleeping for %d', delay)
+                logger.debug('RetryingCoreAgentSocket, sleeping for %d', delay)
                 time.sleep(delay)
                 delay += 1
             else:
@@ -106,12 +119,12 @@ class ThreadedSocket:
         self.queue.put(body)
 
     def open(self):
-        logger.info('Socket Thread: Open')
+        logger.debug('Socket Thread: Open')
         self.ensure_thread()
         self.underlying.open()
 
     def close(self):
-        logger.info('Socket Thread: Closing')
+        logger.debug('Socket Thread: Closing')
         self.stop_thread()
         self.underlying.close()
 
@@ -126,18 +139,15 @@ class ThreadedSocket:
             return False
 
     def start_thread(self):
-        logger.info('Socket Thread: Starting Thread')
+        logger.debug('Socket Thread: Starting Thread')
         self.worker = ThreadedSocketWorker(self.queue, self.underlying)
         self.worker.daemon = True
         self.worker.start()
 
     def stop_thread(self):
-        if self.thread_running():
-            logger.info('Socket Thread: Stopping Thread')
+            logger.debug('Socket Thread: Stopping Thread')
             self.worker.stop()
             self.worker.join()
-        else:
-            logger.info('Socket Thread: Stopping, Not running, can\'t stop')
 
 
 class ThreadedSocketWorker(threading.Thread):
@@ -156,6 +166,7 @@ class ThreadedSocketWorker(threading.Thread):
     def run(self):
         while True:
             if self.stopped():
+                logger.debug("Socket is marked to stop!")
                 break
 
             try:
@@ -165,4 +176,5 @@ class ThreadedSocketWorker(threading.Thread):
                 self.underlying.send(body)
                 self.queue.task_done()
             except queue.Empty:
-                logger.info('Got Empty exception')
+                #logger.debug('Got Empty exception')
+                pass
