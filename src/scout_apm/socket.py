@@ -176,5 +176,5 @@ class ThreadedSocketWorker(threading.Thread):
                 self.underlying.send(body)
                 self.queue.task_done()
             except queue.Empty:
-                #logger.debug('Got Empty exception')
+                # logger.debug('Got Empty exception')
                 pass

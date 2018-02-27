@@ -139,7 +139,6 @@ class CoreAgentDownloader():
         except Exception:
             pass
 
-
     def release_download_lock(self):
         if self.download_lock_fd is not None:
             os.unlink(self.download_lock_path)
