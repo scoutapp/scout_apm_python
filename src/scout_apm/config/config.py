@@ -46,10 +46,10 @@ class ScoutConfig():
             'core_agent_launch',
             'core_agent_version',
             'download_url',
+            'git_sha',
             'log_level',
             'name',
             'key',
-            'manual_daemon',
             'socket_path'
         ]
 
@@ -121,7 +121,8 @@ class ScoutConfigDefaults():
                 'core_agent_download': True,
                 'core_agent_launch': True,
                 'core_agent_version': self.core_agent_version,
-                'download_url': 'https://download.scoutapp.com',
+                'download_url': 'https://download.scoutapp.com/scout_apm_core',
+                'git_sha': '',
                 'key': '',
                 'log_level': 'info',
                 'name': '',
