@@ -128,7 +128,7 @@ class BatchCommand:
 
     def message(self):
         messages = list(map(lambda cmd: cmd.message(), self.commands))
-        return {'BatchCommand': messages}
+        return {'BatchCommand': {'commands': messages}}
 
     @classmethod
     def from_tracked_request(cls, request):
