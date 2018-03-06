@@ -3,6 +3,7 @@ from __future__ import absolute_import
 # Python Modules
 import logging
 from os import getpid
+import threading
 
 from scout_apm.core_agent_manager import CoreAgentManager
 

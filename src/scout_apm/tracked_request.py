@@ -4,6 +4,7 @@ import logging
 from datetime import datetime
 from uuid import uuid4
 
+from scout_apm.samplers import Samplers
 from scout_apm.request_manager import RequestManager
 from scout_apm.thread_local import ThreadLocalSingleton
 
@@ -70,6 +71,8 @@ class TrackedRequest(ThreadLocalSingleton):
         if self.end_time is None:
             self.end_time = datetime.utcnow()
         RequestManager.instance().add_request(self)
+        if self.is_real_request():
+            Samplers.ensure_running()
         self.release()
 
 
