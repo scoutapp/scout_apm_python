@@ -44,4 +44,4 @@ class Memory(object):
         logger.info('{human_name}: #{res}'.format(
             human_name=self.human_name(),
             res=res))
-        res
+        return res

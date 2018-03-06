@@ -6,6 +6,7 @@ from threading import Thread
 from time import sleep
 
 from scout_apm.context import AgentContext
+from scout_apm.commands import ApplicationEvent
 
 from .cpu import Cpu
 from .memory import Memory
@@ -16,7 +17,9 @@ logger = logging.getLogger(__name__)
 
 class Samplers():
     def install():
-        Thread(target=Samplers.samplers).run()
+        th = Thread(target=Samplers.samplers)
+        th.daemon = True
+        th.run()
 
     @staticmethod
     def samplers():
@@ -27,18 +30,12 @@ class Samplers():
 
         while True:
             for instance in instances:
-                event_value = instance.run()
-                event_type = instance.metric_type() + '/' + instance.metric_name()
-                moment = datetime.datetime.utcnow().isoformat() + 'Z'
-                source = 'Pid: ' + str(getpid())
+                event = ApplicationEvent()
+                event.event_value = instance.run()
+                event.event_type = instance.metric_type() + '/' + instance.metric_name()
+                event.moment = datetime.datetime.utcnow().isoformat() + 'Z'
+                event.source = 'Pid: ' + str(getpid())
 
-                if event_value is not None:
-                    socket.send(json.dumps({
-                        'ApplicationEvent': {
-                            'event_type':  event_type,
-                            'event_value': event_value,
-                            'moment': moment,
-                            'source': source,
-                        }
-                    }))
-            sleep(10)
+                if event.event_value is not None:
+                    socket.send(event)
+            sleep(60)

@@ -111,6 +111,21 @@ class TagRequest:
         }}
 
 
+class ApplicationEvent:
+    def __init__(self, *args, **kwargs):
+        self.event_type = kwargs.get('event_type', '')
+        self.event_value = kwargs.get('event_value', '')
+        self.moment = kwargs.get('moment', datetime.utcnow())
+        self.source = kwargs.get('source', '')
+
+    def message(self):
+        return {'ApplicationEvent': {
+                    'event_type':  self.event_type,
+                    'event_value': self.event_value,
+                    'moment': self.moment,
+                    'source': self.source}}
+
+
 class CoreAgentVersion:
     def message(self):
         return {'CoreAgentVersion': {}}
