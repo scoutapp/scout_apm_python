@@ -184,9 +184,10 @@ class CoreAgentManifest:
         with open(self.manifest_path) as manifest_file:
             self.raw = manifest_file.read()
             self.json = json.loads(self.raw)
-            self.bin_version = self.json['version']
-            self.bin_name = self.json['core_binary']
-            self.sha256 = self.json['core_binary_sha256']
+            self.version = self.json['version']
+            self.bin_version = self.json['core_agent_version']
+            self.bin_name = self.json['core_agent_binary']
+            self.sha256 = self.json['core_agent_binary_sha256']
             self.valid = True
             logger.debug("Core Agent manifest json: %s", self.json)
 

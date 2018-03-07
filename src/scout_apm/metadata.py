@@ -40,7 +40,7 @@ class AppMetadata():
                     'version':           '{}.{}.{}'.format(version_tuple[0],
                                                            version_tuple[1],
                                                            version_tuple[2]),
-                    'server_time':        datetime.utcnow(),
+                    'server_time':        datetime.utcnow().isoformat() + 'Z',
                     'framework':          '',
                     'framework_version':  '',
                     'environment':        '',
