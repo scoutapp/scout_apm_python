@@ -20,7 +20,6 @@ class ScoutConfig():
             ScoutConfigEnv(),
             ScoutConfigDefaults(),
             ScoutConfigNull()]
-        self.log()
 
     def value(self, key):
         return self.locate_layer_for_key(key).value(key)

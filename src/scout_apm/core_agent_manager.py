@@ -72,7 +72,7 @@ class CoreAgentManager:
         return AgentContext.instance().config.value('log_level')
 
     def verify(self):
-        manifest = CoreAgentManifest(self.core_agent_dir + '/manifest.txt')
+        manifest = CoreAgentManifest(self.core_agent_dir + '/manifest.json')
         if manifest.is_valid() is not True:
             logger.debug('Core Agent verification failed: '
                          'CoreAgentManifest is not valid.')

@@ -31,7 +31,7 @@ class StartSpan:
 
     def message(self):
         return {'StartSpan': {
-            'moment': self.timestamp.isoformat() + 'Z',
+            'timestamp': self.timestamp.isoformat() + 'Z',
             'request_id': self.request_id,
             'span_id': self.span_id,
             'parent_id': self.parent,
@@ -47,7 +47,7 @@ class StopSpan:
 
     def message(self):
         return {'StopSpan': {
-            'moment': self.timestamp.isoformat() + 'Z',
+            'timestamp': self.timestamp.isoformat() + 'Z',
             'request_id': self.request_id,
             'span_id': self.span_id,
         }}
@@ -60,7 +60,7 @@ class StartRequest:
 
     def message(self):
         return {'StartRequest': {
-            'moment': self.timestamp.isoformat() + 'Z',
+            'timestamp': self.timestamp.isoformat() + 'Z',
             'request_id': self.request_id,
         }}
 
@@ -72,7 +72,7 @@ class FinishRequest:
 
     def message(self):
         return {'FinishRequest': {
-            'moment': self.timestamp.isoformat() + 'Z',
+            'timestamp': self.timestamp.isoformat() + 'Z',
             'request_id': self.request_id,
         }}
 
@@ -87,7 +87,7 @@ class TagSpan:
 
     def message(self):
         return {'TagSpan': {
-            'moment': self.timestamp.isoformat() + 'Z',
+            'timestamp': self.timestamp.isoformat() + 'Z',
             'request_id': self.request_id,
             'span_id': self.span_id,
             'tag': self.tag,
@@ -104,7 +104,7 @@ class TagRequest:
 
     def message(self):
         return {'TagRequest': {
-            'moment': self.timestamp.isoformat() + 'Z',
+            'timestamp': self.timestamp.isoformat() + 'Z',
             'request_id': self.request_id,
             'tag': self.tag,
             'value': self.value,
@@ -115,14 +115,14 @@ class ApplicationEvent:
     def __init__(self, *args, **kwargs):
         self.event_type = kwargs.get('event_type', '')
         self.event_value = kwargs.get('event_value', '')
-        self.timestamp = kwargs.get('moment', datetime.utcnow())
+        self.timestamp = kwargs.get('timestamp', datetime.utcnow())
         self.source = kwargs.get('source', '')
 
     def message(self):
         return {'ApplicationEvent': {
                     'event_type':  self.event_type,
                     'event_value': self.event_value,
-                    'moment': self.timestamp.isoformat() + 'Z',
+                    'timestamp': self.timestamp.isoformat() + 'Z',
                     'source': self.source,
         }}
 

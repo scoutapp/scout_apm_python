@@ -14,148 +14,26 @@ except ImportError:
     # Python 2.x
     import Queue as queue
 
+from scout_apm.config.config import ScoutConfig
+from scout_apm.commands import Register
+
 # Logging
 logger = logging.getLogger(__name__)
 
 
-class CoreAgentSocket:
-    def __init__(self, socket_path):
-        self.socket_path = socket_path
-        self.open()
-
-    def open(self):
-        logger.debug('CoreAgentSocket connecting to %s', self.socket_path)
-        try:
-            self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            self.socket.connect(self.socket_path)
-            self.socket.settimeout(0.5)
-            logger.debug('CoreAgentSocket Opened Successfully')
-            return True
-        except ConnectionRefusedError:
-            logger.debug('Connection refused error')
-            return None
-
-    def send(self, command, async=True):
-        msg = command.message()
-        data = json.dumps(msg)
-        try:
-            self.socket.sendall(self.message_length(data))
-            self.socket.sendall(data.encode())
-            if async is True:
-                return True
-            else:
-                return self.read_response()
-
-        except BrokenPipeError as e:
-            logger.debug("Broken Pipe: %s" % repr(e))
-            pass
-
-    def message_length(self, body):
-        length = len(body)
-        return length.to_bytes(4, 'big')
-
-    def read_response(self):
-        try:
-            raw_size = self.socket.recv(4)
-            size = struct.unpack('<I', raw_size)[0]
-            message = self.socket.recv(size)
-            return message
-        except Exception as e:
-            logger.debug('Socket error on read response: %s' % repr(e))
-            return None
-
-    def close(self):
-        self.socket.close()
-
-
-class RetryingCoreAgentSocket:
-    """
-    Wraps a CoreAgentSocket instance, and adds retry & error handling logic.
-    """
-
-    def __init__(self, underlying):
-        self.underlying = underlying
-
-    def send(self, body):
-        try:
-            self.underlying.send(body)
-        except ConnectionRefusedError as err:
-            logger.debug('ConnectionRefusedError %s', err)
-            self.open()
-            self.send(self, body)
-        except OSError as err:
-            logger.debug('OSError,', err)
-
-    def open(self):
-        logger.debug('RetryingCoreAgentSocket open')
-        delay = 1
-        while True:
-            if self.underlying.open() is None:
-                logger.debug('RetryingCoreAgentSocket, sleeping for %d', delay)
-                time.sleep(delay)
-                delay += 1
-            else:
-                return True
-
-    def close(self):
-        self.underlying.close()
-
-
-# TODO: Look into capping the size of the internal queue, to prevent a dead
-# thread from having a never-ending queue size.
-class ThreadedSocket:
-    """
-    Wraps another Socket, pushing all writes into a background thread.
-    The thread is entirely managed by this class.
-    """
-
-    def __init__(self, underlying):
-        self.underlying = underlying
-        self.queue = queue.Queue()
-        self.worker = None
-
-    def send(self, body):
-        self.ensure_thread()
-        self.queue.put(body)
-
-    def open(self):
-        logger.debug('Socket Thread: Open')
-        self.ensure_thread()
-        self.underlying.open()
-
-    def close(self):
-        logger.debug('Socket Thread: Closing')
-        self.stop_thread()
-        self.underlying.close()
-
-    def ensure_thread(self):
-        if self.thread_running() is False:
-            self.start_thread()
-
-    def thread_running(self):
-        if self.worker is not None:
-            self.worker.is_alive()
-        else:
-            return False
-
-    def start_thread(self):
-        logger.debug('Socket Thread: Starting Thread')
-        self.worker = ThreadedSocketWorker(self.queue, self.underlying)
-        self.worker.daemon = True
-        self.worker.start()
-
-    def stop_thread(self):
-            logger.debug('Socket Thread: Stopping Thread')
-            self.worker.stop()
-            self.worker.join()
-
-
-class ThreadedSocketWorker(threading.Thread):
-    def __init__(self, queue, underlying):
-        super(ThreadedSocketWorker, self).__init__()
+class CoreAgentSocket(threading.Thread):
+    def __init__(self, *args, **kwargs):
+        # Call threading.Thread.__init__()
+        super(CoreAgentSocket, self).__init__()
+        self.config = kwargs.get('scout_config', ScoutConfig())
+        # Socket related
+        self.socket_path = self.config.value('socket_path')
+        self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        # Threading related
         self._stop_event = threading.Event()
-        self.underlying = underlying
-        self.queue = queue
+        self.queue = queue.Queue()
+        self.daemon = True
+        self.start()
 
     def stop(self):
         self._stop_event.set()
@@ -164,17 +42,104 @@ class ThreadedSocketWorker(threading.Thread):
         return self._stop_event.is_set()
 
     def run(self):
+        self._connect()
+        self._register()
+
         while True:
             if self.stopped():
-                logger.debug("Socket is marked to stop!")
+                logger.debug("CoreAgentSocket thread exiting.")
                 break
 
             try:
                 body = self.queue.get(block=True, timeout=1)
-                if body is None:
-                    break
-                self.underlying.send(body)
-                self.queue.task_done()
             except queue.Empty:
-                # logger.debug('Got Empty exception')
-                pass
+                continue
+
+            if body is not None:
+                result = self._send(body)
+                if result is True:
+                    self.queue.task_done()
+                elif result is False:
+                    # Something was wrong with the command.
+                    self.queue.task_done()
+                else:
+                    # Something was wrong with the socket.
+                    self._disconnect()
+                    self._connect()
+                    self._register()
+
+    def send(self, command):
+        try:
+            self.queue.put(command)
+        except Exception as e:
+            # TODO mark the command as not queued?
+            logger.debug('CoreAgentSocket error on send: %s' % repr(e))
+
+    def _send(self, command, async=True):
+        try:
+            msg = command.message()
+        except Exception as e:
+            log.debug('Exception when getting command message: %s' % repr(e))
+            return False
+
+        try:
+            data = json.dumps(msg)
+        except Exception as e:
+            log.debug('Exception when serializing command message: %s' % repr(e))
+            return False
+
+        try:
+            self.socket.sendall(self._message_length(data))
+            self.socket.sendall(data.encode())
+        except Exception as e:
+            logger.debug("CoreAgentSocket exception on _send: %s" % repr(e))
+            return None
+
+        if async is True:
+            return True
+        else:
+            # TODO read respnse back in to command
+            self._read_response()
+            return True
+
+    def _message_length(self, body):
+        length = len(body)
+        return length.to_bytes(4, 'big')
+
+    def _read_response(self):
+        try:
+            raw_size = self.socket.recv(4)
+            size = struct.unpack('<I', raw_size)[0]
+            message = self.socket.recv(size)
+            return message
+        except Exception as e:
+            logger.debug('CoreAgentSocket error on read response: %s' % repr(e))
+            return None
+
+    def _register(self):
+        self._send(Register(app=self.config.value('name'),
+                            key=self.config.value('key')))
+
+    def _connect(self, connect_attempts=5, retry_wait_secs=1):
+        for attempt in range(1, connect_attempts):
+            logger.debug('CoreAgentSocket attempt %d, connecting to %s', attempt, self.socket_path)
+            try:
+                self.socket.connect(self.socket_path)
+                self.socket.settimeout(0.5)
+                logger.debug('CoreAgentSocket is connected')
+                return True
+            except Exception as e:
+                logger.debug('CoreAgentSocket connection error: %s', repr(e))
+                if attempt >= connect_attempts:
+                    return False
+                time.sleep(retry_wait_secs)
+                continue
+
+    def _disconnect(self):
+        logger.debug('CoreAgentSocket disconnecting from %s', self.socket_path)
+        try:
+            self.socket.close()
+        except Exception as e:
+            logger.debug('CoreAgentSocket exception on disconnect: %s' % repr(e))
+        finally:
+            self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
