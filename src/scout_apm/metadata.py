@@ -23,7 +23,7 @@ class AppMetadata():
             socket = AgentContext.instance().socket()
             event = ApplicationEvent()
             event.event_value = cls.data()
-            event.event_type = 'AppMetadata'
+            event.event_type = 'scout.metadata'
             event.timestamp = datetime.utcnow()
             event.source = 'Pid: ' + str(getpid())
             socket.send(event)
