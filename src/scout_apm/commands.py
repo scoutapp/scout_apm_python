@@ -15,10 +15,10 @@ class Register:
 
     def message(self):
         logging.info('Registering with app=%s key=%s' % (self.app, self.key))
-        return {
+        return {'Register': {
             'app': self.app,
             'key': self.key,
-        }
+        }}
 
 
 class StartSpan:
