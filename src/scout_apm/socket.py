@@ -22,6 +22,8 @@ logger = logging.getLogger(__name__)
 
 
 class CoreAgentSocket(threading.Thread):
+    _run_lock = threading.Semaphore()
+
     def __init__(self, *args, **kwargs):
         # Call threading.Thread.__init__()
         super(CoreAgentSocket, self).__init__()
@@ -29,48 +31,70 @@ class CoreAgentSocket(threading.Thread):
         # Socket related
         self.socket_path = self.config.value('socket_path')
         self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        # Threading related
+        # Threading control related
+        self._started_event = threading.Event()
         self._stop_event = threading.Event()
-        self.queue = queue.Queue()
+        self._stopped_event = threading.Event()
+        # Command queues
+        self.command_queue = queue.Queue()
+        # Start the thread
         self.daemon = True
         self.start()
 
-    def stop(self):
-        self._stop_event.set()
+    def running(self):
+        return self._started_event.is_set()
 
-    def stopped(self):
-        return self._stop_event.is_set()
+    def stop(self):
+        if self._started_event.is_set():
+            self._stop_event.set()
+            self._stopped_event.wait(2)
+            if self._stopped_event.is_set():
+                return True
+            else:
+                logger.debug('CoreAgentSocket Failed to stop thread within timeout!')
+                return False
+        else:
+            return True
 
     def run(self):
-        self._connect()
-        self._register()
+        if self.__class__._run_lock.acquire(False) is False:
+            logger.debug('CoreAgentSocket thread failed to acquire run lock.')
+            return None
 
-        while True:
-            if self.stopped():
-                logger.debug("CoreAgentSocket thread exiting.")
-                break
+        try:
+            self._started_event.set()
+            while True:
+                if self._stop_event.is_set():
+                    logger.debug("CoreAgentSocket thread stopping.")
+                    break
 
-            try:
-                body = self.queue.get(block=True, timeout=1)
-            except queue.Empty:
-                continue
+                try:
+                    body = self.command_queue.get(block=True, timeout=1)
+                except queue.Empty:
+                    continue
 
-            if body is not None:
-                result = self._send(body)
-                if result is True:
-                    self.queue.task_done()
-                elif result is False:
-                    # Something was wrong with the command.
-                    self.queue.task_done()
-                else:
-                    # Something was wrong with the socket.
-                    self._disconnect()
-                    self._connect()
-                    self._register()
+                if body is not None:
+                    result = self._send(body)
+                    if result is True:
+                        self.command_queue.task_done()
+                    elif result is False:
+                        # Something was wrong with the command.
+                        self.command_queue.task_done()
+                    else:
+                        # Something was wrong with the socket.
+                        self._disconnect()
+                        self._connect()
+                        self._register()
+        finally:
+            self.__class__._run_lock.release()
+            self._stop_event.clear()
+            self._started_event.clear()
+            self._stopped_event.set()
+            logger.debug("CoreAgentSocket thread stopped.")
 
     def send(self, command):
         try:
-            self.queue.put(command)
+            self.command_queue.put(command)
         except Exception as e:
             # TODO mark the command as not queued?
             logger.debug('CoreAgentSocket error on send: %s' % repr(e))

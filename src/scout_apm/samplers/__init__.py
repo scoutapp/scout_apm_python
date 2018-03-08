@@ -15,25 +15,23 @@ logger = logging.getLogger(__name__)
 
 
 class Samplers():
-    thread_lock = threading.Semaphore()
+    _thread_lock = threading.Semaphore()
 
     @classmethod
     def ensure_running(cls):
-        try:
-            if cls.thread_lock.acquire(False) is True:
-                th = threading.Thread(target=Samplers.run_samplers)
-                th.daemon = True
-                th.start()
-        finally:
-            cls.thread_lock.release()
+        if cls._thread_lock.acquire(False) is True:
+            th = threading.Thread(target=Samplers.run_samplers)
+            th.daemon = True
+            th.start()
+            cls._thread_lock.release()
 
     @classmethod
     def run_samplers(cls):
         logger.info('Starting Samplers. Acquiring samplers lock.')
         try:
-            if cls.thread_lock.acquire(True) is True:
+            if cls._thread_lock.acquire(True) is True:
                 logger.info('Acquired samplers lock.')
-                socket = AgentContext.instance().socket()
+                socket = AgentContext.socket
                 instances = [Cpu(), Memory()]
 
                 while True:
@@ -48,4 +46,5 @@ class Samplers():
                             socket.send(event)
                     sleep(60)
         finally:
-            cls.thread_lock.release()
+            logger.debug('Shutting down samplers thread.')
+            cls._thread_lock.release()

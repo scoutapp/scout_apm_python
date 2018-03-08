@@ -20,7 +20,7 @@ class AppMetadata():
     @classmethod
     def report(cls):
         try:
-            socket = AgentContext.instance().socket()
+            socket = AgentContext.socket
             event = ApplicationEvent()
             event.event_value = cls.data()
             event.event_type = 'scout.metadata'
