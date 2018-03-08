@@ -46,7 +46,7 @@ class CoreAgentSocket(threading.Thread):
         self._stop_event = threading.Event()
         self._stopped_event = threading.Event()
         # Command queues
-        self.command_queue = queue.Queue()
+        self.command_queue = queue.Queue(maxsize=500)
         # Start the thread
         self.daemon = True
         self.start()
@@ -76,6 +76,8 @@ class CoreAgentSocket(threading.Thread):
 
         try:
             self._started_event.set()
+            self._connect()
+            self._register()
             while True:
                 if self._stop_event.is_set():
                     logger.debug("CoreAgentSocket thread stopping.")

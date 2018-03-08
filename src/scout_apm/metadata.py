@@ -19,16 +19,12 @@ logger = logging.getLogger(__name__)
 class AppMetadata():
     @classmethod
     def report(cls):
-        try:
-            event = ApplicationEvent()
-            event.event_value = cls.data()
-            event.event_type = 'scout.metadata'
-            event.timestamp = datetime.utcnow()
-            event.source = 'Pid: ' + str(getpid())
-            AgentContext.socket().send(event)
-        finally:
-            # Release the thread local Agent Context and shut down its socket
-            AgentContext.instance().release()
+        event = ApplicationEvent()
+        event.event_value = cls.data()
+        event.event_type = 'scout.metadata'
+        event.timestamp = datetime.utcnow()
+        event.source = 'Pid: ' + str(getpid())
+        AgentContext.socket().send(event)
 
     @classmethod
     def data(cls):
