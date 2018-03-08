@@ -109,7 +109,7 @@ class CoreAgentDownloader():
             try:
                 self.download_package()
                 self.untar()
-            except Exception as e:
+            except OSError as e:
                 logger.error('Exception raised while '
                              'downloading Core Agent: %s', repr(e))
             finally:
@@ -125,7 +125,7 @@ class CoreAgentDownloader():
         self.clean_stale_download_lock()
         try:
             self.download_lock_fd = os.open(self.download_lock_path, os.O_RDWR | os.O_CREAT | os.O_EXCL | os.O_NONBLOCK)
-        except Exception as e:
+        except OSError as e:
             logger.debug("Could not obtain download lock on %s: %s",
                          self.download_lock_path,
                          repr(e))
@@ -137,7 +137,7 @@ class CoreAgentDownloader():
             if delta > self.stale_download_secs:
                 logger.debug("Clearing stale download lock file.")
                 os.unlink(self.download_lock_path)
-        except Exception:
+        except OSError:
             pass
 
     def release_download_lock(self):
@@ -176,7 +176,7 @@ class CoreAgentManifest:
         self.valid = False
         try:
             self.parse()
-        except Exception as e:
+        except (ValueError, TypeError, OSError) as e:
             logger.debug('Error parsing Core Agent Manifest: %s', repr(e))
 
     def parse(self):
@@ -213,6 +213,6 @@ class SHA256:
                 for block in iter(lambda: f.read(block_size), b''):
                     sha256.update(block)
             return sha256.hexdigest()
-        except Exception as e:
+        except OSError as e:
             logger.debug('Error on digest: %s', repr(e))
             return None

@@ -92,9 +92,6 @@ class CoreAgentSocket(threading.Thread):
                     result = self._send(body)
                     if result is True:
                         self.command_queue.task_done()
-                    elif result is False:
-                        # Something was wrong with the command.
-                        self.command_queue.task_done()
                     else:
                         # Something was wrong with the socket.
                         self._disconnect()
@@ -109,28 +106,24 @@ class CoreAgentSocket(threading.Thread):
 
     def send(self, command):
         try:
-            self.command_queue.put(command)
-        except Exception as e:
+            self.command_queue.put(command, False)
+        except queue.Full as e:
             # TODO mark the command as not queued?
             logger.debug('CoreAgentSocket error on send: %s' % repr(e))
 
     def _send(self, command, async=True):
-        try:
-            msg = command.message()
-        except Exception as e:
-            log.debug('Exception when getting command message: %s' % repr(e))
-            return False
+        msg = command.message()
 
         try:
             data = json.dumps(msg)
-        except Exception as e:
+        except (ValueError, TypeError) as e:
             log.debug('Exception when serializing command message: %s' % repr(e))
             return False
 
         try:
             self.socket.sendall(self._message_length(data))
             self.socket.sendall(data.encode())
-        except Exception as e:
+        except (OSError, ConnectionRefusedError) as e:
             logger.debug("CoreAgentSocket exception on _send: %s" % repr(e))
             return None
 
@@ -151,7 +144,7 @@ class CoreAgentSocket(threading.Thread):
             size = struct.unpack('<I', raw_size)[0]
             message = self.socket.recv(size)
             return message
-        except Exception as e:
+        except (OSError, ConnectionRefusedError) as e:
             logger.debug('CoreAgentSocket error on read response: %s' % repr(e))
             return None
 
@@ -167,7 +160,7 @@ class CoreAgentSocket(threading.Thread):
                 self.socket.settimeout(0.5)
                 logger.debug('CoreAgentSocket is connected')
                 return True
-            except Exception as e:
+            except (FileNotFoundError, ConnectionRefusedError) as e:
                 logger.debug('CoreAgentSocket connection error: %s', repr(e))
                 if attempt >= connect_attempts:
                     return False
@@ -178,7 +171,7 @@ class CoreAgentSocket(threading.Thread):
         logger.debug('CoreAgentSocket disconnecting from %s', self.socket_path)
         try:
             self.socket.close()
-        except Exception as e:
+        except (OSError, ConnectionRefusedError) as e:
             logger.debug('CoreAgentSocket exception on disconnect: %s' % repr(e))
         finally:
             self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
