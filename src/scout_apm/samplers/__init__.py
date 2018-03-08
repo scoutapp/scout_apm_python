@@ -31,7 +31,6 @@ class Samplers():
         try:
             if cls._thread_lock.acquire(True) is True:
                 logger.info('Acquired samplers lock.')
-                socket = AgentContext.socket
                 instances = [Cpu(), Memory()]
 
                 while True:
@@ -43,7 +42,7 @@ class Samplers():
                         event.source = 'Pid: ' + str(getpid())
 
                         if event.event_value is not None:
-                            socket.send(event)
+                            AgentContext.socket().send(event)
                     sleep(60)
         finally:
             logger.debug('Shutting down samplers thread.')

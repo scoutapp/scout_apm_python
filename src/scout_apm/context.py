@@ -10,7 +10,9 @@ logger = logging.getLogger(__name__)
 
 
 class AgentContext(ThreadLocalSingleton):
-    socket = CoreAgentSocket()
-
     def __init__(self, *args, **kwargs):
         self.config = kwargs.get('config', ScoutConfig())
+
+    @classmethod
+    def socket(cls):
+        return CoreAgentSocket.instance(scout_config=ScoutConfig())

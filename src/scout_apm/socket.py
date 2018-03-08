@@ -22,7 +22,17 @@ logger = logging.getLogger(__name__)
 
 
 class CoreAgentSocket(threading.Thread):
+    _instance = None
     _run_lock = threading.Semaphore()
+
+    @classmethod
+    def instance(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = cls(args, kwargs)
+        elif cls._instance.running() is False:
+            del(cls._instance)
+            cls._instance = cls(args, kwargs)
+        return cls._instance
 
     def __init__(self, *args, **kwargs):
         # Call threading.Thread.__init__()
@@ -40,6 +50,9 @@ class CoreAgentSocket(threading.Thread):
         # Start the thread
         self.daemon = True
         self.start()
+
+    def __del__(self):
+        self.stop()
 
     def running(self):
         return self._started_event.is_set()
