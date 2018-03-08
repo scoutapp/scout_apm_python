@@ -159,7 +159,7 @@ class BatchCommand:
                                        tag=key,
                                        value=request.tags[key]))
         # Spans
-        for span in request.spans:
+        for span in request.complete_spans:
             # Span Start
             commands.append(StartSpan(timestamp=span.start_time,
                                       request_id=span.request_id,

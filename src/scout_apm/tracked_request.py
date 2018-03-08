@@ -22,7 +22,8 @@ class TrackedRequest(ThreadLocalSingleton):
         self.req_id = 'req-' + str(uuid4())
         self.start_time = kwargs.get('start_time', datetime.utcnow())
         self.end_time = kwargs.get('end_time', None)
-        self.spans = kwargs.get('spans', [])
+        self.active_spans = kwargs.get('active_spans', [])
+        self.complete_spans = kwargs.get('complete_spans', [])
         self.tags = kwargs.get('tags', {})
         self.real_request = kwargs.get('real_request', False)
         logger.debug('Starting request: %s', self.req_id)
@@ -50,18 +51,19 @@ class TrackedRequest(ThreadLocalSingleton):
             request_id=self.req_id,
             operation=operation,
             parent=parent_id)
-        self.spans.append(new_span)
+        self.active_spans.append(new_span)
         return new_span
 
     def stop_span(self):
-        stopping_span = self.spans.pop()
+        stopping_span = self.active_spans.pop()
         stopping_span.stop()
-        if len(self.spans) == 0:
+        self.complete_spans.append(stopping_span)
+        if len(self.active_spans) == 0:
             self.finish()
 
     def current_span(self):
-        if len(self.spans) > 0:
-            return self.spans[-1]
+        if len(self.active_spans) > 0:
+            return self.active_spans[-1]
         else:
             return None
 
