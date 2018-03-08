@@ -57,6 +57,7 @@ class CoreAgentManager:
             subprocess.Popen(
                     [
                         self.core_agent_bin_path, 'start',
+                        '--daemonize', 'true',
                         '--log-level', self.log_level(),
                         '--socket', self.socket_path()
                     ])
