@@ -58,4 +58,4 @@ class SQLInstrument:
             result = original(*args, **kwargs)
             return _DetailedTracingCursorWrapper(result, self)
 
-        logger.info('Monkey patched SQL')
+        logger.debug('Monkey patched SQL')

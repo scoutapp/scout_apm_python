@@ -146,7 +146,7 @@ class CoreAgentDownloader():
             os.close(self.download_lock_fd)
 
     def download_package(self):
-        logger.info('Downloading: {full_url} to {filepath}'.format(
+        logger.debug('Downloading: {full_url} to {filepath}'.format(
             full_url=self.full_url(),
             filepath=self.package_location))
         req = requests.get(self.full_url(), stream=True)

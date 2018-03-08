@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def install():
-    logger.info('APM Launching on PID: %s', getpid())
+    logger.debug('APM Launching on PID: %s', getpid())
     CoreAgentManager().launch()
     AppMetadata.report()
     AgentContext.socket().stop()

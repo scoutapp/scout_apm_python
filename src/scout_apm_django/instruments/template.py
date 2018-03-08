@@ -84,7 +84,7 @@ class TemplateInstrument:
         def render(self, *args, **kwargs):
             return ('Block/Render', {'name': self.name})
 
-        logger.info('Monkey patched Templates')
+        logger.debug('Monkey patched Templates')
 
         # XXX: Figure this out, causes exception that the "resolve_context" key isn't in dict
         # Also will need to figure out the name hash

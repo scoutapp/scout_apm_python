@@ -27,10 +27,10 @@ class Samplers():
 
     @classmethod
     def run_samplers(cls):
-        logger.info('Starting Samplers. Acquiring samplers lock.')
+        logger.debug('Starting Samplers. Acquiring samplers lock.')
         try:
             if cls._thread_lock.acquire(True) is True:
-                logger.info('Acquired samplers lock.')
+                logger.debug('Acquired samplers lock.')
                 instances = [Cpu(), Memory()]
 
                 while True:

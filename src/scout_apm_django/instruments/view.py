@@ -134,20 +134,20 @@ def intercept_resolver_and_view():
 
                     span.tag('remote_addr', request.META['REMOTE_ADDR'])
 
-                    logger.info('Before calling original view')
+                    logger.debug('Before calling original view')
                     try:
                         return original(*args, **kwargs)
                     except Exception as e:
-                        logger.info('***** Got the exception')
+                        logger.debug('***** Got the exception')
                         TrackedRequest.instance().tag('error', 'true')
                         raise e
                     finally:
                         TrackedRequest.instance().stop_span()
-                        logger.info(span.dump())
+                        logger.debug(span.dump())
 
                 return CallableProxy(func, tracing_function)
             except Exception as err:
-                logger.info(err)
+                logger.debug(err)
                 # If we can't wrap for any reason, just return the original
                 return func
 
@@ -159,4 +159,4 @@ class ViewInstrument:
     def install():
         intercept_middleware()
         intercept_resolver_and_view()
-        logger.info('Monkey patched View')
+        logger.debug('Monkey patched View')

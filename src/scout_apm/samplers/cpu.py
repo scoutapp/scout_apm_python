@@ -37,8 +37,7 @@ class Cpu(object):
         wall_clock_elapsed = now - self.last_run
         if wall_clock_elapsed < timedelta(0):
             self.save_times(now, cpu_times)
-            # TODO: these logger.info lines need a proper logger
-            logger.info(dedent(
+            logger.debug(dedent(
                          """
                          {human_name}: Negative time elapsed.
                          now: {now},
@@ -58,7 +57,7 @@ class Cpu(object):
         # pre-fork, records {u,s}time, then forks. This resets {u,s}time to 0
         if process_elapsed < 0:
             self.save_times(now, cpu_times)
-            logger.info(dedent(
+            logger.debug(dedent(
                          """
                          {human_name}: Negative process time elapsed.
                          utime: {utime_elapsed},
@@ -85,7 +84,7 @@ class Cpu(object):
 
         if res < 0:
             self.save_times(now, cpu_times)
-            logger.info(dedent(
+            logger.debug(dedent(
                          """
                          {human_name}: Negative CPU.
                          {process_elapsed} / {normalized_wall_clock_elapsed} * 100 ==> {res}
@@ -98,7 +97,7 @@ class Cpu(object):
 
         self.save_times(now, cpu_times)
 
-        logger.info(dedent(
+        logger.debug(dedent(
                      """
                      {human_name}: {res} [{num_processors} CPU(s)]
                      """

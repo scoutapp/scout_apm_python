@@ -32,7 +32,7 @@ def trace_method(cls, method_name=None):
                 return original(*args, **kwargs)
             finally:
                 TrackedRequest.instance().stop_span()
-                logger.info(span.dump())
+                logger.debug(span.dump())
         return tracing_method
     return decorator
 
@@ -61,7 +61,7 @@ def trace_function(func, info, real_request):
                 return original(*args, **kwargs)
             finally:
                 TrackedRequest.instance().stop_span()
-                logger.info(span.dump())
+                logger.debug(span.dump())
 
         return CallableProxy(func, tracing_function)
     except Exception:

@@ -22,7 +22,7 @@ class DjangoSignals:
                                 dispatch_uid='request_started_scoutapm')
         request_finished.connect(DjangoSignals.stop_tracked_request,
                                  dispatch_uid='request_stopped_scoutapm')
-        logger.info('Added Django Signals')
+        logger.debug('Added Django Signals')
 
     # sender: django.core.handlers.wsgi.WSGIHandler
     # kwargs: 'environ' => { ENV Key => Env Value }
