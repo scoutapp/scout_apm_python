@@ -11,34 +11,30 @@ from scout_apm.tracked_request import TrackedRequest
 from django.core.handlers.base import BaseHandler
 from django.core.handlers.wsgi import WSGIHandler
 
-try:
-    # Django 1.x
-    from django.core import urlresolvers as resolvers
-except ImportError:
-    # Django 2.x - https://docs.djangoproject.com/en/2.0/releases/2.0/
-    from django.urls import resolvers
+# TODO: support django 2.0
+from django.urls import resolvers
 
 # Logging
 logger = logging.getLogger(__name__)
 
 
-def patch_function_list(functions, action_type, format_string, real_request):
+def patch_function_list(functions, action_type, format_string):
     for i, func in enumerate(functions):
         if hasattr(func, 'im_class'):
             middleware_name = func.im_class.__name__
         else:
             middleware_name = func.__name__
         info = (action_type, {'name': middleware_name})
-        functions[i] = trace_function(func, info, real_request)
+        functions[i] = trace_function(func, info)
 
 
 def wrap_middleware_with_tracers(request_handler):
     # XXX: Figure out why request middleware isn't getting instrumented
-    patch_function_list(request_handler._request_middleware, 'Middleware/Request', 'Middleware: %s (request)', True)
-    patch_function_list(request_handler._view_middleware, 'Middleware/View', 'Middleware: %s (view)', True)
-    patch_function_list(request_handler._template_response_middleware, 'Middleware/Template/Response', 'Middleware: %s (template response)', True)
-    patch_function_list(request_handler._response_middleware, 'Middleware/Response', 'Middleware: %s (response)', True)
-    patch_function_list(request_handler._exception_middleware, 'Middleware/Exception', 'Middleware: %s (exeption)', True)
+    patch_function_list(request_handler._request_middleware, 'Middleware/Request', 'Middleware: %s (request)')
+    patch_function_list(request_handler._view_middleware, 'Middleware/View', 'Middleware: %s (view)')
+    patch_function_list(request_handler._template_response_middleware, 'Middleware/Template/Response', 'Middleware: %s (template response)')
+    patch_function_list(request_handler._response_middleware, 'Middleware/Response', 'Middleware: %s (response)')
+    patch_function_list(request_handler._exception_middleware, 'Middleware/Exception', 'Middleware: %s (exeption)')
 
 
 # The linter thinks the methods we monkeypatch are not used

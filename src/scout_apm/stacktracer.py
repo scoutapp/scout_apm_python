@@ -37,7 +37,7 @@ def trace_method(cls, method_name=None):
     return decorator
 
 
-def trace_function(func, info, real_request):
+def trace_function(func, info):
     try:
         def tracing_function(original, *args, **kwargs):
             if callable(info):
@@ -50,8 +50,6 @@ def trace_function(func, info, real_request):
                 operation = operation + '/' + detail['name']
 
             tr = TrackedRequest.instance()
-            if real_request is True:
-                tr.mark_real_request()
             span = tr.start_span(operation=operation)
 
             for key in detail:

@@ -30,7 +30,9 @@ class DjangoSignals:
     def start_tracked_request(sender, **kwargs):
         # TODO: This is a good spot to extract headers
         operation = 'Django'
-        TrackedRequest.instance().start_span(operation=operation)
+        tr = TrackedRequest.instance()
+        tr.start_span(operation=operation)
+        tr.mark_real_request()
 
     def stop_tracked_request(sender, **kwargs):
         TrackedRequest.instance().stop_span()

@@ -18,6 +18,7 @@ class Register:
         return {'Register': {
             'app': self.app,
             'key': self.key,
+            'api_version': '1.0',
         }}
 
 

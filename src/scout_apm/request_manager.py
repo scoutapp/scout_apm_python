@@ -18,7 +18,6 @@ class RequestManager(ThreadLocalSingleton):
     def add_request(self, request):
         if request.is_real_request():
             self.request_buffer.add_request(request)
-            self.request_buffer.flush()
 
 
 class RequestBuffer(ThreadLocalSingleton):
@@ -28,6 +27,7 @@ class RequestBuffer(ThreadLocalSingleton):
     # TODO: ensure there is a limit to the tracked requests in this buffer
     def add_request(self, request):
         self._requests.append(request)
+        self.flush()
 
     def flush(self):
         logger.debug('Flushing RequestBuffer')
