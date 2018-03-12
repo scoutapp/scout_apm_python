@@ -79,10 +79,6 @@ class CoreAgentSocket(threading.Thread):
             self._connect()
             self._register()
             while True:
-                if self._stop_event.is_set():
-                    logger.debug("CoreAgentSocket thread stopping.")
-                    break
-
                 try:
                     body = self.command_queue.get(block=True, timeout=1)
                 except queue.Empty:
@@ -97,6 +93,14 @@ class CoreAgentSocket(threading.Thread):
                         self._disconnect()
                         self._connect()
                         self._register()
+
+                # Check for stop event after a read from the queue. This is to
+                # allow you to open a socket, immediately send to it, and then
+                # stop it. We do this in the Metadata send at application start
+                # time
+                if self._stop_event.is_set():
+                    logger.debug("CoreAgentSocket thread stopping.")
+                    break
         finally:
             self.__class__._run_lock.release()
             self._stop_event.clear()
