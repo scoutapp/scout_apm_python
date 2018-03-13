@@ -55,12 +55,12 @@ class CoreAgentManager:
     def run(self):
         try:
             process = subprocess.Popen(
-                    [
-                        self.core_agent_bin_path, 'start',
-                        '--daemonize', 'true',
-                        '--log-level', self.log_level(),
-                        '--socket', self.socket_path()
-                    ])
+                    self.agent_binary() +
+                    self.daemonize_flag() +
+                    self.log_level() +
+                    self.log_file() +
+                    self.socket_path()
+                    )
             process.wait()
         except Exception as e:
             # TODO detect failute of launch properly
@@ -68,11 +68,26 @@ class CoreAgentManager:
             return False
         return True
 
+    def agent_binary(self):
+        return [self.core_agent_bin_path, 'start']
+
+    def daemonize_flag(self):
+        return ['--daemonize', 'true']
+
     def socket_path(self):
-        return AgentContext.instance().config.value('socket_path')
+        socket_path = AgentContext.instance().config.value('socket_path')
+        return ['--socket', socket_path]
 
     def log_level(self):
-        return AgentContext.instance().config.value('log_level')
+        level = AgentContext.instance().config.value('log_level')
+        return ['--log-level', level]
+
+    def log_file(self):
+        path = AgentContext.instance().config.value('log_file')
+        if path is not None:
+            return ['--log-file', path]
+        else:
+            return []
 
     def verify(self):
         manifest = CoreAgentManifest(self.core_agent_dir + '/manifest.json')
