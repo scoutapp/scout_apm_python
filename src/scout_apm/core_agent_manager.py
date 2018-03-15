@@ -59,6 +59,7 @@ class CoreAgentManager:
                     self.daemonize_flag() +
                     self.log_level() +
                     self.log_file() +
+                    self.config_file() +
                     self.socket_path()
                     )
             process.wait()
@@ -86,6 +87,13 @@ class CoreAgentManager:
         path = AgentContext.instance().config.value('log_file')
         if path is not None:
             return ['--log-file', path]
+        else:
+            return []
+
+    def config_file(self):
+        path = AgentContext.instance().config.value('config_file')
+        if path is not None:
+            return ['--config-file', path]
         else:
             return []
 
