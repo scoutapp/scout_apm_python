@@ -23,7 +23,13 @@ class ScoutConfig():
             ScoutConfigNull()]
 
     def value(self, key):
-        return self.locate_layer_for_key(key).value(key)
+        value = self.locate_layer_for_key(key).value(key)
+        if key in CONVERSIONS:
+            converted_value = CONVERSIONS[key].convert(value)
+        else:
+            converted_value = value
+
+        return converted_value
 
     def locate_layer_for_key(self, key):
         for layer in self.layers:
@@ -185,3 +191,14 @@ class ScoutConfigNull():
 
     def value(self, key):
         return None
+
+
+class BooleanConversion():
+    @classmethod
+    def convert(cls, value):
+        return value.lower() in ('yes', 'true', 't', '1')
+
+
+CONVERSIONS = {
+    'monitor': BooleanConversion,
+}
