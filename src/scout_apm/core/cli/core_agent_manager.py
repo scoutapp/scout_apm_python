@@ -5,13 +5,13 @@ import logging
 
 
 def download(**kwargs):
-    from scout_apm import CoreAgentManager
+    from scout_apm.core import CoreAgentManager
     core_agent_manager = CoreAgentManager()
     core_agent_manager.download()
 
 
 def launch(**kwargs):
-    from scout_apm import CoreAgentManager
+    from scout_apm.core import CoreAgentManager
     core_agent_manager = CoreAgentManager()
     core_agent_manager.launch()
 

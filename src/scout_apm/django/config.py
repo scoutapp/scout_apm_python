@@ -1,5 +1,5 @@
 from django.conf import settings
-from scout_apm.config.config import ScoutConfig
+from scout_apm.core.config.config import ScoutConfig
 
 
 import logging

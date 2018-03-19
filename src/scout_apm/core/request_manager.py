@@ -2,8 +2,8 @@ from __future__ import absolute_import
 
 import logging
 
-from scout_apm.context import AgentContext
-from scout_apm.thread_local import ThreadLocalSingleton
+from scout_apm.core.context import AgentContext
+from scout_apm.core.thread_local import ThreadLocalSingleton
 
 from .commands import BatchCommand
 

@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 import logging
 
-from scout_apm.stacktracer import trace_function, trace_method
+from scout_apm.core.stacktracer import trace_function, trace_method
 
 # XXX:Changed in Django 1.9
 # https://github.com/jazzband/django-debug-toolbar/issues/739

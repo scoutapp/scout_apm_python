@@ -1,8 +1,8 @@
 from __future__ import absolute_import
 import logging
 
-from scout_apm.monkey import CallableProxy, monkeypatch_method
-from scout_apm.tracked_request import TrackedRequest
+from scout_apm.core.monkey import CallableProxy, monkeypatch_method
+from scout_apm.core.tracked_request import TrackedRequest
 
 # Logging
 logger = logging.getLogger(__name__)

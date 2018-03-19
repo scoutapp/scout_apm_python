@@ -4,11 +4,11 @@ import threading
 from os import getpid
 from time import sleep
 
-from scout_apm.context import AgentContext
-from scout_apm.commands import ApplicationEvent
+from scout_apm.core.context import AgentContext
+from scout_apm.core.commands import ApplicationEvent
 
-from scout_apm.samplers.cpu import Cpu
-from scout_apm.samplers.memory import Memory
+from scout_apm.core.samplers.cpu import Cpu
+from scout_apm.core.samplers.memory import Memory
 
 # Logging
 logger = logging.getLogger(__name__)

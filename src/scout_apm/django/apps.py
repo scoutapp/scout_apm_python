@@ -3,12 +3,12 @@ from __future__ import absolute_import
 from django.apps import AppConfig
 from django.core.signals import request_finished, request_started
 
-from scout_apm_django.instruments.sql import SQLInstrument
-from scout_apm_django.instruments.template import TemplateInstrument
-from scout_apm_django.instruments.view import ViewInstrument
-from scout_apm_django.config import ConfigAdapter
-from scout_apm.tracked_request import TrackedRequest
-import scout_apm
+from scout_apm.django.instruments.sql import SQLInstrument
+from scout_apm.django.instruments.template import TemplateInstrument
+from scout_apm.django.instruments.view import ViewInstrument
+from scout_apm.django.config import ConfigAdapter
+from scout_apm.core.tracked_request import TrackedRequest
+import scout_apm.core
 
 import logging
 
@@ -48,7 +48,7 @@ class ScoutApmDjangoConfig(AppConfig):
         ConfigAdapter.install()
 
         # Finish installing the agent
-        scout_apm.install()
+        scout_apm.core.install()
 
         # Setup Instruments
         DjangoSignals.install()

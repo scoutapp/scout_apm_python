@@ -9,8 +9,8 @@ import sys
 
 
 # Scout APM
-from scout_apm.context import AgentContext
-from scout_apm.commands import ApplicationEvent
+from scout_apm.core.context import AgentContext
+from scout_apm.core.commands import ApplicationEvent
 # from scout_apm.environment import Environment
 
 logger = logging.getLogger(__name__)

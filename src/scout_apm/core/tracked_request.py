@@ -4,9 +4,9 @@ import logging
 from datetime import datetime
 from uuid import uuid4
 
-from scout_apm.samplers import Samplers
-from scout_apm.request_manager import RequestManager
-from scout_apm.thread_local import ThreadLocalSingleton
+from scout_apm.core.samplers import Samplers
+from scout_apm.core.request_manager import RequestManager
+from scout_apm.core.thread_local import ThreadLocalSingleton
 
 # Logging
 logger = logging.getLogger(__name__)

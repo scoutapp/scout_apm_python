@@ -1,8 +1,8 @@
 from __future__ import absolute_import
 import logging
 
-from scout_apm.monkey import monkeypatch_method
-from scout_apm.tracked_request import TrackedRequest
+from scout_apm.core.monkey import monkeypatch_method
+from scout_apm.core.tracked_request import TrackedRequest
 
 try:
     from django.db.backends.base.base import BaseDatabaseWrapper

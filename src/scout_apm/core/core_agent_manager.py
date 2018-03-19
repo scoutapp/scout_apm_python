@@ -13,8 +13,8 @@ import time
 import requests
 
 # APM Modules
-from scout_apm.context import AgentContext
-from scout_apm.socket import CoreAgentSocket
+from scout_apm.core.context import AgentContext
+from scout_apm.core.socket import CoreAgentSocket
 
 # Logging
 logger = logging.getLogger(__name__)

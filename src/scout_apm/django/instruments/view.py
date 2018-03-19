@@ -3,9 +3,9 @@ from __future__ import absolute_import
 import logging
 
 # APM Modules
-from scout_apm.monkey import CallableProxy, monkeypatch_method
-from scout_apm.stacktracer import trace_function
-from scout_apm.tracked_request import TrackedRequest
+from scout_apm.core.monkey import CallableProxy, monkeypatch_method
+from scout_apm.core.stacktracer import trace_function
+from scout_apm.core.tracked_request import TrackedRequest
 
 # Django
 from django.core.handlers.base import BaseHandler
