@@ -155,6 +155,7 @@ class ScoutConfigDefaults():
                 'key': '',
                 'log_level': 'info',
                 'name': '',
+                'monitor': True,
                 'socket_path': '{}/scout_apm_core-{}-{}-{}/core-agent.sock'.format(self.core_agent_dir,
                                                                                    self.core_agent_version,
                                                                                    ScoutConfig.platform(),

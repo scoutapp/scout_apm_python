@@ -47,8 +47,12 @@ class ScoutApmDjangoConfig(AppConfig):
         # Copy django configuration to scout_apm's config
         ConfigAdapter.install()
 
-        # Finish installing the agent
-        scout_apm.core.install()
+        # Finish installing the agent. If the agent isn't installed for any
+        # reason, return without installing instruments
+        installed = scout_apm.core.install()
+        if installed is False:
+            return
+
 
         # Setup Instruments
         DjangoSignals.install()
