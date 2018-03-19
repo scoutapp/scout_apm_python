@@ -56,7 +56,7 @@ class AppMetadata():
     def package_list(cls):
         packages = []
         try:
-            for pkg_dist in [p for p in pip._vendor.pkg_resources.working_set]:
+            for pkg_dist in [p for p in pip._internal._vendor.pkg_resources.working_set]:
                 try:
                     p_split = str(pkg_dist).split()
                     packages.append([p_split[0], p_split[1]])
