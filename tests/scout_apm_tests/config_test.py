@@ -12,10 +12,28 @@ def test_defaults():
 
 def test_env():
     conf = scout_apm.config.config.ScoutConfig()
-    os.environ['SCOUT_SOCKET_PATH'] = '/set/in/test'
-    assert('/set/in/test' == conf.value('socket_path'))
+    os.environ['SCOUT_SOCKET_PATH'] = '/set/in/env'
+    assert('/set/in/env' == conf.value('socket_path'))
+    del os.environ['SCOUT_SOCKET_PATH']
+
+
+def test_python():
+    scout_apm.config.config.ScoutConfig.set(socket_path='/set/via/function')
+    conf = scout_apm.config.config.ScoutConfig()
+    assert('/set/via/function' == conf.value('socket_path'))
 
 
 def test_none():
     conf = scout_apm.config.config.ScoutConfig()
     assert(conf.value('unknown value') is None)
+
+
+def test_env_outranks_python():
+    os.environ['SCOUT_SOCKET_PATH'] = '/set/in/env'
+    scout_apm.config.config.ScoutConfig.set(socket_path='/set/via/function')
+
+    conf = scout_apm.config.config.ScoutConfig()
+    assert('/set/in/env' == conf.value('socket_path'))
+
+    del os.environ['SCOUT_SOCKET_PATH']
+
