@@ -18,6 +18,7 @@ class ScoutConfig():
     def __init__(self):
         self.layers = [
             ScoutConfigEnv(),
+            ScoutConfigPython(),
             ScoutConfigDefaults(),
             ScoutConfigNull()]
 
@@ -77,6 +78,31 @@ class ScoutConfig():
             return 'x86_64'
         else:
             return 'unknown'
+
+
+# Module-level data, the ScoutConfigPython can add to this, and reads from it.
+SCOUT_PYTHON_VALUES = {}
+
+
+class ScoutConfigPython():
+    """
+    A configuration overlay that lets other parts of python set values.
+    """
+    def name(self):
+        return 'Python'
+
+    def has_config(self, key):
+        return key in SCOUT_PYTHON_VALUES
+
+    def value(self, key):
+        return SCOUT_PYTHON_VALUES[key]
+
+    @classmethod
+    def set(cls, **kwargs):
+        global SCOUT_PYTHON_VALUES
+        for key, value in kwargs.items():
+            SCOUT_PYTHON_VALUES[key] = value
+
 
 
 class ScoutConfigEnv():

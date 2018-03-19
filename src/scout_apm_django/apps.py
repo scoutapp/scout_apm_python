@@ -6,6 +6,7 @@ from django.core.signals import request_finished, request_started
 from scout_apm_django.instruments.sql import SQLInstrument
 from scout_apm_django.instruments.template import TemplateInstrument
 from scout_apm_django.instruments.view import ViewInstrument
+from scout_apm_django.config import ConfigAdapter
 from scout_apm.tracked_request import TrackedRequest
 import scout_apm
 
@@ -43,7 +44,13 @@ class ScoutApmDjangoConfig(AppConfig):
     verbose_name = 'Scout Apm (Django)'
 
     def ready(self):
+        # Copy django configuration to scout_apm's config
+        ConfigAdapter.install()
+
+        # Finish installing the agent
         scout_apm.install()
+
+        # Setup Instruments
         DjangoSignals.install()
         SQLInstrument.install()
         TemplateInstrument.install()
