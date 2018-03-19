@@ -12,8 +12,11 @@ from django.core.handlers.base import BaseHandler
 from django.core.handlers.wsgi import WSGIHandler
 import django
 
-# TODO: support django 2.0
-from django.urls import resolvers
+try:
+    from django.urls import resolvers
+except:
+    from django.core import urlresolvers
+
 
 # Logging
 logger = logging.getLogger(__name__)
@@ -75,10 +78,12 @@ def intercept_resolver_and_view():
     # inspect the callstack in __new__ and return either a normal object, or an
     # instance of our proxying class.
 
-    if django.VERSION < (2, 0):
-        intercept_resolver_and_view_django_1()
-    else:
+    if django.VERSION > (2, 0):
         intercept_resolver_and_view_django_2()
+    elif django.VERSION > (1, 9):
+        intercept_resolver_and_view_django_1_9()
+    else:
+        intercept_resolver_and_view_django_1_8()
 
 
 def intercept_resolver_and_view_django_2():
@@ -156,7 +161,7 @@ def intercept_resolver_and_view_django_2():
     resolvers.URLResolver = ProxyURLResolver
 
 
-def intercept_resolver_and_view_django_1():
+def intercept_resolver_and_view_django_1_9():
     real_resolver_cls = resolvers.RegexURLResolver
 
     class ProxyRegexURLResolverMetaClass(resolvers.RegexURLResolver.__class__):
@@ -231,6 +236,81 @@ def intercept_resolver_and_view_django_1():
 
     resolvers.RegexURLResolver = ProxyRegexURLResolver
 
+
+def intercept_resolver_and_view_django_1_8():
+    real_resolver_cls = urlresolvers.RegexURLResolver
+
+    class ProxyRegexURLResolverMetaClass(urlresolvers.RegexURLResolver.__class__):
+        def __instancecheck__(self, instance):
+            # Some places in django do a type check against RegexURLResolver
+            # and behave differently based on the result, so we have to make
+            # sure the replacement class we plug in accepts instances of both
+            # the default and replaced types.
+            return isinstance(instance, real_resolver_cls) or super(ProxyRegexURLResolverMetaClass, self).__instancecheck__(instance)
+
+    class ProxyRegexURLResolver(object):
+        __metaclass__ = ProxyRegexURLResolverMetaClass
+
+        def __new__(cls, *args, **kwargs):
+            real_object = real_resolver_cls(*args, **kwargs)
+            obj = super(ProxyRegexURLResolver, cls).__new__(cls)
+            obj.other = real_object
+            return obj
+            # XXX: this return is behind an if statement in speedbar, sometimes
+            # doesn't instrument. unsure why
+
+        def __getattr__(self, attr):
+            return getattr(self.other, attr)
+
+        def resolve(self, path):
+            callbacks = self.other.resolve(path)
+            callbacks.func = self.trace_view_function(callbacks.func, ('Controller', {"path": path, "name": callbacks._func_path}))
+            return callbacks
+
+        # XXX: This is duplicate code w/ StackTracer class.  Can this maybe be
+        # a callback that takes the span, and the req and the args?  Rather
+        # than a full reimpl of this?
+        def trace_view_function(self, func, info):
+            try:
+                def tracing_function(original, *args, **kwargs):
+                    entry_type, detail = info
+
+                    operation = entry_type
+                    if detail['name'] is not None:
+                        operation = operation + '/' + detail['name']
+
+                    span = TrackedRequest.instance().start_span(operation=operation)
+                    for key in detail:
+                        span.tag(key, detail[key])
+
+                    # And the custom View stuff
+                    request = args[0]
+
+                    # Extract headers
+                    #  regex = re.compile('^HTTP_')
+                    #  headers = dict((regex.sub('', header), value) for (header, value)
+                    #  in request.META.items() if header.startswith('HTTP_'))
+
+                    span.tag('remote_addr', request.META['REMOTE_ADDR'])
+
+                    logger.debug('Before calling original view')
+                    try:
+                        return original(*args, **kwargs)
+                    except Exception as e:
+                        logger.debug('***** Got the exception')
+                        TrackedRequest.instance().tag('error', 'true')
+                        raise e
+                    finally:
+                        TrackedRequest.instance().stop_span()
+                        logger.debug(span.dump())
+
+                return CallableProxy(func, tracing_function)
+            except Exception as err:
+                logger.debug(err)
+                # If we can't wrap for any reason, just return the original
+                return func
+
+    urlresolvers.RegexURLResolver = ProxyRegexURLResolver
 
 class ViewInstrument:
     @staticmethod
