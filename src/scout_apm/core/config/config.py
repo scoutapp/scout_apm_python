@@ -200,5 +200,7 @@ class BooleanConversion():
 
 
 CONVERSIONS = {
+    'core_agent_download': BooleanConversion,
+    'core_agent_launch': BooleanConversion,
     'monitor': BooleanConversion,
 }
