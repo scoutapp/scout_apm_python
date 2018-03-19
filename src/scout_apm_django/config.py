@@ -1,5 +1,5 @@
 from django.conf import settings
-from scout_apm.config.config import ScoutConfigPython
+from scout_apm.config.config import ScoutConfig
 
 
 import logging
@@ -16,4 +16,4 @@ class ConfigAdapter:
             value = getattr(settings, name)
             clean_name = name.replace('SCOUT_', '').lower()
             configs[clean_name] = value
-        ScoutConfigPython.set(**configs)
+        ScoutConfig.set(**configs)

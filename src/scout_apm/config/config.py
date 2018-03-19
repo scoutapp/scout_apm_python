@@ -79,8 +79,18 @@ class ScoutConfig():
         else:
             return 'unknown'
 
+    @classmethod
+    def set(cls, **kwargs):
+        """
+        Sets a configuration value for the Scout agent. Values set here will
+        not override values set in ENV.
+        """
+        global SCOUT_PYTHON_VALUES
+        for key, value in kwargs.items():
+            SCOUT_PYTHON_VALUES[key] = value
 
-# Module-level data, the ScoutConfigPython can add to this, and reads from it.
+
+# Module-level data, the ScoutConfig.set(key="value") adds to this
 SCOUT_PYTHON_VALUES = {}
 
 
@@ -96,12 +106,6 @@ class ScoutConfigPython():
 
     def value(self, key):
         return SCOUT_PYTHON_VALUES[key]
-
-    @classmethod
-    def set(cls, **kwargs):
-        global SCOUT_PYTHON_VALUES
-        for key, value in kwargs.items():
-            SCOUT_PYTHON_VALUES[key] = value
 
 
 
