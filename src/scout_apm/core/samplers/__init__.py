@@ -31,7 +31,8 @@ class Samplers():
         try:
             if cls._thread_lock.acquire(True) is True:
                 logger.debug('Acquired samplers lock.')
-                instances = [Cpu(), Memory()]
+                # instances = [Cpu(), Memory()]
+                instances = [Memory()]
 
                 while True:
                     for instance in instances:
