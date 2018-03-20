@@ -196,7 +196,12 @@ class ScoutConfigNull():
 class BooleanConversion():
     @classmethod
     def convert(cls, value):
-        return value.lower() in ('yes', 'true', 't', '1')
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            return value.lower() in ('yes', 'true', 't', '1')
+        # Unknown type - default to false?
+        return False
 
 
 CONVERSIONS = {
