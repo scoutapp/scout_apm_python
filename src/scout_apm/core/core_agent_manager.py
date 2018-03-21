@@ -221,14 +221,6 @@ class CoreAgentManifest:
         return self.valid
 
 
-class CoreAgentProbe():
-    def build_socket(self):
-        socket_path = AgentContext.instance().config.value('core_agent_socket')
-        socket = CoreAgentSocket(socket_path)
-        socket.open()
-        return socket
-
-
 class SHA256:
     @staticmethod
     def digest(filename, block_size=65536):
