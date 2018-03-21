@@ -14,7 +14,6 @@ import requests
 
 # APM Modules
 from scout_apm.core.context import AgentContext
-from scout_apm.core.socket import CoreAgentSocket
 
 # Logging
 logger = logging.getLogger(__name__)
