@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class _DetailedTracingCursorWrapper(CursorWrapper):
     def execute(self, sql, params=()):
         tr = TrackedRequest.instance()
-        span = tr.start_span(operation='SQL/query')
+        span = tr.start_span(operation='SQL/Query')
         span.tag('db.statement', sql)
 
         try:
@@ -31,7 +31,7 @@ class _DetailedTracingCursorWrapper(CursorWrapper):
             tr.stop_span()
 
     def executemany(self, sql, param_list):
-        span = TrackedRequest.instance().start_span(operation='SQL/many')
+        span = TrackedRequest.instance().start_span(operation='SQL/Many')
         span.tag('db.statement', sql)
 
         try:
