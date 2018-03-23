@@ -1,23 +1,26 @@
 import logging
-import platform
-import resource
+import psutil
 
 # Logging
 logger = logging.getLogger(__name__)
 
 
 class Memory(object):
-    # Account for Darwin returning maxrss in bytes and Linux in KB. Used by
-    # the slow converters. Doesn't feel like this should go here
-    # though...more of a utility.
     @staticmethod
-    def rss_to_mb(rss):
-        kilobyte_adjust = 1024 if (platform.system == 'Darwin') else 1
-        return float(rss) / 1024 / kilobyte_adjust
+    def rss_to_mb(rss_in_bytes):
+        """
+        Convert a number of bytes to a number of megabytes.
+        """
+        bytes_per_kb = 1024
+        kb_per_megabyte = 1024
+        return float(rss_in_bytes) / bytes_per_kb / kb_per_megabyte
 
     @staticmethod
     def rss():
-        return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        """
+        Returns the memory usage (RSS) of this process, in bytes
+        """
+        return psutil.Process().memory_info().rss
 
     @staticmethod
     def rss_in_mb():
@@ -31,13 +34,6 @@ class Memory(object):
 
     def human_name(self):
         return 'Process Memory'
-
-    def metrics(self):
-        """
-        TODO: after implementing metrics collector,
-        make sure this returns compatible metrics
-        """
-        return None
 
     def run(self):
         res = self.__class__.rss_in_mb()
