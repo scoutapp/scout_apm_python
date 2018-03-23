@@ -36,3 +36,20 @@ notifications:
   email:
     on_success: never
     on_failure: always
+
+branches:
+  only:
+    # release tags
+    - /^v\d+\.\d+\.\d+.*$/
+    - master
+
+deploy:
+  provider: pypi
+  user: scout
+  distributions: sdist bdist_wheel
+  password:
+    secure: "vM2OxUeh76my7EQl9CY35qf8RuDQk/n7xtYvUboBD8Kv3Ihfv6xxJVci9eBNqc59U5oM7y70gfFagiEEWUBafB6smSnxwnJlTFGe9THJmPsw2mnTbLhPju0qOZ7ynBEdpwPV6q84wTv1CbdnzfYDpC7xc/KH0dlNofAVlttMeG8J6E9nHfzTTvOtbVoAjfa9CP5vCd3Hg0RrAHQAOf5lcYT98n0WVesBy/f2mMKDOSA6+Gp/2j2GE8+KQSo++lR/4AktWAERjfD1Q11Ovm02Mu4Gfb4PlgwVWprZhpfHG1qQ1WLVaBa+5FkY++rfP3X3lvgtpTsJ8l3bc9f2VVU6YPiSTCTzOTOLh9h6hr4y7/K41sM6ANkEWDrQdgxmmkDh0v+pZa4Nn+tarI1O6PLayk8x4NOmmp2/uwV8/mnPk7ZwS/57eMF1n61BfyIpkLj/fqmNsBSS2Cye88SzDc9+Ms+yEMRDv++TSem9r3JrrMyqFeCV3YjRVtsEHFcKNV7KSbzFvfJId09sSLFmhxPev4ud/hh2AViQXKDzHNaAFGrM5juW/5VozNAd1tktSQgnOijsxjFcxgar+aCQFtKj/H9p2APkn0iIZX6+HHHUJoK2Baq8OSaXhp4ABLT9DWW4C/8eg7ERHHr/HqIU3GbSYbYs0BLMAzHaejNXi64r7UA="
+  on:
+    tags: true
+    repo: scoutapp/scout_apm_python
+    condition: "$TRAVIS_PYTHON_VERSION = 3.6"
