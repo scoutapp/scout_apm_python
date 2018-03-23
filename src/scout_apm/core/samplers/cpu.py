@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class Cpu(object):
     def __init__(self):
         self.last_run = datetime.now()
-        self.last_cpu_times = psutil.cpu_times()
+        self.last_cpu_times = psutil.Process().cpu_times()
         self.num_processors = psutil.cpu_count()
 
     def metric_type(self):
@@ -23,16 +23,10 @@ class Cpu(object):
     def human_name(self):
         return "Process CPU"
 
-    def metrics(self):
-        """
-        TODO: after implementing metrics collector,
-        make sure this returns compatible metrics
-        """
-        return None
-
     def run(self):
         now = datetime.now()
-        cpu_times = psutil.cpu_times()
+        process = psutil.Process() # get a handle on the current process
+        cpu_times = process.cpu_times()
 
         wall_clock_elapsed = now - self.last_run
         if wall_clock_elapsed < timedelta(0):
