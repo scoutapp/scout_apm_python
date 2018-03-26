@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.3] 2018-03-26
+
+### Fixed
+
+- Correct the default `socket_path`
+
 ## [1.0.2] 2018-03-26
 
 ### Fixed
