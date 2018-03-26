@@ -59,8 +59,9 @@ class ScoutConfig():
             'socket_path'
         ]
 
+    # scout_apm_core-latest-x86_64-apple-darwin.tgz
     def core_agent_full_name(self):
-        return 'core-agent-{version}-{platform}-{arch}'.format(
+        return 'scout_apm_core-{version}-{arch}-{platform}'.format(
                 version=self.value('core_agent_version'),
                 platform=self.platform(),
                 arch=self.arch())
@@ -69,9 +70,9 @@ class ScoutConfig():
     def platform(cls):
         system_name = platform.system()
         if system_name == 'Linux':
-            return 'linux'
+            return 'unknown-linux-gnu'
         elif system_name == 'Darwin':
-            return 'darwin'
+            return 'apple-darwin'
         else:
             return 'unknown'
 
