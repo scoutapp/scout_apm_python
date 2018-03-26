@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.1] 2018-03-26
+
+### Fixed
+
+- Fix mismatched archive download location
+
 ## [1.0.0] 2018-03-26
 
 Initial public release
