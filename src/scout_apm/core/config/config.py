@@ -60,7 +60,7 @@ class ScoutConfig():
         ]
 
     def core_agent_full_name(self):
-        return 'scout_apm_core-{version}-{platform}-{arch}'.format(
+        return 'core-agent-{version}-{platform}-{arch}'.format(
                 version=self.value('core_agent_version'),
                 platform=self.platform(),
                 arch=self.arch())
