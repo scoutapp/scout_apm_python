@@ -156,7 +156,7 @@ class ScoutConfigDefaults():
                 'core_agent_download': True,
                 'core_agent_launch': True,
                 'core_agent_version': self.core_agent_version,
-                'download_url': 'https://download.scoutapp.com/scout_apm_core',
+                'download_url': 'https://s3-us-west-1.amazonaws.com/scout-public-downloads/apm_core_agent/release',
                 'git_sha': '',
                 'key': '',
                 'log_level': 'info',
