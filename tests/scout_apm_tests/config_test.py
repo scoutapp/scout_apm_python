@@ -5,7 +5,7 @@ import re
 
 def test_defaults():
     conf = scout_apm.core.config.config.ScoutConfig()
-    m = re.match(r'/tmp/scout_apm_core/scout_apm_core-latest-(linux|darwin|unknown)-(x86_64|i686|unknown)/core-agent\.sock',
+    m = re.match(r'/tmp/scout_apm_core/scout_apm_core-latest-(x86_64|i686|unknown)-(unknown-linux-gnu|apple-darwin|unknown)/core-agent\.sock',
                  conf.value('socket_path'))
     assert(m is not None)
 

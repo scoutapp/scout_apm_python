@@ -63,8 +63,8 @@ class ScoutConfig():
     def core_agent_full_name(self):
         return 'scout_apm_core-{version}-{arch}-{platform}'.format(
                 version=self.value('core_agent_version'),
-                platform=self.platform(),
-                arch=self.arch())
+                arch=self.arch(),
+                platform=self.platform())
 
     @classmethod
     def platform(cls):
@@ -165,8 +165,8 @@ class ScoutConfigDefaults():
                 'monitor': False,
                 'socket_path': '{}/scout_apm_core-{}-{}-{}/core-agent.sock'.format(self.core_agent_dir,
                                                                                    self.core_agent_version,
-                                                                                   ScoutConfig.platform(),
-                                                                                   ScoutConfig.arch())
+                                                                                   ScoutConfig.arch(),
+                                                                                   ScoutConfig.platform())
         }
 
     def has_config(self, key):
