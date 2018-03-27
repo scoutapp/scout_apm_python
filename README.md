@@ -1,6 +1,6 @@
 # Scout Python Monitoring Agent
 
-Python Agent for [Scout Application Monitoring](https://www.scoutapp.com).
+This is the Python Agent for [Scout Application Monitoring](https://www.scoutapp.com). Install this agent in your Python application to collect detailed performance metrics and transaction traces.
 
 Python Monitoring is in our Technical Preview Program. If you run into any questions or issues, contact us at support@scoutapp.com or create an issue in this repo.
 
