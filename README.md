@@ -1,4 +1,4 @@
-_Python Monitoring is in our Technical Preview Program. If you run into any questions or issues, contact us at support@scoutapp.com or create an issue in this repo._
+_Python Monitoring is in our Technical Preview Program. If you run have questions or run into issues, contact us at support@scoutapp.com or create an issue in this repo._
 
 # Scout Python Monitoring Agent
 
