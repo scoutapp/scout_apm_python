@@ -8,6 +8,8 @@ This is the Python Agent for [Scout Application Monitoring](https://www.scoutapp
 
 ## Django Quick Start
 
+__A Scout account is required. [Signup for Scout](https://apm.scoutapp.com/users/sign_up).__
+
 ```sh
 pip install scout-apm
 ```
