@@ -6,6 +6,7 @@ import logging
 from scout_apm.core.monkey import CallableProxy, monkeypatch_method
 from scout_apm.core.stacktracer import trace_function
 from scout_apm.core.tracked_request import TrackedRequest
+from scout_apm.api.context import Context
 
 # Django
 from django.core.handlers.base import BaseHandler
@@ -140,7 +141,9 @@ def intercept_resolver_and_view_django_2():
                     #  headers = dict((regex.sub('', header), value) for (header, value)
                     #  in request.META.items() if header.startswith('HTTP_'))
 
-                    span.tag('remote_addr', request.META['REMOTE_ADDR'])
+                    Context.add('user_ip', request.get_host())
+                    if request.user is not None:
+                        Context.add('username', request.user.username)
 
                     logger.debug('Before calling original view')
                     try:
@@ -215,7 +218,9 @@ def intercept_resolver_and_view_django_1_9():
                     #  headers = dict((regex.sub('', header), value) for (header, value)
                     #  in request.META.items() if header.startswith('HTTP_'))
 
-                    span.tag('remote_addr', request.META['REMOTE_ADDR'])
+                    Context.add('user_ip', request.get_host())
+                    if request.user is not None:
+                        Context.add('username', request.user.username)
 
                     logger.debug('Before calling original view')
                     try:
@@ -291,7 +296,9 @@ def intercept_resolver_and_view_django_1_8():
                     #  headers = dict((regex.sub('', header), value) for (header, value)
                     #  in request.META.items() if header.startswith('HTTP_'))
 
-                    span.tag('remote_addr', request.META['REMOTE_ADDR'])
+                    Context.add('user_ip', request.get_host())
+                    if request.user is not None:
+                        Context.add('username', request.user.username)
 
                     logger.debug('Before calling original view')
                     try:
