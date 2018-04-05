@@ -17,7 +17,6 @@ class ScoutApm(object):
         app.before_first_request(self.before_first_request)
         app.before_request(self.process_request)
         app.after_request(self.process_response)
-        app.teardown_request(self.teardown_request)
 
         # Monkey-patch the Flask.dispatch_request method
         app.dispatch_request = self.dispatch_request
@@ -48,7 +47,6 @@ class ScoutApm(object):
     def dispatch_request(self):
         """Modified version of Flask.dispatch_request to call process_view."""
 
-        print('Dispatch Request')
         req = _request_ctx_stack.top.request
         app = current_app
 
@@ -77,7 +75,6 @@ class ScoutApm(object):
         This is done by the dispatch_request method.
         """
         operation = view_func.__module__ + '.' + view_func.__name__
-        print("Process View (Started view span):", operation)
         return self.trace_view_function(view_func, ('Controller', {"path": req.path, "name": operation}))
 
     def trace_view_function(self, func, info):
@@ -106,11 +103,9 @@ class ScoutApm(object):
 
                 #  span.tag('remote_addr', request.META['REMOTE_ADDR'])
 
-                print('Before calling original view')
                 try:
                     return original(*args, **kwargs)
                 except Exception as e:
-                    print('***** Got the exception')
                     TrackedRequest.instance().tag('error', 'true')
                     raise e
                 finally:
@@ -118,15 +113,10 @@ class ScoutApm(object):
 
             return CallableProxy(func, tracing_function)
         except Exception as err:
-            print(err)
             # If we can't wrap for any reason, just return the original
             return func
 
     def process_response(self, response):
         TrackedRequest.instance().stop_span()
         return response
-
-    def teardown_request(self, exc):
-        print("Teardown Request")
-
 
