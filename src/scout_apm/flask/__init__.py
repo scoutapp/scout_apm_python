@@ -1,7 +1,10 @@
 from flask import current_app, request, g, send_from_directory
 from flask.globals import _request_ctx_stack
 
-from datetime import datetime
+import scout_apm.core
+from scout_apm.core.config.config import ScoutConfig
+from scout_apm.core.tracked_request import TrackedRequest
+from scout_apm.core.monkey import CallableProxy
 
 
 class ScoutApm(object):
@@ -11,6 +14,7 @@ class ScoutApm(object):
             self.init_app(app)
 
     def init_app(self, app):
+        app.before_first_request(self.before_first_request)
         app.before_request(self.process_request)
         app.after_request(self.process_response)
         app.teardown_request(self.teardown_request)
@@ -18,43 +22,108 @@ class ScoutApm(object):
         # Monkey-patch the Flask.dispatch_request method
         app.dispatch_request = self.dispatch_request
 
+    #############
+    #  Startup  #
+    #############
+
+    def before_first_request(self):
+        self.extract_flask_settings()
+        scout_apm.core.install()
+
+    def extract_flask_settings(self):
+        """
+        Copies SCOUT_* settings in the app into Scout's config lookup
+        """
+        configs = {}
+        for name in filter(lambda x: x.startswith('SCOUT_'), current_app.config):
+            value = current_app.config[name]
+            clean_name = name.replace('SCOUT_', '').lower()
+            configs[clean_name] = value
+        ScoutConfig.set(**configs)
+
+    #############################
+    #  Request Lifecycle hooks  #
+    #############################
+
     def dispatch_request(self):
         """Modified version of Flask.dispatch_request to call process_view."""
 
-        print("Dispatch Request")
+        print('Dispatch Request')
         req = _request_ctx_stack.top.request
         app = current_app
 
         if req.routing_exception is not None:
             app.raise_routing_exception(req)
 
+        # The routing rule has some handy attributes to extract how Flask found
+        # this endpoint
         rule = req.url_rule
 
-        # if we provide automatic options for this URL and the
-        # request came with the OPTIONS method, reply automatically
-        if getattr(rule, 'provide_automatic_options', False) \
-           and req.method == 'OPTIONS':
-            return app.make_default_options_response()
-
-        # otherwise dispatch to the handler for that endpoint
-        view_func = app.view_functions[rule.endpoint]
-        view_func = self.process_view(app, view_func, req.view_args)
+        # Wrap the real view_func
+        view_func = self.wrap_view_func(
+            app,
+            rule,
+            req,
+            app.view_functions[rule.endpoint],
+            req.view_args)
 
         return view_func(**req.view_args)
 
     def process_request(self):
-        print("Process Request")
+        TrackedRequest.instance().start_span(operation='Flask')
 
-    def process_view(self, app, view_func, view_kwargs):
+    def wrap_view_func(self, app, rule, req, view_func, view_kwargs):
         """ This method is called just before the flask view is called.
         This is done by the dispatch_request method.
         """
-        print("Process View:", view_func.__module__, view_func.__name__)
-        #  __import__('pdb').set_trace()
-        return view_func
+        operation = view_func.__module__ + '.' + view_func.__name__
+        print("Process View (Started view span):", operation)
+        return self.trace_view_function(view_func, ('Controller', {"path": req.path, "name": operation}))
+
+    def trace_view_function(self, func, info):
+        try:
+            def tracing_function(original, *args, **kwargs):
+                entry_type, detail = info
+
+                operation = entry_type
+                if detail['name'] is not None:
+                    operation = operation + '/' + detail['name']
+
+                tr = TrackedRequest.instance()
+                tr.mark_real_request()
+                span = tr.start_span(operation=operation)
+
+                for key in detail:
+                    span.tag(key, detail[key])
+
+                # And the custom View stuff
+                #  request = args[0]
+
+                # Extract headers
+                #  regex = re.compile('^HTTP_')
+                #  headers = dict((regex.sub('', header), value) for (header, value)
+                #  in request.META.items() if header.startswith('HTTP_'))
+
+                #  span.tag('remote_addr', request.META['REMOTE_ADDR'])
+
+                print('Before calling original view')
+                try:
+                    return original(*args, **kwargs)
+                except Exception as e:
+                    print('***** Got the exception')
+                    TrackedRequest.instance().tag('error', 'true')
+                    raise e
+                finally:
+                    TrackedRequest.instance().stop_span()
+
+            return CallableProxy(func, tracing_function)
+        except Exception as err:
+            print(err)
+            # If we can't wrap for any reason, just return the original
+            return func
 
     def process_response(self, response):
-        print("Process Response")
+        TrackedRequest.instance().stop_span()
         return response
 
     def teardown_request(self, exc):
