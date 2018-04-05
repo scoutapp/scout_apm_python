@@ -121,7 +121,7 @@ class CoreAgentSocket(threading.Thread):
         try:
             data = json.dumps(msg)
         except (ValueError, TypeError) as e:
-            log.debug('Exception when serializing command message: %s' % repr(e))
+            logger.debug('Exception when serializing command message: %s' % repr(e))
             return False
 
         try:
