@@ -1,4 +1,4 @@
-from flask import current_app, request, g, send_from_directory
+from flask import current_app
 from flask.globals import _request_ctx_stack
 
 import scout_apm.core
@@ -75,7 +75,9 @@ class ScoutApm(object):
         This is done by the dispatch_request method.
         """
         operation = view_func.__module__ + '.' + view_func.__name__
-        return self.trace_view_function(view_func, ('Controller', {"path": req.path, "name": operation}))
+        return self.trace_view_function(
+                        view_func,
+                        ('Controller', {'path': req.path, 'name': operation}))
 
     def trace_view_function(self, func, info):
         try:
