@@ -1,13 +1,5 @@
 from __future__ import absolute_import
 
-
-# pip needs to be imported before anything else (in particular the requests
-# library), since it vendors stuff oddly.
-#
-# This is an unsupported use of pip, and we need to figure out a smoother way
-# to detect loaded libraries. Check metadata.py for our usage.
-import pip # noqa
-
 # Python Modules
 import logging
 from os import getpid

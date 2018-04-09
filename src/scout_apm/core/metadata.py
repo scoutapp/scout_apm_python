@@ -4,7 +4,6 @@ from __future__ import absolute_import
 from datetime import datetime
 import logging
 from os import getpid
-import pip
 import sys
 
 
@@ -44,7 +43,7 @@ class AppMetadata():
                     'database_engine':    '',  # Detected
                     'database_adapter':   '',  # Raw
                     'application_name':   '',  # Environment.application_name,
-                    'libraries':          cls.package_list(),
+                    'libraries':          cls.get_python_packages_versions(),
                     'paas':               '',
                     'git_sha':            ''}  # Environment.git_revision_sha()}
         except Exception as e:
@@ -53,16 +52,13 @@ class AppMetadata():
         return data
 
     @classmethod
-    def package_list(cls):
-        packages = []
+    def get_python_packages_versions(cls):
         try:
-            for pkg_dist in [p for p in pip._vendor.pkg_resources.working_set]:
-                try:
-                    p_split = str(pkg_dist).split()
-                    packages.append([p_split[0], p_split[1]])
-                except Exception as e:
-                    logger.debug('Exception while reading packages: %s', repr(e))
-                    continue
-        except Exception as e:
-            logger.debug('Exception while getting pkg_resources: %s', repr(e))
-        return packages
+            import pkg_resources
+        except ImportError:
+            return []
+
+        return list(sorted(
+            (distribution.project_name, distribution.version)
+            for distribution in pkg_resources.working_set
+        ))
