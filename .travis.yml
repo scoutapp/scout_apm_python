@@ -37,11 +37,11 @@ notifications:
     on_success: never
     on_failure: always
 
-branches:
-  only:
-    # release tags
-    - /^v\d+\.\d+\.\d+.*$/
-    - master
+# branches:
+#   only:
+#     # release tags
+#     - /^v\d+\.\d+\.\d+.*$/
+#     - master
 
 deploy:
   provider: pypi
