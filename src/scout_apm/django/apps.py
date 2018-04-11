@@ -52,8 +52,21 @@ class ScoutApmDjangoConfig(AppConfig):
         if installed is False:
             return
 
+        self.install_middleware()
 
         # Setup Instruments
         DjangoSignals.install()
         SQLInstrument.install()
         TemplateInstrument.install()
+
+    def install_middleware(self):
+        """
+        Attempts to insert the ScoutApm middleware as the first middleware
+        (first on incoming requests, last on outgoing responses).
+        """
+        from django.conf import settings
+
+        if isinstance(settings.MIDDLEWARE, tuple):
+            settings.MIDDLEWARE = ('scout_apm.django.middleware.ScoutApmMiddleware', ) + settings.MIDDLEWARE
+        else:
+            settings.MIDDLEWARE.insert(0, 'scout_apm.django.middleware.ScoutApmMiddleware')
