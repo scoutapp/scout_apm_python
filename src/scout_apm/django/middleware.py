@@ -5,7 +5,7 @@ from scout_apm.core.tracked_request import TrackedRequest
 logger = logging.getLogger(__name__)
 
 
-class Middleware:
+class ScoutApmMiddleware:
     """
     """
 
