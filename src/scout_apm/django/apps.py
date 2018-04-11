@@ -67,6 +67,11 @@ class ScoutApmDjangoConfig(AppConfig):
         from django.conf import settings
 
         if isinstance(settings.MIDDLEWARE, tuple):
-            settings.MIDDLEWARE = ('scout_apm.django.middleware.ScoutApmMiddleware', ) + settings.MIDDLEWARE
+            settings.MIDDLEWARE = (
+                ('scout_apm.django.middleware.MiddlewareTimingMiddleware', ) +
+                settings.MIDDLEWARE +
+                ('scout_apm.django.middleware.ViewTimingMiddleware', ))
         else:
-            settings.MIDDLEWARE.insert(0, 'scout_apm.django.middleware.ScoutApmMiddleware')
+            settings.MIDDLEWARE.insert(0, 'scout_apm.django.middleware.MiddlewareTimingMiddleware')
+            settings.MIDDLEWARE.append('scout_apm.django.middleware.ViewTimingMiddleware')
+

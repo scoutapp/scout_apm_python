@@ -5,13 +5,30 @@ from scout_apm.core.tracked_request import TrackedRequest
 logger = logging.getLogger(__name__)
 
 
-class ScoutApmMiddleware:
+class MiddlewareTimingMiddleware:
     """
+    Insert as early into the Middleware stack as possible (outermost layers),
+    so that other middlewares called after can be timed.
     """
 
     def __init__(self, get_response):
-        """
-        """
+        self.get_response = get_response
+
+    def __call__(self, request):
+        operation = 'Middleware'
+
+        TrackedRequest.instance().start_span(operation=operation)
+        response = self.get_response(request)
+        TrackedRequest.instance().stop_span()
+        return response
+
+class ViewTimingMiddleware:
+    """
+    Insert as deep into the middleware stack as possible, ideally wrapping no
+    other middleware. Designed to time the View itself
+    """
+
+    def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
@@ -30,7 +47,6 @@ class ScoutApmMiddleware:
         # process_view
         operation = 'Unknown'
 
-        # This span will either be stopped here, even if it was an exception
         TrackedRequest.instance().start_span(operation=operation)
         response = self.get_response(request)
         TrackedRequest.instance().stop_span()
