@@ -5,7 +5,6 @@ from django.core.signals import request_finished, request_started
 
 from scout_apm.django.instruments.sql import SQLInstrument
 from scout_apm.django.instruments.template import TemplateInstrument
-from scout_apm.django.instruments.view import ViewInstrument
 from scout_apm.django.config import ConfigAdapter
 from scout_apm.core.tracked_request import TrackedRequest
 import scout_apm.core
@@ -58,4 +57,3 @@ class ScoutApmDjangoConfig(AppConfig):
         DjangoSignals.install()
         SQLInstrument.install()
         TemplateInstrument.install()
-        ViewInstrument.install()
