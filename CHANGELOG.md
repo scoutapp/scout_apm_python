@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.0] 2018-04-13
+
+### Added
+
+- Reworked Django instrumentation (#19)
+- Initial Flask Support (#18)
+- Initial SQLAlchemy Support (#18)
+- Add Request Context Support (#17)
+
 ## [1.0.3] 2018-03-26
 
 ### Fixed
