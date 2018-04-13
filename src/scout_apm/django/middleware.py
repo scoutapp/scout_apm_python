@@ -1,5 +1,6 @@
 import logging
 from scout_apm.core.tracked_request import TrackedRequest
+from scout_apm.api.context import Context
 
 # Logging
 logger = logging.getLogger(__name__)
@@ -63,8 +64,10 @@ class ViewTimingMiddleware:
         span = TrackedRequest.instance().current_span()
         if span is not None:
             span.operation = 'Controller/' + view_name
-            span.tag('path', request.path)
-            span.tag('remote_addr', request.META['REMOTE_ADDR'])
+            Context.add('path', request.path)
+            Context.add('user_ip', request.get_host())
+            if request.user is not None:
+                Context.add('username', request.user.username)
 
     def process_exception(self, request, exception):
         """
@@ -74,7 +77,7 @@ class ViewTimingMiddleware:
         """
         TrackedRequest.instance().tag('error', 'true')
 
-    def process_template_response(self, request, response):
-        """
-        """
-        pass
+    #  def process_template_response(self, request, response):
+    #      """
+    #      """
+    #      pass
