@@ -200,7 +200,7 @@ class CoreAgentManifest:
         self.valid = False
         try:
             self.parse()
-        except (ValueError, TypeError, OSError) as e:
+        except (ValueError, TypeError, OSError, IOError) as e:
             logger.debug('Error parsing Core Agent Manifest: %s', repr(e))
 
     def parse(self):
