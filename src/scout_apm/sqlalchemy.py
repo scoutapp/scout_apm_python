@@ -30,6 +30,8 @@ def after_cursor_execute(conn, cursor, statement, parameters, context, executema
 
 
 def instrument_sqlalchemy(engine):
+    # We can get in the situation where we double-instrument the cursor. Avoid
+    # it by setting a flag and checking it before adding these listeners
     if getattr(engine, "_scout_instrumented", False):
         return
     event.listen(engine, "before_cursor_execute", before_cursor_execute)
