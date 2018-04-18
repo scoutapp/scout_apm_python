@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.1] 2018-04-18
+
+### Fixed
+
+- Catch IOError when reading core-agent's manifest.json (#24)
+
 ## [1.1.0] 2018-04-13
 
 ### Added

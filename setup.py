@@ -4,7 +4,7 @@ from os.path import basename, splitext
 from setuptools import find_packages, setup
 
 setup(name='scout_apm',
-      version='1.1.0',
+      version='1.1.1',
       description='Scout Application Performance Monitoring Agent',
       long_description='Scout Application Performance Monitoring Agent',
       url='https://github.com/scoutapp/scout_apm_python',
