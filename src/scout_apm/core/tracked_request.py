@@ -7,6 +7,7 @@ from uuid import uuid4
 from scout_apm.core.samplers import Samplers
 from scout_apm.core.request_manager import RequestManager
 from scout_apm.core.thread_local import ThreadLocalSingleton
+import scout_apm.core.traceback
 
 # Logging
 logger = logging.getLogger(__name__)
@@ -57,6 +58,10 @@ class TrackedRequest(ThreadLocalSingleton):
     def stop_span(self):
         stopping_span = self.active_spans.pop()
         stopping_span.stop()
+
+        stopping_span.annotate()
+
+
         self.complete_spans.append(stopping_span)
         if len(self.active_spans) == 0:
             self.finish()
@@ -111,7 +116,15 @@ class Span:
     # In seconds
     def duration(self):
         if self.end_time is not None:
-            (self.end_time - self.start_time).total_seconds()
+            return (self.end_time - self.start_time).total_seconds()
         else:
             # Current, running duration
-            (datetime.utcnow() - self.start_time).total_seconds()
+            return (datetime.utcnow() - self.start_time).total_seconds()
+
+    # Add any interesting annotations to the span. Assumes that we are in the
+    # process of stopping this span.
+    def annotate(self):
+        slow_threshold = 0.0
+        if self.duration() > slow_threshold:
+            stack = scout_apm.core.traceback.capture()
+            self.tag('stack', stack)
