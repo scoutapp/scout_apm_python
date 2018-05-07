@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.2] 2018-05-07
+
+### Fixed
+
+- Capture the current user's username correctly when using custom User model
+
 ## [1.1.1] 2018-04-18
 
 ### Fixed
