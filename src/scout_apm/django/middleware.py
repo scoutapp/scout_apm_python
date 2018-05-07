@@ -59,15 +59,17 @@ class ViewTimingMiddleware:
         """
         Capture details about the view_func that is about to execute
         """
-
-        view_name = request.resolver_match._func_path
-        span = TrackedRequest.instance().current_span()
-        if span is not None:
-            span.operation = 'Controller/' + view_name
-            Context.add('path', request.path)
-            Context.add('user_ip', request.get_host())
-            if request.user is not None:
-                Context.add('username', request.user.username)
+        try:
+            view_name = request.resolver_match._func_path
+            span = TrackedRequest.instance().current_span()
+            if span is not None:
+                span.operation = 'Controller/' + view_name
+                Context.add('path', request.path)
+                Context.add('user_ip', request.get_host())
+                if request.user is not None:
+                    Context.add('username', request.user.get_username())
+        except:
+            pass
 
     def process_exception(self, request, exception):
         """
