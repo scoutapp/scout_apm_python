@@ -18,7 +18,7 @@ setup(name='scout_apm',
       py_modules=[splitext(basename(path))[0] for path in glob('src/*.py')],
       entry_points={
           'console_scripts': [
-              'core-agent-manager = scout_apm.core.cli.core_agent_manager:__main__'
+              'core-agent-manager = scout_apm.core.cli.core_agent_manager:main'
           ]
       },
       install_requires=['psutil', 'PyYAML', 'requests'],

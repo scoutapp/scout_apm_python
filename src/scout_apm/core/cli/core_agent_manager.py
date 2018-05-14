@@ -16,7 +16,7 @@ def launch(**kwargs):
     core_agent_manager.launch()
 
 
-if __name__ == '__main__':
+def main(**kwargs):
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--verbose", help="increase output verbosity",
                         action="count")
