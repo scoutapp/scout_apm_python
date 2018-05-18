@@ -7,10 +7,12 @@ def capture():
     stack = traceback.extract_stack()
     formatted_stack = []
     for frame in stack:
+        # Python 2.7 and 3.4 returned tuples
         if type(frame) is tuple:
             filename = frame[0]
             line = frame[1]
             function = frame[3]
+        # 3.5+ returned objects
         else:
             filename = frame.filename
             line = frame.lineno
