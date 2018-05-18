@@ -7,7 +7,7 @@ from uuid import uuid4
 from scout_apm.core.samplers import Samplers
 from scout_apm.core.request_manager import RequestManager
 from scout_apm.core.thread_local import ThreadLocalSingleton
-import scout_apm.core.traceback
+import scout_apm.core.backtrace
 
 # Logging
 logger = logging.getLogger(__name__)
@@ -126,5 +126,5 @@ class Span:
     def annotate(self):
         slow_threshold = 0.500
         if self.duration() > slow_threshold:
-            stack = scout_apm.core.traceback.capture()
+            stack = scout_apm.core.backtrace.capture()
             self.tag('stack', stack)

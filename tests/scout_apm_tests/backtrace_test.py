@@ -2,9 +2,8 @@ import scout_apm
 
 
 def test_traceback():
-    traceback = scout_apm.core.traceback.capture()
-    for frame in traceback:
+    bt = scout_apm.core.backtrace.capture()
+    for frame in bt:
         keys = list(frame.keys())
         keys.sort()
         assert(keys == ['file', 'function', 'line'])
-
