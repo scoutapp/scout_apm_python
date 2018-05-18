@@ -13,7 +13,7 @@ def capture():
             'function': frame.name,
         })
 
-    # Python puts the closes stack frames at the end of the traceback. But we
+    # Python puts the closest stack frames at the end of the traceback. But we
     # want them up front
     formatted_stack.reverse()
 
