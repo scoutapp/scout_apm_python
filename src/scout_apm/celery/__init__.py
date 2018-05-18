@@ -11,13 +11,12 @@ def prerun_callback(sender=None, headers=None, body=None, **kwargs):
 
     tr = TrackedRequest.instance()
     tr.mark_real_request()
-    tr.start_span(operation='Queue/Default')
-    tr.start_span(operation=('Job/' + name))
+    span = tr.start_span(operation=('Job/' + name))
+    span.tag('queue', 'default')
 
 
 def postrun_callback(sender=None, headers=None, body=None, **kwargs):
     tr = TrackedRequest.instance()
-    tr.stop_span()
     tr.stop_span()
 
 
@@ -25,8 +24,6 @@ def install():
     installed = scout_apm.core.install()
     if installed is False:
         return
-
-    print('Installing ScoutAPM Celery Instruments')
 
     task_prerun.connect(prerun_callback)
     task_postrun.connect(postrun_callback)
