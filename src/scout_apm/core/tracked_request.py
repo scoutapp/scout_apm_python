@@ -124,7 +124,7 @@ class Span:
     # Add any interesting annotations to the span. Assumes that we are in the
     # process of stopping this span.
     def annotate(self):
-        slow_threshold = 0.0
+        slow_threshold = 0.500
         if self.duration() > slow_threshold:
             stack = scout_apm.core.traceback.capture()
             self.tag('stack', stack)
