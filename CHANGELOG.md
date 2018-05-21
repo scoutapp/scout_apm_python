@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.3] 2018-05-21
+
+### Added
+
+- Basic Celery support
+- Capture Tracebacks on spans over 500ms
+
+### Fixed
+
+- Register as Python with APM (previously was not noted explicitly)
+- Fix CLI commands
+
 ## [1.1.2] 2018-05-07
 
 ### Fixed
