@@ -12,8 +12,8 @@ logger = logging.getLogger(__name__)
 
 
 def install():
-    if not AgentContext.instance().config.value("monitor"):
-        logger.debug('APM Not Launching on PID: %s - Configuration \'monitor\' is not true', getpid())
+    if not AgentContext.instance().config.value('monitor'):
+        logger.info("APM Not Launching on PID: %s - Configuration 'monitor' is not true", getpid())
         return False
 
     logger.debug('APM Launching on PID: %s', getpid())
