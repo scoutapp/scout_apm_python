@@ -127,7 +127,7 @@ class CoreAgentSocket(threading.Thread):
         try:
             self.socket.sendall(self._message_length(data))
             self.socket.sendall(data.encode())
-        except (OSError, ConnectionRefusedError) as e:
+        except (OSError) as e:
             logger.debug("CoreAgentSocket exception on _send: %s" % repr(e))
             return None
 
@@ -148,7 +148,7 @@ class CoreAgentSocket(threading.Thread):
             size = struct.unpack('<I', raw_size)[0]
             message = self.socket.recv(size)
             return message
-        except (OSError, ConnectionRefusedError) as e:
+        except (OSError) as e:
             logger.debug('CoreAgentSocket error on read response: %s' % repr(e))
             return None
 
@@ -164,7 +164,7 @@ class CoreAgentSocket(threading.Thread):
                 self.socket.settimeout(0.5)
                 logger.debug('CoreAgentSocket is connected')
                 return True
-            except (FileNotFoundError, ConnectionRefusedError) as e:
+            except (FileNotFoundError, OSError) as e:
                 logger.debug('CoreAgentSocket connection error: %s', repr(e))
                 if attempt >= connect_attempts:
                     return False
@@ -175,7 +175,7 @@ class CoreAgentSocket(threading.Thread):
         logger.debug('CoreAgentSocket disconnecting from %s', self.socket_path)
         try:
             self.socket.close()
-        except (OSError, ConnectionRefusedError) as e:
+        except (OSError) as e:
             logger.debug('CoreAgentSocket exception on disconnect: %s' % repr(e))
         finally:
             self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
