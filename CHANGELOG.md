@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.4] 2018-05-24
+
+### Fixed
+
+- Log INFO message if SCOUT_MONITOR is false
+- Except OSError instead of ConnectionRefusedError (python 2.7 compatibility)
+- Fix CLI command module import
+
 ## [1.1.3] 2018-05-21
 
 ### Added
