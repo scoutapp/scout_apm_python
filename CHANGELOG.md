@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.5] 2018-05-25
+
+### Fixed
+
+- Prevent span mismatch from raising on `stop_span`
+
 ## [1.1.4] 2018-05-24
 
 ### Fixed

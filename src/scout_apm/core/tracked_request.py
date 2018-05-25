@@ -56,13 +56,17 @@ class TrackedRequest(ThreadLocalSingleton):
         return new_span
 
     def stop_span(self):
-        stopping_span = self.active_spans.pop()
-        stopping_span.stop()
+        stopping_span = None
+        try:
+            stopping_span = self.active_spans.pop()
+        except IndexError as e:
+            logger.debug('Exception when stopping span: %s' % repr(e))
 
-        stopping_span.annotate()
+        if stopping_span is not None:
+            stopping_span.stop()
+            stopping_span.annotate()
+            self.complete_spans.append(stopping_span)
 
-
-        self.complete_spans.append(stopping_span)
         if len(self.active_spans) == 0:
             self.finish()
 
