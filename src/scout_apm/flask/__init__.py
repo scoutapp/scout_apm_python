@@ -50,6 +50,10 @@ class ScoutApm(object):
         req = _request_ctx_stack.top.request
         app = current_app
 
+        # Return flask's default options response. See issue #40
+        if req.method == 'OPTIONS':
+            return app.make_default_options_response()
+
         if req.routing_exception is not None:
             app.raise_routing_exception(req)
 
