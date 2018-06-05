@@ -97,18 +97,6 @@ class Span:
         self.parent = kwargs.get('parent', None)
         self.tags = kwargs.get('tags', {})
 
-    def dump(self):
-        if self.end_time is None:
-            logger.debug(self.operation)
-        return 'request=%s operation=%s id=%s parent=%s start_time=%s end_time=%s' % (
-                self.request_id,
-                self.operation,
-                self.span_id,
-                self.parent,
-                self.start_time.isoformat(),
-                self.end_time.isoformat()
-            )
-
     def stop(self):
         self.end_time = datetime.utcnow()
 
