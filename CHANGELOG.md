@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.6] 2018-06-05
+
+### Fixed
+
+- Handle Flask OPTIONS requests (#41)
+- Fix incorrect default argument to cursor.execute (#42)
+- Remove debugging message for spans that could raise an error
+
 ## [1.1.5] 2018-05-25
 
 ### Fixed
