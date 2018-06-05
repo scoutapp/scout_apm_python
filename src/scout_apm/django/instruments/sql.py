@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class _DetailedTracingCursorWrapper(CursorWrapper):
-    def execute(self, sql, params=()):
+    def execute(self, sql, params=None):
         tr = TrackedRequest.instance()
         span = tr.start_span(operation='SQL/Query')
         span.tag('db.statement', sql)
