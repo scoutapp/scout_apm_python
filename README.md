@@ -6,6 +6,13 @@ This is the Python Agent for [Scout Application Monitoring](https://www.scoutapp
 
 ![screenshot](https://s3-us-west-1.amazonaws.com/scout-blog/python_monitoring_release/python_monitoring_screenshot.png)
 
+## Requirements
+
+* Python 3.4+
+* Django 1.10+
+* Flask 0.10+
+* Celery 3.1+
+
 ## Quick Start
 
 __A Scout account is required. [Signup for Scout](https://apm.scoutapp.com/users/sign_up).__
