@@ -176,10 +176,19 @@ class BatchCommand:
                                         tag=key,
                                         value=span.tags[key]))
             # Span End
+            if span.end_time is None:
+                logger.debug("Invalid Request, span_id: %s had a None end_time", span.span_id)
+                return None
+
             commands.append(StopSpan(timestamp=span.end_time,
                                      request_id=span.request_id,
                                      span_id=span.span_id))
         # Request Finish
+        if request.end_time is None:
+            logger.debug("Invalid Request, request_id: %s had a None end_time", request.req_id)
+            return None
+
         commands.append(FinishRequest(timestamp=request.end_time,
                                       request_id=request.req_id))
+
         return BatchCommand(commands)
