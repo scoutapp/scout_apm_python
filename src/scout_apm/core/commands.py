@@ -7,6 +7,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# A constant that represents an "unknown" date. Fallback, and will be rejected
+# by the CoreAgent. But important to avoid exceptions if a None timestamp is
+# passed to a Command.
+INVALID_DATE = datetime.datetime(year=2000, month=1, day=1)
+
 
 class Register:
     def __init__(self, *args, **kwargs):
@@ -25,7 +30,7 @@ class Register:
 
 class StartSpan:
     def __init__(self, *args, **kwargs):
-        self.timestamp = kwargs.get('timestamp') or datetime.utcnow()
+        self.timestamp = kwargs.get('timestamp') or INVALID_DATE
         self.request_id = kwargs.get('request_id', None)
         self.span_id = kwargs.get('span_id', None)
         self.parent = kwargs.get('parent', None)
@@ -45,7 +50,7 @@ class StopSpan:
     def __init__(self, *args, **kwargs):
         self.request_id = kwargs.get('request_id', None)
         self.span_id = kwargs.get('span_id', None)
-        self.timestamp = kwargs.get('timestamp') or datetime.utcnow()
+        self.timestamp = kwargs.get('timestamp') or INVALID_DATE
 
     def message(self):
         return {'StopSpan': {
@@ -57,7 +62,7 @@ class StopSpan:
 
 class StartRequest:
     def __init__(self, *args, **kwargs):
-        self.timestamp = kwargs.get('timestamp') or datetime.utcnow()
+        self.timestamp = kwargs.get('timestamp') or INVALID_DATE
         self.request_id = kwargs.get('request_id', None)
 
     def message(self):
@@ -69,7 +74,7 @@ class StartRequest:
 
 class FinishRequest:
     def __init__(self, *args, **kwargs):
-        self.timestamp = kwargs.get('timestamp') or datetime.utcnow()
+        self.timestamp = kwargs.get('timestamp') or INVALID_DATE
         self.request_id = kwargs.get('request_id', None)
 
     def message(self):
@@ -81,7 +86,7 @@ class FinishRequest:
 
 class TagSpan:
     def __init__(self, *args, **kwargs):
-        self.timestamp = kwargs.get('timestamp') or datetime.utcnow()
+        self.timestamp = kwargs.get('timestamp') or INVALID_DATE
         self.request_id = kwargs.get('request_id', None)
         self.span_id = kwargs.get('span_id', None)
         self.tag = kwargs.get('tag', None)
@@ -99,7 +104,7 @@ class TagSpan:
 
 class TagRequest:
     def __init__(self, *args, **kwargs):
-        self.timestamp = kwargs.get('timestamp') or datetime.utcnow()
+        self.timestamp = kwargs.get('timestamp') or INVALID_DATE
         self.request_id = kwargs.get('request_id', None)
         self.tag = kwargs.get('tag', None)
         self.value = kwargs.get('value', None)
@@ -117,7 +122,7 @@ class ApplicationEvent:
     def __init__(self, *args, **kwargs):
         self.event_type = kwargs.get('event_type', '')
         self.event_value = kwargs.get('event_value', '')
-        self.timestamp = kwargs.get('timestamp') or datetime.utcnow()
+        self.timestamp = kwargs.get('timestamp') or INVALID_DATE
         self.source = kwargs.get('source', '')
 
     def message(self):
