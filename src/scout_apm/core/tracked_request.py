@@ -84,7 +84,12 @@ class TrackedRequest(ThreadLocalSingleton):
         RequestManager.instance().add_request(self)
         if self.is_real_request():
             Samplers.ensure_running()
-        self.release()
+
+        # This can fail if the Tracked Request was created directly, not through instance()
+        try:
+            self.release()
+        except:
+            pass
 
 
 class Span:
