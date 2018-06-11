@@ -25,7 +25,7 @@ class Register:
 
 class StartSpan:
     def __init__(self, *args, **kwargs):
-        self.timestamp = kwargs.get('timestamp', datetime.utcnow())
+        self.timestamp = kwargs.get('timestamp') or datetime.utcnow()
         self.request_id = kwargs.get('request_id', None)
         self.span_id = kwargs.get('span_id', None)
         self.parent = kwargs.get('parent', None)
@@ -43,9 +43,9 @@ class StartSpan:
 
 class StopSpan:
     def __init__(self, *args, **kwargs):
-        self.timestamp = kwargs.get('timestamp', datetime.utcnow())
         self.request_id = kwargs.get('request_id', None)
         self.span_id = kwargs.get('span_id', None)
+        self.timestamp = kwargs.get('timestamp') or datetime.utcnow()
 
     def message(self):
         return {'StopSpan': {
@@ -57,7 +57,7 @@ class StopSpan:
 
 class StartRequest:
     def __init__(self, *args, **kwargs):
-        self.timestamp = kwargs.get('timestamp', datetime.utcnow())
+        self.timestamp = kwargs.get('timestamp') or datetime.utcnow()
         self.request_id = kwargs.get('request_id', None)
 
     def message(self):
@@ -69,7 +69,7 @@ class StartRequest:
 
 class FinishRequest:
     def __init__(self, *args, **kwargs):
-        self.timestamp = kwargs.get('timestamp', datetime.utcnow())
+        self.timestamp = kwargs.get('timestamp') or datetime.utcnow()
         self.request_id = kwargs.get('request_id', None)
 
     def message(self):
@@ -81,7 +81,7 @@ class FinishRequest:
 
 class TagSpan:
     def __init__(self, *args, **kwargs):
-        self.timestamp = kwargs.get('timestamp', datetime.utcnow())
+        self.timestamp = kwargs.get('timestamp') or datetime.utcnow()
         self.request_id = kwargs.get('request_id', None)
         self.span_id = kwargs.get('span_id', None)
         self.tag = kwargs.get('tag', None)
@@ -99,7 +99,7 @@ class TagSpan:
 
 class TagRequest:
     def __init__(self, *args, **kwargs):
-        self.timestamp = kwargs.get('timestamp', datetime.utcnow())
+        self.timestamp = kwargs.get('timestamp') or datetime.utcnow()
         self.request_id = kwargs.get('request_id', None)
         self.tag = kwargs.get('tag', None)
         self.value = kwargs.get('value', None)
@@ -117,7 +117,7 @@ class ApplicationEvent:
     def __init__(self, *args, **kwargs):
         self.event_type = kwargs.get('event_type', '')
         self.event_value = kwargs.get('event_value', '')
-        self.timestamp = kwargs.get('timestamp', datetime.utcnow())
+        self.timestamp = kwargs.get('timestamp') or datetime.utcnow()
         self.source = kwargs.get('source', '')
 
     def message(self):
