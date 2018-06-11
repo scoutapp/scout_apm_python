@@ -2,7 +2,7 @@ _Python Monitoring is in our Technical Preview Program. If you run have question
 
 # Scout Python APM Agent
 
-This is the Python Agent for [Scout Application Monitoring](https://www.scoutapp.com). Install this agent in your Python application to collect detailed performance metrics and transaction traces. Data is reported to Scout.
+Monitor the performance of Python Django apps, Flask apps, and Celery workers with Scout's [Python APM Agent](https://www.scoutapp.com). Detailed performance metrics and transaction traces are collected once the `scout-apm` package is installed and configured.
 
 ![screenshot](https://s3-us-west-1.amazonaws.com/scout-blog/python_monitoring_release/python_monitoring_screenshot.png)
 
