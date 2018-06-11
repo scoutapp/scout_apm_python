@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 # A constant that represents an "unknown" date. Fallback, and will be rejected
 # by the CoreAgent. But important to avoid exceptions if a None timestamp is
 # passed to a Command.
-INVALID_DATE = datetime.datetime(year=2000, month=1, day=1)
+INVALID_DATE = datetime(year=2000, month=1, day=1)
 
 
 class Register:
