@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.1.7] 2018-06-12
+
+### Added
+
+- Custom instrumentation with a Context Manager or Decorator (#50)
+- Enhanced Test Coverage (#53)
+
+### Fixed
+
+- In error conditions that cause unfinished spans, don't raise exceptions (#52)
+- Several Python 2.7 Incompatibilities (#56, #57)
+
+###
+
 ## [1.1.6] 2018-06-05
 
 ### Fixed
