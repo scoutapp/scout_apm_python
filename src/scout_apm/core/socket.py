@@ -140,12 +140,12 @@ class CoreAgentSocket(threading.Thread):
 
     def _message_length(self, body):
         length = len(body)
-        return length.to_bytes(4, 'big')
+        return struct.pack('>I', length)
 
     def _read_response(self):
         try:
             raw_size = self.socket.recv(4)
-            size = struct.unpack('<I', raw_size)[0]
+            size = struct.unpack('>I', raw_size)[0]
             message = self.socket.recv(size)
             return message
         except (OSError) as e:
