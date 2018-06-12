@@ -34,7 +34,7 @@ class RequestBuffer(ThreadLocalSingleton):
         for request in self._requests:
             logger.debug('Flushing Request Id: %s' % request.req_id)
             self.flush_request(request)
-        self._requests.clear()
+        del self._requests[:]
 
     def flush_request(self, request):
         batch_command = BatchCommand.from_tracked_request(request)
