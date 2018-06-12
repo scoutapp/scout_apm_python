@@ -24,12 +24,15 @@ else:
 
 
 class instrument(ContextDecorator):
-    def __init__(self, operation):
-        self.operation = operation
+    def __init__(self, operation, kind='Custom', tags={}):
+        self.operation = kind + '/' + operation
+        self.tags = tags
 
     def __enter__(self):
         tr = TrackedRequest.instance()
         self.span = tr.start_span(operation=self.operation)
+        for key, value in self.tags.items():
+            self.tag(key, value)
         return self
 
     def __exit__(self, *exc):
