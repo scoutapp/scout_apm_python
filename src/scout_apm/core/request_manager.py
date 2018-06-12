@@ -38,4 +38,5 @@ class RequestBuffer(ThreadLocalSingleton):
 
     def flush_request(self, request):
         batch_command = BatchCommand.from_tracked_request(request)
-        AgentContext.socket().send(batch_command)
+        if batch_command is not None:
+            AgentContext.socket().send(batch_command)
