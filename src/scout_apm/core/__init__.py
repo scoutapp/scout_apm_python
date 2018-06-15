@@ -20,3 +20,4 @@ def install():
     CoreAgentManager().launch()
     AppMetadata.report()
     AgentContext.socket().stop()
+    return True
