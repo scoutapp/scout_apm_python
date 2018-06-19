@@ -54,6 +54,6 @@ class NPlusOneCallSetItem():
         return self.past_duration_threshold
 
     def capture_backtrace(self):
-        if (not self.captured) && (self.call_count >= self.__class__.CALL_COUNT_THRESHOLD) && self.past_time_threshold():
+        if (not self.captured) and (self.call_count >= self.__class__.CALL_COUNT_THRESHOLD) and self.past_time_threshold():
             self.captured = True
         return self.captured
