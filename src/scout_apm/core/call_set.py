@@ -1,9 +1,6 @@
 from __future__ import absolute_import
 
 import logging
-from datetime import datetime
-
-import scout_apm.core.backtrace
 
 # Logging
 logger = logging.getLogger(__name__)
