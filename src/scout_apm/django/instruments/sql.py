@@ -29,15 +29,22 @@ class _DetailedTracingCursorWrapper(CursorWrapper):
             return self.cursor.execute(sql, params)
         finally:
             tr.stop_span()
+            tr.callset.update(sql, 1, span.duration_in_ms())
+            if tr.callset.capture_bracktrace(sql) is True:
+                span.capture_backtrace()
 
     def executemany(self, sql, param_list):
-        span = TrackedRequest.instance().start_span(operation='SQL/Many')
+        tr = TrackedRequest.instance()
+        span = tr.start_span(operation='SQL/Many')
         span.tag('db.statement', sql)
 
         try:
             return self.cursor.executemany(sql, param_list)
         finally:
-            TrackedRequest.instance().stop_span()
+            tr.stop_span()
+            tr.callset.update(sql, 1, span.duration_in_ms())
+            if tr.callset.capture_bracktrace(sql) is True:
+                span.capture_backtrace()
 
 
 # pylint: disable=too-few-public-methods
