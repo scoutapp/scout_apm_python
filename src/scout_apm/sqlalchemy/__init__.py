@@ -13,7 +13,7 @@ def instrument_sqlalchemy(engine):
         span = tr.current_span()
         if span is not None:
             tr.callset.update(statement, 1, span.duration_in_ms())
-            if tr.callset.capture_bracktrace(sql) is True:
+            if tr.callset.should_capture_bracktrace(statement) is True:
                 span.capture_backtrace()
         tr.stop_span()
 
