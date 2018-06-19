@@ -30,7 +30,7 @@ class _DetailedTracingCursorWrapper(CursorWrapper):
         finally:
             tr.stop_span()
             tr.callset.update(sql, 1, span.duration_in_ms())
-            if tr.callset.capture_bracktrace(sql) is True:
+            if tr.callset.capture_backtrace(sql) is True:
                 span.capture_backtrace()
 
     def executemany(self, sql, param_list):
