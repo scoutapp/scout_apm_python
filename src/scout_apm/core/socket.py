@@ -59,10 +59,10 @@ class CoreAgentSocket(threading.Thread):
         self.daemon = True
 
         # Obtain the run lock here, in this thread, before starting the sub-thread.
-        # If the lock can't be obtained, then this is not a valid instance
+        # If the lock can't be obtained, then this is not a valid instance, and
+        # we don't even attempt to start the thread.
         if self.__class__._run_lock.acquire(False) is False:
             logger.debug('(%s) CoreAgentSocket thread failed to acquire run lock.', threading.current_thread())
-            return None
         else:
             logger.debug('(%s) CoreAgentSocket thread obtained run lock', threading.current_thread())
             self.start()
