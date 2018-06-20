@@ -53,9 +53,10 @@ class ScoutConfig():
             'core_agent_version',
             'download_url',
             'git_sha',
+            'key',
             'log_level',
             'name',
-            'key',
+            'monitor',
             'socket_path'
         ]
 
