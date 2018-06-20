@@ -36,7 +36,7 @@ class TrackedRequest(ThreadLocalSingleton):
         return self.real_request
 
     def tag(self, key, value):
-        if hasattr(self.tags, key):
+        if key in self.tags:
             logger.debug('Overwriting previously set tag for request %s: %s' % self.req_id, key)
         self.tags[key] = value
 
@@ -106,7 +106,7 @@ class Span:
         self.end_time = datetime.utcnow()
 
     def tag(self, key, value):
-        if hasattr(self.tags, key):
+        if key in self.tags:
             logger.debug('Overwriting previously set tag for span %s: %s' % self.span_id, key)
         self.tags[key] = value
 
