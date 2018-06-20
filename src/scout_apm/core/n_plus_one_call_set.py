@@ -33,7 +33,7 @@ class NPlusOneCallSetItem():
         self.sql_string = sql_string
         self.captured = False
         self.call_count = 0
-        self.call_duration = 0  # In milliseconds
+        self.call_duration = 0.0  # In Seconds
         self.past_duration_threshold = False
 
     def update(self, call_count, call_duration):

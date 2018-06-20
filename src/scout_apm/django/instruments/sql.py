@@ -29,7 +29,7 @@ class _DetailedTracingCursorWrapper(CursorWrapper):
             return self.cursor.execute(sql, params)
         finally:
             tr.stop_span()
-            tr.callset.update(sql, 1, span.duration_in_ms())
+            tr.callset.update(sql, 1, span.duration())
             if tr.callset.should_capture_backtrace(sql) is True:
                 span.capture_backtrace()
 
@@ -42,7 +42,7 @@ class _DetailedTracingCursorWrapper(CursorWrapper):
             return self.cursor.executemany(sql, param_list)
         finally:
             tr.stop_span()
-            tr.callset.update(sql, 1, span.duration_in_ms())
+            tr.callset.update(sql, 1, span.duration())
             if tr.callset.should_capture_backtrace(sql) is True:
                 span.capture_backtrace()
 
