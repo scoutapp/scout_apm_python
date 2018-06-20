@@ -17,7 +17,7 @@ class NPlusOneCallSet():
         return self.find_for(sql_string).should_capture_backtrace()
 
     def find_for(self, sql_string):
-        if not hasattr(self.items, sql_string):
+        if sql_string not in self.items:
             self.items[sql_string] = NPlusOneCallSetItem(sql_string)
         return self.items[sql_string]
 
@@ -43,14 +43,16 @@ class NPlusOneCallSetItem():
         self.call_count += call_count
         self.call_duration += call_duration
 
-    def past_duration_threshold(self):
+    def is_past_duration_threshold(self):
         if self.past_duration_threshold is True:
             # no need to check again once past
             return True
-        self.past_time_threshold = self.call_duration >= self.__class__.DURATION_THRESHOLD
+        self.past_duration_threshold = self.call_duration >= self.__class__.DURATION_THRESHOLD
         return self.past_duration_threshold
 
+    # Call count and call duration must both be past thresholds.
     def should_capture_backtrace(self):
-        if (not self.captured) and (self.call_count >= self.__class__.CALL_COUNT_THRESHOLD) and self.past_time_threshold():
+        if (not self.captured) and (self.call_count >= self.__class__.CALL_COUNT_THRESHOLD) and self.is_past_duration_threshold():
             self.captured = True
-        return self.captured
+            return True
+        return False
