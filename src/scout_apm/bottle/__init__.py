@@ -3,9 +3,11 @@ from __future__ import absolute_import
 from bottle import request
 
 import scout_apm.core
-from scout_apm.api.context import Context
+from scout_apm.core.context import AgentContext
 from scout_apm.core.config.config import ScoutConfig
 from scout_apm.core.tracked_request import TrackedRequest
+
+from scout_apm.api.context import Context
 
 
 class ScoutPlugin(object):
@@ -13,7 +15,7 @@ class ScoutPlugin(object):
         self.name = 'scout'
         self.api = 2
 
-    def config_from_bottle(self, app):
+    def set_config_from_bottle(self, app):
         scout_config = ScoutConfig()
         bottle_configs = {}
         for k in scout_config.known_keys():
@@ -24,17 +26,17 @@ class ScoutPlugin(object):
         return scout_config
 
     def setup(self, app):
-        config = self.config_from_bottle(app)
-        scout_apm.core.install(config=config)
+        self.set_config_from_bottle(app)
+        scout_apm.core.install()
 
     def apply(self, callback, context):
-        scout_config = self.config_from_bottle(context.app)
-        if scout_config.value('monitor') is not True:
+        if AgentContext.instance().config.value('monitor') is not True:
             return callback
 
         def wrapper(*args, **kwargs):
             try:
                 tr = TrackedRequest.instance()
+                tr.mark_real_request()
                 path = 'Unknown'
 
                 if request.route.name is not None:
