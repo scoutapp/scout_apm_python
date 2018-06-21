@@ -4,6 +4,8 @@ import logging
 import os
 import platform
 
+from scout_apm.core.git_revision import GitRevision
+
 logger = logging.getLogger(__name__)
 
 
@@ -47,12 +49,16 @@ class ScoutConfig():
 
     def known_keys(self):
         return [
+            'app_server',
             'core_agent_dir',
             'core_agent_download',
             'core_agent_launch',
             'core_agent_version',
             'download_url',
+            'framework',
+            'framework_version',
             'git_sha',
+            'hostname',
             'log_level',
             'name',
             'key',
@@ -115,7 +121,6 @@ class ScoutConfigPython():
         return SCOUT_PYTHON_VALUES[key]
 
 
-
 class ScoutConfigEnv():
     """
     Reads configuration from environment by prefixing the key
@@ -153,13 +158,17 @@ class ScoutConfigDefaults():
         self.core_agent_dir = '/tmp/scout_apm_core'
         self.core_agent_version = 'latest'
         self.defaults = {
+                'app_server': '',
                 'core_agent_dir': self.core_agent_dir,
                 'core_agent_download': True,
                 'core_agent_launch': True,
                 'core_agent_version': self.core_agent_version,
                 'download_url': 'https://s3-us-west-1.amazonaws.com/scout-public-downloads/apm_core_agent/release',
-                'git_sha': '',
+                'framework': '',
+                'framework_version': '',
+                'git_sha': GitRevision().detect(),
                 'key': '',
+                'hostname': '',
                 'log_level': 'info',
                 'name': '',
                 'monitor': False,
