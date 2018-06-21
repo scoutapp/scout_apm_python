@@ -10,7 +10,6 @@ import sys
 # Scout APM
 from scout_apm.core.context import AgentContext
 from scout_apm.core.commands import ApplicationEvent
-# from scout_apm.environment import Environment
 
 logger = logging.getLogger(__name__)
 
@@ -35,17 +34,17 @@ class AppMetadata():
                                                            version_tuple[1],
                                                            version_tuple[2]),
                     'server_time':        datetime.utcnow().isoformat() + 'Z',
-                    'framework':          '',
-                    'framework_version':  '',
+                    'framework':          AgentContext.instance().config.value('framework'),
+                    'framework_version':  AgentContext.instance().config.value('framework_version'),
                     'environment':        '',
-                    'app_server':         '',
-                    'hostname':           '',  # Environment.hostname,
+                    'app_server':         AgentContext.instance().config.value('app_server'),
+                    'hostname':           AgentContext.instance().config.value('hostname'),
                     'database_engine':    '',  # Detected
                     'database_adapter':   '',  # Raw
                     'application_name':   '',  # Environment.application_name,
                     'libraries':          cls.get_python_packages_versions(),
                     'paas':               '',
-                    'git_sha':            ''}  # Environment.git_revision_sha()}
+                    'git_sha':            AgentContext.instance().config.value('git_sha')}
         except Exception as e:
             logger.debug('Exception in AppMetadata: %s', repr(e))
 
