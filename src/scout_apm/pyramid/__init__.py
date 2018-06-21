@@ -33,7 +33,7 @@ def instruments(handler, registry):
             try:
                 response = handler(request)
             except:
-                TrackedRequest.instance().tag('error', 'true')
+                tr.tag('error', 'true')
                 raise
 
             # This happens further down the call chain. So time it starting
@@ -43,7 +43,7 @@ def instruments(handler, registry):
                 span.operation = 'Controller/' + request.matched_route.name
 
         finally:
-            TrackedRequest.instance().stop_span()
+            tr.stop_span()
 
         return response
 
