@@ -44,7 +44,8 @@ class AppMetadata():
                     'application_name':   '',  # Environment.application_name,
                     'libraries':          cls.get_python_packages_versions(),
                     'paas':               '',
-                    'git_sha':            AgentContext.instance().config.value('git_sha')}
+                    'git_sha':            AgentContext.instance().config.value('git_sha'),
+                    'application_root':   AgentContext.instance().config.value('application_root')}
         except Exception as e:
             logger.debug('Exception in AppMetadata: %s', repr(e))
 
