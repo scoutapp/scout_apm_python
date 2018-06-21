@@ -34,6 +34,7 @@ class ScoutApm(object):
         Copies SCOUT_* settings in the app into Scout's config lookup
         """
         configs = {}
+        configs['application_root'] = self.app.instance_path
         for name in filter(lambda x: x.startswith('SCOUT_'), current_app.config):
             value = current_app.config[name]
             clean_name = name.replace('SCOUT_', '').lower()
