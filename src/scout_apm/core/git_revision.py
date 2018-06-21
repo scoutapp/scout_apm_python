@@ -12,11 +12,7 @@ class GitRevision():
         return sha or ''
 
     def detect_from_heroku(self):
-        if 'HEROKU_SLUG_COMMIT' in os.environ:
-            return os.environ['HEROKU_SLUG_COMMIT']
-        return None
+        return os.environ.get('HEROKU_SLUG_COMMIT')
 
     def detect_from_env_var(self):
-        if 'SCOUT_REVISION_SHA' in os.environ:
-            return os.environ['SCOUT_REVISION_SHA']
-        return None
+        return os.environ.get('SCOUT_REVISION_SHA')
