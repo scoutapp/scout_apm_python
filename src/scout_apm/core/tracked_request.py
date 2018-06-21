@@ -7,6 +7,7 @@ from uuid import uuid4
 from scout_apm.core.samplers import Samplers
 from scout_apm.core.request_manager import RequestManager
 from scout_apm.core.thread_local import ThreadLocalSingleton
+from scout_apm.core.n_plus_one_call_set import NPlusOneCallSet
 import scout_apm.core.backtrace
 
 # Logging
@@ -27,6 +28,7 @@ class TrackedRequest(ThreadLocalSingleton):
         self.complete_spans = kwargs.get('complete_spans', [])
         self.tags = kwargs.get('tags', {})
         self.real_request = kwargs.get('real_request', False)
+        self.callset = NPlusOneCallSet()
         logger.debug('Starting request: %s', self.req_id)
 
     def mark_real_request(self):
@@ -118,10 +120,16 @@ class Span:
             # Current, running duration
             return (datetime.utcnow() - self.start_time).total_seconds()
 
+    def duration_in_ms(self):
+        return self.duration() / 1000
+
     # Add any interesting annotations to the span. Assumes that we are in the
     # process of stopping this span.
     def annotate(self):
         slow_threshold = 0.500
         if self.duration() > slow_threshold:
-            stack = scout_apm.core.backtrace.capture()
-            self.tag('stack', stack)
+            self.capture_backtrace()
+
+    def capture_backtrace(self):
+        stack = scout_apm.core.backtrace.capture()
+        self.tag('stack', stack)

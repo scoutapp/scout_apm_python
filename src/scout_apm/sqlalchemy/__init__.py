@@ -10,6 +10,11 @@ def instrument_sqlalchemy(engine):
 
     def after_cursor_execute(conn, cursor, statement, parameters, context, executemany):
         tr = TrackedRequest.instance()
+        span = tr.current_span()
+        if span is not None:
+            tr.callset.update(statement, 1, span.duration())
+            if tr.callset.should_capture_bracktrace(statement) is True:
+                span.capture_backtrace()
         tr.stop_span()
 
     if getattr(engine, "_scout_instrumented", False) != True:
