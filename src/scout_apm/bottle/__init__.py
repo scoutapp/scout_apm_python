@@ -48,7 +48,7 @@ class ScoutPlugin(object):
                     path = '/home'
 
                 if not path.startswith('/'):
-                    path = '/{}'.format(request.path)
+                    path = '/{}'.format(path)
 
                 span = tr.start_span(operation='Controller{}'.format(path))
 
