@@ -58,10 +58,11 @@ class ScoutConfig():
             'framework',
             'framework_version',
             'git_sha',
+            'key',
             'hostname',
             'log_level',
             'name',
-            'key',
+            'monitor',
             'socket_path'
         ]
 
