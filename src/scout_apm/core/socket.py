@@ -164,7 +164,7 @@ class CoreAgentSocket(threading.Thread):
                 self.socket.settimeout(0.5)
                 logger.debug('CoreAgentSocket is connected')
                 return True
-            except (FileNotFoundError, OSError) as e:
+            except (OSError) as e:
                 logger.debug('CoreAgentSocket connection error: %s', repr(e))
                 if attempt >= connect_attempts:
                     return False
