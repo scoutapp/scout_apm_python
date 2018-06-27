@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.8] 2018-06-27
+
+### Added
+
+- Pyramid Support (#58)
+- Bottle Support (#64)
+- Deploy Tracking Support (#65)
+- N+1 Backtrace Capture (#62)
+
+### Fixed
+
+- A few fixes for 2.7 support
+
 ## [1.1.7] 2018-06-12
 
 ### Added
