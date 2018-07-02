@@ -44,3 +44,50 @@ class instrument(ContextDecorator):
         if self.span is not None:
             self.span.tag(key, value)
 
+
+class Transaction(ContextDecorator):
+    def __init__(self, name, tags={}):
+        self.name = name
+        self.tags = tags
+
+    def start(kind, operation, tags={}):
+        operation = kind + '/' + operation
+
+        tr = TrackedRequest.instance()
+        span = tr.start_span(operation=operation)
+        for key, value in tags.items():
+            tr.tag(key, value)
+        return span
+
+    def stop():
+        tr = TrackedRequest.instance()
+        tr.stop_span()
+        return False
+
+    #  def __enter__(self):
+        #  self.span = .start(self.name, self.tags)
+        #  return self.span
+
+    def __exit__(self, *exc):
+        return WebTransaction.stop()
+
+    def tag(self, key, value):
+        if self.span is not None:
+            self.span.tag(key, value)
+
+
+class WebTransaction(Transaction):
+    def start(operation, tags={}):
+        Transaction.start("Controller", operation, tags)
+
+    def __enter__(self):
+        Transaction.start("Controller", self.name, self.tags)
+
+
+class BackgroundTransaction(Transaction):
+    def start(operation, tags={}):
+        Transaction.start("Job", operation, tags)
+
+    def __enter__(self):
+        Transaction.start("Job", self.name, self.tags)
+
