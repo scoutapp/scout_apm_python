@@ -50,7 +50,8 @@ class Transaction(ContextDecorator):
         self.name = name
         self.tags = tags
 
-    def start(kind, operation, tags={}):
+    @classmethod
+    def start(cls, kind, operation, tags={}):
         operation = kind + '/' + operation
 
         tr = TrackedRequest.instance()
@@ -59,17 +60,16 @@ class Transaction(ContextDecorator):
             tr.tag(key, value)
         return span
 
-    def stop():
+    @classmethod
+    def stop(cls):
         tr = TrackedRequest.instance()
         tr.stop_span()
-        return False
+        return True
 
-    #  def __enter__(self):
-        #  self.span = .start(self.name, self.tags)
-        #  return self.span
-
+    # *exc is any exception raised. Ignore that
     def __exit__(self, *exc):
-        return WebTransaction.stop()
+        WebTransaction.stop()
+        return False
 
     def tag(self, key, value):
         if self.span is not None:
@@ -77,7 +77,8 @@ class Transaction(ContextDecorator):
 
 
 class WebTransaction(Transaction):
-    def start(operation, tags={}):
+    @classmethod
+    def start(cls, operation, tags={}):
         Transaction.start("Controller", operation, tags)
 
     def __enter__(self):
@@ -85,7 +86,8 @@ class WebTransaction(Transaction):
 
 
 class BackgroundTransaction(Transaction):
-    def start(operation, tags={}):
+    @classmethod
+    def start(cls, operation, tags={}):
         Transaction.start("Job", operation, tags)
 
     def __enter__(self):
