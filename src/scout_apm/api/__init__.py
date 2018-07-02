@@ -46,13 +46,19 @@ class instrument(ContextDecorator):
 
 
 class Transaction(ContextDecorator):
+    """
+    This Class is not meant to be used directly.
+    Use one of the subclasses
+    (WebTransaction or BackgroundTransaction)
+    """
+
     def __init__(self, name, tags={}):
         self.name = name
         self.tags = tags
 
     @classmethod
-    def start(cls, kind, operation, tags={}):
-        operation = kind + '/' + operation
+    def start(cls, kind, name, tags={}):
+        operation = kind + '/' + name
 
         tr = TrackedRequest.instance()
         span = tr.start_span(operation=operation)
@@ -78,8 +84,8 @@ class Transaction(ContextDecorator):
 
 class WebTransaction(Transaction):
     @classmethod
-    def start(cls, operation, tags={}):
-        Transaction.start("Controller", operation, tags)
+    def start(cls, name, tags={}):
+        Transaction.start("Controller", name, tags)
 
     def __enter__(self):
         Transaction.start("Controller", self.name, self.tags)
@@ -87,8 +93,8 @@ class WebTransaction(Transaction):
 
 class BackgroundTransaction(Transaction):
     @classmethod
-    def start(cls, operation, tags={}):
-        Transaction.start("Job", operation, tags)
+    def start(cls, name, tags={}):
+        Transaction.start("Job", name, tags)
 
     def __enter__(self):
         Transaction.start("Job", self.name, self.tags)
