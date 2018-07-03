@@ -4,15 +4,6 @@ from scout_apm.core.instrument_manager import InstrumentManager
 
 # Fake instrument - note, this uses a module level global var to track if it's
 # been installed. Reset it after your test to reuse.
-installed_fake_instrument = False
-def install():
-    global installed_fake_instrument
-    installed_fake_instrument = True
-    return True
-
-
-# Fake instrument - note, this uses a module level global var to track if it's
-# been installed. Reset it after your test to reuse.
 klassy_instrument_pos_arg = False
 klassy_instrument_kwarg = False
 class KlassyInstrument():
@@ -38,15 +29,26 @@ class ExceptionalInstrument():
         raise Exception("foo")
 
 
-def test_loads_instrument():
-    global installed_fake_instrument
+# Default instrument name
+default_instrument_installed = False
+class Instrument():
+    def install(self):
+        global default_instrument_installed
 
-    assert(not installed_fake_instrument)
-    result = InstrumentManager(ScoutConfig()).install('scout_apm_tests.instrument_manager_test')
-    assert(installed_fake_instrument)
+        default_instrument_installed = True
+        return True
+
+
+def test_loads_default_instrument():
+    global default_instrument_installed
+    assert(not default_instrument_installed)
+
+    result = InstrumentManager().install('scout_apm_tests.instrument_manager_test')
+
+    assert(default_instrument_installed)
     assert(result)
 
-    installed_fake_instrument = False
+    default_instrument_installed = False
 
 
 def test_loads_class_instrument():
@@ -56,7 +58,7 @@ def test_loads_class_instrument():
     assert(not klassy_instrument_pos_arg)
     assert(not klassy_instrument_kwarg)
 
-    result = InstrumentManager(ScoutConfig()).install('scout_apm_tests.instrument_manager_test', 'KlassyInstrument', 'pos arg', kwarg='kwarg')
+    result = InstrumentManager().install('scout_apm_tests.instrument_manager_test', 'KlassyInstrument', 'pos arg', kwarg='kwarg')
 
     assert(klassy_instrument_pos_arg == 'pos arg')
     assert(klassy_instrument_kwarg == 'kwarg')
@@ -67,6 +69,6 @@ def test_loads_class_instrument():
 
 
 def test_handles_exception():
-    result = InstrumentManager(ScoutConfig()).install('scout_apm_tests.instrument_manager_test', 'ExceptionalInstrument')
+    result = InstrumentManager().install('scout_apm_tests.instrument_manager_test', 'ExceptionalInstrument')
     assert(not result)
 

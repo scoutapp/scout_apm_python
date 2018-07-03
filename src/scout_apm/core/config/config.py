@@ -173,6 +173,7 @@ class ScoutConfigDefaults():
                 'log_level': 'info',
                 'name': '',
                 'monitor': False,
+                'instruments': [],
                 'socket_path': '{}/scout_apm_core-{}-{}-{}/core-agent.sock'.format(self.core_agent_dir,
                                                                                    self.core_agent_version,
                                                                                    ScoutConfig.arch(),
@@ -215,8 +216,22 @@ class BooleanConversion():
         return False
 
 
+class ListConversion():
+    @classmethod
+    def convert(cls, value):
+        if isinstance(value, list):
+            return value
+        if isinstance(value, tuple):
+            return list(value)
+        if isinstance(value, str):
+            # Split on commas
+            return value.split(',')
+        # Unknown type - default to empty?
+        return []
+
 CONVERSIONS = {
     'core_agent_download': BooleanConversion,
     'core_agent_launch': BooleanConversion,
     'monitor': BooleanConversion,
+    'instruments': ListConversion,
 }
