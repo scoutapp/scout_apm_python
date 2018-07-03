@@ -72,6 +72,10 @@ class Transaction(ContextDecorator):
         tr.stop_span()
         return True
 
+
+    # __enter__ must be defined by child classes.
+
+
     # *exc is any exception raised. Ignore that
     def __exit__(self, *exc):
         WebTransaction.stop()
