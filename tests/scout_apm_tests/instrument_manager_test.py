@@ -1,3 +1,4 @@
+from scout_apm.core.config.config import ScoutConfig
 from scout_apm.core.instrument_manager import InstrumentManager
 
 
@@ -41,7 +42,7 @@ def test_loads_instrument():
     global installed_fake_instrument
 
     assert(not installed_fake_instrument)
-    result = InstrumentManager().install('scout_apm_tests.instrument_manager_test')
+    result = InstrumentManager(ScoutConfig()).install('scout_apm_tests.instrument_manager_test')
     assert(installed_fake_instrument)
     assert(result)
 
@@ -55,7 +56,7 @@ def test_loads_class_instrument():
     assert(not klassy_instrument_pos_arg)
     assert(not klassy_instrument_kwarg)
 
-    result = InstrumentManager().install('scout_apm_tests.instrument_manager_test', 'KlassyInstrument', 'pos arg', kwarg='kwarg')
+    result = InstrumentManager(ScoutConfig()).install('scout_apm_tests.instrument_manager_test', 'KlassyInstrument', 'pos arg', kwarg='kwarg')
 
     assert(klassy_instrument_pos_arg == 'pos arg')
     assert(klassy_instrument_kwarg == 'kwarg')
@@ -66,6 +67,6 @@ def test_loads_class_instrument():
 
 
 def test_handles_exception():
-    result = InstrumentManager().install('scout_apm_tests.instrument_manager_test', 'ExceptionalInstrument')
+    result = InstrumentManager(ScoutConfig()).install('scout_apm_tests.instrument_manager_test', 'ExceptionalInstrument')
     assert(not result)
 

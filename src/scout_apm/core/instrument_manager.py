@@ -1,8 +1,9 @@
 import importlib
 
+
 class InstrumentManager:
-    def __init__(self):
-        pass
+    def __init__(self, config):
+        self.config = config
 
     def install(self, module_name, klass=None, *args, **kwargs):
         try:
@@ -21,3 +22,4 @@ class InstrumentManager:
         #      return True
 
         return False
+
