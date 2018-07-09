@@ -39,7 +39,7 @@ class TrackedRequest(ThreadLocalSingleton):
 
     def tag(self, key, value):
         if key in self.tags:
-            logger.debug('Overwriting previously set tag for request %s: %s' % self.req_id, key)
+            logger.debug('Overwriting previously set tag for request %s: %s' % (self.req_id, key))
         self.tags[key] = value
 
     def start_span(self, operation=None):
@@ -109,7 +109,7 @@ class Span:
 
     def tag(self, key, value):
         if key in self.tags:
-            logger.debug('Overwriting previously set tag for span %s: %s' % self.span_id, key)
+            logger.debug('Overwriting previously set tag for span %s: %s' % (self.span_id, key))
         self.tags[key] = value
 
     # In seconds
