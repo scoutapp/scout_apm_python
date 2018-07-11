@@ -53,4 +53,4 @@ deploy:
   on:
     tags: true
     repo: scoutapp/scout_apm_python
-    condition: "$TRAVIS_PYTHON_VERSION = 3.7"
+    condition: "$TRAVIS_PYTHON_VERSION = 3.6"
