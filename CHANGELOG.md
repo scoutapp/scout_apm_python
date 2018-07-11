@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.10] 2018-07-11
+
+- Python 3.7 compatibility.
+
+### Fixed
+
+- Python 3.7 makes 'async' a reserved word.
+
 ## [1.1.9] 2018-07-09
 
 - Remove python 2.7 from supported versions in setup.py while we work
