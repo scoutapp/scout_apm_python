@@ -1,9 +1,12 @@
 language: python
-python:
-  - "3.4"
-  - "3.5"
-  - "3.6"
-  - "pypy3"
+matrix:
+  include:
+    - python: 3.4
+    - python: 3.5
+    - python: 3.6
+    - python: 3.7
+      dist: xenial
+    - python: "pypy3"
 
 cache: pip
 
@@ -50,4 +53,4 @@ deploy:
   on:
     tags: true
     repo: scoutapp/scout_apm_python
-    condition: "$TRAVIS_PYTHON_VERSION = 3.6"
+    condition: "$TRAVIS_PYTHON_VERSION = 3.7"
