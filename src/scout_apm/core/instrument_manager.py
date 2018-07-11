@@ -1,6 +1,10 @@
 import importlib
+import logging
 
 from scout_apm.core.context import AgentContext
+
+
+logger = logging.getLogger(__name__)
 
 
 class InstrumentManager:
@@ -16,17 +20,17 @@ class InstrumentManager:
 
             result = getattr(installable, 'install')()
             return result
-        except Exception:
+        except Exception as e:
+            logger.info('Exception while installing instrument {}: {}'.format(module_name, repr(e)))
             return False
 
     def install_all(self):
         self.install("scout_apm.instruments.jinja2")
-        self.install("scout_apm.instruments.mongo")
-        self.install("scout_apm.instruments.reqwests")
+        self.install("scout_apm.instruments.pymongo")
+        self.install("scout_apm.instruments.redis")
 
     def is_disabled(self, module_name):
         #  disabled = AgentContext.instance.config.value('disabled_instruments')
         #  if in_list:
         #      return True
         return False
-

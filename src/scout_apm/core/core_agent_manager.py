@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class CoreAgentManager:
-    def __init__(self, context):
+    def __init__(self):
         self.core_agent_bin_path = None
         self.core_agent_bin_version = None
         self.core_agent_dir = '{}/{}'.format(AgentContext.instance.config.value('core_agent_dir'),

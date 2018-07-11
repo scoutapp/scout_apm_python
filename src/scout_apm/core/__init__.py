@@ -23,6 +23,9 @@ def install():
 
     logger.debug('APM Launching on PID: %s', getpid())
     CoreAgentManager().launch()
+
+    InstrumentManager().install_all()
+
     AppMetadata.report()
     AgentContext.socket().stop()
     return True
