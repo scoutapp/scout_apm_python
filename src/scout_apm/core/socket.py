@@ -115,7 +115,7 @@ class CoreAgentSocket(threading.Thread):
             # TODO mark the command as not queued?
             logger.debug('CoreAgentSocket error on send: %s' % repr(e))
 
-    def _send(self, command, async=True):
+    def _send(self, command, do_async=True):
         msg = command.message()
 
         try:
@@ -131,7 +131,7 @@ class CoreAgentSocket(threading.Thread):
             logger.debug("CoreAgentSocket exception on _send: %s" % repr(e))
             return None
 
-        if async is True:
+        if do_async is True:
             return True
         else:
             # TODO read respnse back in to command
