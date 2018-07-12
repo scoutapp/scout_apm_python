@@ -28,6 +28,7 @@ class InstrumentManager:
         self.install("scout_apm.instruments.jinja2")
         self.install("scout_apm.instruments.pymongo")
         self.install("scout_apm.instruments.redis")
+        self.install("scout_apm.instruments.urllib3")
 
     def is_disabled(self, module_name):
         #  disabled = AgentContext.instance.config.value('disabled_instruments')

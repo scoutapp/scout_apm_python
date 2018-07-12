@@ -21,10 +21,10 @@ def install():
         logger.info("APM Not Launching on PID: %s - Configuration 'monitor' is not true", getpid())
         return False
 
+    InstrumentManager().install_all()
+
     logger.debug('APM Launching on PID: %s', getpid())
     CoreAgentManager().launch()
-
-    InstrumentManager().install_all()
 
     AppMetadata.report()
     AgentContext.socket().stop()
