@@ -31,7 +31,6 @@ class Instrument:
         self.installed = True
 
         self.patch_connectionpool()
-        self.patch_poolmanager()
 
         logger.info("Instrumented Urllib3")
         return True
@@ -42,8 +41,20 @@ class Instrument:
 
             @monkeypatch_method(HTTPConnectionPool)
             def urlopen(original, self, *args, **kwargs):
+                method = 'Unknown'
+                url = 'Unknown'
+                try:
+                    if 'method' in kwargs:
+                        method = kwargs['method']
+                    else:
+                        method = args[0]
+                    url = '{}'.format(self._absolute_url('/'))
+                except Exception as e:
+                    logger.error('Could not get instrument data for HTTPConnectionPool: {}'.format(repr(e)))
+
                 tr = TrackedRequest.instance()
-                span = tr.start_span(operation='HTTP')
+                span = tr.start_span(operation='HTTP/{}'.format(method))
+                span.tag('uri', '{}'.format(url))
 
                 try:
                     return original(*args, **kwargs)
@@ -51,18 +62,3 @@ class Instrument:
                     tr.stop_span()
         except Exception as e:
             logger.warn('Unable to instrument for Urllib3 HTTPConnectionPool.urlopen: {}'.format(repr(e)))
-
-    def patch_poolmanager(self):
-        try:
-            from urllib3 import PoolManager
-            @monkeypatch_method(PoolManager)
-            def urlopen(original, self, *args, **kwargs):
-                tr = TrackedRequest.instance()
-                span = tr.start_span(operation='HTTP')
-
-                try:
-                    return original(*args, **kwargs)
-                finally:
-                    tr.stop_span()
-        except Exception as e:
-            logger.warn('Unable to instrument for Urllib3 PoolManager.urlopen: {}'.format(repr(e)))
