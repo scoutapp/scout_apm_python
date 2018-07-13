@@ -49,6 +49,7 @@ class ScoutConfig():
 
     def known_keys(self):
         return [
+            'application_root',
             'app_server',
             'core_agent_dir',
             'core_agent_download',
@@ -160,6 +161,7 @@ class ScoutConfigDefaults():
         self.core_agent_dir = '/tmp/scout_apm_core'
         self.core_agent_version = 'latest'
         self.defaults = {
+                'application_root': '',
                 'app_server': '',
                 'core_agent_dir': self.core_agent_dir,
                 'core_agent_download': True,
