@@ -8,12 +8,11 @@ logger = logging.getLogger(__name__)
 
 
 class InstrumentManager:
+    INSTRUMENT_NAMESPACE = 'scout_apm.instruments'
+    DEFAULT_INSTRUMENTS = ['jinja2', 'pymongo', 'redis', 'urllib3']
+
     def install(self, module_name, klass="Instrument", *args, **kwargs):
         try:
-            # Configuration can disable individual instruments
-            #  if self.is_disabled(module_name):
-            #      return False
-
             installable = importlib.import_module(module_name)
             installable = getattr(installable, klass)
             installable = installable(*args, **kwargs)
@@ -25,13 +24,13 @@ class InstrumentManager:
             return False
 
     def install_all(self):
-        self.install("scout_apm.instruments.jinja2")
-        self.install("scout_apm.instruments.pymongo")
-        self.install("scout_apm.instruments.redis")
-        self.install("scout_apm.instruments.urllib3")
+        for module_name in self.__class__.DEFAULT_INSTRUMENTS:
+            if self.is_disabled(module_name):
+                logger.info('{} instruments are disabled. Skipping.'.format(module_name))
+                continue
+            self.install('{}.{}'.format(self.__class__.INSTRUMENT_NAMESPACE, module_name))
 
     def is_disabled(self, module_name):
-        #  disabled = AgentContext.instance.config.value('disabled_instruments')
-        #  if in_list:
-        #      return True
-        return False
+        disabled = AgentContext.instance.config.value('disabled_instruments')
+        if module_name in disabled:
+            return True

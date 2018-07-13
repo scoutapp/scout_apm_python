@@ -54,6 +54,7 @@ class ScoutConfig():
             'core_agent_download',
             'core_agent_launch',
             'core_agent_version',
+            'disabled_instruments',
             'download_url',
             'framework',
             'framework_version',
@@ -173,7 +174,7 @@ class ScoutConfigDefaults():
                 'log_level': 'info',
                 'name': '',
                 'monitor': False,
-                'instruments': [],
+                'disabled_instruments': [],
                 'socket_path': '{}/scout_apm_core-{}-{}-{}/core-agent.sock'.format(self.core_agent_dir,
                                                                                    self.core_agent_version,
                                                                                    ScoutConfig.arch(),
@@ -233,5 +234,5 @@ CONVERSIONS = {
     'core_agent_download': BooleanConversion,
     'core_agent_launch': BooleanConversion,
     'monitor': BooleanConversion,
-    'instruments': ListConversion,
+    'disabled_instruments': ListConversion,
 }
