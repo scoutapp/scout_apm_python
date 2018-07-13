@@ -54,7 +54,7 @@ class Instrument:
 
                 tr = TrackedRequest.instance()
                 span = tr.start_span(operation='HTTP/{}'.format(method))
-                span.tag('uri', '{}'.format(url))
+                span.tag('url', '{}'.format(url))
 
                 try:
                     return original(*args, **kwargs)
