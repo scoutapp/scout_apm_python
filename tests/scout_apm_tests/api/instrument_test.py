@@ -74,3 +74,71 @@ def test_decoration_default_tags():
     span = tr.complete_spans[-1]
     assert(len(span.tags) == 1)
     assert(span.tags['x'] == 99)
+
+
+def test_web_transaction_manual():
+    tr = TrackedRequest.instance()
+
+    scout_apm.api.WebTransaction.start("Foo")
+    scout_apm.api.WebTransaction.stop()
+
+    span = tr.complete_spans[-1]
+    assert(span.operation == "Controller/Foo")
+
+
+def test_web_transaction_context_mgr():
+    tr = TrackedRequest.instance()
+    x = 0
+
+    with scout_apm.api.WebTransaction("Foo"):
+        x = 1
+
+    span = tr.complete_spans[-1]
+    assert(x == 1)
+    assert(span.operation == "Controller/Foo")
+
+
+def test_web_transaction_decorator():
+    tr = TrackedRequest.instance()
+
+    @scout_apm.api.WebTransaction('Bar')
+    def my_transaction():
+        pass
+    my_transaction()
+
+    span = tr.complete_spans[-1]
+    assert(span.operation == "Controller/Bar")
+
+
+def test_background_transaction_manual():
+    tr = TrackedRequest.instance()
+
+    scout_apm.api.BackgroundTransaction.start("Foo")
+    scout_apm.api.BackgroundTransaction.stop()
+
+    span = tr.complete_spans[-1]
+    assert(span.operation == "Job/Foo")
+
+
+def test_background_transaction_context_mgr():
+    tr = TrackedRequest.instance()
+    x = 0
+
+    with scout_apm.api.BackgroundTransaction("Foo"):
+        x = 1
+
+    span = tr.complete_spans[-1]
+    assert(x == 1)
+    assert(span.operation == "Job/Foo")
+
+
+def test_background_transaction_decorator():
+    tr = TrackedRequest.instance()
+
+    @scout_apm.api.BackgroundTransaction('Bar')
+    def my_transaction():
+        pass
+    my_transaction()
+
+    span = tr.complete_spans[-1]
+    assert(span.operation == "Job/Bar")
