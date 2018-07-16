@@ -23,19 +23,19 @@ class CoreAgentManager:
     def __init__(self):
         self.core_agent_bin_path = None
         self.core_agent_bin_version = None
-        self.core_agent_dir = '{}/{}'.format(AgentContext.instance().config.value('core_agent_dir'),
-                                             AgentContext.instance().config.core_agent_full_name())
+        self.core_agent_dir = '{}/{}'.format(AgentContext.instance.config.value('core_agent_dir'),
+                                             AgentContext.instance.config.core_agent_full_name())
         self.downloader = CoreAgentDownloader(self.core_agent_dir,
-                                              AgentContext.instance().config.core_agent_full_name())
+                                              AgentContext.instance.config.core_agent_full_name())
 
     def launch(self):
-        if AgentContext.instance().config.value('core_agent_launch') is not True:
+        if AgentContext.instance.config.value('core_agent_launch') is not True:
             logger.debug("Not attempting to launch Core Agent "
                          "due to 'core_agent_launch' setting.")
             return
 
         if self.verify() is not True:
-            if AgentContext.instance().config.value('core_agent_download') is True:
+            if AgentContext.instance.config.value('core_agent_download') is True:
                 self.download()
             else:
                 logger.debug("Not attempting to download Core Agent due "
@@ -75,22 +75,22 @@ class CoreAgentManager:
         return ['--daemonize', 'true']
 
     def socket_path(self):
-        socket_path = AgentContext.instance().config.value('socket_path')
+        socket_path = AgentContext.instance.config.value('socket_path')
         return ['--socket', socket_path]
 
     def log_level(self):
-        level = AgentContext.instance().config.value('log_level')
+        level = AgentContext.instance.config.value('log_level')
         return ['--log-level', level]
 
     def log_file(self):
-        path = AgentContext.instance().config.value('log_file')
+        path = AgentContext.instance.config.value('log_file')
         if path is not None:
             return ['--log-file', path]
         else:
             return []
 
     def config_file(self):
-        path = AgentContext.instance().config.value('config_file')
+        path = AgentContext.instance.config.value('config_file')
         if path is not None:
             return ['--config-file', path]
         else:
@@ -188,7 +188,7 @@ class CoreAgentDownloader():
                 core_agent_full_name=self.core_agent_full_name)
 
     def root_url(self):
-        return AgentContext.instance().config.value('download_url')
+        return AgentContext.instance.config.value('download_url')
 
 
 class CoreAgentManifest:
