@@ -4,9 +4,10 @@ from os.path import basename, splitext
 from setuptools import find_packages, setup
 
 setup(name='scout_apm',
-      version='1.1.10',
+      version='1.2.0',
       description='Scout Application Performance Monitoring Agent',
-      long_description='Scout Application Performance Monitoring Agent',
+      long_description=open('README.md').read(),
+      long_description_content_type='text/markdown',
       url='https://github.com/scoutapp/scout_apm_python',
       author='Scout',
       author_email='support@scoutapp.com',
@@ -24,7 +25,7 @@ setup(name='scout_apm',
       install_requires=['psutil', 'PyYAML', 'requests'],
       keywords='apm performance monitoring development',
       classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'Topic :: System :: Monitoring',
         'License :: Other/Proprietary License',

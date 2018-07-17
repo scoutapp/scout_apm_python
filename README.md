@@ -1,5 +1,3 @@
-_Python Monitoring is in our Technical Preview Program. If you run have questions or run into issues, contact us at support@scoutapp.com or create an issue in this repo._
-
 # Scout Python APM Agent
 
 Monitor the performance of Python Django apps, Flask apps, and Celery workers with Scout's [Python APM Agent](https://www.scoutapp.com). Detailed performance metrics and transaction traces are collected once the `scout-apm` package is installed and configured.
@@ -12,6 +10,8 @@ Monitor the performance of Python Django apps, Flask apps, and Celery workers wi
 * Django 1.10+ ([request Django 1.8 and 1.9 support](https://github.com/scoutapp/scout_apm_python/issues/26))
 * Flask 0.10+
 * Celery 3.1+
+* Pyramid 1.8+
+* Bottle 0.12+
 
 ## Quick Start
 
@@ -58,6 +58,40 @@ app.config['SCOUT_KEY']     = "[AVAILABLE IN THE SCOUT UI]"
 app.config['SCOUT_NAME']    = "A FRIENDLY NAME FOR YOUR APP"
 ```
 
+### Pyramid
+
+Add the `SCOUT_*` settings to the Pyramid config, and then `config.include('scout_apm.pyramid')`
+
+
+```python
+import scout_apm.pyramid
+
+if __name__ == '__main__':
+    with Configurator() as config:
+        config.add_settings(
+            SCOUT_KEY = '...',
+            SCOUT_MONITOR = True,
+            SCOUT_NAME = 'My Pyramid App'
+        )
+        config.include('scout_apm.pyramid')
+
+        # Rest of your config...
+```
+
+### Bottle
+
+```python
+from scout_apm.bottle import ScoutPlugin
+
+app = bottle.default_app()
+app.config.update({'scout.name': "YOUR_APP_NAME",
+                   'scout.key': "YOUR_KEY"
+                   'scout.monitor': "true"})
+
+scout = ScoutPlugin()
+bottle.install(scout)
+```
+
 For full installation instructions, including information on configuring Scout via environment variables, see our [Python docs](http://help.apm.scoutapp.com/#python-agent).
 
 ## Documentation
@@ -65,4 +99,6 @@ For full installation instructions, including information on configuring Scout v
 For full installation and troubleshooting documentation, visit our
 [help site](http://help.apm.scoutapp.com/#python-agent).
 
+## Support
 
+Please contact us at support@scoutapp.com or create an issue in this repo.
