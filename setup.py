@@ -1,12 +1,17 @@
 from glob import glob
-from os.path import basename, splitext
+import os
 
 from setuptools import find_packages, setup
 
+long_description = 'Scout Application Performance Monitoring Agent - https://scoutapp.com'
+if os.path.exists('README.md'):
+    long_description = open('README.md').read()
+
 setup(name='scout_apm',
-      version='1.1.10',
+      version='1.2.0',
       description='Scout Application Performance Monitoring Agent',
-      long_description='Scout Application Performance Monitoring Agent',
+      long_description=long_description,
+      long_description_content_type='text/markdown',
       url='https://github.com/scoutapp/scout_apm_python',
       author='Scout',
       author_email='support@scoutapp.com',
@@ -15,7 +20,7 @@ setup(name='scout_apm',
       python_requires='>=3.4, <4',
       packages=find_packages('src'),
       package_dir={'': 'src'},
-      py_modules=[splitext(basename(path))[0] for path in glob('src/*.py')],
+      py_modules=[os.splitext(os.basename(path))[0] for path in glob('src/*.py')],
       entry_points={
           'console_scripts': [
               'core-agent-manager = scout_apm.core.cli.core_agent_manager:main'
@@ -24,7 +29,7 @@ setup(name='scout_apm',
       install_requires=['psutil', 'PyYAML', 'requests'],
       keywords='apm performance monitoring development',
       classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'Topic :: System :: Monitoring',
         'License :: Other/Proprietary License',

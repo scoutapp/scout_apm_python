@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.2.0] 2018-07-17
+
+### Added
+
+- Determine Application Root
+- Deploy Detection
+- Additional Instruments:
+  - PyMongo
+  - UrlLib3
+  - Redis
+  - ElasticSearch
+  - Jinja2
+- Instrumentation API
+
 ## [1.1.10] 2018-07-11
 
 - Python 3.7 compatibility.
