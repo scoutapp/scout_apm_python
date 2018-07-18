@@ -1,4 +1,5 @@
 from scout_apm.core.config import ScoutConfig
+from scout_apm.api.context import Context as ScoutContext
 from scout_apm.core.tracked_request import TrackedRequest
 
 import sys
@@ -22,6 +23,10 @@ if sys.version_info < (3, 2):
             return decorated
 else:
     from contextlib import ContextDecorator
+
+
+class Context(ScoutContext):
+    pass
 
 
 class Config(ScoutConfig):
