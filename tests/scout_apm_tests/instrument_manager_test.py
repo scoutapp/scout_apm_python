@@ -1,4 +1,4 @@
-from scout_apm.core.config.config import ScoutConfig
+from scout_apm.core.config import ScoutConfig
 from scout_apm.core.instrument_manager import InstrumentManager
 
 

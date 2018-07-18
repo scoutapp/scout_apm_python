@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 import logging
 
-from .config.config import ScoutConfig
+from .config import ScoutConfig
 from .socket import CoreAgentSocket
 
 # Logging

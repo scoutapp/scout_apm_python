@@ -4,7 +4,7 @@ from bottle import request
 
 import scout_apm.core
 from scout_apm.core.context import AgentContext
-from scout_apm.core.config.config import ScoutConfig
+from scout_apm.core.config import ScoutConfig
 from scout_apm.core.tracked_request import TrackedRequest
 
 from scout_apm.api.context import Context

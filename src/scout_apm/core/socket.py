@@ -14,7 +14,7 @@ except ImportError:
     # Python 2.x
     import Queue as queue
 
-from scout_apm.core.config.config import ScoutConfig
+from scout_apm.core.config import ScoutConfig
 from scout_apm.core.commands import Register
 
 # Logging

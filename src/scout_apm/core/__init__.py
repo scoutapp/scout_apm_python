@@ -4,7 +4,7 @@ from __future__ import absolute_import
 import logging
 from os import getpid
 
-from scout_apm.core.config.config import ScoutConfig
+from scout_apm.core.config import ScoutConfig
 from scout_apm.core.context import AgentContext
 from scout_apm.core.core_agent_manager import CoreAgentManager
 from scout_apm.core.instrument_manager import InstrumentManager
