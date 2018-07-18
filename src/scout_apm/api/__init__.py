@@ -1,3 +1,4 @@
+from scout_apm.core.config import ScoutConfig
 from scout_apm.core.tracked_request import TrackedRequest
 
 import sys
@@ -21,6 +22,10 @@ if sys.version_info < (3, 2):
             return decorated
 else:
     from contextlib import ContextDecorator
+
+
+class Config(ScoutConfig):
+    pass
 
 
 class instrument(ContextDecorator):
@@ -61,6 +66,7 @@ class Transaction(ContextDecorator):
         operation = kind + '/' + name
 
         tr = TrackedRequest.instance()
+        tr.mark_real_request()
         span = tr.start_span(operation=operation)
         for key, value in tags.items():
             tr.tag(key, value)
@@ -102,4 +108,3 @@ class BackgroundTransaction(Transaction):
 
     def __enter__(self):
         Transaction.start("Job", self.name, self.tags)
-
