@@ -1,3 +1,4 @@
+import scout_apm.core
 from scout_apm.core.config import ScoutConfig
 from scout_apm.api.context import Context as ScoutContext
 from scout_apm.core.tracked_request import TrackedRequest
@@ -31,6 +32,10 @@ class Context(ScoutContext):
 
 class Config(ScoutConfig):
     pass
+
+
+def install(*args, **kwargs):
+    scout_apm.core.install(*args, **kwargs)
 
 
 class instrument(ContextDecorator):

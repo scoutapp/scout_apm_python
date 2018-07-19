@@ -13,6 +13,7 @@ class AgentContext():
 
     def __init__(self, *args, **kwargs):
         self.config = kwargs.get('config', ScoutConfig())
+        self.config.log()
 
     @classmethod
     def build(cls, *args, **kwargs):
@@ -22,4 +23,3 @@ class AgentContext():
     @classmethod
     def socket(cls):
         return CoreAgentSocket.instance(scout_config=ScoutConfig())
-

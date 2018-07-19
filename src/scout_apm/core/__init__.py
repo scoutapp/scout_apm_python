@@ -13,9 +13,10 @@ from scout_apm.core.metadata import AppMetadata
 logger = logging.getLogger(__name__)
 
 
-def install():
-    config = ScoutConfig()
-    context = AgentContext.build(config=config)
+def install(*args, **kwargs):
+    if 'config' in kwargs:
+        ScoutConfig().set(**kwargs['config'])
+    context = AgentContext.build(config=ScoutConfig())
 
     if not context.config.value('monitor'):
         logger.info("APM Not Launching on PID: %s - Configuration 'monitor' is not true", getpid())
