@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.1] 2018-07-20
+
+### Added
+
+- Log configuration options to DEBUG on install
+- Add Context, Config, and install() to scout_apm.api
+
+### Fixed
+
+- Instrumentation API marks TrackedRequest as real request
+- Spans can ignore children (#85)
+
 ## [1.2.0] 2018-07-17
 
 ### Added
