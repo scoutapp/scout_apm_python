@@ -33,3 +33,35 @@ def test_start_span_wires_parents():
     span2 = tr.start_span()
     assert(span1.parent is None)
     assert(span2.parent == span1.span_id)
+
+
+def test_start_span_does_not_ignore_children():
+    tr = TrackedRequest()
+    tr.start_span(operation='parent')
+    child1 = tr.start_span()
+    assert(False == child1.ignore)
+    assert(False == child1.ignore_children)
+    child2 = tr.start_span()
+    assert(False == child2.ignore)
+    assert(False == child2.ignore_children)
+    tr.stop_span()
+    tr.stop_span()
+    tr.stop_span()
+    assert(3 == len(tr.complete_spans))
+    assert('parent' == tr.complete_spans[2].operation)
+
+
+def test_start_span_ignores_children():
+    tr = TrackedRequest()
+    tr.start_span(operation='parent', ignore_children=True)
+    child1 = tr.start_span()
+    assert(True == child1.ignore)
+    assert(True == child1.ignore_children)
+    child2 = tr.start_span()
+    assert(True == child2.ignore)
+    assert(True == child2.ignore_children)
+    tr.stop_span()
+    tr.stop_span()
+    tr.stop_span()
+    assert(1 == len(tr.complete_spans))
+    assert('parent' == tr.complete_spans[0].operation)

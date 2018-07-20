@@ -74,7 +74,7 @@ class Instrument:
                     op = 'Unknown'
 
                 tr = TrackedRequest.instance()
-                span = tr.start_span(operation='Elasticsearch/{}'.format(op))
+                span = tr.start_span(operation='Elasticsearch/{}'.format(op), ignore_children=True)
 
                 try:
                     return original(*args, **kwargs)

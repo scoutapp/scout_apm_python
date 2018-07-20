@@ -42,18 +42,23 @@ class TrackedRequest(ThreadLocalSingleton):
             logger.debug('Overwriting previously set tag for request %s: %s' % (self.req_id, key))
         self.tags[key] = value
 
-    def start_span(self, operation=None):
+    def start_span(self, operation=None, ignore=False, ignore_children=False):
         maybe_parent = self.current_span()
 
         if maybe_parent is not None:
             parent_id = maybe_parent.span_id
+            if maybe_parent.ignore_children:
+                ignore = True
+                ignore_children = True
         else:
             parent_id = None
 
         new_span = Span(
             request_id=self.req_id,
             operation=operation,
-            parent=parent_id)
+            parent=parent_id,
+            ignore=ignore,
+            ignore_children=ignore_children)
         self.active_spans.append(new_span)
         return new_span
 
@@ -66,8 +71,9 @@ class TrackedRequest(ThreadLocalSingleton):
 
         if stopping_span is not None:
             stopping_span.stop()
-            stopping_span.annotate()
-            self.complete_spans.append(stopping_span)
+            if not stopping_span.ignore:
+                stopping_span.annotate()
+                self.complete_spans.append(stopping_span)
 
         if len(self.active_spans) == 0:
             self.finish()
@@ -101,6 +107,8 @@ class Span:
         self.end_time = kwargs.get('end_time', None)
         self.request_id = kwargs.get('request_id', None)
         self.operation = kwargs.get('operation', None)
+        self.ignore = kwargs.get('ignore', False)
+        self.ignore_children = kwargs.get('ignore_children', False)
         self.parent = kwargs.get('parent', None)
         self.tags = kwargs.get('tags', {})
 
