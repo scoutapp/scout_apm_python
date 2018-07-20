@@ -9,27 +9,73 @@ logger = logging.getLogger(__name__)
 
 
 class Instrument:
+    CLIENT_METHODS = ['bulk', 'count', 'create',
+                      'delete', 'delete_by_query', 'exists',
+                      'exists_source', 'explain', 'field_caps',
+                      'get', 'get_source', 'index',
+                      'mget', 'msearch', 'msearch_template',
+                      'mtermvectors', 'reindex', 'reindex_rethrottle',
+                      'search', 'search_shards', 'search_template',
+                      'termvectors', 'update', 'update_by_query']
+
     def __init__(self):
         self.installed = False
 
     def installable(self):
         try:
+            from elasticsearch.client import Elasticsearch
             from elasticsearch import Transport
         except ImportError:
-            logger.info("Unable to import for ElasticSearch instruments")
+            logger.info("Unable to import for Elasticsearch instruments")
             return False
         if self.installed:
-            logger.warn("ElasticSearch Instruments are already installed.")
+            logger.warn("Elasticsearch Instruments are already installed.")
             return False
         return True
 
     def install(self):
         if not self.installable():
-            logger.info("ElasticSearch instruments are not installable. Skipping.")
+            logger.info("Elasticsearch instruments are not installable. Skipping.")
             return False
 
         self.installed = True
 
+        self.instrument_client()
+        self.instrument_transport()
+
+    def instrument_client(self):
+        try:
+            from elasticsearch.client import Elasticsearch
+        except ImportError:
+            logger.info("Unable to import for Elasticsearch Client instruments. Instrument install failed.")
+            return False
+
+        for method_str in self.__class__.CLIENT_METHODS:
+            try:
+                code_str = """
+@monkeypatch_method(Elasticsearch)
+def {method_str}(original, self, *args, **kwargs):
+    tr = TrackedRequest.instance()
+    index = kwargs.get('index', 'Unknown').title()
+    name = '/'.join(['Elasticsearch', index, '{camel_name}'])
+    span = tr.start_span(operation=name, ignore_children=True)
+
+
+    try:
+        return original(*args, **kwargs)
+    finally:
+        tr.stop_span()
+""".format(method_str=method_str, camel_name=''.join(c.title() for c in method_str.split('_')))
+
+                exec(code_str)
+                logger.info('Instrumented Elasticsearch Elasticsearch.{}'.format(method_str))
+
+            except Exception as e:
+                logger.warn('Unable to instrument for Elasticsearch Elasticsearch.{}: {}'.format(method_str, repr(e)))
+        return True
+
+
+    def instrument_transport(self):
         try:
             from elasticsearch import Transport
 
@@ -81,8 +127,8 @@ class Instrument:
                 finally:
                     tr.stop_span()
 
-            logger.info("Instrumented ElasticSearch")
+            logger.info("Instrumented Elasticsearch Transport")
 
         except Exception as e:
-            logger.warn('Unable to instrument for ElasticSearch Transport.perform_request: {}'.format(repr(e)))
+            logger.warn('Unable to instrument for Elasticsearch Transport.perform_request: {}'.format(repr(e)))
         return True

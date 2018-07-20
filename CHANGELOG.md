@@ -22,7 +22,7 @@
   - PyMongo
   - UrlLib3
   - Redis
-  - ElasticSearch
+  - Elasticsearch
   - Jinja2
 - Instrumentation API
 
