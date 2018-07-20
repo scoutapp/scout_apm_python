@@ -55,7 +55,7 @@ class Instrument:
 @monkeypatch_method(Collection)
 def {method_str}(original, self, *args, **kwargs):
     tr = TrackedRequest.instance()
-    span = tr.start_span(operation='MongoDB/{camel_name}')
+    span = tr.start_span(operation='MongoDB/{camel_name}', ignore_children=True)
     span.tag('name', self.name)
 
     try:
