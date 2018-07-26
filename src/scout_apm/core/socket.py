@@ -23,32 +23,51 @@ logger = logging.getLogger(__name__)
 
 class CoreAgentSocket(threading.Thread):
     _instance = None
-    _run_lock = threading.Semaphore()
+    _instance_lock = threading.Lock()
 
     @classmethod
     def instance(cls, *args, **kwargs):
-        if cls._instance is None:
-            cls._instance = cls(args, kwargs)
-        elif cls._instance.running() is False:
-            del(cls._instance)
-            cls._instance = cls(args, kwargs)
-        return cls._instance
+        with cls._instance_lock:
+            # No instance exists yet.
+            if cls._instance is None:
+                cls._instance = cls(args, kwargs)
+                return cls._instance
+
+            # An instance exists but is no longer running.
+            if cls._instance.running() is False:
+                cls._instance = cls(args, kwargs)
+                return cls._instance
+
+            # An instance exists and is running (or in the process of
+            # starting or in the process of stopping). In any case,
+            # return this instance.
+            return cls._instance
 
     def __init__(self, *args, **kwargs):
-        # Call threading.Thread.__init__()
-        super(CoreAgentSocket, self).__init__()
+        threading.Thread.__init__(self)
         self.config = kwargs.get('scout_config', ScoutConfig())
+
         # Socket related
         self.socket_path = self.config.value('socket_path')
         self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+
         # Threading control related
         self._started_event = threading.Event()
         self._stop_event = threading.Event()
         self._stopped_event = threading.Event()
+
         # Command queues
         self.command_queue = queue.Queue(maxsize=500)
-        # Start the thread
+
+        # Set Thread options
         self.daemon = True
+
+        # Set the started event here to avoid races in the class instance()
+        # method. If there is an exception in the socket thread then it will
+        # clear this event on exit.
+        self._started_event.set()
+
+        # Now call start() which eventually launches run() in another thread.
         self.start()
 
     def __del__(self):
@@ -70,12 +89,11 @@ class CoreAgentSocket(threading.Thread):
             return True
 
     def run(self):
-        if self.__class__._run_lock.acquire(False) is False:
-            logger.debug('CoreAgentSocket thread failed to acquire run lock.')
-            return None
+        """
+        Called by the threading system
+        """
 
         try:
-            self._started_event.set()
             self._connect()
             self._register()
             while True:
@@ -101,10 +119,11 @@ class CoreAgentSocket(threading.Thread):
                 if self._stop_event.is_set():
                     logger.debug("CoreAgentSocket thread stopping.")
                     break
+        except:
+            logger.debug("CoreAgentSocket thread exception")
         finally:
-            self.__class__._run_lock.release()
-            self._stop_event.clear()
             self._started_event.clear()
+            self._stop_event.clear()
             self._stopped_event.set()
             logger.debug("CoreAgentSocket thread stopped.")
 
