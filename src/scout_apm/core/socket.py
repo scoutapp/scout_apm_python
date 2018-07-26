@@ -43,7 +43,6 @@ class CoreAgentSocket(threading.Thread):
             # return this instance.
             return cls._instance
 
-
     def __init__(self, *args, **kwargs):
         threading.Thread.__init__(self)
         self.config = kwargs.get('scout_config', ScoutConfig())
@@ -70,7 +69,6 @@ class CoreAgentSocket(threading.Thread):
 
         # Now call start() which eventually launches run() in another thread.
         self.start()
-
 
     def __del__(self):
         self.stop()
