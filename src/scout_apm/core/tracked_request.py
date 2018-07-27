@@ -42,23 +42,21 @@ class TrackedRequest(ThreadLocalSingleton):
             logger.debug('Overwriting previously set tag for request %s: %s' % (self.req_id, key))
         self.tags[key] = value
 
-    def start_span(self, operation=None, ignore=False, ignore_children=False):
+    def start_span(self, *args, **kwargs):
         maybe_parent = self.current_span()
 
         if maybe_parent is not None:
             parent_id = maybe_parent.span_id
             if maybe_parent.ignore_children:
-                ignore = True
-                ignore_children = True
+                kwargs['ignore'] = True
+                kwargs['ignore_children'] = True
         else:
             parent_id = None
 
-        new_span = Span(
-            request_id=self.req_id,
-            operation=operation,
-            parent=parent_id,
-            ignore=ignore,
-            ignore_children=ignore_children)
+        kwargs['parent'] = parent_id
+        kwargs['request_id'] = self.req_id
+
+        new_span = Span(**kwargs)
         self.active_spans.append(new_span)
         return new_span
 
@@ -134,6 +132,9 @@ class Span:
     # Add any interesting annotations to the span. Assumes that we are in the
     # process of stopping this span.
     def annotate(self):
+        if self.operation is not None:
+            if self.operation.startswith('Controller') or self.operation.startswith('Middleware'):
+                return
         slow_threshold = 0.500
         if self.duration() > slow_threshold:
             self.capture_backtrace()

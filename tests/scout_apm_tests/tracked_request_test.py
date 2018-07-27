@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from scout_apm.core.tracked_request import TrackedRequest
 
 
@@ -65,3 +67,23 @@ def test_start_span_ignores_children():
     tr.stop_span()
     assert(1 == len(tr.complete_spans))
     assert('parent' == tr.complete_spans[0].operation)
+
+
+def test_span_captures_backtrace():
+    tr = TrackedRequest()
+    span = tr.start_span(operation='Sql/Work',
+                         start_time=datetime.now() - timedelta(seconds=1))
+    tr.stop_span()
+    assert(span.tags['stack'])
+
+
+def test_span_does_not_capture_backtrace():
+    tr = TrackedRequest()
+    controller = tr.start_span(operation='Controller/Work',
+                         start_time=datetime.now() - timedelta(seconds=10))
+    middleware = tr.start_span(operation='Middleware/Work',
+                         start_time=datetime.now() - timedelta(seconds=10))
+    tr.stop_span()
+    tr.stop_span()
+    assert('stack' not in controller.tags)
+    assert('stack' not in middleware.tags)
