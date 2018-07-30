@@ -1,5 +1,6 @@
 import logging
 from scout_apm.core.tracked_request import TrackedRequest
+from scout_apm.core.remote_ip import RemoteIp
 from scout_apm.api.context import Context
 
 # Logging
@@ -65,7 +66,7 @@ class ViewTimingMiddleware:
             if span is not None:
                 span.operation = 'Controller/' + view_name
                 Context.add('path', request.path)
-                Context.add('user_ip', request.get_host())
+                Context.add('user_ip', RemoteIp.lookup_from_headers(request.META))
                 if request.user is not None:
                     Context.add('username', request.user.get_username())
         except:
