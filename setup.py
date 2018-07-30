@@ -8,7 +8,7 @@ if os.path.exists('README.md'):
     long_description = open('README.md').read()
 
 setup(name='scout_apm',
-      version='1.2.1',
+      version='1.2.2',
       description='Scout Application Performance Monitoring Agent',
       long_description=long_description,
       long_description_content_type='text/markdown',
@@ -32,7 +32,7 @@ setup(name='scout_apm',
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'Topic :: System :: Monitoring',
-        'License :: Other/Proprietary License',
+        'License :: OSI Approved :: MIT License',
         'Operating System :: MacOS',
         'Operating System :: POSIX',
         'Operating System :: POSIX :: Linux',

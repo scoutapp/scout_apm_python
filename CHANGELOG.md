@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.2.2] 2018-07-30
+
+### Fixed
+
+- Look up 'user_ip' context from request headers (PR #90)
+- Improved locking/sync around CoreAgentSocket (#91)
+- DO not collect backtraces on Controller or Middleware layers (#88)
+- Better Elasticsearch naming (#84)
+- Flask transactions that throw exceptions don't appear (#29)
+
 ## [1.2.1] 2018-07-20
 
 ### Added
