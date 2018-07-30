@@ -30,6 +30,8 @@ class RemoteIp:
         #       in order: `client,proxy1,proxy2`
         #   - Client-Ip is propagated from the outermost proxy, or is blank
         #   - REMOTE_ADDR will be the IP that made the request to this server
+        #
+        # X-Forwarded-For and Client-Ip shouldn't be set at the same time
         ips = forwarded_ips + client_ips + remote_addr
 
         try:
