@@ -73,7 +73,7 @@ class ScoutApm(object):
         return view_func(**req.view_args)
 
     def process_request(self):
-        TrackedRequest.instance().start_span(operation='Flask')
+        pass
 
     def wrap_view_func(self, app, rule, req, view_func, view_kwargs):
         """ This method is called just before the flask view is called.
@@ -124,6 +124,5 @@ class ScoutApm(object):
             return func
 
     def process_response(self, response):
-        TrackedRequest.instance().stop_span()
         return response
 
