@@ -1,5 +1,6 @@
 import logging
 from scout_apm.core.tracked_request import TrackedRequest
+from scout_apm.core.remote_ip import RemoteIp
 from scout_apm.api.context import Context
 
 # Logging
@@ -62,10 +63,11 @@ class ViewTimingMiddleware:
         try:
             view_name = request.resolver_match._func_path
             span = TrackedRequest.instance().current_span()
+            __import__('pdb').set_trace()
             if span is not None:
                 span.operation = 'Controller/' + view_name
                 Context.add('path', request.path)
-                Context.add('user_ip', RemoteAddress.lookup_from_request(request))
+                Context.add('user_ip', RemoteIp.lookup_from_headers(request.META))
                 if request.user is not None:
                     Context.add('username', request.user.get_username())
         except:
@@ -83,19 +85,3 @@ class ViewTimingMiddleware:
     #      """
     #      """
     #      pass
-
-
-class RemoteAddress:
-    """
-    A helper class to lookup what IP the request is associated with for adding
-    Context to a request
-    """
-
-    @classmethod
-    def lookup_from_request(cls, request):
-        if 'HTTP_X_FORWARDED_FOR' in request.META:
-            return request.META['HTTP_X_FORWARDED_FOR']
-        elif 'REMOTE_ADDR' in request.META:
-            return request.META['REMOTE_ADDR']
-        else:
-            return None
