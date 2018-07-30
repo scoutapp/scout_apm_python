@@ -63,7 +63,6 @@ class ViewTimingMiddleware:
         try:
             view_name = request.resolver_match._func_path
             span = TrackedRequest.instance().current_span()
-            __import__('pdb').set_trace()
             if span is not None:
                 span.operation = 'Controller/' + view_name
                 Context.add('path', request.path)
