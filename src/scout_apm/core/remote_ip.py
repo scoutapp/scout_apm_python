@@ -18,11 +18,11 @@ class RemoteIp:
         """
 
         # A single address, set by this server, returned as an Array
-        remote_addr = RemoteIp.ips_from(headers.get("REMOTE_ADDR"))
+        remote_addr = cls.ips_from(headers.get("REMOTE_ADDR"))
 
         # Could be a CSV list and/or repeated headers that were concatenated.
-        forwarded_ips = RemoteIp.ips_from(headers.get("X-FORWARDED-FOR"))
-        client_ips = RemoteIp.ips_from(headers.get("CLIENT_IP"))
+        forwarded_ips = cls.ips_from(headers.get("X-FORWARDED-FOR"))
+        client_ips = cls.ips_from(headers.get("CLIENT_IP"))
 
         # We assume these things about the IP headers:
         #
