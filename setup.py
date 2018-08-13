@@ -21,7 +21,7 @@ setup(name='scout_apm',
       packages=find_packages('src'),
       package_dir={'': 'src'},
       py_modules=[os.splitext(os.basename(path))[0] for path in glob('src/*.py')],
-      ext_modules=[Extension('scout_apm.core.objtrace', ['src/scout_apm/ext/objtrace.c'])],
+      ext_modules=[Extension('scout_apm.core.objtrace', ['src/scout_apm/core/ext/objtrace.c'])],
       entry_points={
           'console_scripts': [
               'core-agent-manager = scout_apm.core.cli.core_agent_manager:main'

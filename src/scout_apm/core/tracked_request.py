@@ -8,6 +8,7 @@ from scout_apm.core.samplers import Samplers
 from scout_apm.core.request_manager import RequestManager
 from scout_apm.core.thread_local import ThreadLocalSingleton
 from scout_apm.core.n_plus_one_call_set import NPlusOneCallSet
+from scout_apm.core import objtrace
 import scout_apm.core.backtrace
 
 # Logging
@@ -109,9 +110,12 @@ class Span:
         self.ignore_children = kwargs.get('ignore_children', False)
         self.parent = kwargs.get('parent', None)
         self.tags = kwargs.get('tags', {})
+        self.start_objtrace_counts = kwargs.get('start_objtrace_counts', objtrace.get_counts())
+        self.end_objtrace_counts = kwargs.get('end_objtrace_counts', (0, 0, 0, 0))
 
     def stop(self):
         self.end_time = datetime.utcnow()
+        self.end_objtrace_counts = objtrace.get_counts()
 
     def tag(self, key, value):
         if key in self.tags:
@@ -132,12 +136,30 @@ class Span:
     # Add any interesting annotations to the span. Assumes that we are in the
     # process of stopping this span.
     def annotate(self):
+        self.tag('allocations', self.calculate_allocations())
+        # Don't capture backtraces for Controller or Middleware
         if self.operation is not None:
             if self.operation.startswith('Controller') or self.operation.startswith('Middleware'):
                 return
         slow_threshold = 0.500
         if self.duration() > slow_threshold:
             self.capture_backtrace()
+
+    def calculate_allocations(self):
+        start_allocs = self.start_objtrace_counts[0] + self.start_objtrace_counts[1] + self.start_objtrace_counts[2]
+        end_allocs = self.end_objtrace_counts[0] + self.end_objtrace_counts[1] + self.end_objtrace_counts[2]
+        try:
+            if end_allocs - start_allocs < 0:
+                logger.debug('End allocation count smaller than start '
+                             'allocation count for span {}: start = {}, '
+                             'end = {}'.format(self.span_id,
+                                               start_allocs,
+                                               end_allocs))
+                return 0
+            return end_allocs - start_allocs
+        except TypeError as e:
+            logger.debug('Exception in calculate_allocations: {}'.format(repr(e)))
+            return 0
 
     def capture_backtrace(self):
         stack = scout_apm.core.backtrace.capture()

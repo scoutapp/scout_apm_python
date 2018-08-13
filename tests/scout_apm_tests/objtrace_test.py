@@ -1,6 +1,6 @@
 import unittest
 
-from scout_apm import objtrace
+from scout_apm.core import objtrace
 
 
 class TestObjtrace(unittest.TestCase):
