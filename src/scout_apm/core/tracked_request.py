@@ -149,6 +149,9 @@ class Span:
         start_allocs = self.start_objtrace_counts[0] + self.start_objtrace_counts[1] + self.start_objtrace_counts[2]
         end_allocs = self.end_objtrace_counts[0] + self.end_objtrace_counts[1] + self.end_objtrace_counts[2]
         try:
+            # If even one of the counters rolled over, we're pretty much
+            # guaranteed to have end_allocs be less than start_allocs.
+            # This should rarely happen. Max Unsigned Long Long is a big number
             if end_allocs - start_allocs < 0:
                 logger.debug('End allocation count smaller than start '
                              'allocation count for span {}: start = {}, '
