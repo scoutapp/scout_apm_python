@@ -14,6 +14,8 @@ class ScoutApm(object):
             self.init_app(app)
 
     def init_app(self, app):
+        self.app = app
+
         app.before_first_request(self.before_first_request)
         app.before_request(self.process_request)
         app.after_request(self.process_response)
