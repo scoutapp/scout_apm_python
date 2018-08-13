@@ -16,10 +16,10 @@ struct {
     PyMemAllocator obj;
 } hook;
 
-static __thread unsigned long long allocs;
-static __thread unsigned long long callocs;
-static __thread unsigned long long reallocs;
-static __thread unsigned long long frees;
+static __thread unsigned long long allocs = 0;
+static __thread unsigned long long callocs = 0;
+static __thread unsigned long long reallocs = 0;
+static __thread unsigned long long frees = 0;
 
 static void* hook_malloc(void *ctx, size_t size)
 {
