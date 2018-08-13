@@ -1,6 +1,10 @@
 import unittest
 
-from scout_apm.core import objtrace
+try:
+    from scout_apm.core import objtrace
+    HAS_OBJTRACE = True
+except ImportError:
+    HAS_OBJTRACE = False
 
 
 class TestObjtrace(unittest.TestCase):
@@ -31,5 +35,6 @@ class TestObjtrace(unittest.TestCase):
         c = objtrace.get_counts()
         assert(c[3] > 0)
 
-if __name__ == '__main__':
-    unittest.main()
+if HAS_OBJTRACE:
+    if __name__ == '__main__':
+        unittest.main()

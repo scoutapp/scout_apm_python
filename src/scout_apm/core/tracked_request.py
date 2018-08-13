@@ -8,8 +8,13 @@ from scout_apm.core.samplers import Samplers
 from scout_apm.core.request_manager import RequestManager
 from scout_apm.core.thread_local import ThreadLocalSingleton
 from scout_apm.core.n_plus_one_call_set import NPlusOneCallSet
-from scout_apm.core import objtrace
 import scout_apm.core.backtrace
+
+try:
+    from scout_apm.core import objtrace
+    HAS_OBJTRACE = True
+except ImportError:
+    HAS_OBJTRACE = False
 
 # Logging
 logger = logging.getLogger(__name__)
@@ -110,7 +115,10 @@ class Span:
         self.ignore_children = kwargs.get('ignore_children', False)
         self.parent = kwargs.get('parent', None)
         self.tags = kwargs.get('tags', {})
-        self.start_objtrace_counts = kwargs.get('start_objtrace_counts', objtrace.get_counts())
+        if HAS_OBJTRACE:
+            self.start_objtrace_counts = kwargs.get('start_objtrace_counts', objtrace.get_counts())
+        else:
+            self.start_objtrace_counts = kwargs.get('start_objtrace_counts', (0, 0, 0, 0))
         self.end_objtrace_counts = kwargs.get('end_objtrace_counts', (0, 0, 0, 0))
 
     def stop(self):
@@ -146,6 +154,9 @@ class Span:
             self.capture_backtrace()
 
     def calculate_allocations(self):
+        if HAS_OBJTRACE is False:
+            return 0
+
         start_allocs = self.start_objtrace_counts[0] + self.start_objtrace_counts[1] + self.start_objtrace_counts[2]
         end_allocs = self.end_objtrace_counts[0] + self.end_objtrace_counts[1] + self.end_objtrace_counts[2]
         try:

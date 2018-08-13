@@ -1,11 +1,20 @@
 from glob import glob
 import os
+import sys
 
 from setuptools import find_packages, setup, Extension
 
 long_description = 'Scout Application Performance Monitoring Agent - https://scoutapp.com'
 if os.path.exists('README.md'):
     long_description = open('README.md').read()
+
+c_extenstions = [Extension('scout_apm.core.objtrace', ['src/scout_apm/core/ext/objtrace.c'])]
+
+if sys.platform.startswith('java'):
+    c_extenstions = []
+
+if '__pypy__' in sys.builtin_module_names:
+    c_extenstions = []
 
 setup(name='scout_apm',
       version='1.3.0',
@@ -21,7 +30,7 @@ setup(name='scout_apm',
       packages=find_packages('src'),
       package_dir={'': 'src'},
       py_modules=[os.splitext(os.basename(path))[0] for path in glob('src/*.py')],
-      ext_modules=[Extension('scout_apm.core.objtrace', ['src/scout_apm/core/ext/objtrace.c'])],
+      ext_modules=c_extenstions,
       entry_points={
           'console_scripts': [
               'core-agent-manager = scout_apm.core.cli.core_agent_manager:main'
