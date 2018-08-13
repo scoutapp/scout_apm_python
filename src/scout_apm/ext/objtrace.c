@@ -1,5 +1,6 @@
 #include "Python.h"
 #include <stdlib.h>
+#include <limits.h>
 
 #define VERSION "1.0.0"
 
@@ -22,6 +23,10 @@ static __thread unsigned long long frees;
 
 static void* hook_malloc(void *ctx, size_t size)
 {
+    if (allocs == ULLONG_MAX) {
+        allocs = 0;
+    }
+
     allocs++;
     PyMemAllocator *alloc = (PyMemAllocator *)ctx;
     return alloc->malloc(alloc->ctx, size);
@@ -30,6 +35,10 @@ static void* hook_malloc(void *ctx, size_t size)
 #ifdef FAIL_CALLOC
 static void* hook_calloc(void *ctx, size_t nelem, size_t elsize)
 {
+    if (callocs == ULLONG_MAX) {
+        callocs = 0;
+    }
+
     callocs++;
     PyMemAllocator *alloc = (PyMemAllocator *)ctx;
     return alloc->calloc(alloc->ctx, nelem, elsize);
@@ -38,6 +47,10 @@ static void* hook_calloc(void *ctx, size_t nelem, size_t elsize)
 
 static void* hook_realloc(void *ctx, void *ptr, size_t new_size)
 {
+    if (reallocs == ULLONG_MAX) {
+        reallocs = 0;
+    }
+
     reallocs++;
     PyMemAllocator *alloc = (PyMemAllocator *)ctx;
     return alloc->realloc(alloc->ctx, ptr, new_size);
@@ -45,6 +58,10 @@ static void* hook_realloc(void *ctx, void *ptr, size_t new_size)
 
 static void hook_free(void *ctx, void *ptr)
 {
+    if (frees == ULLONG_MAX) {
+        frees = 0;
+    }
+
     frees++;
     PyMemAllocator *alloc = (PyMemAllocator *)ctx;
     alloc->free(alloc->ctx, ptr);
@@ -99,6 +116,17 @@ objtrace_get_counts(PyObject *module)
     return Py_BuildValue("KKKK", allocs, callocs, reallocs, frees);
 }
 
+static PyObject*
+objtrace_reset_counts(PyObject *module)
+{
+    allocs = 0;
+    callocs = 0;
+    reallocs = 0;
+    frees = 0;
+
+    Py_RETURN_NONE;
+}
+
 PyDoc_STRVAR(module_doc,
 "objtrace module.");
 
@@ -112,6 +140,9 @@ static PyMethodDef module_methods[] = {
     {"get_counts",
      (PyCFunction)objtrace_get_counts, METH_NOARGS,
      PyDoc_STR("get_counts()")},
+    {"reset_counts",
+     (PyCFunction)objtrace_reset_counts, METH_NOARGS,
+     PyDoc_STR("reset_counts()")},
     {NULL, NULL}  /* sentinel */
 };
 
