@@ -1,7 +1,12 @@
 from datetime import datetime, timedelta
 
 from scout_apm.core.tracked_request import TrackedRequest
-from scout_apm.core import objtrace
+
+try:
+    from scout_apm.core import objtrace
+    HAS_OBJTRACE = True
+except ImportError:
+    HAS_OBJTRACE = False
 
 
 def test_instance():
@@ -38,10 +43,11 @@ def test_start_span_wires_parents():
 
 
 def test_tags_allocations_for_spans():
-    tr = TrackedRequest()
-    span = tr.start_span()
-    tr.stop_span()
-    assert(span.tags['allocations'] > 0)
+    if HAS_OBJTRACE:
+        tr = TrackedRequest()
+        span = tr.start_span()
+        tr.stop_span()
+        assert(span.tags['allocations'] > 0)
 
 
 def test_start_span_does_not_ignore_children():
