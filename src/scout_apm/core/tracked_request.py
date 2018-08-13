@@ -123,7 +123,10 @@ class Span:
 
     def stop(self):
         self.end_time = datetime.utcnow()
-        self.end_objtrace_counts = objtrace.get_counts()
+        if HAS_OBJTRACE:
+            self.end_objtrace_counts = objtrace.get_counts()
+        else:
+            self.end_objtrace_counts = (0, 0, 0, 0)
 
     def tag(self, key, value):
         if key in self.tags:
