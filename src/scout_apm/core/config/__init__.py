@@ -70,13 +70,10 @@ class ScoutConfig():
 
     # scout_apm_core-latest-x86_64-apple-darwin.tgz
     def core_agent_full_name(self):
-        return 'scout_apm_core-{version}-{platform}'.format(
+        return '{name}-{version}-{triple}'.format(
+                name='scout_apm_core',
                 version=self.value('core_agent_version'),
-                platform=self.platform())
-
-    @classmethod
-    def platform(cls):
-        return PlatformDetection.get_triple()
+                triple=PlatformDetection.get_triple())
 
     @classmethod
     def set(cls, **kwargs):
@@ -160,10 +157,8 @@ class ScoutConfigDefaults():
                 'name': '',
                 'monitor': False,
                 'disabled_instruments': [],
-                'socket_path': '{}/scout_apm_core-{}-{}-{}/core-agent.sock'.format(self.core_agent_dir,
-                                                                                   self.core_agent_version,
-                                                                                   ScoutConfig.arch(),
-                                                                                   ScoutConfig.platform())
+                'socket_path': '{}/{}/core-agent.sock'.format(self.core_agent_dir,
+                                                              ScoutConfig.core_agent_full_name())
         }
 
     def has_config(self, key):
