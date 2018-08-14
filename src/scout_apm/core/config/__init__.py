@@ -9,43 +9,6 @@ from scout_apm.core.platform_detection import PlatformDetection
 logger = logging.getLogger(__name__)
 
 
-class ScoutConfigDerived():
-    """
-    A configuration overlay that calculates from other values.
-    """
-
-    def __init__(self, config):
-        """
-        config argument is the overall ScoutConfig var, so we can lookup the components of the derived info.
-        """
-        self.config = config
-
-    def name(self):
-        return 'Derived'
-
-    def has_config(self, key):
-        return self.lookup_func(key) is not None
-
-    def value(self, key):
-        return self.lookup_func(key)()
-
-    def lookup_func(self, key):
-        """
-        Returns the dervie_#{key} function, or None if it isn't defined
-        """
-        func_name = 'derive_' + key
-        return getattr(self, func_name, None)
-
-
-    def derive_socket_path(self):
-        return '{}/{}/core-agent.sock'.format(self.config.value('core_agent_dir'), self.config.value('core_agent_full_name'))
-
-    def derive_core_agent_full_name(self):
-        return '{name}-{version}-{triple}'.format(
-                name='scout_apm_core',
-                version=self.config.value('core_agent_version'),
-                triple=PlatformDetection.get_triple())
-
 class ScoutConfig():
     """
     Configuration object for the ScoutApm agent.
@@ -168,6 +131,44 @@ class ScoutConfigEnv():
     def modify_key(self, key):
         env_key = ('SCOUT_' + key).upper()
         return env_key
+
+
+class ScoutConfigDerived():
+    """
+    A configuration overlay that calculates from other values.
+    """
+
+    def __init__(self, config):
+        """
+        config argument is the overall ScoutConfig var, so we can lookup the components of the derived info.
+        """
+        self.config = config
+
+    def name(self):
+        return 'Derived'
+
+    def has_config(self, key):
+        return self.lookup_func(key) is not None
+
+    def value(self, key):
+        return self.lookup_func(key)()
+
+    def lookup_func(self, key):
+        """
+        Returns the dervie_#{key} function, or None if it isn't defined
+        """
+        func_name = 'derive_' + key
+        return getattr(self, func_name, None)
+
+
+    def derive_socket_path(self):
+        return '{}/{}/core-agent.sock'.format(self.config.value('core_agent_dir'), self.config.value('core_agent_full_name'))
+
+    def derive_core_agent_full_name(self):
+        return '{name}-{version}-{triple}'.format(
+                name='scout_apm_core',
+                version=self.config.value('core_agent_version'),
+                triple=PlatformDetection.get_triple())
 
 
 class ScoutConfigDefaults():
