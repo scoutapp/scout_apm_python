@@ -181,22 +181,22 @@ class ScoutConfigDefaults():
 
     def __init__(self):
         self.defaults = {
-                'application_root': '',
                 'app_server': '',
+                'application_root': '',
                 'core_agent_dir': '/tmp/scout_apm_core',
                 'core_agent_download': True,
                 'core_agent_launch': True,
                 'core_agent_version': 'latest',
+                'disabled_instruments': [],
                 'download_url': 'https://s3-us-west-1.amazonaws.com/scout-public-downloads/apm_core_agent/release',
                 'framework': '',
                 'framework_version': '',
-                'revision_sha': GitRevision().detect(),
-                'key': '',
                 'hostname': '',
+                'key': '',
                 'log_level': 'info',
-                'name': '',
                 'monitor': False,
-                'disabled_instruments': [],
+                'name': '',
+                'revision_sha': GitRevision().detect(),
         }
 
     def has_config(self, key):
