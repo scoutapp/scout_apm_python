@@ -48,8 +48,14 @@ class PlatformDetection:
         appears to be the most reliable way to do this.
         """
         try:
-            output = subprocess.check_output(['ldd', '--version'])
-            if 'musl' in output:
+            process = subprocess.Popen(
+                          ['ldd', '--version'],
+                          stdout=subprocess.PIPE,
+                          stderr=subprocess.STDOUT)
+            returncode = process.wait()
+            output = process.stdout.read()
+
+            if b'musl' in output:
                 return 'musl'
             else:
                 return 'gnu'
