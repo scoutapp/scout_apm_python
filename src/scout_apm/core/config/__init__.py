@@ -9,6 +9,19 @@ from scout_apm.core.platform_detection import PlatformDetection
 logger = logging.getLogger(__name__)
 
 
+class DerivedConfig():
+    def __init__(self):
+        pass
+
+    # scout_apm_core-latest-x86_64-apple-darwin.tgz
+    @classmethod
+    def core_agent_full_name(cls, version):
+        return '{name}-{version}-{triple}'.format(
+                name='scout_apm_core',
+                version=version,
+                triple=PlatformDetection.get_triple())
+
+
 class ScoutConfig():
     """
     Configuration object for the ScoutApm agent.
@@ -67,13 +80,6 @@ class ScoutConfig():
             'monitor',
             'socket_path'
         ]
-
-    # scout_apm_core-latest-x86_64-apple-darwin.tgz
-    def core_agent_full_name(self):
-        return '{name}-{version}-{triple}'.format(
-                name='scout_apm_core',
-                version=self.value('core_agent_version'),
-                triple=PlatformDetection.get_triple())
 
     @classmethod
     def set(cls, **kwargs):
@@ -158,7 +164,7 @@ class ScoutConfigDefaults():
                 'monitor': False,
                 'disabled_instruments': [],
                 'socket_path': '{}/{}/core-agent.sock'.format(self.core_agent_dir,
-                                                              ScoutConfig.core_agent_full_name())
+                                                              DerivedConfig.core_agent_full_name(self.core_agent_version))
         }
 
     def has_config(self, key):
