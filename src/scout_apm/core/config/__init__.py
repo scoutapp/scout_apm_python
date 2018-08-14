@@ -180,15 +180,13 @@ class ScoutConfigDefaults():
         return 'Defaults'
 
     def __init__(self):
-        self.core_agent_dir = '/tmp/scout_apm_core'
-        self.core_agent_version = 'latest'
         self.defaults = {
                 'application_root': '',
                 'app_server': '',
-                'core_agent_dir': self.core_agent_dir,
+                'core_agent_dir': '/tmp/scout_apm_core',
                 'core_agent_download': True,
                 'core_agent_launch': True,
-                'core_agent_version': self.core_agent_version,
+                'core_agent_version': 'latest',
                 'download_url': 'https://s3-us-west-1.amazonaws.com/scout-public-downloads/apm_core_agent/release',
                 'framework': '',
                 'framework_version': '',
