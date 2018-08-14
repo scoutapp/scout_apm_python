@@ -9,18 +9,42 @@ from scout_apm.core.platform_detection import PlatformDetection
 logger = logging.getLogger(__name__)
 
 
-class DerivedConfig():
-    def __init__(self):
-        pass
+class ScoutConfigDerived():
+    """
+    A configuration overlay that calculates from other values.
+    """
 
-    # scout_apm_core-latest-x86_64-apple-darwin.tgz
-    @classmethod
-    def core_agent_full_name(cls, version):
+    def __init__(self, config):
+        """
+        config argument is the overall ScoutConfig var, so we can lookup the components of the derived info.
+        """
+        self.config = config
+
+    def name(self):
+        return 'Derived'
+
+    def has_config(self, key):
+        return self.lookup_func(key) is not None
+
+    def value(self, key):
+        return self.lookup_func(key)()
+
+    def lookup_func(self, key):
+        """
+        Returns the dervie_#{key} function, or None if it isn't defined
+        """
+        func_name = 'derive_' + key
+        return getattr(self, func_name, None)
+
+
+    def derive_socket_path(self):
+        return '{}/{}/core-agent.sock'.format(self.config.value('core_agent_dir'), self.config.value('core_agent_full_name'))
+
+    def derive_core_agent_full_name(self):
         return '{name}-{version}-{triple}'.format(
                 name='scout_apm_core',
-                version=version,
+                version=self.config.value('core_agent_version'),
                 triple=PlatformDetection.get_triple())
-
 
 class ScoutConfig():
     """
@@ -34,6 +58,7 @@ class ScoutConfig():
         self.layers = [
             ScoutConfigEnv(),
             ScoutConfigPython(),
+            ScoutConfigDerived(self),
             ScoutConfigDefaults(),
             ScoutConfigNull()]
 
@@ -90,6 +115,16 @@ class ScoutConfig():
         global SCOUT_PYTHON_VALUES
         for key, value in kwargs.items():
             SCOUT_PYTHON_VALUES[key] = value
+
+    @classmethod
+    def reset_all(cls):
+        """
+        Remove all configuration settings set via `ScoutConfig.set(...)`.
+
+        This is meant for use in testing.
+        """
+        global SCOUT_PYTHON_VALUES
+        SCOUT_PYTHON_VALUES = {}
 
 
 # Module-level data, the ScoutConfig.set(key="value") adds to this
@@ -163,8 +198,6 @@ class ScoutConfigDefaults():
                 'name': '',
                 'monitor': False,
                 'disabled_instruments': [],
-                'socket_path': '{}/{}/core-agent.sock'.format(self.core_agent_dir,
-                                                              DerivedConfig.core_agent_full_name(self.core_agent_version))
         }
 
     def has_config(self, key):
