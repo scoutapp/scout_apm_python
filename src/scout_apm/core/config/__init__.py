@@ -2,9 +2,9 @@ from __future__ import absolute_import
 
 import logging
 import os
-import platform
 
 from scout_apm.core.git_revision import GitRevision
+from scout_apm.core.platform_detection import PlatformDetection
 
 logger = logging.getLogger(__name__)
 
@@ -70,30 +70,13 @@ class ScoutConfig():
 
     # scout_apm_core-latest-x86_64-apple-darwin.tgz
     def core_agent_full_name(self):
-        return 'scout_apm_core-{version}-{arch}-{platform}'.format(
+        return 'scout_apm_core-{version}-{platform}'.format(
                 version=self.value('core_agent_version'),
-                arch=self.arch(),
                 platform=self.platform())
 
     @classmethod
     def platform(cls):
-        system_name = platform.system()
-        if system_name == 'Linux':
-            return 'unknown-linux-gnu'
-        elif system_name == 'Darwin':
-            return 'apple-darwin'
-        else:
-            return 'unknown'
-
-    @classmethod
-    def arch(cls):
-        arch = platform.machine()
-        if arch == 'i686':
-            return 'i686'
-        elif arch == 'x86_64':
-            return 'x86_64'
-        else:
-            return 'unknown'
+        return PlatformDetection.get_triple()
 
     @classmethod
     def set(cls, **kwargs):
