@@ -42,5 +42,5 @@ def test_env_outranks_python():
 def test_socket_path_matches_version():
     scout_apm.core.config.ScoutConfig.set(core_agent_version='v1.1.5')
     conf = scout_apm.core.config.ScoutConfig()
-    assert('/tmp/scout_apm_core/scout_apm_core-v1.1.5-x86_64-apple-darwin/core-agent.sock' == conf.value('socket_path'))
+    assert('v1.1.5' in conf.value('socket_path'))
 
