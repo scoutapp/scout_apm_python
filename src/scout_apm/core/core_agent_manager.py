@@ -24,9 +24,9 @@ class CoreAgentManager:
         self.core_agent_bin_path = None
         self.core_agent_bin_version = None
         self.core_agent_dir = '{}/{}'.format(AgentContext.instance.config.value('core_agent_dir'),
-                                             AgentContext.instance.config.core_agent_full_name())
+                                             AgentContext.instance.config.value('core_agent_full_name'))
         self.downloader = CoreAgentDownloader(self.core_agent_dir,
-                                              AgentContext.instance.config.core_agent_full_name())
+                                              AgentContext.instance.config.value('core_agent_full_name'))
 
     def launch(self):
         if AgentContext.instance.config.value('core_agent_launch') is not True:

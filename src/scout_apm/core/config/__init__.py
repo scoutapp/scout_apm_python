@@ -155,7 +155,7 @@ class ScoutConfigDerived():
 
     def lookup_func(self, key):
         """
-        Returns the dervie_#{key} function, or None if it isn't defined
+        Returns the derive_#{key} function, or None if it isn't defined
         """
         func_name = 'derive_' + key
         return getattr(self, func_name, None)
