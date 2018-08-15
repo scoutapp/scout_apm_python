@@ -39,8 +39,8 @@ def test_env_outranks_python():
     del os.environ['SCOUT_SOCKET_PATH']
     scout_apm.core.config.ScoutConfig.reset_all()
 
+
 def test_socket_path_matches_version():
     scout_apm.core.config.ScoutConfig.set(core_agent_version='v1.1.5')
     conf = scout_apm.core.config.ScoutConfig()
     assert('v1.1.5' in conf.value('socket_path'))
-
