@@ -21,6 +21,7 @@ def test_python():
     scout_apm.core.config.ScoutConfig.set(socket_path='/set/via/function')
     conf = scout_apm.core.config.ScoutConfig()
     assert('/set/via/function' == conf.value('socket_path'))
+    scout_apm.core.config.ScoutConfig.reset_all()
 
 
 def test_none():
@@ -36,4 +37,10 @@ def test_env_outranks_python():
     assert('/set/in/env' == conf.value('socket_path'))
 
     del os.environ['SCOUT_SOCKET_PATH']
+    scout_apm.core.config.ScoutConfig.reset_all()
 
+
+def test_socket_path_matches_version():
+    scout_apm.core.config.ScoutConfig.set(core_agent_version='v1.1.5')
+    conf = scout_apm.core.config.ScoutConfig()
+    assert('v1.1.5' in conf.value('socket_path'))

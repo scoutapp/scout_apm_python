@@ -2,9 +2,9 @@ from __future__ import absolute_import
 
 import logging
 import os
-import platform
 
 from scout_apm.core.git_revision import GitRevision
+from scout_apm.core.platform_detection import PlatformDetection
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +21,7 @@ class ScoutConfig():
         self.layers = [
             ScoutConfigEnv(),
             ScoutConfigPython(),
+            ScoutConfigDerived(self),
             ScoutConfigDefaults(),
             ScoutConfigNull()]
 
@@ -68,33 +69,6 @@ class ScoutConfig():
             'socket_path'
         ]
 
-    # scout_apm_core-latest-x86_64-apple-darwin.tgz
-    def core_agent_full_name(self):
-        return 'scout_apm_core-{version}-{arch}-{platform}'.format(
-                version=self.value('core_agent_version'),
-                arch=self.arch(),
-                platform=self.platform())
-
-    @classmethod
-    def platform(cls):
-        system_name = platform.system()
-        if system_name == 'Linux':
-            return 'unknown-linux-gnu'
-        elif system_name == 'Darwin':
-            return 'apple-darwin'
-        else:
-            return 'unknown'
-
-    @classmethod
-    def arch(cls):
-        arch = platform.machine()
-        if arch == 'i686':
-            return 'i686'
-        elif arch == 'x86_64':
-            return 'x86_64'
-        else:
-            return 'unknown'
-
     @classmethod
     def set(cls, **kwargs):
         """
@@ -104,6 +78,16 @@ class ScoutConfig():
         global SCOUT_PYTHON_VALUES
         for key, value in kwargs.items():
             SCOUT_PYTHON_VALUES[key] = value
+
+    @classmethod
+    def reset_all(cls):
+        """
+        Remove all configuration settings set via `ScoutConfig.set(...)`.
+
+        This is meant for use in testing.
+        """
+        global SCOUT_PYTHON_VALUES
+        SCOUT_PYTHON_VALUES = {}
 
 
 # Module-level data, the ScoutConfig.set(key="value") adds to this
@@ -149,6 +133,44 @@ class ScoutConfigEnv():
         return env_key
 
 
+class ScoutConfigDerived():
+    """
+    A configuration overlay that calculates from other values.
+    """
+
+    def __init__(self, config):
+        """
+        config argument is the overall ScoutConfig var, so we can lookup the components of the derived info.
+        """
+        self.config = config
+
+    def name(self):
+        return 'Derived'
+
+    def has_config(self, key):
+        return self.lookup_func(key) is not None
+
+    def value(self, key):
+        return self.lookup_func(key)()
+
+    def lookup_func(self, key):
+        """
+        Returns the derive_#{key} function, or None if it isn't defined
+        """
+        func_name = 'derive_' + key
+        return getattr(self, func_name, None)
+
+
+    def derive_socket_path(self):
+        return '{}/{}/core-agent.sock'.format(self.config.value('core_agent_dir'), self.config.value('core_agent_full_name'))
+
+    def derive_core_agent_full_name(self):
+        return '{name}-{version}-{triple}'.format(
+                name='scout_apm_core',
+                version=self.config.value('core_agent_version'),
+                triple=PlatformDetection.get_triple())
+
+
 class ScoutConfigDefaults():
     """
     Provides default values for important configurations
@@ -158,29 +180,23 @@ class ScoutConfigDefaults():
         return 'Defaults'
 
     def __init__(self):
-        self.core_agent_dir = '/tmp/scout_apm_core'
-        self.core_agent_version = 'latest'
         self.defaults = {
-                'application_root': '',
                 'app_server': '',
-                'core_agent_dir': self.core_agent_dir,
+                'application_root': '',
+                'core_agent_dir': '/tmp/scout_apm_core',
                 'core_agent_download': True,
                 'core_agent_launch': True,
-                'core_agent_version': self.core_agent_version,
+                'core_agent_version': 'latest',
+                'disabled_instruments': [],
                 'download_url': 'https://s3-us-west-1.amazonaws.com/scout-public-downloads/apm_core_agent/release',
                 'framework': '',
                 'framework_version': '',
-                'revision_sha': GitRevision().detect(),
-                'key': '',
                 'hostname': '',
+                'key': '',
                 'log_level': 'info',
-                'name': '',
                 'monitor': False,
-                'disabled_instruments': [],
-                'socket_path': '{}/scout_apm_core-{}-{}-{}/core-agent.sock'.format(self.core_agent_dir,
-                                                                                   self.core_agent_version,
-                                                                                   ScoutConfig.arch(),
-                                                                                   ScoutConfig.platform())
+                'name': '',
+                'revision_sha': GitRevision().detect(),
         }
 
     def has_config(self, key):
