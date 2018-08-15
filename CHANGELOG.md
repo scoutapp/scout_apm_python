@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.3] 2018-08-15
+
+### Added
+
+- Alpine Linux support (Musl based distro) (#108, PR #110)
+
+### Fixed
+
+- Configuration not integrated into derived values (#112)
+- Flask Instruments: init_app captures app variable (#104)
+
+
 ## [1.2.2] 2018-07-30
 
 ### Fixed
