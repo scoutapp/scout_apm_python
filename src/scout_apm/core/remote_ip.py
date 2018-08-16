@@ -21,8 +21,8 @@ class RemoteIp:
         remote_addr = cls.ips_from(headers.get("REMOTE_ADDR"))
 
         # Could be a CSV list and/or repeated headers that were concatenated.
-        forwarded_ips = cls.ips_from(headers.get("X-FORWARDED-FOR"))
-        client_ips = cls.ips_from(headers.get("CLIENT_IP"))
+        forwarded_ips = cls.ips_from(headers.get("HTTP_X_FORWARDED_FOR"))
+        client_ips = cls.ips_from(headers.get("HTTP_CLIENT_IP"))
 
         # We assume these things about the IP headers:
         #
@@ -31,7 +31,8 @@ class RemoteIp:
         #   - Client-Ip is propagated from the outermost proxy, or is blank
         #   - REMOTE_ADDR will be the IP that made the request to this server
         #
-        # X-Forwarded-For and Client-Ip shouldn't be set at the same time
+        # X-Forwarded-For and Client-Ip shouldn't be set at the same time, but
+        # if they are, use the one in Forwarded
         ips = forwarded_ips + client_ips + remote_addr
 
         try:
