@@ -38,7 +38,7 @@ install:
   - tox --version
 
 script:
-  - tox -v
+  - tox -v --workdir=/tmp/tox
   - cibuildwheel --output-dir wheelhouse
 
 after_failure:
