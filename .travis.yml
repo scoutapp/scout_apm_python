@@ -1,13 +1,25 @@
 language: python
 matrix:
   include:
-    - sudo: required
+      sudo: required
       services:
         - docker
     - python: 3.4
+      sudo: required
+      services:
+        - docker
     - python: 3.5
+      sudo: required
+      services:
+        - docker
     - python: 3.6
+      sudo: required
+      services:
+        - docker
     - python: "pypy3"
+      sudo: required
+      services:
+        - docker
 
 cache: pip
 
