@@ -2,18 +2,22 @@ language: python
 matrix:
   include:
     - python: 3.4
+      env: PIP=pip3
       sudo: required
       services:
         - docker
     - python: 3.5
+      env: PIP=pip3
       sudo: required
       services:
         - docker
     - python: 3.6
+      env: PIP=pip3
       sudo: required
       services:
         - docker
     - python: "pypy3"
+      env: PIP=pip3
       sudo: required
       services:
         - docker
@@ -29,12 +33,12 @@ before_install:
     - "export PYTHONPATH=$PYTHONPATH:$(pwd)"
 
 install:
-  - pip install tox
-  - pip install tox-travis
-  - pip install cibuildwheel
+  - $PIP install tox
+  - $PIP install tox-travis
+  - $PIP install cibuildwheel
   - virtualenv --version
   - easy_install --version
-  - pip --version
+  - $PIP --version
   - tox --version
 
 script:
