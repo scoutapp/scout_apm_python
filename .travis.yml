@@ -19,6 +19,7 @@ before_install:
 install:
   - pip install tox
   - pip install tox-travis
+  - pip install cibuildwheel
   - virtualenv --version
   - easy_install --version
   - pip --version
@@ -26,6 +27,7 @@ install:
 
 script:
   - tox -v
+  - cibuildwheel --output-dir wheelhouse
 
 after_failure:
   - more .tox/log/* | cat
