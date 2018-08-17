@@ -2,8 +2,8 @@ language: python
 matrix:
   include:
     - sudo: required
-    services:
-      - docker
+      services:
+        - docker
     - python: 3.4
     - python: 3.5
     - python: 3.6
