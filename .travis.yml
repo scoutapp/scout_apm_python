@@ -4,6 +4,8 @@ matrix:
     - python: 3.4
     - python: 3.5
     - python: 3.6
+    - python: 3.7
+      dist: xenial
     - python: "pypy3"
 
 cache: pip
@@ -28,7 +30,7 @@ script:
   - tox -v --workdir=/tmp/tox
   - python setup.py bdist_wheel
   - if [ "${TRAVIS_PYTHON_VERSION:-}" == "3.6" ]; then
-      python setup.py sdist
+      python setup.py sdist;
     fi
 
 after_failure:
