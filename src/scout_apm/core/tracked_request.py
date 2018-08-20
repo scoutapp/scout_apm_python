@@ -8,6 +8,7 @@ from scout_apm.core.samplers import Samplers
 from scout_apm.core.request_manager import RequestManager
 from scout_apm.core.thread_local import ThreadLocalSingleton
 from scout_apm.core.n_plus_one_call_set import NPlusOneCallSet
+from scout_apm.core.samplers import Memory
 import scout_apm.core.backtrace
 
 try:
@@ -34,6 +35,7 @@ class TrackedRequest(ThreadLocalSingleton):
         self.complete_spans = kwargs.get('complete_spans', [])
         self.tags = kwargs.get('tags', {})
         self.real_request = kwargs.get('real_request', False)
+        self.memory_start = kwargs.get('memory_start', Memory.rss_in_mb())
         self.callset = NPlusOneCallSet()
         logger.debug('Starting request: %s', self.req_id)
 
@@ -93,8 +95,9 @@ class TrackedRequest(ThreadLocalSingleton):
         logger.debug('Stopping request: %s', self.req_id)
         if self.end_time is None:
             self.end_time = datetime.utcnow()
-        RequestManager.instance().add_request(self)
         if self.is_real_request():
+            self.tag('mem_delta', Memory.get_delta(self.memory_start))
+            RequestManager.instance().add_request(self)
             Samplers.ensure_running()
 
         # This can fail if the Tracked Request was created directly, not through instance()
