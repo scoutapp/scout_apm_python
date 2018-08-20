@@ -84,3 +84,56 @@ class ViewTimingMiddleware:
     #      """
     #      """
     #      pass
+
+
+class OldStyleMiddlewareTimingMiddleware:
+    """
+    Insert as early into the Middleware stack as possible (outermost layers),
+    so that other middlewares called after can be timed.
+    """
+    def process_request(self, request):
+        operation = 'Middleware'
+        span = TrackedRequest.instance().start_span(operation=operation)
+        request.scout_middleware_span = span
+
+    def process_response(self, request, response):
+        tr = TrackedRequest.instance()
+        if hasattr(request, 'scout_middleware_span') and tr.current_span() == request.scout_middleware_span:
+            tr.stop_span()
+        return response
+
+
+class OldStyleViewMiddleware:
+    def process_request(self, request):
+        pass
+
+    def process_view(self, request, view_func, view_func_args, view_func_kwargs):
+        tr = TrackedRequest.instance()
+
+        view_name = request.resolver_match._func_path
+        operation = 'Controller/' + view_name
+
+        span = tr.start_span(operation=operation)
+        tr.mark_real_request()
+
+        # Save the span into the request, so we can check if we're matched up when stopping
+        request.scout_view_span = span
+
+        return None
+
+    # Process Response could be called without ever having called process_view.
+    # Be careful to not stop a span that never got started
+    def process_response(self, request, response):
+        tr = TrackedRequest.instance()
+        if hasattr(request, 'scout_view_span') and tr.current_span() == request.scout_view_span:
+            tr.stop_span()
+        return response
+
+    def process_exception(request, exception):
+        tr = TrackedRequest.instance()
+
+        if hasattr(request, 'scout_view_span') and tr.current_span() == request.scout_view_span:
+            tr.tag('error', 'true')
+            tr.stop_span()
+
+        return None
