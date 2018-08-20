@@ -52,3 +52,4 @@ deploy:
   on:
     tags: true
     repo: scoutapp/scout_apm_python
+  server: https://test.pypi.org
