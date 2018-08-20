@@ -47,7 +47,9 @@ deploy:
   provider: releases
   api_key:
     secure: Cq6+zTywxa33PqdQPDQZ+wmnWEMna2JJoN4NcQ1LTn9QIvB1piEP1J1QKHheJwirI7xCJa+abhC6LyuGcrlHCBZAR0iaMo4hftWTbMt/955v3gZ1INVwGLf+VSJ9gYXNA3jIelEq7+732qedijc/LGPKZVcCPM3hk5xhGcwyi+xqlY9XpGiatwCoQSl7ZUjMYnK2DJfO7ElVZNn/xMMwygc+YIsQWtSZUX1Ft5rVnV5mWLwu3ovSny8U38Bsi6/xSKWeybf4ojAz6j7sohnslRw23tZSl2zG3FJ/WFp4WonqP2799ilW56BKyF2I5kHuFGa2gR9SnBoR914yq8X10n+23ZBMA0QXpvenGvGb8EuX26OjfB6aVTRL0RVjHtIsdZDEIYmmBv6z0YlZQIU2uomhs5QqwETy+6xtetPk8aP329UyPk5zvQPg1CgGQ2ozTvUgXoF1YTFMt1+HIg3sOFT/Gr/d6AOT0LfsA9jI/hThTe0MsoX8joHhiM7MMUlFGG67GDy35lk8a4wE8Blf8gJ+e2MDjWcypFJtVgdBsuJWxWh3exudw5gpAn1ulxFr/GAhVpfzpKlIAycuwgSNMMALM5DwDxsNwSdiJIplt06ib2I/7+1Clg88jlnyT/U/UCIYMIcWl6rBik5vAxq4Bxo0rW9rIaWRQiLceUDoCjM=
+  file_glob: true
   file: dist/*
+  skip_cleanup: true
   on:
     tags: true
     repo: scoutapp/scout_apm_python
