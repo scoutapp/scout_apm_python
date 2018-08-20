@@ -2,25 +2,9 @@ language: python
 matrix:
   include:
     - python: 3.4
-      env: PIP=pip3
-      sudo: required
-      services:
-        - docker
     - python: 3.5
-      env: PIP=pip3
-      sudo: required
-      services:
-        - docker
     - python: 3.6
-      env: PIP=pip3
-      sudo: required
-      services:
-        - docker
     - python: "pypy3"
-      env: PIP=pip3
-      sudo: required
-      services:
-        - docker
 
 cache: pip
 
@@ -33,17 +17,19 @@ before_install:
     - "export PYTHONPATH=$PYTHONPATH:$(pwd)"
 
 install:
-  - $PIP install tox
-  - $PIP install tox-travis
-  - $PIP install cibuildwheel
+  - pip install tox
+  - pip install tox-travis
   - virtualenv --version
   - easy_install --version
-  - $PIP --version
+  - pip --version
   - tox --version
 
 script:
   - tox -v --workdir=/tmp/tox
-  - cibuildwheel --output-dir wheelhouse
+  - python setup.py bdist_wheel
+  - if [ "${TRAVIS_PYTHON_VERSION:-}" == "3.6" ]; then
+      python setup.py sdist
+    fi
 
 after_failure:
   - more .tox/log/* | cat
@@ -63,4 +49,3 @@ deploy:
   on:
     tags: true
     repo: scoutapp/scout_apm_python
-    condition: "$TRAVIS_PYTHON_VERSION = 3.6"
