@@ -58,7 +58,6 @@ def test_context_manager_default_tags():
         a = 1
 
     span = tr.complete_spans[-1]
-    assert(len(span.tags) == 1)
     assert(span.tags['x'] == 99)
 
 
@@ -72,7 +71,6 @@ def test_decoration_default_tags():
     test()
 
     span = tr.complete_spans[-1]
-    assert(len(span.tags) == 1)
     assert(span.tags['x'] == 99)
 
 

@@ -10,6 +10,12 @@ from scout_apm.core.core_agent_manager import CoreAgentManager
 from scout_apm.core.instrument_manager import InstrumentManager
 from scout_apm.core.metadata import AppMetadata
 
+try:
+    from scout_apm.core import objtrace
+    HAS_OBJTRACE = True
+except ImportError:
+    HAS_OBJTRACE = False
+
 logger = logging.getLogger(__name__)
 
 
@@ -23,6 +29,9 @@ def install(*args, **kwargs):
         return False
 
     InstrumentManager().install_all()
+
+    if HAS_OBJTRACE:
+        objtrace.enable()
 
     logger.debug('APM Launching on PID: %s', getpid())
     CoreAgentManager().launch()

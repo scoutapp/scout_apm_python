@@ -26,6 +26,13 @@ class Memory(object):
     def rss_in_mb():
         return Memory.rss_to_mb(Memory.rss())
 
+    @staticmethod
+    def get_delta(prior_rss_in_mb):
+        mem = Memory.rss_in_mb()
+        if mem > prior_rss_in_mb:
+            return mem - prior_rss_in_mb
+        return 0.0
+
     def metric_type(self):
         return 'Memory'
 
