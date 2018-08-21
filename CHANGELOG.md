@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.3.0] 2018-08-20
+
+### Added
+
+- Track object allocations for every span (Objtrace module)
+- Track RSS increase during a TrackedRequest.
+
+### Fixed
+
+- Compatibility with old style Django middleware/settings
+
 ## [1.2.3] 2018-08-15
 
 ### Added

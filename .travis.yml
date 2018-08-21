@@ -1,9 +1,17 @@
+env:
+  global:
+    - TWINE_USERNAME=scout
+    - secure: "ohvspT59/b71SdnIFf/HA5552tGaYWLYTUV2IQ/ZNxrTiJd/hcm5eBbfAkOUiC6l2cxdHt+cAyRh27us32z7F29qzlSzrWkTD18pvFKjSGtaa2X0aBTiollfiGgiXpdT5wiDoyjyGWti3q4CpwOZjrpB/rZx0DUxdRejf0cQfs/6W8xqei/PeSTAY+58eRxKUo9JOsEObDgpjJFSWTHVip6Rm0C8zG5fEal6OEMozP+LncSzxIPZiaA0x82nYSMSBQiJXqgX6x1iNDUVl9W1wwghPjCxhz1n6kUtoKOnLcz2VhtmzR+rFDXcdgIr3l9HsSaj8t/jRIPwyUuB1DDamKWuEC0dFrqeTraOKz/t7eZkSpKa+jRaNUC4RLPSSNJVC3hEH8WlNIAyCGyvYv0RAGEYzrWcl0QZQgn1s205uIVKF8v3bepAV4oPUOEjhAk3+kVhBDLrUHWnDtLzQxPJOcC/PpMIkXx5+ZCADJrkmppEAtv+gAbHIE5gcodvyGgUc1ynp/Ul2LQxUX7KUopZBkBtFomRJWOXli5rV9tc8It+m91Xua6+jRB8UePyHw2KLGoABulNNoGSvr+uRdH8Ph/4des33iikTEnEDBk740NAsMW1pExMMlXAdaYScpBjCu7z3MrSCs4oraCVJ1g9nqbc7ugxVqMPC97fu7XKpe8="
+
 language: python
 matrix:
   include:
     - python: 3.4
     - python: 3.5
     - python: 3.6
+    - python: 3.7
+      dist: xenial
+      sudo: true
     - python: "pypy3"
 
 cache: pip
@@ -25,7 +33,15 @@ install:
   - tox --version
 
 script:
-  - tox -v
+  - tox -v --workdir=/tmp/tox
+  - python setup.py bdist_wheel
+  - if [ "${TRAVIS_PYTHON_VERSION:-}" == "3.6" ]; then
+      python setup.py sdist;
+    fi
+  - if [ "${TRAVIS_TAG:-}" != "" ]; then
+      pip install twine;
+      python -m twine upload --skip-existing dist/*;
+    fi
 
 after_failure:
   - more .tox/log/* | cat
@@ -35,20 +51,3 @@ notifications:
   email:
     on_success: never
     on_failure: always
-
-# branches:
-#   only:
-#     # release tags
-#     - /^v\d+\.\d+\.\d+.*$/
-#     - master
-
-deploy:
-  provider: pypi
-  user: scout
-  distributions: sdist bdist_wheel
-  password:
-    secure: "MPs+ybUn50YCD+oSXdLnIyHiKf5ZU4JB6rzFkesWEf2fFglX3mMUoZ1xfHUTuNJLMf4Jp6+UNNMRGIAFkNLPrYaNmUYiVyZKIqwgNzB/+9lyTAj/gVOrO8zEZrEslaZYVWwv8NAyR3TjjoFwRN49F23aGT0zqKB9wdec2WRN0I7HqYDbOyEDgVJXnPSxvTJK6PCgLoRTN+pgATpGXLODQeem74T88ApgFixGwqXSTc8JqTp52JRYtxYYZGeFtlExiB42PoUkGMozP/LIpMPgVite7zEoIJNcGqA0Yr55xOBnsAJM34jJzVz/Kn1i8c0RyJXmTypLnjEAtmIAfuPSGja/3Tw8ARvvPWMLVrvBGqCLZPgn/nZDIr3XsTrmpzPnwHne2Q4juPwQzOZHYZ5U6DmQb/NoSzqCK2QGVEQNT8gEEyZVPeUiPeHmPeqHPk5IRBiT/YiL84kXA+r44EDcpfTYdrjBw4gHf1T+qru3BPgpk2QF3EJOtC3D1q0fBzmBhXFSU1W2BEFnw58l2wHMSLeKm0zN/gOZ0hnNgTw02sfb67RgWi7WY3Yj8BBNp6S98YB73lbkJ9Aw0wM53WA9kcEVaQ6DXHqI9WSSrqXhMFEFZPgSaP48e1f4g/VasncadrZ67voMwhhGnumyV6aV06QSscvLa1Y+QF/tYMSFcsI="
-  on:
-    tags: true
-    repo: scoutapp/scout_apm_python
-    condition: "$TRAVIS_PYTHON_VERSION = 3.6"

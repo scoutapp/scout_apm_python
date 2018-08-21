@@ -8,7 +8,14 @@ from scout_apm.core.samplers import Samplers
 from scout_apm.core.request_manager import RequestManager
 from scout_apm.core.thread_local import ThreadLocalSingleton
 from scout_apm.core.n_plus_one_call_set import NPlusOneCallSet
+from scout_apm.core.samplers import Memory
 import scout_apm.core.backtrace
+
+try:
+    from scout_apm.core import objtrace
+    HAS_OBJTRACE = True
+except ImportError:
+    HAS_OBJTRACE = False
 
 # Logging
 logger = logging.getLogger(__name__)
@@ -28,6 +35,7 @@ class TrackedRequest(ThreadLocalSingleton):
         self.complete_spans = kwargs.get('complete_spans', [])
         self.tags = kwargs.get('tags', {})
         self.real_request = kwargs.get('real_request', False)
+        self.memory_start = kwargs.get('memory_start', Memory.rss_in_mb())
         self.callset = NPlusOneCallSet()
         logger.debug('Starting request: %s', self.req_id)
 
@@ -87,8 +95,9 @@ class TrackedRequest(ThreadLocalSingleton):
         logger.debug('Stopping request: %s', self.req_id)
         if self.end_time is None:
             self.end_time = datetime.utcnow()
-        RequestManager.instance().add_request(self)
         if self.is_real_request():
+            self.tag('mem_delta', Memory.get_delta(self.memory_start))
+            RequestManager.instance().add_request(self)
             Samplers.ensure_running()
 
         # This can fail if the Tracked Request was created directly, not through instance()
@@ -109,9 +118,18 @@ class Span:
         self.ignore_children = kwargs.get('ignore_children', False)
         self.parent = kwargs.get('parent', None)
         self.tags = kwargs.get('tags', {})
+        if HAS_OBJTRACE:
+            self.start_objtrace_counts = kwargs.get('start_objtrace_counts', objtrace.get_counts())
+        else:
+            self.start_objtrace_counts = kwargs.get('start_objtrace_counts', (0, 0, 0, 0))
+        self.end_objtrace_counts = kwargs.get('end_objtrace_counts', (0, 0, 0, 0))
 
     def stop(self):
         self.end_time = datetime.utcnow()
+        if HAS_OBJTRACE:
+            self.end_objtrace_counts = objtrace.get_counts()
+        else:
+            self.end_objtrace_counts = (0, 0, 0, 0)
 
     def tag(self, key, value):
         if key in self.tags:
@@ -132,12 +150,36 @@ class Span:
     # Add any interesting annotations to the span. Assumes that we are in the
     # process of stopping this span.
     def annotate(self):
+        self.tag('allocations', self.calculate_allocations())
+        # Don't capture backtraces for Controller or Middleware
         if self.operation is not None:
             if self.operation.startswith('Controller') or self.operation.startswith('Middleware'):
                 return
         slow_threshold = 0.500
         if self.duration() > slow_threshold:
             self.capture_backtrace()
+
+    def calculate_allocations(self):
+        if HAS_OBJTRACE is False:
+            return 0
+
+        start_allocs = self.start_objtrace_counts[0] + self.start_objtrace_counts[1] + self.start_objtrace_counts[2]
+        end_allocs = self.end_objtrace_counts[0] + self.end_objtrace_counts[1] + self.end_objtrace_counts[2]
+        try:
+            # If even one of the counters rolled over, we're pretty much
+            # guaranteed to have end_allocs be less than start_allocs.
+            # This should rarely happen. Max Unsigned Long Long is a big number
+            if end_allocs - start_allocs < 0:
+                logger.debug('End allocation count smaller than start '
+                             'allocation count for span {}: start = {}, '
+                             'end = {}'.format(self.span_id,
+                                               start_allocs,
+                                               end_allocs))
+                return 0
+            return end_allocs - start_allocs
+        except TypeError as e:
+            logger.debug('Exception in calculate_allocations: {}'.format(repr(e)))
+            return 0
 
     def capture_backtrace(self):
         stack = scout_apm.core.backtrace.capture()

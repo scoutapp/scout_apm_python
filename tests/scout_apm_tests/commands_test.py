@@ -30,4 +30,4 @@ def test_from_tracked_request_creates_batch_command():
     tr.stop_span()
 
     batch = scout_apm.core.commands.BatchCommand.from_tracked_request(tr)
-    assert(len(batch.commands) == 4)
+    assert(len(batch.commands) == 5)
