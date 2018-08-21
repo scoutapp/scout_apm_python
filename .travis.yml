@@ -6,46 +6,36 @@ env:
 language: python
 matrix:
   include:
-    - python: 3.4
-    - python: 3.5
     - python: 3.6
+      env:
+        - BUILD_SDIST="true"
     - python: 3.7
       dist: xenial
       sudo: true
-    - python: "pypy3"
-
-cache: pip
-
-before_install:
-  - python --version
-  - uname -a
-  - lsb_release -a
-
-before_install:
-    - "export PYTHONPATH=$PYTHONPATH:$(pwd)"
+      env:
+        - BUILD_WHEEL="true"
+        - CIBW_SKIP="cp27-* cp33-*"
+        - CIBW_TEST_COMMAND="/project/ci/cibuildwheel.sh"
+        - CIBW_TEST_REQUIRES="tox"
+        - CIBW_BUILD_VERBOSITY=0
 
 install:
-  - pip install tox
-  - pip install tox-travis
-  - virtualenv --version
-  - easy_install --version
-  - pip --version
-  - tox --version
+  - pip3 install --upgrade cibuildwheel
+  - pip3 install tox
 
 script:
-  - tox -v --workdir=/tmp/tox
-  - python setup.py bdist_wheel
-  - if [ "${TRAVIS_PYTHON_VERSION:-}" == "3.6" ]; then
-      python setup.py sdist;
+  - if [ "${BUILD_WHEEL:-}" == "true" ]; then
+      cibuildwheel --output-dir wheelhouse;
+    fi
+  - if [ "${BUILD_SDIST:-}" == "true" ]; then
+      export TOXENV=`tox --listenvs | grep "py${TRAVIS_PYTHON_VERSION/./}-" | tr '\n' ','`;
+      tox -v && python3 setup.py sdist --dist-dir=wheelhouse;
     fi
   - if [ "${TRAVIS_TAG:-}" != "" ]; then
-      pip install twine;
-      python -m twine upload --skip-existing dist/*;
+      pip3 install twine;
+      python3 -m twine upload --skip-existing wheelhouse/*;
     fi
-
-after_failure:
-  - more .tox/log/* | cat
-  - more .tox/*/log/* | cat
+  - ls -al wheelhouse
 
 notifications:
   email:
