@@ -1,5 +1,6 @@
 include .python-version
 include *.txt
+include *.md
 include LICENSE
 recursive-include tests *.py
 recursive-include docs *
