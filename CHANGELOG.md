@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.3.1] 2018-08-22
+
+- Packaging changes only
+
 ## [1.3.0] 2018-08-20
 
 ### Added
