@@ -45,6 +45,7 @@ install:
 
 script:
   - if [ "${BUILD_WHEEL:-}" == "true" ]; then
+      ci/cibuildwheel_setup.sh;
       cibuildwheel --output-dir wheelhouse;
     fi
   - if [ "${BUILD_SDIST:-}" == "true" ]; then

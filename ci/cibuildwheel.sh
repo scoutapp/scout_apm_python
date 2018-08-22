@@ -8,12 +8,6 @@
 # Exit with nonzero status if anything in this script errors.
 set -e
 
-# This should list all of the versions cibuildwheel supports.
-ALL_CIBW_VERSIONS="cp27-* cp33-* cp34-* cp35-* cp36-* cp37-*"
-
-# We want to skip all versions EXCEPT the one specified by travis in $CIBW_PY_VER
-export CIBW_SKIP=`echo ${ALL_CIBW_VERSIONS} | perl -pe "s/cp${CIBW_PY_VER}.*? //"`
-
 # cibuildwheel mounts the project directory into the docker container at /project
 export TOX_CONFIG="/project/tox.ini"
 
