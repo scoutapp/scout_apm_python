@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.2] 2018-08-24
+
+### Fixed
+
+- Fix issue detecting `MIDDLEWARE_CLASSES` in Django apps (#119)
+
 ## [1.3.1] 2018-08-22
 
 - Packaging changes only
