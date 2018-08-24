@@ -41,7 +41,7 @@ class ScoutApmDjangoConfig(AppConfig):
         from django.conf import settings
 
         # If MIDDLEWARE_CLASSES is set, update that, with handling of tuple vs array forms
-        if settings.MIDDLEWARE_CLASSES is not None:
+        if getattr(settings, "MIDDLEWARE_CLASSES", None) is not None:
             if isinstance(settings.MIDDLEWARE_CLASSES, tuple):
                 settings.MIDDLEWARE_CLASSES = (
                     ('scout_apm.django.middleware.OldStyleMiddlewareTimingMiddleware', ) +
