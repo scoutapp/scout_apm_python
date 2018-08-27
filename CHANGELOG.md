@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.3] 2018-08-27
+
+### Fixed
+
+- Fix issue when `MIDDLEWARE` and `MIDDLEWARE_CLASSES`
+  are both defined in Django 1.x apps (PR #122)
+
 ## [1.3.2] 2018-08-24
 
 ### Fixed
