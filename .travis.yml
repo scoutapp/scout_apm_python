@@ -20,7 +20,7 @@ matrix:
         - CIBW_BUILD_VERBOSITY=0
 
 install:
-  - pip3 install --upgrade cibuildwheel
+  - pip3 install --upgrade setuptools wheel cibuildwheel
   - pip3 install tox
 
 script:
@@ -32,7 +32,7 @@ script:
       tox -v && python3 setup.py sdist --dist-dir=wheelhouse;
     fi
   - if [ "${TRAVIS_TAG:-}" != "" ]; then
-      pip3 install twine;
+      pip3 install -U twine;
       python3 -m twine upload --skip-existing wheelhouse/*;
     fi
   - ls -al wheelhouse
