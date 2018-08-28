@@ -12,7 +12,8 @@ class ConfigAdapter:
     @classmethod
     def install(cls):
         configs = {}
-        configs['application_root'] = settings.BASE_DIR
+        if getattr(settings, 'BASE_DIR', None) is not None:
+            configs['application_root'] = settings.BASE_DIR
         for name in filter(lambda x: x.startswith('SCOUT_'), dir(settings)):
             value = getattr(settings, name)
             clean_name = name.replace('SCOUT_', '').lower()

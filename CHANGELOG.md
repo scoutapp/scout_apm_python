@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.4] 2018-08-28
+
+### Fixed
+
+- settings.BASE_DIR is optional in Django (#123)
+
 ## [1.3.3] 2018-08-27
 
 ### Fixed
