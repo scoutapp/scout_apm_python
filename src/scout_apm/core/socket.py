@@ -6,6 +6,7 @@ import socket
 import struct
 import time
 import threading
+import os
 
 try:
     # Python 3.x
@@ -134,7 +135,7 @@ class CoreAgentSocket(threading.Thread):
             # TODO mark the command as not queued?
             logger.debug('CoreAgentSocket error on send: %s' % repr(e))
 
-    def _send(self, command, do_async=True):
+    def _send(self, command, do_async=False):
         msg = command.message()
 
         try:
@@ -145,16 +146,21 @@ class CoreAgentSocket(threading.Thread):
 
         try:
             self.socket.sendall(self._message_length(data))
+        except (OSError) as e:
+            logger.debug("CoreAgentSocket exception on length _send: %s on PID: %s on thread: %s" % (repr(e), os.getpid(), threading.current_thread()))
+            return None
+
+        try:
             self.socket.sendall(data.encode())
         except (OSError) as e:
-            logger.debug("CoreAgentSocket exception on _send: %s" % repr(e))
+            logger.debug("CoreAgentSocket exception on data _send: %s on PID: %s on thread: %s" % (repr(e), os.getpid(), threading.current_thread()))
             return None
 
         if do_async is True:
             return True
         else:
             # TODO read respnse back in to command
-            self._read_response()
+            response = self._read_response()
             return True
 
     def _message_length(self, body):
@@ -165,7 +171,12 @@ class CoreAgentSocket(threading.Thread):
         try:
             raw_size = self.socket.recv(4)
             size = struct.unpack('>I', raw_size)[0]
-            message = self.socket.recv(size)
+            message = bytearray(0)
+
+            while len(message) < size:
+                recv = self.socket.recv(size)
+                message += recv
+
             return message
         except (OSError) as e:
             logger.debug('CoreAgentSocket error on read response: %s' % repr(e))
@@ -177,7 +188,7 @@ class CoreAgentSocket(threading.Thread):
 
     def _connect(self, connect_attempts=5, retry_wait_secs=1):
         for attempt in range(1, connect_attempts):
-            logger.debug('CoreAgentSocket attempt %d, connecting to %s', attempt, self.socket_path)
+            logger.debug('CoreAgentSocket attempt %d, connecting to %s, PID: %s, Thread: %s', attempt, self.socket_path, os.getpid(), threading.current_thread())
             try:
                 self.socket.connect(self.socket_path)
                 self.socket.settimeout(0.5)
