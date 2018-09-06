@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.3.5] 2018-09-06
+
+### Added
+
+- Enable Memory Bloat and Allocation tracking.
+
+### Fixed
+
+- More reliable socket communication with Core Agent (#126)
+
 ## [1.3.4] 2018-08-28
 
 ### Fixed
