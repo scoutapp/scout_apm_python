@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.6] 2018-09-07
+
+### Fixed
+
+- Update Core Agent
+
 ## [1.3.5] 2018-09-06
 
 ### Added
