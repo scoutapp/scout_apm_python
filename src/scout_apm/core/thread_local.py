@@ -22,8 +22,9 @@ class ThreadLocalSingleton(object):
             # The instance is none, so we'll need to recreate it (and the thread local dict too)
             if cls._thread_lookup.instance is None:
                 cls.__new_instance(args, kwargs)
-                cls._thread_lookup.instance
+                return cls._thread_lookup.instance
 
+            # We made it through the checks, return the instance that we know exists
             return cls._thread_lookup.instance
 
     # Releasing is under the same lock as creating, so it shouldn't step on each other.
