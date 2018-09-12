@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.7] 2018-09-07
+
+### Fixed
+
+- Multi threading lock fix in ThreadLocalSingleton (#127)
+
 ## [1.3.6] 2018-09-07
 
 ### Fixed
