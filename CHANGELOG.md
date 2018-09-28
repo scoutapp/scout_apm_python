@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.8] 2018-09-28
+
+### Added
+
+- Updated Core Agent version to support Database Addon
+
 ## [1.3.7] 2018-09-07
 
 ### Fixed

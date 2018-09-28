@@ -186,7 +186,7 @@ class ScoutConfigDefaults():
                 'core_agent_dir': '/tmp/scout_apm_core',
                 'core_agent_download': True,
                 'core_agent_launch': True,
-                'core_agent_version': 'v1.1.7', # This can be an exact tag name, or 'latest'
+                'core_agent_version': 'v1.1.8',  # This can be an exact tag name, or 'latest'
                 'disabled_instruments': [],
                 'download_url': 'https://s3-us-west-1.amazonaws.com/scout-public-downloads/apm_core_agent/release',
                 'framework': '',
