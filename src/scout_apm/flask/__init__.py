@@ -39,10 +39,11 @@ class ScoutApm(object):
         """
         configs = {}
         configs["application_root"] = self.app.instance_path
-        for name in filter(lambda x: x.startswith("SCOUT_"), current_app.config):
-            value = current_app.config[name]
-            clean_name = name.replace("SCOUT_", "").lower()
-            configs[clean_name] = value
+        for name in current_app.config:
+            if name.startswith("SCOUT_"):
+                value = current_app.config[name]
+                clean_name = name.replace("SCOUT_", "").lower()
+                configs[clean_name] = value
         ScoutConfig.set(**configs)
 
     #############################

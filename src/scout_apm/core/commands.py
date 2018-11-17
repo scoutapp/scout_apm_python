@@ -165,7 +165,7 @@ class BatchCommand(object):
         self.commands = commands
 
     def message(self):
-        messages = list(map(lambda cmd: cmd.message(), self.commands))
+        messages = [command.message() for command in self.commands]
         return {"BatchCommand": {"commands": messages}}
 
     @classmethod

@@ -15,8 +15,9 @@ class ConfigAdapter(object):
         configs = {}
         if getattr(settings, "BASE_DIR", None) is not None:
             configs["application_root"] = settings.BASE_DIR
-        for name in filter(lambda x: x.startswith("SCOUT_"), dir(settings)):
-            value = getattr(settings, name)
-            clean_name = name.replace("SCOUT_", "").lower()
-            configs[clean_name] = value
+        for name in dir(settings):
+            if name.startswith("SCOUT_"):
+                value = getattr(settings, name)
+                clean_name = name.replace("SCOUT_", "").lower()
+                configs[clean_name] = value
         ScoutConfig.set(**configs)

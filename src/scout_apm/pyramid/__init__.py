@@ -9,10 +9,11 @@ from scout_apm.core.tracked_request import TrackedRequest
 def includeme(config):
     configs = {}
     pyramid_config = config.get_settings()
-    for name in filter(lambda x: x.startswith("SCOUT_"), pyramid_config):
-        value = pyramid_config[name]
-        clean_name = name.replace("SCOUT_", "").lower()
-        configs[clean_name] = value
+    for name in pyramid_config:
+        if name.startswith("SCOUT_"):
+            value = pyramid_config[name]
+            clean_name = name.replace("SCOUT_", "").lower()
+            configs[clean_name] = value
     ScoutConfig.set(**configs)
 
     if scout_apm.core.install():
