@@ -18,7 +18,6 @@ except ImportError:
 from scout_apm.core.config import ScoutConfig
 from scout_apm.core.commands import Register
 
-# Logging
 logger = logging.getLogger(__name__)
 
 

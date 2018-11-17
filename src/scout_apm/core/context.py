@@ -4,7 +4,6 @@ import logging
 from scout_apm.core.config import ScoutConfig
 from scout_apm.core.socket import CoreAgentSocket
 
-# Logging
 logger = logging.getLogger(__name__)
 
 

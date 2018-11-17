@@ -4,7 +4,6 @@ import logging
 from scout_apm.core.monkey import CallableProxy, monkeypatch_method
 from scout_apm.core.tracked_request import TrackedRequest
 
-# Logging
 logger = logging.getLogger(__name__)
 
 

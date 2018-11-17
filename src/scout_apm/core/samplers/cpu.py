@@ -4,7 +4,6 @@ from textwrap import dedent
 
 import psutil
 
-# Logging
 logger = logging.getLogger(__name__)
 
 

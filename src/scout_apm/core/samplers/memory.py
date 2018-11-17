@@ -1,7 +1,6 @@
 import logging
 import psutil
 
-# Logging
 logger = logging.getLogger(__name__)
 
 

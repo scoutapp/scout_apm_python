@@ -17,7 +17,6 @@ try:
 except ImportError:
     HAS_OBJTRACE = False
 
-# Logging
 logger = logging.getLogger(__name__)
 
 

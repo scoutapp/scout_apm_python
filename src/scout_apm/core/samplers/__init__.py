@@ -10,7 +10,6 @@ from scout_apm.core.commands import ApplicationEvent
 from scout_apm.core.samplers.cpu import Cpu
 from scout_apm.core.samplers.memory import Memory
 
-# Logging
 logger = logging.getLogger(__name__)
 
 

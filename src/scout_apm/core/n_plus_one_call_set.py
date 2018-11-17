@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 import logging
 
-# Logging
 logger = logging.getLogger(__name__)
 
 

@@ -7,7 +7,6 @@ from scout_apm.core.thread_local import ThreadLocalSingleton
 
 from scout_apm.core.commands import BatchCommand
 
-# Logging
 logger = logging.getLogger(__name__)
 
 
