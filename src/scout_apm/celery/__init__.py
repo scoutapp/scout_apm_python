@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from celery.signals import task_postrun, task_prerun
 
 import scout_apm.core

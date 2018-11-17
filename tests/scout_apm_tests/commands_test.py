@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import scout_apm.core.commands
 from scout_apm.core.tracked_request import TrackedRequest
 

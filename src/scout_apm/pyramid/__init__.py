@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import scout_apm.core
 from scout_apm.api.context import Context
 from scout_apm.core.config import ScoutConfig

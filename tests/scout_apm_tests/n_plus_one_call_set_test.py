@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from scout_apm.core.n_plus_one_call_set import NPlusOneCallSet, NPlusOneCallSetItem
 from scout_apm.core.tracked_request import TrackedRequest
 
