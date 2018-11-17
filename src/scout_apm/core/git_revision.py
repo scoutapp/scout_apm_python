@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 #
 # Similarly, this can be overriden by the code level configuration (from Django
 # configs or similar) by using the "revision_sha" key.
-class GitRevision:
+class GitRevision(object):
     def detect(self):
         sha = self.detect_from_env_var() or self.detect_from_heroku()
         return sha or ""

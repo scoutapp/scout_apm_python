@@ -48,7 +48,7 @@ class _DetailedTracingCursorWrapper(CursorWrapper):
                 span.capture_backtrace()
 
 
-class SQLInstrument:
+class SQLInstrument(object):
     @staticmethod
     def install():
         """

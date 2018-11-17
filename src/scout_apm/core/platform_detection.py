@@ -4,7 +4,7 @@ import platform
 import subprocess
 
 
-class PlatformDetection:
+class PlatformDetection(object):
     """
     This helps figuring out what platform we're running on, so we can download
     the correct binary build of Core Agent.

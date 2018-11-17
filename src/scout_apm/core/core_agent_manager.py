@@ -15,7 +15,7 @@ from scout_apm.core.context import AgentContext
 logger = logging.getLogger(__name__)
 
 
-class CoreAgentManager:
+class CoreAgentManager(object):
     def __init__(self):
         self.core_agent_bin_path = None
         self.core_agent_bin_version = None
@@ -120,7 +120,7 @@ class CoreAgentManager:
             return False
 
 
-class CoreAgentDownloader:
+class CoreAgentDownloader(object):
     def __init__(self, download_destination, core_agent_full_name):
         self.stale_download_secs = 120
         self.destination = download_destination
@@ -196,7 +196,7 @@ class CoreAgentDownloader:
         return AgentContext.instance.config.value("download_url")
 
 
-class CoreAgentManifest:
+class CoreAgentManifest(object):
     def __init__(self, path):
         self.manifest_path = path
         self.bin_name = None
@@ -224,7 +224,7 @@ class CoreAgentManifest:
         return self.valid
 
 
-class SHA256:
+class SHA256(object):
     @staticmethod
     def digest(filename, block_size=65536):
         try:

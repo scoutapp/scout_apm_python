@@ -9,7 +9,7 @@ from scout_apm.core.tracked_request import TrackedRequest
 logger = logging.getLogger(__name__)
 
 
-class MiddlewareTimingMiddleware:
+class MiddlewareTimingMiddleware(object):
     """
     Insert as early into the Middleware stack as possible (outermost layers),
     so that other middlewares called after can be timed.
@@ -27,7 +27,7 @@ class MiddlewareTimingMiddleware:
         return response
 
 
-class ViewTimingMiddleware:
+class ViewTimingMiddleware(object):
     """
     Insert as deep into the middleware stack as possible, ideally wrapping no
     other middleware. Designed to time the View itself
@@ -89,7 +89,7 @@ class ViewTimingMiddleware:
     #      pass
 
 
-class OldStyleMiddlewareTimingMiddleware:
+class OldStyleMiddlewareTimingMiddleware(object):
     """
     Insert as early into the Middleware stack as possible (outermost layers),
     so that other middlewares called after can be timed.
@@ -110,7 +110,7 @@ class OldStyleMiddlewareTimingMiddleware:
         return response
 
 
-class OldStyleViewMiddleware:
+class OldStyleViewMiddleware(object):
     def process_request(self, request):
         pass
 

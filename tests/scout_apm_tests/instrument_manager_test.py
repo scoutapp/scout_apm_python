@@ -8,7 +8,7 @@ klassy_instrument_pos_arg = False
 klassy_instrument_kwarg = False
 
 
-class KlassyInstrument:
+class KlassyInstrument(object):
     def __init__(self, pos_arg, kwarg=None):
         self.pos_arg = pos_arg
         self.kwarg = kwarg
@@ -24,7 +24,7 @@ class KlassyInstrument:
 
 # Fake instrument - note, this uses a module level global var to track if it's
 # been installed. Reset it after your test to reuse.
-class ExceptionalInstrument:
+class ExceptionalInstrument(object):
     def __init__(self):
         pass
 
@@ -36,7 +36,7 @@ class ExceptionalInstrument:
 default_instrument_installed = False
 
 
-class Instrument:
+class Instrument(object):
     def install(self):
         global default_instrument_installed
 

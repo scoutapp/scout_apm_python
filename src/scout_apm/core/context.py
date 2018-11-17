@@ -8,7 +8,7 @@ from scout_apm.core.socket import CoreAgentSocket
 logger = logging.getLogger(__name__)
 
 
-class AgentContext:
+class AgentContext(object):
     instance = None
 
     def __init__(self, *args, **kwargs):

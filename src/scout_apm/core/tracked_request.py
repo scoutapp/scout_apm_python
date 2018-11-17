@@ -110,7 +110,7 @@ class TrackedRequest(ThreadLocalSingleton):
             pass
 
 
-class Span:
+class Span(object):
     def __init__(self, *args, **kwargs):
         self.span_id = kwargs.get("span_id", "span-" + str(uuid4()))
         self.start_time = kwargs.get("start_time", datetime.utcnow())

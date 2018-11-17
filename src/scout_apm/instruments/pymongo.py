@@ -9,7 +9,7 @@ from scout_apm.core.tracked_request import TrackedRequest  # noqa: F401
 logger = logging.getLogger(__name__)
 
 
-class Instrument:
+class Instrument(object):
     PYMONGO_METHODS = [
         "aggregate",
         "bulk_write",

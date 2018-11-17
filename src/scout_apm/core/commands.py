@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 INVALID_DATE = datetime(year=2000, month=1, day=1)
 
 
-class Register:
+class Register(object):
     def __init__(self, *args, **kwargs):
         self.app = kwargs.get("app", None)
         self.key = kwargs.get("key", None)
@@ -29,7 +29,7 @@ class Register:
         }
 
 
-class StartSpan:
+class StartSpan(object):
     def __init__(self, *args, **kwargs):
         self.timestamp = kwargs.get("timestamp") or INVALID_DATE
         self.request_id = kwargs.get("request_id", None)
@@ -49,7 +49,7 @@ class StartSpan:
         }
 
 
-class StopSpan:
+class StopSpan(object):
     def __init__(self, *args, **kwargs):
         self.request_id = kwargs.get("request_id", None)
         self.span_id = kwargs.get("span_id", None)
@@ -65,7 +65,7 @@ class StopSpan:
         }
 
 
-class StartRequest:
+class StartRequest(object):
     def __init__(self, *args, **kwargs):
         self.timestamp = kwargs.get("timestamp") or INVALID_DATE
         self.request_id = kwargs.get("request_id", None)
@@ -79,7 +79,7 @@ class StartRequest:
         }
 
 
-class FinishRequest:
+class FinishRequest(object):
     def __init__(self, *args, **kwargs):
         self.timestamp = kwargs.get("timestamp") or INVALID_DATE
         self.request_id = kwargs.get("request_id", None)
@@ -93,7 +93,7 @@ class FinishRequest:
         }
 
 
-class TagSpan:
+class TagSpan(object):
     def __init__(self, *args, **kwargs):
         self.timestamp = kwargs.get("timestamp") or INVALID_DATE
         self.request_id = kwargs.get("request_id", None)
@@ -113,7 +113,7 @@ class TagSpan:
         }
 
 
-class TagRequest:
+class TagRequest(object):
     def __init__(self, *args, **kwargs):
         self.timestamp = kwargs.get("timestamp") or INVALID_DATE
         self.request_id = kwargs.get("request_id", None)
@@ -131,7 +131,7 @@ class TagRequest:
         }
 
 
-class ApplicationEvent:
+class ApplicationEvent(object):
     def __init__(self, *args, **kwargs):
         self.event_type = kwargs.get("event_type", "")
         self.event_value = kwargs.get("event_value", "")
@@ -149,18 +149,18 @@ class ApplicationEvent:
         }
 
 
-class CoreAgentVersion:
+class CoreAgentVersion(object):
     def message(self):
         return {"CoreAgentVersion": {}}
 
 
-class CoreAgentVersionResponse:
+class CoreAgentVersionResponse(object):
     def __init__(self, message):
         self.loaded = json.loads(message)
         self.version = self.loaded["CoreAgentVersion"]["version"]
 
 
-class BatchCommand:
+class BatchCommand(object):
     def __init__(self, commands):
         self.commands = commands
 

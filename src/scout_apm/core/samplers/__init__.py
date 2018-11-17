@@ -14,7 +14,7 @@ from scout_apm.core.samplers.memory import Memory
 logger = logging.getLogger(__name__)
 
 
-class Samplers:
+class Samplers(object):
     _thread_lock = threading.Semaphore()
 
     @classmethod

@@ -11,7 +11,7 @@ from scout_apm.core.context import AgentContext
 logger = logging.getLogger(__name__)
 
 
-class AppMetadata:
+class AppMetadata(object):
     @classmethod
     def report(cls):
         event = ApplicationEvent()

@@ -46,7 +46,7 @@ def load(parser, token):
     return defaulttags.load(decorating_parser, token)
 
 
-class TemplateInstrument:
+class TemplateInstrument(object):
     @staticmethod
     def install():
         # Our eventual aim is to patch the render() method on the Node objects

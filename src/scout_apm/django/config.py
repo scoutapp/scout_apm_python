@@ -9,7 +9,7 @@ from scout_apm.core.config import ScoutConfig
 logger = logging.getLogger(__name__)
 
 
-class ConfigAdapter:
+class ConfigAdapter(object):
     @classmethod
     def install(cls):
         configs = {}

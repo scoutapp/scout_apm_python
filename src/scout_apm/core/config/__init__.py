@@ -9,7 +9,7 @@ from scout_apm.core.platform_detection import PlatformDetection
 logger = logging.getLogger(__name__)
 
 
-class ScoutConfig:
+class ScoutConfig(object):
     """
     Configuration object for the ScoutApm agent.
 
@@ -93,7 +93,7 @@ class ScoutConfig:
 SCOUT_PYTHON_VALUES = {}
 
 
-class ScoutConfigPython:
+class ScoutConfigPython(object):
     """
     A configuration overlay that lets other parts of python set values.
     """
@@ -108,7 +108,7 @@ class ScoutConfigPython:
         return SCOUT_PYTHON_VALUES[key]
 
 
-class ScoutConfigEnv:
+class ScoutConfigEnv(object):
     """
     Reads configuration from environment by prefixing the key
     requested with "SCOUT_"
@@ -133,7 +133,7 @@ class ScoutConfigEnv:
         return env_key
 
 
-class ScoutConfigDerived:
+class ScoutConfigDerived(object):
     """
     A configuration overlay that calculates from other values.
     """
@@ -175,7 +175,7 @@ class ScoutConfigDerived:
         )
 
 
-class ScoutConfigDefaults:
+class ScoutConfigDefaults(object):
     """
     Provides default values for important configurations
     """
@@ -211,7 +211,7 @@ class ScoutConfigDefaults:
 
 
 # Always returns None to any key
-class ScoutConfigNull:
+class ScoutConfigNull(object):
     """
     Always answers that a key is present, but the value is None
 
@@ -228,7 +228,7 @@ class ScoutConfigNull:
         return None
 
 
-class BooleanConversion:
+class BooleanConversion(object):
     @classmethod
     def convert(cls, value):
         if isinstance(value, bool):
@@ -239,7 +239,7 @@ class BooleanConversion:
         return False
 
 
-class ListConversion:
+class ListConversion(object):
     @classmethod
     def convert(cls, value):
         if isinstance(value, list):

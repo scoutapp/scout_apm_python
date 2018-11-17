@@ -5,7 +5,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class NPlusOneCallSet:
+class NPlusOneCallSet(object):
     def __init__(self):
         self.items = {}
 
@@ -21,7 +21,7 @@ class NPlusOneCallSet:
         return self.items[sql_string]
 
 
-class NPlusOneCallSetItem:
+class NPlusOneCallSetItem(object):
     # Fetch backtraces on this number of same SQL calls
     CALL_COUNT_THRESHOLD = 5
 

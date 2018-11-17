@@ -8,7 +8,7 @@ from scout_apm.core.context import AgentContext
 logger = logging.getLogger(__name__)
 
 
-class InstrumentManager:
+class InstrumentManager(object):
     INSTRUMENT_NAMESPACE = "scout_apm.instruments"
     DEFAULT_INSTRUMENTS = ["jinja2", "pymongo", "redis", "urllib3", "elasticsearch"]
 
