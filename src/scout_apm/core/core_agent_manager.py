@@ -56,7 +56,7 @@ class CoreAgentManager:
 
     def run(self):
         try:
-            process = subprocess.Popen(
+            subprocess.check_call(
                 self.agent_binary()
                 + self.daemonize_flag()
                 + self.log_level()
@@ -64,7 +64,6 @@ class CoreAgentManager:
                 + self.config_file()
                 + self.socket_path()
             )
-            process.wait()
         except Exception as e:
             # TODO detect failure of launch properly
             logger.error("Error running Core Agent: %r", e)

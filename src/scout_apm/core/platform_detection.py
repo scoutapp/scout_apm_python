@@ -50,15 +50,13 @@ class PlatformDetection:
         appears to be the most reliable way to do this.
         """
         try:
-            process = subprocess.Popen(
-                ["ldd", "--version"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+            output = subprocess.check_output(
+                ["ldd", "--version"], stderr=subprocess.STDOUT
             )
-            process.wait()
-            output = process.stdout.read()
-
+        except (OSError, subprocess.CalledProcessError):
+            return "gnu"
+        else:
             if b"musl" in output:
                 return "musl"
             else:
                 return "gnu"
-        except FileNotFoundError:
-            return "gnu"
