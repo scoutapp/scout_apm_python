@@ -23,34 +23,28 @@ class AppMetadata(object):
 
     @classmethod
     def data(cls):
-        data = {}
-        version_tuple = sys.version_info
+        config = AgentContext.instance.config
         try:
             data = {
                 "language": "python",
-                "version": "{}.{}.{}".format(
-                    version_tuple[0], version_tuple[1], version_tuple[2]
-                ),
+                "version": "{}.{}.{}".format(*sys.version_info[:3]),
                 "server_time": datetime.utcnow().isoformat() + "Z",
-                "framework": AgentContext.instance.config.value("framework"),
-                "framework_version": AgentContext.instance.config.value(
-                    "framework_version"
-                ),
+                "framework": config.value("framework"),
+                "framework_version": config.value("framework_version"),
                 "environment": "",
-                "app_server": AgentContext.instance.config.value("app_server"),
-                "hostname": AgentContext.instance.config.value("hostname"),
+                "app_server": config.value("app_server"),
+                "hostname": config.value("hostname"),
                 "database_engine": "",  # Detected
                 "database_adapter": "",  # Raw
                 "application_name": "",  # Environment.application_name,
                 "libraries": cls.get_python_packages_versions(),
                 "paas": "",
-                "application_root": AgentContext.instance.config.value(
-                    "application_root"
-                ),
-                "git_sha": AgentContext.instance.config.value("revision_sha"),
+                "application_root": config.value("application_root"),
+                "git_sha": config.value("revision_sha"),
             }
         except Exception as e:
             logger.debug("Exception in AppMetadata: %r", e)
+            data = {}
 
         return data
 
