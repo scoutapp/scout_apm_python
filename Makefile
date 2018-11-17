@@ -14,8 +14,8 @@ clean-build:
 
 clean: clean-pyc clean-cache clean-build
 
-isort:
-	sh -c "isort --skip-glob=.tox --recursive . "
+style:
+	isort --recursive src tests setup.py
 
 lint:
 	tox -e check
