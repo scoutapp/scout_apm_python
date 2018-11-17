@@ -32,12 +32,10 @@ class Cpu(object):
         if wall_clock_elapsed < timedelta(0):
             self.save_times(now, cpu_times)
             logger.debug(
-                (
-                    "{human_name}: Negative time elapsed. "
-                    "now: {now}, "
-                    "last_run: {last_run}, "
-                    "total time: {wall_clock_elapsed}."
-                ).format(human_name=self.human_name(), now=now, last_run=self.last_run)
+                "%s: Negative time elapsed. now: %s, last_run: %s, total time: %s.",
+                self.human_name(),
+                now,
+                self.last_run,
             )
             return None
 
@@ -50,18 +48,13 @@ class Cpu(object):
         if process_elapsed < 0:
             self.save_times(now, cpu_times)
             logger.debug(
-                (
-                    "{human_name}: Negative process time elapsed. "
-                    "utime: {utime_elapsed}, "
-                    "stime: {stime_elapsed}, "
-                    "total time: {process_elapsed}. "
-                    "This is normal to see when starting a forking web server."
-                ).format(
-                    human_name=self.human_name(),
-                    utime_elapsed=utime_elapsed,
-                    stime_elapsed=stime_elapsed,
-                    process_elapsed=process_elapsed,
-                )
+                "%s: Negative process time elapsed. "
+                "utime: %s, stime: %s, total time: %s. "
+                "This is normal to see when starting a forking web server.",
+                self.human_name(),
+                utime_elapsed,
+                stime_elapsed,
+                process_elapsed,
             )
             return None
 
@@ -80,28 +73,17 @@ class Cpu(object):
         if res < 0:
             self.save_times(now, cpu_times)
             logger.debug(
-                (
-                    "{human_name}: Negative CPU: "
-                    "{process_elapsed} / {normalized_wall_clock_elapsed} "
-                    "* 100 ==> {res}"
-                ).format(
-                    human_name=self.human_name(),
-                    process_elapsed=process_elapsed,
-                    normalized_wall_clock_elapsed=normalized_wall_clock_elapsed,
-                    res=res,
-                )
+                "%s: Negative CPU: %s / %s * 100 ==> %s",
+                self.human_name(),
+                process_elapsed,
+                normalized_wall_clock_elapsed,
+                res,
             )
             return None
 
         self.save_times(now, cpu_times)
 
-        logger.debug(
-            ("{human_name}: {res} [{num_processors} CPU(s)]").format(
-                human_name=self.human_name(),
-                res=res,
-                num_processors=self.num_processors,
-            )
-        )
+        logger.debug("%s: %s [%s CPU(s)]", self.human_name(), res, self.num_processors)
 
         return res
 

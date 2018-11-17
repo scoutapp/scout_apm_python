@@ -21,19 +21,13 @@ class InstrumentManager:
             result = getattr(installable, "install")()
             return result
         except Exception as e:
-            logger.info(
-                "Exception while installing instrument {}: {}".format(
-                    module_name, repr(e)
-                )
-            )
+            logger.info("Exception while installing instrument %s: %r", module_name, e)
             return False
 
     def install_all(self):
         for module_name in self.__class__.DEFAULT_INSTRUMENTS:
             if self.is_disabled(module_name):
-                logger.info(
-                    "{} instruments are disabled. Skipping.".format(module_name)
-                )
+                logger.info("%s instruments are disabled. Skipping.", module_name)
                 continue
             self.install(
                 "{}.{}".format(self.__class__.INSTRUMENT_NAMESPACE, module_name)

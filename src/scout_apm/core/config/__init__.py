@@ -45,7 +45,7 @@ class ScoutConfig:
         logger.debug("Configuration Loaded:")
         for key in self.known_keys():
             layer = self.locate_layer_for_key(key)
-            logger.debug("{:9}: {} = {}".format(layer.name(), key, layer.value(key)))
+            logger.debug("%-9s: %s = %s", layer.name(), key, layer.value(key))
 
     def known_keys(self):
         return [

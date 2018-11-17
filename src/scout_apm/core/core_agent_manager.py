@@ -46,7 +46,7 @@ class CoreAgentManager:
                 )
 
         if not self.verify():
-            logger.debug("Failed to verify Core Agent. " "Not launching Core Agent.")
+            logger.debug("Failed to verify Core Agent. Not launching Core Agent.")
             return False
 
         return self.run()
@@ -66,8 +66,8 @@ class CoreAgentManager:
             )
             process.wait()
         except Exception as e:
-            # TODO detect failute of launch properly
-            logger.error("Error running Core Agent: %s", repr(e))
+            # TODO detect failure of launch properly
+            logger.error("Error running Core Agent: %r", e)
             return False
         return True
 
@@ -103,7 +103,7 @@ class CoreAgentManager:
         manifest = CoreAgentManifest(self.core_agent_dir + "/manifest.json")
         if not manifest.is_valid():
             logger.debug(
-                "Core Agent verification failed: " "CoreAgentManifest is not valid."
+                "Core Agent verification failed: CoreAgentManifest is not valid."
             )
             self.core_agent_bin_path = None
             self.core_agent_bin_version = None
@@ -140,9 +140,7 @@ class CoreAgentDownloader:
                 self.download_package()
                 self.untar()
             except OSError as e:
-                logger.error(
-                    "Exception raised while " "downloading Core Agent: %s", repr(e)
-                )
+                logger.error("Exception raised while downloading Core Agent: %r", e)
             finally:
                 self.release_download_lock()
 
@@ -161,9 +159,7 @@ class CoreAgentDownloader:
             )
         except OSError as e:
             logger.debug(
-                "Could not obtain download lock on %s: %s",
-                self.download_lock_path,
-                repr(e),
+                "Could not obtain download lock on %s: %r", self.download_lock_path, e
             )
             self.download_lock_fd = None
 
@@ -182,11 +178,7 @@ class CoreAgentDownloader:
             os.close(self.download_lock_fd)
 
     def download_package(self):
-        logger.debug(
-            "Downloading: {full_url} to {filepath}".format(
-                full_url=self.full_url(), filepath=self.package_location
-            )
-        )
+        logger.debug("Downloading: %s to %s", self.full_url(), self.package_location)
         req = requests.get(self.full_url(), stream=True)
         with open(self.package_location, "wb") as f:
             for chunk in req.iter_content(1024 * 1000):
@@ -215,10 +207,10 @@ class CoreAgentManifest:
         try:
             self.parse()
         except (ValueError, TypeError, OSError, IOError) as e:
-            logger.debug("Error parsing Core Agent Manifest: %s", repr(e))
+            logger.debug("Error parsing Core Agent Manifest: %r", e)
 
     def parse(self):
-        logger.debug("Parsing Core Agent" " manifest path: %s", self.manifest_path)
+        logger.debug("Parsing Core Agent manifest path: %s", self.manifest_path)
         with open(self.manifest_path) as manifest_file:
             self.raw = manifest_file.read()
             self.json = json.loads(self.raw)
@@ -243,5 +235,5 @@ class SHA256:
                     sha256.update(block)
             return sha256.hexdigest()
         except OSError as e:
-            logger.debug("Error on digest: %s", repr(e))
+            logger.debug("Error on digest: %r", e)
             return None

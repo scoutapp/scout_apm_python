@@ -50,7 +50,7 @@ class AppMetadata:
                 "git_sha": AgentContext.instance.config.value("revision_sha"),
             }
         except Exception as e:
-            logger.debug("Exception in AppMetadata: %s", repr(e))
+            logger.debug("Exception in AppMetadata: %r", e)
 
         return data
 

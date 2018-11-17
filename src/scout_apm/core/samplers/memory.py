@@ -46,7 +46,5 @@ class Memory(object):
 
     def run(self):
         res = self.__class__.rss_in_mb()
-        logger.debug(
-            "{human_name}: #{res}".format(human_name=self.human_name(), res=res)
-        )
+        logger.debug("%s: #%s", self.human_name(), res)
         return res

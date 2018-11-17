@@ -51,8 +51,7 @@ class Instrument:
                     url = "{}".format(self._absolute_url("/"))
                 except Exception as e:
                     logger.error(
-                        "Could not get instrument data for HTTPConnectionPool: "
-                        "{}".format(repr(e))
+                        "Could not get instrument data for HTTPConnectionPool: %r", e
                     )
 
                 tr = TrackedRequest.instance()
@@ -66,6 +65,5 @@ class Instrument:
 
         except Exception as e:
             logger.warn(
-                "Unable to instrument for Urllib3 HTTPConnectionPool.urlopen: "
-                "{}".format(repr(e))
+                "Unable to instrument for Urllib3 HTTPConnectionPool.urlopen: %r", e
             )

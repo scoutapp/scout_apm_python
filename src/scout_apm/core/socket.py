@@ -133,7 +133,7 @@ class CoreAgentSocket(threading.Thread):
             self.command_queue.put(command, False)
         except queue.Full as e:
             # TODO mark the command as not queued?
-            logger.debug("CoreAgentSocket error on send: %s" % repr(e))
+            logger.debug("CoreAgentSocket error on send: %r", e)
 
     def _send(self, command, do_async=False):
         msg = command.message()
@@ -141,15 +141,18 @@ class CoreAgentSocket(threading.Thread):
         try:
             data = json.dumps(msg)
         except (ValueError, TypeError) as e:
-            logger.debug("Exception when serializing command message: %s" % repr(e))
+            logger.debug("Exception when serializing command message: %r", e)
             return False
 
         try:
             self.socket.sendall(self._message_length(data))
         except OSError as e:
             logger.debug(
-                "CoreAgentSocket exception on length _send: %s on PID: %s on thread: %s"
-                % (repr(e), os.getpid(), threading.current_thread())
+                "CoreAgentSocket exception on length _send: "
+                "%r on PID: %s on thread: %s",
+                e,
+                os.getpid(),
+                threading.current_thread(),
             )
             return None
 
@@ -157,8 +160,11 @@ class CoreAgentSocket(threading.Thread):
             self.socket.sendall(data.encode())
         except OSError as e:
             logger.debug(
-                "CoreAgentSocket exception on data _send: %s on PID: %s on thread: %s"
-                % (repr(e), os.getpid(), threading.current_thread())
+                "CoreAgentSocket exception on data _send: "
+                "%r on PID: %s on thread: %s",
+                e,
+                os.getpid(),
+                threading.current_thread(),
             )
             return None
 
@@ -185,7 +191,7 @@ class CoreAgentSocket(threading.Thread):
 
             return message
         except OSError as e:
-            logger.debug("CoreAgentSocket error on read response: %s" % repr(e))
+            logger.debug("CoreAgentSocket error on read response: %r", e)
             return None
 
     def _register(self):
@@ -208,7 +214,7 @@ class CoreAgentSocket(threading.Thread):
                 logger.debug("CoreAgentSocket is connected")
                 return True
             except OSError as e:
-                logger.debug("CoreAgentSocket connection error: %s", repr(e))
+                logger.debug("CoreAgentSocket connection error: %r", e)
                 if attempt >= connect_attempts:
                     return False
                 time.sleep(retry_wait_secs)
@@ -219,6 +225,6 @@ class CoreAgentSocket(threading.Thread):
         try:
             self.socket.close()
         except OSError as e:
-            logger.debug("CoreAgentSocket exception on disconnect: %s" % repr(e))
+            logger.debug("CoreAgentSocket exception on disconnect: %r", e)
         finally:
             self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)

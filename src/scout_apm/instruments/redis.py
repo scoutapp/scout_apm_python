@@ -58,9 +58,7 @@ class Instrument:
 
         except Exception as e:
             logger.warn(
-                "Unable to instrument for Redis StrictRedis.execute_command: {}".format(
-                    repr(e)
-                )
+                "Unable to instrument for Redis StrictRedis.execute_command: %r", e
             )
 
     def patch_basepipeline(self):
@@ -78,8 +76,4 @@ class Instrument:
                     tr.stop_span()
 
         except Exception as e:
-            logger.warn(
-                "Unable to instrument for Redis BasePipeline.execute: {}".format(
-                    repr(e)
-                )
-            )
+            logger.warn("Unable to instrument for Redis BasePipeline.execute: %r", e)

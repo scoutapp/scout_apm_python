@@ -93,14 +93,13 @@ def {method_str}(original, self, *args, **kwargs):
                 )
 
                 exec(code_str)
-                logger.info(
-                    "Instrumented Elasticsearch Elasticsearch.{}".format(method_str)
-                )
+                logger.info("Instrumented Elasticsearch Elasticsearch.%s", method_str)
 
             except Exception as e:
                 logger.warn(
-                    "Unable to instrument for Elasticsearch Elasticsearch.{}: "
-                    "{}".format(method_str, repr(e))
+                    "Unable to instrument for Elasticsearch Elasticsearch.%s: %r",
+                    method_str,
+                    e,
                 )
         return True
 
@@ -164,7 +163,7 @@ def {method_str}(original, self, *args, **kwargs):
 
         except Exception as e:
             logger.warn(
-                "Unable to instrument for Elasticsearch Transport.perform_request: "
-                "{}".format(repr(e))
+                "Unable to instrument for Elasticsearch Transport.perform_request: %r",
+                e,
             )
         return True

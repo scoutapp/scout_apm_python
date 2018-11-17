@@ -30,7 +30,7 @@ class RequestBuffer(ThreadLocalSingleton):
     def flush(self):
         logger.debug("Flushing RequestBuffer")
         for request in self._requests:
-            logger.debug("Flushing Request Id: %s" % request.req_id)
+            logger.debug("Flushing Request Id: %s", request.req_id)
             self.flush_request(request)
         del self._requests[:]
 

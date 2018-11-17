@@ -47,7 +47,5 @@ class Instrument:
             logger.info("Instrumented Jinja2")
 
         except Exception as e:
-            logger.warn(
-                "Unable to instrument for Jinja2 Template.render: {}".format(repr(e))
-            )
+            logger.warn("Unable to instrument for Jinja2 Template.render: %r", e)
         return True

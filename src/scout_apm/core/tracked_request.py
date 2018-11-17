@@ -48,7 +48,7 @@ class TrackedRequest(ThreadLocalSingleton):
     def tag(self, key, value):
         if key in self.tags:
             logger.debug(
-                "Overwriting previously set tag for request %s: %s" % (self.req_id, key)
+                "Overwriting previously set tag for request %s: %s", self.req_id, key
             )
         self.tags[key] = value
 
@@ -75,7 +75,7 @@ class TrackedRequest(ThreadLocalSingleton):
         try:
             stopping_span = self.active_spans.pop()
         except IndexError as e:
-            logger.debug("Exception when stopping span: %s" % repr(e))
+            logger.debug("Exception when stopping span: %r", e)
 
         if stopping_span is not None:
             stopping_span.stop()
@@ -141,7 +141,7 @@ class Span:
     def tag(self, key, value):
         if key in self.tags:
             logger.debug(
-                "Overwriting previously set tag for span %s: %s" % (self.span_id, key)
+                "Overwriting previously set tag for span %s: %s", self.span_id, key
             )
         self.tags[key] = value
 
@@ -190,14 +190,16 @@ class Span:
             # This should rarely happen. Max Unsigned Long Long is a big number
             if end_allocs - start_allocs < 0:
                 logger.debug(
-                    "End allocation count smaller than start "
-                    "allocation count for span {}: start = {}, "
-                    "end = {}".format(self.span_id, start_allocs, end_allocs)
+                    "End allocation count smaller than start allocation "
+                    "count for span %s: start = %d, end = %d",
+                    self.span_id,
+                    start_allocs,
+                    end_allocs,
                 )
                 return 0
             return end_allocs - start_allocs
         except TypeError as e:
-            logger.debug("Exception in calculate_allocations: {}".format(repr(e)))
+            logger.debug("Exception in calculate_allocations: %r", e)
             return 0
 
     def capture_backtrace(self):

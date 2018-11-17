@@ -93,12 +93,10 @@ def {method_str}(original, self, *args, **kwargs):
                 )
 
                 exec(code_str)
-                logger.info("Instrumented PyMongo Collection.{}".format(method_str))
+                logger.info("Instrumented PyMongo Collection.%s", method_str)
 
             except Exception as e:
                 logger.warn(
-                    "Unable to instrument for PyMongo Collection.{}: {}".format(
-                        method_str, repr(e)
-                    )
+                    "Unable to instrument for PyMongo Collection.%s: %r", method_str, e
                 )
         return True
