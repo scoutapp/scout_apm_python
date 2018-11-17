@@ -146,7 +146,7 @@ class CoreAgentSocket(threading.Thread):
 
         try:
             self.socket.sendall(self._message_length(data))
-        except (OSError) as e:
+        except OSError as e:
             logger.debug(
                 "CoreAgentSocket exception on length _send: %s on PID: %s on thread: %s"
                 % (repr(e), os.getpid(), threading.current_thread())
@@ -155,7 +155,7 @@ class CoreAgentSocket(threading.Thread):
 
         try:
             self.socket.sendall(data.encode())
-        except (OSError) as e:
+        except OSError as e:
             logger.debug(
                 "CoreAgentSocket exception on data _send: %s on PID: %s on thread: %s"
                 % (repr(e), os.getpid(), threading.current_thread())
@@ -184,7 +184,7 @@ class CoreAgentSocket(threading.Thread):
                 message += recv
 
             return message
-        except (OSError) as e:
+        except OSError as e:
             logger.debug("CoreAgentSocket error on read response: %s" % repr(e))
             return None
 
@@ -207,7 +207,7 @@ class CoreAgentSocket(threading.Thread):
                 self.socket.settimeout(0.5)
                 logger.debug("CoreAgentSocket is connected")
                 return True
-            except (OSError) as e:
+            except OSError as e:
                 logger.debug("CoreAgentSocket connection error: %s", repr(e))
                 if attempt >= connect_attempts:
                     return False
@@ -218,7 +218,7 @@ class CoreAgentSocket(threading.Thread):
         logger.debug("CoreAgentSocket disconnecting from %s", self.socket_path)
         try:
             self.socket.close()
-        except (OSError) as e:
+        except OSError as e:
             logger.debug("CoreAgentSocket exception on disconnect: %s" % repr(e))
         finally:
             self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
