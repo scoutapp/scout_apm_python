@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 
-# Python Built-Ins
 import hashlib
 import json
 import logging
@@ -9,10 +8,8 @@ import subprocess
 import tarfile
 import time
 
-# 3rd Party
 import requests
 
-# APM Modules
 from scout_apm.core.context import AgentContext
 
 logger = logging.getLogger(__name__)

@@ -1,13 +1,11 @@
 from __future__ import absolute_import
 
-# Python Modules
 from datetime import datetime
 import logging
 from os import getpid
 import sys
 
 
-# Scout APM
 from scout_apm.core.context import AgentContext
 from scout_apm.core.commands import ApplicationEvent
 
