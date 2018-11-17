@@ -2,7 +2,7 @@ clean-pyc:
 	find . -name '*.pyc' -exec rm -f {} +
 	find . -name '*.pyo' -exec rm -f {} +
 	find . -name '*~' -exec rm -f  {} +
-	
+
 clean-cache:
 	find . -name '__pycache__' -exec rm -rf {} +
 	rm -rf .pytest_cache
@@ -24,4 +24,4 @@ test: clean-pyc
 	tox -v --workdir /tmp/tox
 
 test-pyenv:
-	pyenv local 2.7 3.4.3 3.5.4 3.6.4 pypy-5.7.1 pypy3.5-5.8.0 && tox -v --workdir /tmp/tox
+	pyenv local `cat .python-version | xargs` && tox -v --workdir /tmp/tox
