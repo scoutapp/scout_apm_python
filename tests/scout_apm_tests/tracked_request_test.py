@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from scout_apm.core.tracked_request import TrackedRequest
 
 try:
-    from scout_apm.core import objtrace
+    from scout_apm.core import objtrace  # noqa: F401
 
     HAS_OBJTRACE = True
 except ImportError:

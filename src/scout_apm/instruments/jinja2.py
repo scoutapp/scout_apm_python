@@ -14,7 +14,7 @@ class Instrument:
 
     def installable(self):
         try:
-            from jinja2 import Template
+            from jinja2 import Template  # noqa: F401
         except ImportError:
             logger.info("Unable to import for Jinja2 instruments")
             return False

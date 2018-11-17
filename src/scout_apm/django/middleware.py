@@ -123,7 +123,8 @@ class OldStyleViewMiddleware:
         span = tr.start_span(operation=operation)
         tr.mark_real_request()
 
-        # Save the span into the request, so we can check if we're matched up when stopping
+        # Save the span into the request, so we can check
+        # if we're matched up when stopping
         request.scout_view_span = span
 
         return None

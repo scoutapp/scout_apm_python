@@ -2,7 +2,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 from datetime import datetime, timedelta
-from textwrap import dedent
 
 import psutil
 
@@ -33,13 +32,11 @@ class Cpu(object):
         if wall_clock_elapsed < timedelta(0):
             self.save_times(now, cpu_times)
             logger.debug(
-                dedent(
-                    """
-                         {human_name}: Negative time elapsed.
-                         now: {now},
-                         last_run: {last_run},
-                         total time: {wall_clock_elapsed}.
-                         """
+                (
+                    "{human_name}: Negative time elapsed. "
+                    "now: {now}, "
+                    "last_run: {last_run}, "
+                    "total time: {wall_clock_elapsed}."
                 ).format(human_name=self.human_name(), now=now, last_run=self.last_run)
             )
             return None
@@ -53,15 +50,12 @@ class Cpu(object):
         if process_elapsed < 0:
             self.save_times(now, cpu_times)
             logger.debug(
-                dedent(
-                    """
-                         {human_name}: Negative process time elapsed.
-                         utime: {utime_elapsed},
-                         stime: {stime_elapsed},
-                         total time: {process_elapsed}.
-                         This is normal to see when starting a
-                         forking web server.
-                         """
+                (
+                    "{human_name}: Negative process time elapsed. "
+                    "utime: {utime_elapsed}, "
+                    "stime: {stime_elapsed}, "
+                    "total time: {process_elapsed}. "
+                    "This is normal to see when starting a forking web server."
                 ).format(
                     human_name=self.human_name(),
                     utime_elapsed=utime_elapsed,
@@ -86,11 +80,10 @@ class Cpu(object):
         if res < 0:
             self.save_times(now, cpu_times)
             logger.debug(
-                dedent(
-                    """
-                         {human_name}: Negative CPU.
-                         {process_elapsed} / {normalized_wall_clock_elapsed} * 100 ==> {res}
-                         """
+                (
+                    "{human_name}: Negative CPU: "
+                    "{process_elapsed} / {normalized_wall_clock_elapsed} "
+                    "* 100 ==> {res}"
                 ).format(
                     human_name=self.human_name(),
                     process_elapsed=process_elapsed,
@@ -103,11 +96,7 @@ class Cpu(object):
         self.save_times(now, cpu_times)
 
         logger.debug(
-            dedent(
-                """
-                     {human_name}: {res} [{num_processors} CPU(s)]
-                     """
-            ).format(
+            ("{human_name}: {res} [{num_processors} CPU(s)]").format(
                 human_name=self.human_name(),
                 res=res,
                 num_processors=self.num_processors,

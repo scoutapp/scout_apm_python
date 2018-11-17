@@ -48,12 +48,7 @@ class _DetailedTracingCursorWrapper(CursorWrapper):
                 span.capture_backtrace()
 
 
-# pylint: disable=too-few-public-methods
 class SQLInstrument:
-
-    # The linter thinks the methods we monkeypatch are not used
-    # pylint: disable=W0612
-    # pylint: disable=no-method-argument
     @staticmethod
     def install():
         """

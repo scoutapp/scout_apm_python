@@ -14,7 +14,7 @@ class Instrument:
 
     def installable(self):
         try:
-            from urllib3 import HTTPConnectionPool, PoolManager
+            from urllib3 import HTTPConnectionPool, PoolManager  # noqa: F401
         except ImportError:
             logger.info("Unable to import for Urllib3 instruments")
             return False
@@ -51,9 +51,8 @@ class Instrument:
                     url = "{}".format(self._absolute_url("/"))
                 except Exception as e:
                     logger.error(
-                        "Could not get instrument data for HTTPConnectionPool: {}".format(
-                            repr(e)
-                        )
+                        "Could not get instrument data for HTTPConnectionPool: "
+                        "{}".format(repr(e))
                     )
 
                 tr = TrackedRequest.instance()
@@ -67,7 +66,6 @@ class Instrument:
 
         except Exception as e:
             logger.warn(
-                "Unable to instrument for Urllib3 HTTPConnectionPool.urlopen: {}".format(
-                    repr(e)
-                )
+                "Unable to instrument for Urllib3 HTTPConnectionPool.urlopen: "
+                "{}".format(repr(e))
             )

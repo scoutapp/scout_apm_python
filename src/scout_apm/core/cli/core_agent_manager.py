@@ -25,10 +25,8 @@ def main(**kwargs):
     )
 
     subparsers = parser.add_subparsers(dest="subparser")
-
-    download_parser = subparsers.add_parser("download")
-
-    launch_parser = subparsers.add_parser("launch")
+    subparsers.add_parser("download")
+    subparsers.add_parser("launch")
 
     args = parser.parse_args()
 

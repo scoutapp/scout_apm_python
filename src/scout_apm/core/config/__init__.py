@@ -140,7 +140,8 @@ class ScoutConfigDerived:
 
     def __init__(self, config):
         """
-        config argument is the overall ScoutConfig var, so we can lookup the components of the derived info.
+        config argument is the overall ScoutConfig var, so we can lookup the
+        components of the derived info.
         """
         self.config = config
 
@@ -189,9 +190,9 @@ class ScoutConfigDefaults:
             "core_agent_dir": "/tmp/scout_apm_core",
             "core_agent_download": True,
             "core_agent_launch": True,
-            "core_agent_version": "v1.1.8",  # This can be an exact tag name, or 'latest'
+            "core_agent_version": "v1.1.8",  # can be an exact tag name, or 'latest'
             "disabled_instruments": [],
-            "download_url": "https://s3-us-west-1.amazonaws.com/scout-public-downloads/apm_core_agent/release",
+            "download_url": "https://s3-us-west-1.amazonaws.com/scout-public-downloads/apm_core_agent/release",  # noqa: E501
             "framework": "",
             "framework_version": "",
             "hostname": "",

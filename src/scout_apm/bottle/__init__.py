@@ -49,7 +49,7 @@ class ScoutPlugin(object):
                 if not path.startswith("/"):
                     path = "/{}".format(path)
 
-                span = tr.start_span(operation="Controller{}".format(path))
+                tr.start_span(operation="Controller{}".format(path))
 
                 try:
                     Context.add("path", path)

@@ -14,8 +14,8 @@ class Instrument:
 
     def installable(self):
         try:
-            from redis import StrictRedis
-            from redis.client import BasePipeline
+            from redis import StrictRedis  # noqa: F401
+            from redis.client import BasePipeline  # noqa: F401
         except ImportError:
             logger.info("Unable to import for Redis instruments")
             return False

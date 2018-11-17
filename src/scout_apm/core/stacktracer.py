@@ -8,8 +8,6 @@ from scout_apm.core.tracked_request import TrackedRequest
 logger = logging.getLogger(__name__)
 
 
-# The linter thinks the methods we monkeypatch are not used
-# pylint: disable=W0612
 def trace_method(cls, method_name=None):
     def decorator(info_func):
         method_to_patch = method_name or info_func.__name__

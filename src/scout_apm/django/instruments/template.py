@@ -47,8 +47,6 @@ def load(parser, token):
 
 
 class TemplateInstrument:
-    # The linter thinks the methods we monkeypatch are not used
-    # pylint: disable=W0612
     @staticmethod
     def install():
         # Our eventual aim is to patch the render() method on the Node objects
@@ -83,13 +81,14 @@ class TemplateInstrument:
             name = self.name if self.name is not None else "<Unknown Template>"
             return ("Template/Render", {"name": name})
 
-        @trace_method(BlockNode)
+        @trace_method(BlockNode)  # noqa: F811
         def render(self, *args, **kwargs):
             return ("Block/Render", {"name": self.name})
 
         logger.debug("Monkey patched Templates")
 
-        # XXX: Figure this out, causes exception that the "resolve_context" key isn't in dict
+        # XXX: Figure this out, causes exception that the "resolve_context" key
+        # isn't in dict
         # Also will need to figure out the name hash
         #  @trace_method(TemplateResponse)
         #  def resolve_context(self, *args, **kwargs):

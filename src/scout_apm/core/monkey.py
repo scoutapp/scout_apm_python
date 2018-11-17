@@ -1,4 +1,4 @@
-# pylint: skip-file
+# flake8: noqa
 
 # Originally taken from https://pypi.python.org/pypi/ProxyTypes
 # inlined due to python3 issues with setup.py, we should gut this out and simplify it
@@ -219,7 +219,6 @@ class LazyWrapper(LazyProxy, AbstractWrapper):
 #######################
 
 
-# pylint: disable=E1001,E1002
 class CallableProxy(ObjectWrapper):
     __slots__ = "_eop_wrapper_"
 

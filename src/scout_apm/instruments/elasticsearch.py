@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 
+# Used in the exec() call below.
 from scout_apm.core.monkey import monkeypatch_method
 from scout_apm.core.tracked_request import TrackedRequest
 
@@ -41,8 +42,8 @@ class Instrument:
 
     def installable(self):
         try:
-            from elasticsearch.client import Elasticsearch
-            from elasticsearch import Transport
+            from elasticsearch.client import Elasticsearch  # noqa: F401
+            from elasticsearch import Transport  # noqa: F401
         except ImportError:
             logger.info("Unable to import for Elasticsearch instruments")
             return False
@@ -63,10 +64,11 @@ class Instrument:
 
     def instrument_client(self):
         try:
-            from elasticsearch.client import Elasticsearch
+            from elasticsearch.client import Elasticsearch  # noqa: F401
         except ImportError:
             logger.info(
-                "Unable to import for Elasticsearch Client instruments. Instrument install failed."
+                "Unable to import for Elasticsearch Client instruments. "
+                "Instrument install failed."
             )
             return False
 
@@ -78,7 +80,7 @@ def {method_str}(original, self, *args, **kwargs):
     tr = TrackedRequest.instance()
     index = kwargs.get('index', 'Unknown').title()
     name = '/'.join(['Elasticsearch', index, '{camel_name}'])
-    span = tr.start_span(operation=name, ignore_children=True)
+    tr.start_span(operation=name, ignore_children=True)
 
 
     try:
@@ -97,9 +99,8 @@ def {method_str}(original, self, *args, **kwargs):
 
             except Exception as e:
                 logger.warn(
-                    "Unable to instrument for Elasticsearch Elasticsearch.{}: {}".format(
-                        method_str, repr(e)
-                    )
+                    "Unable to instrument for Elasticsearch Elasticsearch.{}: "
+                    "{}".format(method_str, repr(e))
                 )
         return True
 
@@ -150,7 +151,7 @@ def {method_str}(original, self, *args, **kwargs):
                     op = "Unknown"
 
                 tr = TrackedRequest.instance()
-                span = tr.start_span(
+                tr.start_span(
                     operation="Elasticsearch/{}".format(op), ignore_children=True
                 )
 
@@ -163,8 +164,7 @@ def {method_str}(original, self, *args, **kwargs):
 
         except Exception as e:
             logger.warn(
-                "Unable to instrument for Elasticsearch Transport.perform_request: {}".format(
-                    repr(e)
-                )
+                "Unable to instrument for Elasticsearch Transport.perform_request: "
+                "{}".format(repr(e))
             )
         return True

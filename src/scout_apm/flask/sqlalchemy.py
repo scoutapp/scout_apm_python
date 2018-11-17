@@ -1,11 +1,9 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import event
 
 import scout_apm.sqlalchemy
 from scout_apm.core.monkey import monkeypatch_method
-from scout_apm.core.tracked_request import TrackedRequest
 
 
 def instrument_sqlalchemy(db):

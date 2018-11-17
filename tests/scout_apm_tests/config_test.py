@@ -8,11 +8,14 @@ import scout_apm
 
 def test_defaults():
     conf = scout_apm.core.config.ScoutConfig()
-    m = re.match(
-        r"/tmp/scout_apm_core/scout_apm_core-(latest|v\d\.\d.\d(.\d)?)-(x86_64|i686|unknown)-(unknown-linux-gnu|apple-darwin|unknown)/core-agent\.sock",
+    assert re.match(
+        r"/tmp/scout_apm_core/scout_apm_core"
+        r"-(latest|v\d\.\d.\d(.\d)?)"
+        r"-(x86_64|i686|unknown)"
+        r"-(unknown-linux-gnu|apple-darwin|unknown)"
+        r"/core-agent\.sock",
         conf.value("socket_path"),
     )
-    assert m is not None
 
 
 def test_env():

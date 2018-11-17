@@ -2,8 +2,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 
-from scout_apm.core.monkey import monkeypatch_method
-from scout_apm.core.tracked_request import TrackedRequest
+# Used in the exec() call below.
+from scout_apm.core.monkey import monkeypatch_method  # noqa: F401
+from scout_apm.core.tracked_request import TrackedRequest  # noqa: F401
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +49,7 @@ class Instrument:
 
     def installable(self):
         try:
-            from pymongo.collection import Collection
+            from pymongo.collection import Collection  # noqa: F401
         except ImportError:
             logger.info("Unable to import for PyMongo instruments")
             return False
@@ -65,7 +66,7 @@ class Instrument:
         self.installed = True
 
         try:
-            from pymongo.collection import Collection
+            from pymongo.collection import Collection  # noqa: F401
         except ImportError:
             logger.info(
                 "Unable to import for PyMongo instruments. Instrument install failed."

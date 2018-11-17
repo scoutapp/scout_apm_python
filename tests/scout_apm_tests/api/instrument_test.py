@@ -21,7 +21,7 @@ def test_decoration_instrument():
 
     @scout_apm.api.instrument("Test Decorator")
     def test():
-        a = 1
+        pass
 
     test()
 
@@ -46,7 +46,7 @@ def test_decoration_instrument_with_kind():
 
     @scout_apm.api.instrument("GET example.com", kind="HTTP")
     def test():
-        a = 1
+        pass
 
     test()
 
@@ -59,7 +59,7 @@ def test_context_manager_default_tags():
     tr = TrackedRequest.instance()
 
     with scout_apm.api.instrument("tag test", tags={"x": 99}):
-        a = 1
+        pass
 
     span = tr.complete_spans[-1]
     assert span.tags["x"] == 99
@@ -71,7 +71,7 @@ def test_decoration_default_tags():
 
     @scout_apm.api.instrument("tag test", tags={"x": 99})
     def test():
-        a = 1
+        pass
 
     test()
 

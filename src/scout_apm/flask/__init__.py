@@ -121,7 +121,7 @@ class ScoutApm(object):
                     TrackedRequest.instance().stop_span()
 
             return CallableProxy(func, tracing_function)
-        except Exception as err:
+        except Exception:
             # If we can't wrap for any reason, just return the original
             return func
 

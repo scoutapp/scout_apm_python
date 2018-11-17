@@ -53,7 +53,7 @@ class PlatformDetection:
             process = subprocess.Popen(
                 ["ldd", "--version"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
             )
-            returncode = process.wait()
+            process.wait()
             output = process.stdout.read()
 
             if b"musl" in output:

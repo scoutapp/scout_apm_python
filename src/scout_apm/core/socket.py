@@ -165,8 +165,8 @@ class CoreAgentSocket(threading.Thread):
         if do_async:
             return True
         else:
-            # TODO read respnse back in to command
-            response = self._read_response()
+            # TODO do something with the response sent back in reply to command
+            self._read_response()
             return True
 
     def _message_length(self, body):
