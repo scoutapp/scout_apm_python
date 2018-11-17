@@ -1,6 +1,7 @@
+from sqlalchemy import event
+
 from scout_apm.core.tracked_request import TrackedRequest
 
-from sqlalchemy import event
 
 def instrument_sqlalchemy(engine):
     def before_cursor_execute(conn, cursor, statement, parameters, context, executemany):

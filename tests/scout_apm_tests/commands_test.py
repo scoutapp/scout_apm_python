@@ -1,6 +1,7 @@
 import scout_apm.core.commands
 from scout_apm.core.tracked_request import TrackedRequest
 
+
 def test_stop_span_defaults_timestamp_to_invalid_date():
     command = scout_apm.core.commands.StopSpan(request_id="req_id", span_id="span_id")
     assert(command.timestamp == scout_apm.core.commands.INVALID_DATE)

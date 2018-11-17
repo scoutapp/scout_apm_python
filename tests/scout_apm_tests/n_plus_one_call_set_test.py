@@ -1,6 +1,5 @@
+from scout_apm.core.n_plus_one_call_set import NPlusOneCallSet, NPlusOneCallSetItem
 from scout_apm.core.tracked_request import TrackedRequest
-from scout_apm.core.n_plus_one_call_set import NPlusOneCallSet
-from scout_apm.core.n_plus_one_call_set import NPlusOneCallSetItem
 
 
 def test_call_set_finds_or_creates():

@@ -1,5 +1,6 @@
 from contextlib import ContextDecorator
 
+
 class instrument(ContextDecorator):
     def __enter__(self):
         print('Starting')
@@ -8,5 +9,3 @@ class instrument(ContextDecorator):
     def __exit__(self, *exc):
         print('Finishing')
         return False
-
-

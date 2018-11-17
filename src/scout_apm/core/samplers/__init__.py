@@ -1,12 +1,11 @@
-from datetime import datetime
 import logging
 import threading
+from datetime import datetime
 from os import getpid
 from time import sleep
 
-from scout_apm.core.context import AgentContext
 from scout_apm.core.commands import ApplicationEvent
-
+from scout_apm.core.context import AgentContext
 from scout_apm.core.samplers.cpu import Cpu
 from scout_apm.core.samplers.memory import Memory
 

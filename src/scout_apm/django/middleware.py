@@ -1,7 +1,8 @@
 import logging
-from scout_apm.core.tracked_request import TrackedRequest
-from scout_apm.core.remote_ip import RemoteIp
+
 from scout_apm.api.context import Context
+from scout_apm.core.remote_ip import RemoteIp
+from scout_apm.core.tracked_request import TrackedRequest
 
 logger = logging.getLogger(__name__)
 

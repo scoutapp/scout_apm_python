@@ -3,8 +3,8 @@ from flask.globals import _request_ctx_stack
 
 import scout_apm.core
 from scout_apm.core.config import ScoutConfig
-from scout_apm.core.tracked_request import TrackedRequest
 from scout_apm.core.monkey import CallableProxy
+from scout_apm.core.tracked_request import TrackedRequest
 
 
 class ScoutApm(object):
@@ -127,4 +127,3 @@ class ScoutApm(object):
 
     def process_response(self, response):
         return response
-

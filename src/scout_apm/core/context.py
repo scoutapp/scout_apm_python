@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+
 import logging
 
 from scout_apm.core.config import ScoutConfig

@@ -1,5 +1,6 @@
 from scout_apm.core.remote_ip import RemoteIp
 
+
 def test_no_forwarded_for():
     ip = RemoteIp.lookup_from_headers({'REMOTE_ADDR': '1.1.1.1'})
     assert(ip == '1.1.1.1')

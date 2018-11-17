@@ -1,13 +1,12 @@
 from __future__ import absolute_import
 
-from datetime import datetime
 import logging
-from os import getpid
 import sys
+from datetime import datetime
+from os import getpid
 
-
-from scout_apm.core.context import AgentContext
 from scout_apm.core.commands import ApplicationEvent
+from scout_apm.core.context import AgentContext
 
 logger = logging.getLogger(__name__)
 

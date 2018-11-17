@@ -1,9 +1,8 @@
-from django.conf import settings
-from scout_apm.core.config import ScoutConfig
-
-
 import logging
 
+from django.conf import settings
+
+from scout_apm.core.config import ScoutConfig
 
 logger = logging.getLogger(__name__)
 

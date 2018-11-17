@@ -4,12 +4,11 @@ import logging
 from datetime import datetime
 from uuid import uuid4
 
-from scout_apm.core.samplers import Samplers
-from scout_apm.core.request_manager import RequestManager
-from scout_apm.core.thread_local import ThreadLocalSingleton
-from scout_apm.core.n_plus_one_call_set import NPlusOneCallSet
-from scout_apm.core.samplers import Memory
 import scout_apm.core.backtrace
+from scout_apm.core.n_plus_one_call_set import NPlusOneCallSet
+from scout_apm.core.request_manager import RequestManager
+from scout_apm.core.samplers import Memory, Samplers
+from scout_apm.core.thread_local import ThreadLocalSingleton
 
 try:
     from scout_apm.core import objtrace

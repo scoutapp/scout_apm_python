@@ -1,11 +1,10 @@
-import scout_apm.core
-from scout_apm.core.config import ScoutConfig
-from scout_apm.api.context import Context as ScoutContext
-from scout_apm.core.tracked_request import TrackedRequest
-
-import sys
 import logging
+import sys
 
+import scout_apm.core
+from scout_apm.api.context import Context as ScoutContext
+from scout_apm.core.config import ScoutConfig
+from scout_apm.core.tracked_request import TrackedRequest
 
 logger = logging.getLogger(__name__)
 

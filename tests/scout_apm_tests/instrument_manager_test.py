@@ -1,7 +1,6 @@
 from scout_apm.core.config import ScoutConfig
 from scout_apm.core.instrument_manager import InstrumentManager
 
-
 # Fake instrument - note, this uses a module level global var to track if it's
 # been installed. Reset it after your test to reuse.
 klassy_instrument_pos_arg = False
@@ -71,4 +70,3 @@ def test_loads_class_instrument():
 def test_handles_exception():
     result = InstrumentManager().install('scout_apm_tests.instrument_manager_test', 'ExceptionalInstrument')
     assert(not result)
-

@@ -2,11 +2,14 @@ from __future__ import absolute_import
 
 import json
 import logging
+import os
 import socket
 import struct
-import time
 import threading
-import os
+import time
+
+from scout_apm.core.commands import Register
+from scout_apm.core.config import ScoutConfig
 
 try:
     # Python 3.x
@@ -15,8 +18,6 @@ except ImportError:
     # Python 2.x
     import Queue as queue
 
-from scout_apm.core.config import ScoutConfig
-from scout_apm.core.commands import Register
 
 logger = logging.getLogger(__name__)
 

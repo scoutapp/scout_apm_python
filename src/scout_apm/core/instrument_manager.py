@@ -3,7 +3,6 @@ import logging
 
 from scout_apm.core.context import AgentContext
 
-
 logger = logging.getLogger(__name__)
 
 

@@ -1,14 +1,13 @@
 from __future__ import absolute_import
 
-from django.apps import AppConfig
-
-from scout_apm.django.instruments.sql import SQLInstrument
-from scout_apm.django.instruments.template import TemplateInstrument
-from scout_apm.django.config import ConfigAdapter
-import scout_apm.core
-
 import logging
 
+from django.apps import AppConfig
+
+import scout_apm.core
+from scout_apm.django.config import ConfigAdapter
+from scout_apm.django.instruments.sql import SQLInstrument
+from scout_apm.django.instruments.template import TemplateInstrument
 
 logger = logging.getLogger(__name__)
 

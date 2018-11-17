@@ -2,10 +2,9 @@ from __future__ import absolute_import
 
 import logging
 
+from scout_apm.core.commands import BatchCommand
 from scout_apm.core.context import AgentContext
 from scout_apm.core.thread_local import ThreadLocalSingleton
-
-from scout_apm.core.commands import BatchCommand
 
 logger = logging.getLogger(__name__)
 

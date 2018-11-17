@@ -1,6 +1,7 @@
-import scout_apm
 import os
 import re
+
+import scout_apm
 
 
 def test_defaults():

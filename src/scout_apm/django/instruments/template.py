@@ -1,13 +1,14 @@
 from __future__ import absolute_import
-import logging
 
-from scout_apm.core.stacktracer import trace_function, trace_method
+import logging
 
 # XXX:Changed in Django 1.9
 # https://github.com/jazzband/django-debug-toolbar/issues/739
 #  from django.template.base import Library, Template
 from django.template import Library, Template, defaulttags
 from django.template.loader_tags import BlockNode
+
+from scout_apm.core.stacktracer import trace_function, trace_method
 
 logger = logging.getLogger(__name__)
 

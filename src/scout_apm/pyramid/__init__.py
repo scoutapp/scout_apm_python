@@ -1,7 +1,7 @@
 import scout_apm.core
-from scout_apm.core.tracked_request import TrackedRequest
-from scout_apm.core.config import ScoutConfig
 from scout_apm.api.context import Context
+from scout_apm.core.config import ScoutConfig
+from scout_apm.core.tracked_request import TrackedRequest
 
 
 def includeme(config):
@@ -48,4 +48,3 @@ def instruments(handler, registry):
         return response
 
     return scout_tween
-

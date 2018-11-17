@@ -1,8 +1,8 @@
-from glob import glob
 import os
 import sys
+from glob import glob
 
-from setuptools import find_packages, setup, Extension
+from setuptools import Extension, find_packages, setup
 
 long_description = 'Scout Application Performance Monitoring Agent - https://scoutapp.com'
 if os.path.exists('README.md'):

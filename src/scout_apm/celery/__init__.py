@@ -1,7 +1,7 @@
+from celery.signals import task_postrun, task_prerun
+
 import scout_apm.core
 from scout_apm.core.tracked_request import TrackedRequest
-
-from celery.signals import task_prerun, task_postrun
 
 
 # TODO: Capture queue.

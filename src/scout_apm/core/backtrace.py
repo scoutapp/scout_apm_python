@@ -29,4 +29,3 @@ def capture():
     formatted_stack.reverse()
 
     return formatted_stack
-

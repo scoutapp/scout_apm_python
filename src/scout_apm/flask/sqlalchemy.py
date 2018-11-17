@@ -1,9 +1,10 @@
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import event
+
+import scout_apm.sqlalchemy
 from scout_apm.core.monkey import monkeypatch_method
 from scout_apm.core.tracked_request import TrackedRequest
-import scout_apm.sqlalchemy
 
-from sqlalchemy import event
-from flask_sqlalchemy import SQLAlchemy
 
 def instrument_sqlalchemy(db):
     @monkeypatch_method(SQLAlchemy)
