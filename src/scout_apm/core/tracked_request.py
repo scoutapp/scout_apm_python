@@ -105,7 +105,7 @@ class TrackedRequest(ThreadLocalSingleton):
         # This can fail if the Tracked Request was created directly, not through instance()
         try:
             self.release()
-        except:
+        except Exception:
             pass
 
 

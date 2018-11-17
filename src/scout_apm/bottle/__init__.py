@@ -54,12 +54,12 @@ class ScoutPlugin(object):
                 try:
                     Context.add("path", path)
                     Context.add("user_ip", request.remote_addr)
-                except:
+                except Exception:
                     pass
 
                 try:
                     response = callback(*args, **kwargs)
-                except:
+                except Exception:
                     tr.tag("error", "true")
                     raise
 

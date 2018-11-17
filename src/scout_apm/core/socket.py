@@ -120,7 +120,7 @@ class CoreAgentSocket(threading.Thread):
                 if self._stop_event.is_set():
                     logger.debug("CoreAgentSocket thread stopping.")
                     break
-        except:
+        except Exception:
             logger.debug("CoreAgentSocket thread exception")
         finally:
             self._started_event.clear()

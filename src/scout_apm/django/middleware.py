@@ -72,7 +72,7 @@ class ViewTimingMiddleware:
                 Context.add("user_ip", RemoteIp.lookup_from_headers(request.META))
                 if request.user is not None:
                     Context.add("username", request.user.get_username())
-        except:
+        except Exception:
             pass
 
     def process_exception(self, request, exception):

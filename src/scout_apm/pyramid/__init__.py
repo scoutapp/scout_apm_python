@@ -29,12 +29,12 @@ def instruments(handler, registry):
             try:
                 Context.add("path", request.path)
                 Context.add("user_ip", request.remote_addr)
-            except:
+            except Exception:
                 pass
 
             try:
                 response = handler(request)
-            except:
+            except Exception:
                 tr.tag("error", "true")
                 raise
 
