@@ -15,6 +15,7 @@ clean-build:
 clean: clean-pyc clean-cache clean-build
 
 style:
+	black src tests setup.py
 	isort --recursive src tests setup.py
 
 lint:
