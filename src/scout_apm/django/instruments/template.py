@@ -20,6 +20,7 @@ class DecoratingParserProxy(object):
     Mocks out the django template parser, passing templatetags through but
     first wrapping them to include performance data
     """
+
     def __init__(self, parser):
         self.parser = parser
 
@@ -33,8 +34,9 @@ class DecoratingParserProxy(object):
     def wrap_compile_function(self, name, tag_compiler):
         def compile(*args, **kwargs):
             node = tag_compiler(*args, **kwargs)
-            node.render = trace_function(node.render, ('Template/Tag', {"name": name}))
+            node.render = trace_function(node.render, ("Template/Tag", {"name": name}))
             return node
+
         return compile
 
 
@@ -73,19 +75,19 @@ class TemplateInstrument:
 
         @trace_method(Template)
         def __init__(self, *args, **kwargs):
-            name = args[2] if len(args) >= 3 else '<Unknown Template>'
-            return ('Template/Compile', {'name': name})
+            name = args[2] if len(args) >= 3 else "<Unknown Template>"
+            return ("Template/Compile", {"name": name})
 
         @trace_method(Template)
         def render(self, *args, **kwargs):
-            name = self.name if self.name is not None else '<Unknown Template>'
-            return ('Template/Render', {'name': name})
+            name = self.name if self.name is not None else "<Unknown Template>"
+            return ("Template/Render", {"name": name})
 
         @trace_method(BlockNode)
         def render(self, *args, **kwargs):
-            return ('Block/Render', {'name': self.name})
+            return ("Block/Render", {"name": self.name})
 
-        logger.debug('Monkey patched Templates')
+        logger.debug("Monkey patched Templates")
 
         # XXX: Figure this out, causes exception that the "resolve_context" key isn't in dict
         # Also will need to figure out the name hash

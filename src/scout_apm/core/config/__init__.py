@@ -9,7 +9,7 @@ from scout_apm.core.platform_detection import PlatformDetection
 logger = logging.getLogger(__name__)
 
 
-class ScoutConfig():
+class ScoutConfig:
     """
     Configuration object for the ScoutApm agent.
 
@@ -17,13 +17,15 @@ class ScoutConfig():
     looked up, each layer is asked in turn if it knows the value. The first one
     to answer affirmatively returns the value.
     """
+
     def __init__(self):
         self.layers = [
             ScoutConfigEnv(),
             ScoutConfigPython(),
             ScoutConfigDerived(self),
             ScoutConfigDefaults(),
-            ScoutConfigNull()]
+            ScoutConfigNull(),
+        ]
 
     def value(self, key):
         value = self.locate_layer_for_key(key).value(key)
@@ -40,33 +42,30 @@ class ScoutConfig():
                 return layer
 
     def log(self):
-        logger.debug('Configuration Loaded:')
+        logger.debug("Configuration Loaded:")
         for key in self.known_keys():
             layer = self.locate_layer_for_key(key)
-            logger.debug('{:9}: {} = {}'.format(
-                layer.name(),
-                key,
-                layer.value(key)))
+            logger.debug("{:9}: {} = {}".format(layer.name(), key, layer.value(key)))
 
     def known_keys(self):
         return [
-            'application_root',
-            'app_server',
-            'core_agent_dir',
-            'core_agent_download',
-            'core_agent_launch',
-            'core_agent_version',
-            'disabled_instruments',
-            'download_url',
-            'framework',
-            'framework_version',
-            'revision_sha',
-            'key',
-            'hostname',
-            'log_level',
-            'name',
-            'monitor',
-            'socket_path'
+            "application_root",
+            "app_server",
+            "core_agent_dir",
+            "core_agent_download",
+            "core_agent_launch",
+            "core_agent_version",
+            "disabled_instruments",
+            "download_url",
+            "framework",
+            "framework_version",
+            "revision_sha",
+            "key",
+            "hostname",
+            "log_level",
+            "name",
+            "monitor",
+            "socket_path",
         ]
 
     @classmethod
@@ -94,12 +93,13 @@ class ScoutConfig():
 SCOUT_PYTHON_VALUES = {}
 
 
-class ScoutConfigPython():
+class ScoutConfigPython:
     """
     A configuration overlay that lets other parts of python set values.
     """
+
     def name(self):
-        return 'Python'
+        return "Python"
 
     def has_config(self, key):
         return key in SCOUT_PYTHON_VALUES
@@ -108,7 +108,7 @@ class ScoutConfigPython():
         return SCOUT_PYTHON_VALUES[key]
 
 
-class ScoutConfigEnv():
+class ScoutConfigEnv:
     """
     Reads configuration from environment by prefixing the key
     requested with "SCOUT_"
@@ -118,7 +118,7 @@ class ScoutConfigEnv():
     """
 
     def name(self):
-        return 'ENV'
+        return "ENV"
 
     def has_config(self, key):
         env_key = self.modify_key(key)
@@ -129,11 +129,11 @@ class ScoutConfigEnv():
         return os.environ[env_key]
 
     def modify_key(self, key):
-        env_key = ('SCOUT_' + key).upper()
+        env_key = ("SCOUT_" + key).upper()
         return env_key
 
 
-class ScoutConfigDerived():
+class ScoutConfigDerived:
     """
     A configuration overlay that calculates from other values.
     """
@@ -145,7 +145,7 @@ class ScoutConfigDerived():
         self.config = config
 
     def name(self):
-        return 'Derived'
+        return "Derived"
 
     def has_config(self, key):
         return self.lookup_func(key) is not None
@@ -157,46 +157,49 @@ class ScoutConfigDerived():
         """
         Returns the derive_#{key} function, or None if it isn't defined
         """
-        func_name = 'derive_' + key
+        func_name = "derive_" + key
         return getattr(self, func_name, None)
 
-
     def derive_socket_path(self):
-        return '{}/{}/core-agent.sock'.format(self.config.value('core_agent_dir'), self.config.value('core_agent_full_name'))
+        return "{}/{}/core-agent.sock".format(
+            self.config.value("core_agent_dir"),
+            self.config.value("core_agent_full_name"),
+        )
 
     def derive_core_agent_full_name(self):
-        return '{name}-{version}-{triple}'.format(
-                name='scout_apm_core',
-                version=self.config.value('core_agent_version'),
-                triple=PlatformDetection.get_triple())
+        return "{name}-{version}-{triple}".format(
+            name="scout_apm_core",
+            version=self.config.value("core_agent_version"),
+            triple=PlatformDetection.get_triple(),
+        )
 
 
-class ScoutConfigDefaults():
+class ScoutConfigDefaults:
     """
     Provides default values for important configurations
     """
 
     def name(self):
-        return 'Defaults'
+        return "Defaults"
 
     def __init__(self):
         self.defaults = {
-                'app_server': '',
-                'application_root': '',
-                'core_agent_dir': '/tmp/scout_apm_core',
-                'core_agent_download': True,
-                'core_agent_launch': True,
-                'core_agent_version': 'v1.1.8',  # This can be an exact tag name, or 'latest'
-                'disabled_instruments': [],
-                'download_url': 'https://s3-us-west-1.amazonaws.com/scout-public-downloads/apm_core_agent/release',
-                'framework': '',
-                'framework_version': '',
-                'hostname': '',
-                'key': '',
-                'log_level': 'info',
-                'monitor': False,
-                'name': '',
-                'revision_sha': GitRevision().detect(),
+            "app_server": "",
+            "application_root": "",
+            "core_agent_dir": "/tmp/scout_apm_core",
+            "core_agent_download": True,
+            "core_agent_launch": True,
+            "core_agent_version": "v1.1.8",  # This can be an exact tag name, or 'latest'
+            "disabled_instruments": [],
+            "download_url": "https://s3-us-west-1.amazonaws.com/scout-public-downloads/apm_core_agent/release",
+            "framework": "",
+            "framework_version": "",
+            "hostname": "",
+            "key": "",
+            "log_level": "info",
+            "monitor": False,
+            "name": "",
+            "revision_sha": GitRevision().detect(),
         }
 
     def has_config(self, key):
@@ -207,7 +210,7 @@ class ScoutConfigDefaults():
 
 
 # Always returns None to any key
-class ScoutConfigNull():
+class ScoutConfigNull:
     """
     Always answers that a key is present, but the value is None
 
@@ -215,7 +218,7 @@ class ScoutConfigNull():
     """
 
     def name(self):
-        return 'Null'
+        return "Null"
 
     def has_config(self, key):
         return True
@@ -224,18 +227,18 @@ class ScoutConfigNull():
         return None
 
 
-class BooleanConversion():
+class BooleanConversion:
     @classmethod
     def convert(cls, value):
         if isinstance(value, bool):
             return value
         if isinstance(value, str):
-            return value.lower() in ('yes', 'true', 't', '1')
+            return value.lower() in ("yes", "true", "t", "1")
         # Unknown type - default to false?
         return False
 
 
-class ListConversion():
+class ListConversion:
     @classmethod
     def convert(cls, value):
         if isinstance(value, list):
@@ -244,13 +247,14 @@ class ListConversion():
             return list(value)
         if isinstance(value, str):
             # Split on commas
-            return value.split(',')
+            return value.split(",")
         # Unknown type - default to empty?
         return []
 
+
 CONVERSIONS = {
-    'core_agent_download': BooleanConversion,
-    'core_agent_launch': BooleanConversion,
-    'monitor': BooleanConversion,
-    'disabled_instruments': ListConversion,
+    "core_agent_download": BooleanConversion,
+    "core_agent_launch": BooleanConversion,
+    "monitor": BooleanConversion,
+    "disabled_instruments": ListConversion,
 }

@@ -36,10 +36,10 @@ class ScoutApm(object):
         Copies SCOUT_* settings in the app into Scout's config lookup
         """
         configs = {}
-        configs['application_root'] = self.app.instance_path
-        for name in filter(lambda x: x.startswith('SCOUT_'), current_app.config):
+        configs["application_root"] = self.app.instance_path
+        for name in filter(lambda x: x.startswith("SCOUT_"), current_app.config):
             value = current_app.config[name]
-            clean_name = name.replace('SCOUT_', '').lower()
+            clean_name = name.replace("SCOUT_", "").lower()
             configs[clean_name] = value
         ScoutConfig.set(**configs)
 
@@ -54,7 +54,7 @@ class ScoutApm(object):
         app = current_app
 
         # Return flask's default options response. See issue #40
-        if req.method == 'OPTIONS':
+        if req.method == "OPTIONS":
             return app.make_default_options_response()
 
         if req.routing_exception is not None:
@@ -66,11 +66,8 @@ class ScoutApm(object):
 
         # Wrap the real view_func
         view_func = self.wrap_view_func(
-            app,
-            rule,
-            req,
-            app.view_functions[rule.endpoint],
-            req.view_args)
+            app, rule, req, app.view_functions[rule.endpoint], req.view_args
+        )
 
         return view_func(**req.view_args)
 
@@ -81,19 +78,20 @@ class ScoutApm(object):
         """ This method is called just before the flask view is called.
         This is done by the dispatch_request method.
         """
-        operation = view_func.__module__ + '.' + view_func.__name__
+        operation = view_func.__module__ + "." + view_func.__name__
         return self.trace_view_function(
-                        view_func,
-                        ('Controller', {'path': req.path, 'name': operation}))
+            view_func, ("Controller", {"path": req.path, "name": operation})
+        )
 
     def trace_view_function(self, func, info):
         try:
+
             def tracing_function(original, *args, **kwargs):
                 entry_type, detail = info
 
                 operation = entry_type
-                if detail['name'] is not None:
-                    operation = operation + '/' + detail['name']
+                if detail["name"] is not None:
+                    operation = operation + "/" + detail["name"]
 
                 tr = TrackedRequest.instance()
                 tr.mark_real_request()
@@ -115,7 +113,7 @@ class ScoutApm(object):
                 try:
                     return original(*args, **kwargs)
                 except Exception as e:
-                    TrackedRequest.instance().tag('error', 'true')
+                    TrackedRequest.instance().tag("error", "true")
                     raise e
                 finally:
                     TrackedRequest.instance().stop_span()

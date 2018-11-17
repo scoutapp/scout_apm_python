@@ -36,8 +36,8 @@ class Instrument:
             @monkeypatch_method(Template)
             def render(original, self, *args, **kwargs):
                 tr = TrackedRequest.instance()
-                span = tr.start_span(operation='Template/Render')
-                span.tag('name', self.name)
+                span = tr.start_span(operation="Template/Render")
+                span.tag("name", self.name)
 
                 try:
                     return original(*args, **kwargs)
@@ -47,5 +47,7 @@ class Instrument:
             logger.info("Instrumented Jinja2")
 
         except Exception as e:
-            logger.warn('Unable to instrument for Jinja2 Template.render: {}'.format(repr(e)))
+            logger.warn(
+                "Unable to instrument for Jinja2 Template.render: {}".format(repr(e))
+            )
         return True

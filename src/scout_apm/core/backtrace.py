@@ -18,11 +18,7 @@ def capture():
             line = frame.lineno
             function = frame.name
 
-        formatted_stack.append({
-            'file': filename,
-            'line': line,
-            'function': function,
-        })
+        formatted_stack.append({"file": filename, "line": line, "function": function})
 
     # Python puts the closest stack frames at the end of the traceback. But we
     # want them up front

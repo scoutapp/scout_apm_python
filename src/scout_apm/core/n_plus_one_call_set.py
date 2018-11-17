@@ -5,7 +5,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class NPlusOneCallSet():
+class NPlusOneCallSet:
     def __init__(self):
         self.items = {}
 
@@ -21,12 +21,12 @@ class NPlusOneCallSet():
         return self.items[sql_string]
 
 
-class NPlusOneCallSetItem():
+class NPlusOneCallSetItem:
     # Fetch backtraces on this number of same SQL calls
     CALL_COUNT_THRESHOLD = 5
 
     # Minimum time in seconds before we start performing any work.
-    DURATION_THRESHOLD = 150/1000.0
+    DURATION_THRESHOLD = 150 / 1000.0
 
     def __init__(self, sql_string):
         self.sql_string = sql_string
@@ -46,12 +46,18 @@ class NPlusOneCallSetItem():
         if self.past_duration_threshold is True:
             # no need to check again once past
             return True
-        self.past_duration_threshold = self.call_duration >= self.__class__.DURATION_THRESHOLD
+        self.past_duration_threshold = (
+            self.call_duration >= self.__class__.DURATION_THRESHOLD
+        )
         return self.past_duration_threshold
 
     # Call count and call duration must both be past thresholds.
     def should_capture_backtrace(self):
-        if (not self.captured) and (self.call_count >= self.__class__.CALL_COUNT_THRESHOLD) and self.is_past_duration_threshold():
+        if (
+            (not self.captured)
+            and (self.call_count >= self.__class__.CALL_COUNT_THRESHOLD)
+            and self.is_past_duration_threshold()
+        ):
             self.captured = True
             return True
         return False

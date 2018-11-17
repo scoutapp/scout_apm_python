@@ -18,12 +18,12 @@ class PlatformDetection:
         What CPU are we on?
         """
         arch = platform.machine()
-        if arch == 'i686':
-            return 'i686'
-        elif arch == 'x86_64':
-            return 'x86_64'
+        if arch == "i686":
+            return "i686"
+        elif arch == "x86_64":
+            return "x86_64"
         else:
-            return 'unknown'
+            return "unknown"
 
     @classmethod
     def platform(cls):
@@ -31,13 +31,13 @@ class PlatformDetection:
         What Operating System (and sub-system like glibc / musl)
         """
         system_name = platform.system()
-        if system_name == 'Linux':
+        if system_name == "Linux":
             libc = cls.libc()
-            return 'unknown-linux-{libc}'.format(libc=libc)
-        elif system_name == 'Darwin':
-            return 'apple-darwin'
+            return "unknown-linux-{libc}".format(libc=libc)
+        elif system_name == "Darwin":
+            return "apple-darwin"
         else:
-            return 'unknown'
+            return "unknown"
 
     @classmethod
     def libc(cls):
@@ -49,15 +49,14 @@ class PlatformDetection:
         """
         try:
             process = subprocess.Popen(
-                          ['ldd', '--version'],
-                          stdout=subprocess.PIPE,
-                          stderr=subprocess.STDOUT)
+                ["ldd", "--version"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+            )
             returncode = process.wait()
             output = process.stdout.read()
 
-            if b'musl' in output:
-                return 'musl'
+            if b"musl" in output:
+                return "musl"
             else:
-                return 'gnu'
+                return "gnu"
         except FileNotFoundError:
-            return 'gnu'
+            return "gnu"

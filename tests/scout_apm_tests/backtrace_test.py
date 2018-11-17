@@ -6,4 +6,4 @@ def test_traceback():
     for frame in bt:
         keys = list(frame.keys())
         keys.sort()
-        assert(keys == ['file', 'function', 'line'])
+        assert keys == ["file", "function", "line"]

@@ -11,14 +11,14 @@ from scout_apm.core.context import AgentContext
 logger = logging.getLogger(__name__)
 
 
-class AppMetadata():
+class AppMetadata:
     @classmethod
     def report(cls):
         event = ApplicationEvent()
         event.event_value = cls.data()
-        event.event_type = 'scout.metadata'
+        event.event_type = "scout.metadata"
         event.timestamp = datetime.utcnow()
-        event.source = 'Pid: ' + str(getpid())
+        event.source = "Pid: " + str(getpid())
         AgentContext.socket().send(event)
 
     @classmethod
@@ -26,25 +26,31 @@ class AppMetadata():
         data = {}
         version_tuple = sys.version_info
         try:
-            data = {'language':          'python',
-                    'version':           '{}.{}.{}'.format(version_tuple[0],
-                                                           version_tuple[1],
-                                                           version_tuple[2]),
-                    'server_time':        datetime.utcnow().isoformat() + 'Z',
-                    'framework':          AgentContext.instance.config.value('framework'),
-                    'framework_version':  AgentContext.instance.config.value('framework_version'),
-                    'environment':        '',
-                    'app_server':         AgentContext.instance.config.value('app_server'),
-                    'hostname':           AgentContext.instance.config.value('hostname'),
-                    'database_engine':    '',  # Detected
-                    'database_adapter':   '',  # Raw
-                    'application_name':   '',  # Environment.application_name,
-                    'libraries':          cls.get_python_packages_versions(),
-                    'paas':               '',
-                    'application_root':   AgentContext.instance.config.value('application_root'),
-                    'git_sha':            AgentContext.instance.config.value('revision_sha')}
+            data = {
+                "language": "python",
+                "version": "{}.{}.{}".format(
+                    version_tuple[0], version_tuple[1], version_tuple[2]
+                ),
+                "server_time": datetime.utcnow().isoformat() + "Z",
+                "framework": AgentContext.instance.config.value("framework"),
+                "framework_version": AgentContext.instance.config.value(
+                    "framework_version"
+                ),
+                "environment": "",
+                "app_server": AgentContext.instance.config.value("app_server"),
+                "hostname": AgentContext.instance.config.value("hostname"),
+                "database_engine": "",  # Detected
+                "database_adapter": "",  # Raw
+                "application_name": "",  # Environment.application_name,
+                "libraries": cls.get_python_packages_versions(),
+                "paas": "",
+                "application_root": AgentContext.instance.config.value(
+                    "application_root"
+                ),
+                "git_sha": AgentContext.instance.config.value("revision_sha"),
+            }
         except Exception as e:
-            logger.debug('Exception in AppMetadata: %s', repr(e))
+            logger.debug("Exception in AppMetadata: %s", repr(e))
 
         return data
 
@@ -55,7 +61,9 @@ class AppMetadata():
         except ImportError:
             return []
 
-        return list(sorted(
-            (distribution.project_name, distribution.version)
-            for distribution in pkg_resources.working_set
-        ))
+        return list(
+            sorted(
+                (distribution.project_name, distribution.version)
+                for distribution in pkg_resources.working_set
+            )
+        )

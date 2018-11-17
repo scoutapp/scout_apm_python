@@ -1,4 +1,3 @@
-
 class RemoteIp:
     """
     A helper class to lookup what IP the request is associated with for adding
@@ -47,4 +46,4 @@ class RemoteIp:
         if header is None:
             return []
 
-        return header.split(',')
+        return header.split(",")

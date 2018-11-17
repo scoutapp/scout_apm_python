@@ -7,12 +7,12 @@ from scout_apm.core.tracked_request import TrackedRequest
 # TODO: Capture queue.
 # https://stackoverflow.com/questions/22385297/how-to-get-the-queue-in-which-a-task-was-run-celery?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
 def prerun_callback(sender=None, headers=None, body=None, **kwargs):
-    name = kwargs['task'].name
+    name = kwargs["task"].name
 
     tr = TrackedRequest.instance()
     tr.mark_real_request()
-    span = tr.start_span(operation=('Job/' + name))
-    span.tag('queue', 'default')
+    span = tr.start_span(operation=("Job/" + name))
+    span.tag("queue", "default")
 
 
 def postrun_callback(sender=None, headers=None, body=None, **kwargs):

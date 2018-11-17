@@ -12,7 +12,7 @@ from scout_apm.core.samplers.memory import Memory
 logger = logging.getLogger(__name__)
 
 
-class Samplers():
+class Samplers:
     _thread_lock = threading.Semaphore()
 
     @classmethod
@@ -25,23 +25,25 @@ class Samplers():
 
     @classmethod
     def run_samplers(cls):
-        logger.debug('Starting Samplers. Acquiring samplers lock.')
+        logger.debug("Starting Samplers. Acquiring samplers lock.")
         try:
             if cls._thread_lock.acquire(True) is True:
-                logger.debug('Acquired samplers lock.')
+                logger.debug("Acquired samplers lock.")
                 instances = [Cpu(), Memory()]
 
                 while True:
                     for instance in instances:
                         event = ApplicationEvent()
                         event.event_value = instance.run()
-                        event.event_type = instance.metric_type() + '/' + instance.metric_name()
+                        event.event_type = (
+                            instance.metric_type() + "/" + instance.metric_name()
+                        )
                         event.timestamp = datetime.utcnow()
-                        event.source = 'Pid: ' + str(getpid())
+                        event.source = "Pid: " + str(getpid())
 
                         if event.event_value is not None:
                             AgentContext.socket().send(event)
                     sleep(60)
         finally:
-            logger.debug('Shutting down samplers thread.')
+            logger.debug("Shutting down samplers thread.")
             cls._thread_lock.release()

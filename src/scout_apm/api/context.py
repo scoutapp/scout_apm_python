@@ -1,7 +1,7 @@
 from scout_apm.core.tracked_request import TrackedRequest
 
 
-class Context():
+class Context:
     @staticmethod
     def add(key, value):
         """Adds context to the currently executing request.

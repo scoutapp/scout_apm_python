@@ -23,8 +23,8 @@ logger = logging.getLogger(__name__)
 class _DetailedTracingCursorWrapper(CursorWrapper):
     def execute(self, sql, params=None):
         tr = TrackedRequest.instance()
-        span = tr.start_span(operation='SQL/Query')
-        span.tag('db.statement', sql)
+        span = tr.start_span(operation="SQL/Query")
+        span.tag("db.statement", sql)
 
         try:
             return self.cursor.execute(sql, params)
@@ -36,8 +36,8 @@ class _DetailedTracingCursorWrapper(CursorWrapper):
 
     def executemany(self, sql, param_list):
         tr = TrackedRequest.instance()
-        span = tr.start_span(operation='SQL/Many')
-        span.tag('db.statement', sql)
+        span = tr.start_span(operation="SQL/Many")
+        span.tag("db.statement", sql)
 
         try:
             return self.cursor.executemany(sql, param_list)
@@ -61,9 +61,10 @@ class SQLInstrument:
         method of BaseDatabaseWrapper, to return a wrapper that instruments any
         calls going through it.
         """
+
         @monkeypatch_method(BaseDatabaseWrapper)
         def cursor(original, self, *args, **kwargs):
             result = original(*args, **kwargs)
             return _DetailedTracingCursorWrapper(result, self)
 
-        logger.debug('Monkey patched SQL')
+        logger.debug("Monkey patched SQL")

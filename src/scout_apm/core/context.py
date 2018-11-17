@@ -8,11 +8,11 @@ from scout_apm.core.socket import CoreAgentSocket
 logger = logging.getLogger(__name__)
 
 
-class AgentContext():
+class AgentContext:
     instance = None
 
     def __init__(self, *args, **kwargs):
-        self.config = kwargs.get('config', ScoutConfig())
+        self.config = kwargs.get("config", ScoutConfig())
         self.config.log()
 
     @classmethod

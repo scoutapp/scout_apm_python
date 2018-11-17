@@ -34,17 +34,17 @@ class Memory(object):
         return 0.0
 
     def metric_type(self):
-        return 'Memory'
+        return "Memory"
 
     def metric_name(self):
-        return 'Physical'
+        return "Physical"
 
     def human_name(self):
-        return 'Process Memory'
+        return "Process Memory"
 
     def run(self):
         res = self.__class__.rss_in_mb()
-        logger.debug('{human_name}: #{res}'.format(
-            human_name=self.human_name(),
-            res=res))
+        logger.debug(
+            "{human_name}: #{res}".format(human_name=self.human_name(), res=res)
+        )
         return res

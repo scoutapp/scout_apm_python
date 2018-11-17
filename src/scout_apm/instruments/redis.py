@@ -45,18 +45,23 @@ class Instrument:
             def execute_command(original, self, *args, **kwargs):
                 try:
                     op = args[0]
-                except(IndexError, TypeError):
-                    op = 'Unknown'
+                except (IndexError, TypeError):
+                    op = "Unknown"
 
                 tr = TrackedRequest.instance()
-                tr.start_span(operation='Redis/{}'.format(op))
+                tr.start_span(operation="Redis/{}".format(op))
 
                 try:
                     return original(*args, **kwargs)
                 finally:
                     tr.stop_span()
+
         except Exception as e:
-            logger.warn('Unable to instrument for Redis StrictRedis.execute_command: {}'.format(repr(e)))
+            logger.warn(
+                "Unable to instrument for Redis StrictRedis.execute_command: {}".format(
+                    repr(e)
+                )
+            )
 
     def patch_basepipeline(self):
         try:
@@ -65,11 +70,16 @@ class Instrument:
             @monkeypatch_method(BasePipeline)
             def execute(original, self, *args, **kwargs):
                 tr = TrackedRequest.instance()
-                tr.start_span(operation='Redis/MULTI')
+                tr.start_span(operation="Redis/MULTI")
 
                 try:
                     return original(*args, **kwargs)
                 finally:
                     tr.stop_span()
+
         except Exception as e:
-            logger.warn('Unable to instrument for Redis BasePipeline.execute: {}'.format(repr(e)))
+            logger.warn(
+                "Unable to instrument for Redis BasePipeline.execute: {}".format(
+                    repr(e)
+                )
+            )

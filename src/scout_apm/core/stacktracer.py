@@ -19,8 +19,8 @@ def trace_method(cls, method_name=None):
             entry_type, detail = info_func(self, *args, **kwargs)
 
             operation = entry_type
-            if detail['name'] is not None:
-                operation = operation + '/' + detail['name']
+            if detail["name"] is not None:
+                operation = operation + "/" + detail["name"]
 
             tr = TrackedRequest.instance()
             span = tr.start_span(operation=operation)
@@ -32,12 +32,15 @@ def trace_method(cls, method_name=None):
                 return original(*args, **kwargs)
             finally:
                 TrackedRequest.instance().stop_span()
+
         return tracing_method
+
     return decorator
 
 
 def trace_function(func, info):
     try:
+
         def tracing_function(original, *args, **kwargs):
             if callable(info):
                 entry_type, detail = info(*args, **kwargs)
@@ -45,8 +48,8 @@ def trace_function(func, info):
                 entry_type, detail = info
 
             operation = entry_type
-            if detail['name'] is not None:
-                operation = operation + '/' + detail['name']
+            if detail["name"] is not None:
+                operation = operation + "/" + detail["name"]
 
             tr = TrackedRequest.instance()
             span = tr.start_span(operation=operation)
