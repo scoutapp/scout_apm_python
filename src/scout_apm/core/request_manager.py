@@ -5,7 +5,7 @@ import logging
 from scout_apm.core.context import AgentContext
 from scout_apm.core.thread_local import ThreadLocalSingleton
 
-from .commands import BatchCommand
+from scout_apm.core.commands import BatchCommand
 
 # Logging
 logger = logging.getLogger(__name__)

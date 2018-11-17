@@ -1,8 +1,8 @@
 from __future__ import absolute_import
 import logging
 
-from .config import ScoutConfig
-from .socket import CoreAgentSocket
+from scout_apm.core.config import ScoutConfig
+from scout_apm.core.socket import CoreAgentSocket
 
 # Logging
 logger = logging.getLogger(__name__)
