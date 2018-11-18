@@ -24,7 +24,7 @@ def postrun_callback(sender=None, headers=None, body=None, **kwargs):
 
 def install():
     installed = scout_apm.core.install()
-    if installed is False:
+    if not installed:
         return
 
     task_prerun.connect(prerun_callback)

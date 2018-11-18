@@ -29,15 +29,15 @@ class CoreAgentManager:
         )
 
     def launch(self):
-        if AgentContext.instance.config.value("core_agent_launch") is not True:
+        if not AgentContext.instance.config.value("core_agent_launch"):
             logger.debug(
                 "Not attempting to launch Core Agent "
                 "due to 'core_agent_launch' setting."
             )
             return
 
-        if self.verify() is not True:
-            if AgentContext.instance.config.value("core_agent_download") is True:
+        if not self.verify():
+            if AgentContext.instance.config.value("core_agent_download"):
                 self.download()
             else:
                 logger.debug(
@@ -45,7 +45,7 @@ class CoreAgentManager:
                     "to 'core_agent_download' setting."
                 )
 
-        if self.verify() is not True:
+        if not self.verify():
             logger.debug("Failed to verify Core Agent. " "Not launching Core Agent.")
             return False
 
@@ -101,7 +101,7 @@ class CoreAgentManager:
 
     def verify(self):
         manifest = CoreAgentManifest(self.core_agent_dir + "/manifest.json")
-        if manifest.is_valid() is not True:
+        if not manifest.is_valid():
             logger.debug(
                 "Core Agent verification failed: " "CoreAgentManifest is not valid."
             )

@@ -36,14 +36,14 @@ class NPlusOneCallSetItem:
         self.past_duration_threshold = False
 
     def update(self, call_count, call_duration):
-        if self.captured is True:
+        if self.captured:
             # No need to do any work if we've already captured a backtrace.
             return
         self.call_count += call_count
         self.call_duration += call_duration
 
     def is_past_duration_threshold(self):
-        if self.past_duration_threshold is True:
+        if self.past_duration_threshold:
             # no need to check again once past
             return True
         self.past_duration_threshold = (

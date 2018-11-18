@@ -30,9 +30,9 @@ def test_should_capture_backtrace():
         NPlusOneCallSetItem.CALL_COUNT_THRESHOLD - 1,
         NPlusOneCallSetItem.DURATION_THRESHOLD - 1,
     )
-    assert callset.should_capture_backtrace(sql) is False
+    assert not callset.should_capture_backtrace(sql)
     callset.update(sql, 1, 1)
-    assert callset.should_capture_backtrace(sql) is True
+    assert callset.should_capture_backtrace(sql)
 
 
 def test_no_capture_if_already_captured():
@@ -43,11 +43,11 @@ def test_no_capture_if_already_captured():
         NPlusOneCallSetItem.CALL_COUNT_THRESHOLD,
         NPlusOneCallSetItem.DURATION_THRESHOLD,
     )
-    assert callset.should_capture_backtrace(sql) is True
+    assert callset.should_capture_backtrace(sql)
     # Subsequent calls should return False
-    assert callset.should_capture_backtrace(sql) is False
+    assert not callset.should_capture_backtrace(sql)
     callset.update(sql, 1, 1)
-    assert callset.should_capture_backtrace(sql) is False
+    assert not callset.should_capture_backtrace(sql)
 
 
 def test_is_past_duration_threshold():
@@ -55,8 +55,8 @@ def test_is_past_duration_threshold():
     callset = NPlusOneCallSet()
     callset.update(sql, 0, NPlusOneCallSetItem.DURATION_THRESHOLD - 1)
     item = callset.find_for(sql)
-    assert item.is_past_duration_threshold() is False
+    assert not item.is_past_duration_threshold()
     callset.update(sql, 0, 1)
-    assert item.is_past_duration_threshold() is True
+    assert item.is_past_duration_threshold()
     # Assert again to test the attribute check in the function
-    assert item.is_past_duration_threshold() is True
+    assert item.is_past_duration_threshold()

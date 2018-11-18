@@ -66,7 +66,7 @@ if sys.platform.startswith("java"):
 if "__pypy__" in sys.builtin_module_names:
     compile_extensions = False
 
-if compile_extensions is not True:
+if not compile_extensions:
     del setup_args["ext_modules"]
 
 setup(**setup_args)

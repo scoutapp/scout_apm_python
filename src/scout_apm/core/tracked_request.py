@@ -170,7 +170,7 @@ class Span:
             self.capture_backtrace()
 
     def calculate_allocations(self):
-        if HAS_OBJTRACE is False:
+        if not HAS_OBJTRACE:
             return 0
 
         start_allocs = (

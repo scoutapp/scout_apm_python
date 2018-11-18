@@ -31,7 +31,7 @@ class _DetailedTracingCursorWrapper(CursorWrapper):
         finally:
             tr.stop_span()
             tr.callset.update(sql, 1, span.duration())
-            if tr.callset.should_capture_backtrace(sql) is True:
+            if tr.callset.should_capture_backtrace(sql):
                 span.capture_backtrace()
 
     def executemany(self, sql, param_list):
@@ -44,7 +44,7 @@ class _DetailedTracingCursorWrapper(CursorWrapper):
         finally:
             tr.stop_span()
             tr.callset.update(sql, 1, span.duration())
-            if tr.callset.should_capture_backtrace(sql) is True:
+            if tr.callset.should_capture_backtrace(sql):
                 span.capture_backtrace()
 
 

@@ -23,7 +23,7 @@ class ScoutApmDjangoConfig(AppConfig):
         # Finish installing the agent. If the agent isn't installed for any
         # reason, return without installing instruments
         installed = scout_apm.core.install()
-        if installed is False:
+        if not installed:
             return
 
         self.install_middleware()

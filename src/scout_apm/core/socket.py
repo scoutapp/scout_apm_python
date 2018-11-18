@@ -35,7 +35,7 @@ class CoreAgentSocket(threading.Thread):
                 return cls._instance
 
             # An instance exists but is no longer running.
-            if cls._instance.running() is False:
+            if not cls._instance.running():
                 cls._instance = cls(args, kwargs)
                 return cls._instance
 
@@ -105,7 +105,7 @@ class CoreAgentSocket(threading.Thread):
 
                 if body is not None:
                     result = self._send(body)
-                    if result is True:
+                    if result:
                         self.command_queue.task_done()
                     else:
                         # Something was wrong with the socket.
@@ -162,7 +162,7 @@ class CoreAgentSocket(threading.Thread):
             )
             return None
 
-        if do_async is True:
+        if do_async:
             return True
         else:
             # TODO read respnse back in to command

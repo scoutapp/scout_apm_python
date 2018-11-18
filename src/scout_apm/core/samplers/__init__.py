@@ -19,7 +19,7 @@ class Samplers:
 
     @classmethod
     def ensure_running(cls):
-        if cls._thread_lock.acquire(False) is True:
+        if cls._thread_lock.acquire(False):
             th = threading.Thread(target=Samplers.run_samplers)
             th.daemon = True
             th.start()
@@ -29,7 +29,7 @@ class Samplers:
     def run_samplers(cls):
         logger.debug("Starting Samplers. Acquiring samplers lock.")
         try:
-            if cls._thread_lock.acquire(True) is True:
+            if cls._thread_lock.acquire(True):
                 logger.debug("Acquired samplers lock.")
                 instances = [Cpu(), Memory()]
 

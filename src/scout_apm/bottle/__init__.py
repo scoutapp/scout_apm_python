@@ -29,7 +29,7 @@ class ScoutPlugin(object):
         scout_apm.core.install()
 
     def apply(self, callback, context):
-        if AgentContext.instance.config.value("monitor") is not True:
+        if not AgentContext.instance.config.value("monitor"):
             return callback
 
         def wrapper(*args, **kwargs):
