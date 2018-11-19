@@ -1,9 +1,2 @@
-include .python-version
-include *.txt
-include *.md
 include LICENSE
-recursive-include tests *.py
-recursive-include docs *
-recursive-include src  cli/*.py
-include tox.ini
-include Makefile
+recursive-include src
