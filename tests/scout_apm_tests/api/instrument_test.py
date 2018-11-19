@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import scout_apm.api
 from scout_apm.core.tracked_request import TrackedRequest
 
@@ -6,72 +8,75 @@ def test_context_manager_instrument():
     # Save TR here, so it doesn't disappear on us when span finishes
     tr = TrackedRequest.instance()
 
-    with scout_apm.api.instrument('Test ContextMgr') as instrument:
-        instrument.tag('foo', 'bar')
+    with scout_apm.api.instrument("Test ContextMgr") as instrument:
+        instrument.tag("foo", "bar")
 
     span = tr.complete_spans[-1]
-    assert(span.operation == 'Custom/Test ContextMgr')
+    assert span.operation == "Custom/Test ContextMgr"
 
 
 def test_decoration_instrument():
     # Save TR here, so it doesn't disappear on us when span finishes
     tr = TrackedRequest.instance()
 
-    @scout_apm.api.instrument('Test Decorator')
+    @scout_apm.api.instrument("Test Decorator")
     def test():
-        a = 1
+        pass
+
     test()
 
     span = tr.complete_spans[-1]
-    assert(span.operation == 'Custom/Test Decorator')
+    assert span.operation == "Custom/Test Decorator"
 
 
 def test_context_manager_instrument_with_kind():
     # Save TR here, so it doesn't disappear on us when span finishes
     tr = TrackedRequest.instance()
 
-    with scout_apm.api.instrument('Get', kind='Redis') as instrument:
-        instrument.tag('foo', 'bar')
+    with scout_apm.api.instrument("Get", kind="Redis") as instrument:
+        instrument.tag("foo", "bar")
 
     span = tr.complete_spans[-1]
-    assert(span.operation == 'Redis/Get')
+    assert span.operation == "Redis/Get"
 
 
 def test_decoration_instrument_with_kind():
     # Save TR here, so it doesn't disappear on us when span finishes
     tr = TrackedRequest.instance()
 
-    @scout_apm.api.instrument('GET example.com', kind='HTTP')
+    @scout_apm.api.instrument("GET example.com", kind="HTTP")
     def test():
-        a = 1
+        pass
+
     test()
 
     span = tr.complete_spans[-1]
-    assert(span.operation == 'HTTP/GET example.com')
+    assert span.operation == "HTTP/GET example.com"
 
 
 def test_context_manager_default_tags():
     # Save TR here, so it doesn't disappear on us when span finishes
     tr = TrackedRequest.instance()
 
-    with scout_apm.api.instrument('tag test', tags={'x': 99}):
-        a = 1
+    with scout_apm.api.instrument("tag test", tags={"x": 99}):
+        pass
 
     span = tr.complete_spans[-1]
-    assert(span.tags['x'] == 99)
+    assert span.tags["x"] == 99
 
 
 def test_decoration_default_tags():
     # Save TR here, so it doesn't disappear on us when span finishes
     tr = TrackedRequest.instance()
 
-    @scout_apm.api.instrument('tag test', tags={'x': 99})
+    @scout_apm.api.instrument("tag test", tags={"x": 99})
     def test():
-        a = 1
+        pass
+
     test()
 
     span = tr.complete_spans[-1]
-    assert(span.tags['x'] == 99)
+    assert span.tags["x"] == 99
 
 
 def test_web_transaction_manual():
@@ -81,7 +86,7 @@ def test_web_transaction_manual():
     scout_apm.api.WebTransaction.stop()
 
     span = tr.complete_spans[-1]
-    assert(span.operation == "Controller/Foo")
+    assert span.operation == "Controller/Foo"
 
 
 def test_web_transaction_context_mgr():
@@ -92,20 +97,21 @@ def test_web_transaction_context_mgr():
         x = 1
 
     span = tr.complete_spans[-1]
-    assert(x == 1)
-    assert(span.operation == "Controller/Foo")
+    assert x == 1
+    assert span.operation == "Controller/Foo"
 
 
 def test_web_transaction_decorator():
     tr = TrackedRequest.instance()
 
-    @scout_apm.api.WebTransaction('Bar')
+    @scout_apm.api.WebTransaction("Bar")
     def my_transaction():
         pass
+
     my_transaction()
 
     span = tr.complete_spans[-1]
-    assert(span.operation == "Controller/Bar")
+    assert span.operation == "Controller/Bar"
 
 
 def test_background_transaction_manual():
@@ -115,7 +121,7 @@ def test_background_transaction_manual():
     scout_apm.api.BackgroundTransaction.stop()
 
     span = tr.complete_spans[-1]
-    assert(span.operation == "Job/Foo")
+    assert span.operation == "Job/Foo"
 
 
 def test_background_transaction_context_mgr():
@@ -126,17 +132,18 @@ def test_background_transaction_context_mgr():
         x = 1
 
     span = tr.complete_spans[-1]
-    assert(x == 1)
-    assert(span.operation == "Job/Foo")
+    assert x == 1
+    assert span.operation == "Job/Foo"
 
 
 def test_background_transaction_decorator():
     tr = TrackedRequest.instance()
 
-    @scout_apm.api.BackgroundTransaction('Bar')
+    @scout_apm.api.BackgroundTransaction("Bar")
     def my_transaction():
         pass
+
     my_transaction()
 
     span = tr.complete_spans[-1]
-    assert(span.operation == "Job/Bar")
+    assert span.operation == "Job/Bar"

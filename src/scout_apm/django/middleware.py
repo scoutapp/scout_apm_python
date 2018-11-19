@@ -1,13 +1,15 @@
-import logging
-from scout_apm.core.tracked_request import TrackedRequest
-from scout_apm.core.remote_ip import RemoteIp
-from scout_apm.api.context import Context
+from __future__ import absolute_import, division, print_function, unicode_literals
 
-# Logging
+import logging
+
+from scout_apm.api.context import Context
+from scout_apm.core.remote_ip import RemoteIp
+from scout_apm.core.tracked_request import TrackedRequest
+
 logger = logging.getLogger(__name__)
 
 
-class MiddlewareTimingMiddleware:
+class MiddlewareTimingMiddleware(object):
     """
     Insert as early into the Middleware stack as possible (outermost layers),
     so that other middlewares called after can be timed.
@@ -17,14 +19,15 @@ class MiddlewareTimingMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        operation = 'Middleware'
+        operation = "Middleware"
 
         TrackedRequest.instance().start_span(operation=operation)
         response = self.get_response(request)
         TrackedRequest.instance().stop_span()
         return response
 
-class ViewTimingMiddleware:
+
+class ViewTimingMiddleware(object):
     """
     Insert as deep into the middleware stack as possible, ideally wrapping no
     other middleware. Designed to time the View itself
@@ -50,7 +53,7 @@ class ViewTimingMiddleware:
 
         # This operation name won't be recorded unless changed later in
         # process_view
-        operation = 'Unknown'
+        operation = "Unknown"
         tr.start_span(operation=operation)
         response = self.get_response(request)
         tr.stop_span()
@@ -64,12 +67,12 @@ class ViewTimingMiddleware:
             view_name = request.resolver_match._func_path
             span = TrackedRequest.instance().current_span()
             if span is not None:
-                span.operation = 'Controller/' + view_name
-                Context.add('path', request.path)
-                Context.add('user_ip', RemoteIp.lookup_from_headers(request.META))
+                span.operation = "Controller/" + view_name
+                Context.add("path", request.path)
+                Context.add("user_ip", RemoteIp.lookup_from_headers(request.META))
                 if request.user is not None:
-                    Context.add('username', request.user.get_username())
-        except:
+                    Context.add("username", request.user.get_username())
+        except Exception:
             pass
 
     def process_exception(self, request, exception):
@@ -78,7 +81,7 @@ class ViewTimingMiddleware:
 
         Does not modify or catch or otherwise change the exception thrown
         """
-        TrackedRequest.instance().tag('error', 'true')
+        TrackedRequest.instance().tag("error", "true")
 
     #  def process_template_response(self, request, response):
     #      """
@@ -86,24 +89,28 @@ class ViewTimingMiddleware:
     #      pass
 
 
-class OldStyleMiddlewareTimingMiddleware:
+class OldStyleMiddlewareTimingMiddleware(object):
     """
     Insert as early into the Middleware stack as possible (outermost layers),
     so that other middlewares called after can be timed.
     """
+
     def process_request(self, request):
-        operation = 'Middleware'
+        operation = "Middleware"
         span = TrackedRequest.instance().start_span(operation=operation)
         request.scout_middleware_span = span
 
     def process_response(self, request, response):
         tr = TrackedRequest.instance()
-        if hasattr(request, 'scout_middleware_span') and tr.current_span() == request.scout_middleware_span:
+        if (
+            hasattr(request, "scout_middleware_span")
+            and tr.current_span() == request.scout_middleware_span
+        ):
             tr.stop_span()
         return response
 
 
-class OldStyleViewMiddleware:
+class OldStyleViewMiddleware(object):
     def process_request(self, request):
         pass
 
@@ -111,12 +118,13 @@ class OldStyleViewMiddleware:
         tr = TrackedRequest.instance()
 
         view_name = request.resolver_match._func_path
-        operation = 'Controller/' + view_name
+        operation = "Controller/" + view_name
 
         span = tr.start_span(operation=operation)
         tr.mark_real_request()
 
-        # Save the span into the request, so we can check if we're matched up when stopping
+        # Save the span into the request, so we can check
+        # if we're matched up when stopping
         request.scout_view_span = span
 
         return None
@@ -125,15 +133,21 @@ class OldStyleViewMiddleware:
     # Be careful to not stop a span that never got started
     def process_response(self, request, response):
         tr = TrackedRequest.instance()
-        if hasattr(request, 'scout_view_span') and tr.current_span() == request.scout_view_span:
+        if (
+            hasattr(request, "scout_view_span")
+            and tr.current_span() == request.scout_view_span
+        ):
             tr.stop_span()
         return response
 
     def process_exception(request, exception):
         tr = TrackedRequest.instance()
 
-        if hasattr(request, 'scout_view_span') and tr.current_span() == request.scout_view_span:
-            tr.tag('error', 'true')
+        if (
+            hasattr(request, "scout_view_span")
+            and tr.current_span() == request.scout_view_span
+        ):
+            tr.tag("error", "true")
             tr.stop_span()
 
         return None

@@ -1,5 +1,7 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
 
-class RemoteIp:
+
+class RemoteIp(object):
     """
     A helper class to lookup what IP the request is associated with for adding
     Context to a request
@@ -47,4 +49,4 @@ class RemoteIp:
         if header is None:
             return []
 
-        return header.split(',')
+        return header.split(",")

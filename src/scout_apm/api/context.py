@@ -1,7 +1,9 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from scout_apm.core.tracked_request import TrackedRequest
 
 
-class Context():
+class Context(object):
     @staticmethod
     def add(key, value):
         """Adds context to the currently executing request.

@@ -1,5 +1,7 @@
 # Module for helper functions to capture tracebacks
 
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import traceback
 
 
@@ -18,15 +20,10 @@ def capture():
             line = frame.lineno
             function = frame.name
 
-        formatted_stack.append({
-            'file': filename,
-            'line': line,
-            'function': function,
-        })
+        formatted_stack.append({"file": filename, "line": line, "function": function})
 
     # Python puts the closest stack frames at the end of the traceback. But we
     # want them up front
     formatted_stack.reverse()
 
     return formatted_stack
-

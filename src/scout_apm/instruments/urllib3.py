@@ -1,20 +1,20 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
 
-from scout_apm.core.tracked_request import TrackedRequest
 from scout_apm.core.monkey import monkeypatch_method
+from scout_apm.core.tracked_request import TrackedRequest
 
 logger = logging.getLogger(__name__)
 
 
-class Instrument:
+class Instrument(object):
     def __init__(self):
         self.installed = False
 
     def installable(self):
         try:
-            from urllib3 import HTTPConnectionPool, PoolManager
+            from urllib3 import HTTPConnectionPool, PoolManager  # noqa: F401
         except ImportError:
             logger.info("Unable to import for Urllib3 instruments")
             return False
@@ -41,24 +41,29 @@ class Instrument:
 
             @monkeypatch_method(HTTPConnectionPool)
             def urlopen(original, self, *args, **kwargs):
-                method = 'Unknown'
-                url = 'Unknown'
+                method = "Unknown"
+                url = "Unknown"
                 try:
-                    if 'method' in kwargs:
-                        method = kwargs['method']
+                    if "method" in kwargs:
+                        method = kwargs["method"]
                     else:
                         method = args[0]
-                    url = '{}'.format(self._absolute_url('/'))
+                    url = "{}".format(self._absolute_url("/"))
                 except Exception as e:
-                    logger.error('Could not get instrument data for HTTPConnectionPool: {}'.format(repr(e)))
+                    logger.error(
+                        "Could not get instrument data for HTTPConnectionPool: %r", e
+                    )
 
                 tr = TrackedRequest.instance()
-                span = tr.start_span(operation='HTTP/{}'.format(method))
-                span.tag('url', '{}'.format(url))
+                span = tr.start_span(operation="HTTP/{}".format(method))
+                span.tag("url", "{}".format(url))
 
                 try:
                     return original(*args, **kwargs)
                 finally:
                     tr.stop_span()
+
         except Exception as e:
-            logger.warn('Unable to instrument for Urllib3 HTTPConnectionPool.urlopen: {}'.format(repr(e)))
+            logger.warn(
+                "Unable to instrument for Urllib3 HTTPConnectionPool.urlopen: %r", e
+            )

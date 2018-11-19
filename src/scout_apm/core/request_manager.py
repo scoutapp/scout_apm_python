@@ -1,13 +1,11 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
 
+from scout_apm.core.commands import BatchCommand
 from scout_apm.core.context import AgentContext
 from scout_apm.core.thread_local import ThreadLocalSingleton
 
-from .commands import BatchCommand
-
-# Logging
 logger = logging.getLogger(__name__)
 
 
@@ -30,9 +28,9 @@ class RequestBuffer(ThreadLocalSingleton):
         self.flush()
 
     def flush(self):
-        logger.debug('Flushing RequestBuffer')
+        logger.debug("Flushing RequestBuffer")
         for request in self._requests:
-            logger.debug('Flushing Request Id: %s' % request.req_id)
+            logger.debug("Flushing Request Id: %s", request.req_id)
             self.flush_request(request)
         del self._requests[:]
 

@@ -1,13 +1,13 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
+import logging
+import sys
+
 import scout_apm.core
-from scout_apm.core.config import ScoutConfig
 from scout_apm.api.context import Context as ScoutContext
+from scout_apm.core.config import ScoutConfig
 from scout_apm.core.tracked_request import TrackedRequest
 
-import sys
-import logging
-
-
-# Logging
 logger = logging.getLogger(__name__)
 
 
@@ -21,7 +21,10 @@ if sys.version_info < (3, 2):
             def decorated(*args, **kwds):
                 with self:
                     return f(*args, **kwds)
+
             return decorated
+
+
 else:
     from contextlib import ContextDecorator
 
@@ -39,8 +42,8 @@ def install(*args, **kwargs):
 
 
 class instrument(ContextDecorator):
-    def __init__(self, operation, kind='Custom', tags={}):
-        self.operation = kind + '/' + operation
+    def __init__(self, operation, kind="Custom", tags={}):
+        self.operation = kind + "/" + operation
         self.tags = tags
 
     def __enter__(self):
@@ -73,7 +76,7 @@ class Transaction(ContextDecorator):
 
     @classmethod
     def start(cls, kind, name, tags={}):
-        operation = kind + '/' + name
+        operation = kind + "/" + name
 
         tr = TrackedRequest.instance()
         tr.mark_real_request()
@@ -88,9 +91,7 @@ class Transaction(ContextDecorator):
         tr.stop_span()
         return True
 
-
     # __enter__ must be defined by child classes.
-
 
     # *exc is any exception raised. Ignore that
     def __exit__(self, *exc):

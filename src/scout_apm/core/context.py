@@ -1,18 +1,18 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import logging
 
-from .config import ScoutConfig
-from .socket import CoreAgentSocket
+from scout_apm.core.config import ScoutConfig
+from scout_apm.core.socket import CoreAgentSocket
 
-# Logging
 logger = logging.getLogger(__name__)
 
 
-class AgentContext():
+class AgentContext(object):
     instance = None
 
     def __init__(self, *args, **kwargs):
-        self.config = kwargs.get('config', ScoutConfig())
+        self.config = kwargs.get("config", ScoutConfig())
         self.config.log()
 
     @classmethod

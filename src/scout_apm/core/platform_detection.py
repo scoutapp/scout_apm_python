@@ -1,8 +1,10 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import platform
 import subprocess
 
 
-class PlatformDetection:
+class PlatformDetection(object):
     """
     This helps figuring out what platform we're running on, so we can download
     the correct binary build of Core Agent.
@@ -18,12 +20,12 @@ class PlatformDetection:
         What CPU are we on?
         """
         arch = platform.machine()
-        if arch == 'i686':
-            return 'i686'
-        elif arch == 'x86_64':
-            return 'x86_64'
+        if arch == "i686":
+            return "i686"
+        elif arch == "x86_64":
+            return "x86_64"
         else:
-            return 'unknown'
+            return "unknown"
 
     @classmethod
     def platform(cls):
@@ -31,13 +33,13 @@ class PlatformDetection:
         What Operating System (and sub-system like glibc / musl)
         """
         system_name = platform.system()
-        if system_name == 'Linux':
+        if system_name == "Linux":
             libc = cls.libc()
-            return 'unknown-linux-{libc}'.format(libc=libc)
-        elif system_name == 'Darwin':
-            return 'apple-darwin'
+            return "unknown-linux-{libc}".format(libc=libc)
+        elif system_name == "Darwin":
+            return "apple-darwin"
         else:
-            return 'unknown'
+            return "unknown"
 
     @classmethod
     def libc(cls):
@@ -48,16 +50,13 @@ class PlatformDetection:
         appears to be the most reliable way to do this.
         """
         try:
-            process = subprocess.Popen(
-                          ['ldd', '--version'],
-                          stdout=subprocess.PIPE,
-                          stderr=subprocess.STDOUT)
-            returncode = process.wait()
-            output = process.stdout.read()
-
-            if b'musl' in output:
-                return 'musl'
+            output = subprocess.check_output(
+                ["ldd", "--version"], stderr=subprocess.STDOUT
+            )
+        except (OSError, subprocess.CalledProcessError):
+            return "gnu"
+        else:
+            if b"musl" in output:
+                return "musl"
             else:
-                return 'gnu'
-        except FileNotFoundError:
-            return 'gnu'
+                return "gnu"

@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import scout_apm
 
 
@@ -6,4 +8,4 @@ def test_traceback():
     for frame in bt:
         keys = list(frame.keys())
         keys.sort()
-        assert(keys == ['file', 'function', 'line'])
+        assert keys == ["file", "function", "line"]

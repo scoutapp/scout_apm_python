@@ -1,32 +1,55 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
+
+# Used in the exec() call below.
+from scout_apm.core.monkey import monkeypatch_method  # noqa: F401
+from scout_apm.core.tracked_request import TrackedRequest  # noqa: F401
 
 logger = logging.getLogger(__name__)
 
 
-from scout_apm.core.tracked_request import TrackedRequest
-from scout_apm.core.monkey import monkeypatch_method
-
-class Instrument:
-    PYMONGO_METHODS = ['aggregate', 'bulk_write', 'count',
-                       'create_index', 'create_indexes', 'delete_many',
-                       'delete_one', 'distinct', 'drop',
-                       'drop_index', 'drop_indexes', 'ensure_index',
-                       'find_and_modify', 'find_one', 'find_one_and_delete',
-                       'find_one_and_replace', 'find_one_and_update', 'group',
-                       'inline_map_reduce', 'insert', 'insert_many',
-                       'insert_one', 'map_reduce', 'reindex',
-                       'remove', 'rename', 'replace_one',
-                       'save', 'update', 'update_many',
-                       'update_one']
+class Instrument(object):
+    PYMONGO_METHODS = [
+        "aggregate",
+        "bulk_write",
+        "count",
+        "create_index",
+        "create_indexes",
+        "delete_many",
+        "delete_one",
+        "distinct",
+        "drop",
+        "drop_index",
+        "drop_indexes",
+        "ensure_index",
+        "find_and_modify",
+        "find_one",
+        "find_one_and_delete",
+        "find_one_and_replace",
+        "find_one_and_update",
+        "group",
+        "inline_map_reduce",
+        "insert",
+        "insert_many",
+        "insert_one",
+        "map_reduce",
+        "reindex",
+        "remove",
+        "rename",
+        "replace_one",
+        "save",
+        "update",
+        "update_many",
+        "update_one",
+    ]
 
     def __init__(self):
         self.installed = False
 
     def installable(self):
         try:
-            from pymongo.collection import Collection
+            from pymongo.collection import Collection  # noqa: F401
         except ImportError:
             logger.info("Unable to import for PyMongo instruments")
             return False
@@ -34,7 +57,6 @@ class Instrument:
             logger.warn("PyMongo Instruments are already installed.")
             return False
         return True
-
 
     def install(self):
         if not self.installable():
@@ -44,9 +66,11 @@ class Instrument:
         self.installed = True
 
         try:
-            from pymongo.collection import Collection
+            from pymongo.collection import Collection  # noqa: F401
         except ImportError:
-            logger.info("Unable to import for PyMongo instruments. Instrument install failed.")
+            logger.info(
+                "Unable to import for PyMongo instruments. Instrument install failed."
+            )
             return False
 
         for method_str in self.__class__.PYMONGO_METHODS:
@@ -63,11 +87,16 @@ def {method_str}(original, self, *args, **kwargs):
         return original(*args, **kwargs)
     finally:
         tr.stop_span()
-""".format(method_str=method_str, camel_name=''.join(c.title() for c in method_str.split('_')))
+""".format(
+                    method_str=method_str,
+                    camel_name="".join(c.title() for c in method_str.split("_")),
+                )
 
                 exec(code_str)
-                logger.info('Instrumented PyMongo Collection.{}'.format(method_str))
+                logger.info("Instrumented PyMongo Collection.%s", method_str)
 
             except Exception as e:
-                logger.warn('Unable to instrument for PyMongo Collection.{}: {}'.format(method_str, repr(e)))
+                logger.warn(
+                    "Unable to instrument for PyMongo Collection.%s: %r", method_str, e
+                )
         return True

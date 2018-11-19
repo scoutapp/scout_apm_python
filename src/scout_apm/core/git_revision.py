@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
 import os
@@ -12,13 +12,13 @@ logger = logging.getLogger(__name__)
 #
 # Similarly, this can be overriden by the code level configuration (from Django
 # configs or similar) by using the "revision_sha" key.
-class GitRevision():
+class GitRevision(object):
     def detect(self):
         sha = self.detect_from_env_var() or self.detect_from_heroku()
-        return sha or ''
+        return sha or ""
 
     def detect_from_heroku(self):
-        return os.environ.get('HEROKU_SLUG_COMMIT')
+        return os.environ.get("HEROKU_SLUG_COMMIT")
 
     def detect_from_env_var(self):
-        return os.environ.get('SCOUT_REVISION_SHA')
+        return os.environ.get("SCOUT_REVISION_SHA")

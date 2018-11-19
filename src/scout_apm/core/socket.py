@@ -1,12 +1,15 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import json
 import logging
+import os
 import socket
 import struct
-import time
 import threading
-import os
+import time
+
+from scout_apm.core.commands import Register
+from scout_apm.core.config import ScoutConfig
 
 try:
     # Python 3.x
@@ -15,10 +18,7 @@ except ImportError:
     # Python 2.x
     import Queue as queue
 
-from scout_apm.core.config import ScoutConfig
-from scout_apm.core.commands import Register
 
-# Logging
 logger = logging.getLogger(__name__)
 
 
@@ -35,7 +35,7 @@ class CoreAgentSocket(threading.Thread):
                 return cls._instance
 
             # An instance exists but is no longer running.
-            if cls._instance.running() is False:
+            if not cls._instance.running():
                 cls._instance = cls(args, kwargs)
                 return cls._instance
 
@@ -46,10 +46,10 @@ class CoreAgentSocket(threading.Thread):
 
     def __init__(self, *args, **kwargs):
         threading.Thread.__init__(self)
-        self.config = kwargs.get('scout_config', ScoutConfig())
+        self.config = kwargs.get("scout_config", ScoutConfig())
 
         # Socket related
-        self.socket_path = self.config.value('socket_path')
+        self.socket_path = self.config.value("socket_path")
         self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 
         # Threading control related
@@ -84,7 +84,7 @@ class CoreAgentSocket(threading.Thread):
             if self._stopped_event.is_set():
                 return True
             else:
-                logger.debug('CoreAgentSocket Failed to stop thread within timeout!')
+                logger.debug("CoreAgentSocket Failed to stop thread within timeout!")
                 return False
         else:
             return True
@@ -105,7 +105,7 @@ class CoreAgentSocket(threading.Thread):
 
                 if body is not None:
                     result = self._send(body)
-                    if result is True:
+                    if result:
                         self.command_queue.task_done()
                     else:
                         # Something was wrong with the socket.
@@ -120,7 +120,7 @@ class CoreAgentSocket(threading.Thread):
                 if self._stop_event.is_set():
                     logger.debug("CoreAgentSocket thread stopping.")
                     break
-        except:
+        except Exception:
             logger.debug("CoreAgentSocket thread exception")
         finally:
             self._started_event.clear()
@@ -133,7 +133,7 @@ class CoreAgentSocket(threading.Thread):
             self.command_queue.put(command, False)
         except queue.Full as e:
             # TODO mark the command as not queued?
-            logger.debug('CoreAgentSocket error on send: %s' % repr(e))
+            logger.debug("CoreAgentSocket error on send: %r", e)
 
     def _send(self, command, do_async=False):
         msg = command.message()
@@ -141,36 +141,48 @@ class CoreAgentSocket(threading.Thread):
         try:
             data = json.dumps(msg)
         except (ValueError, TypeError) as e:
-            logger.debug('Exception when serializing command message: %s' % repr(e))
+            logger.debug("Exception when serializing command message: %r", e)
             return False
 
         try:
             self.socket.sendall(self._message_length(data))
-        except (OSError) as e:
-            logger.debug("CoreAgentSocket exception on length _send: %s on PID: %s on thread: %s" % (repr(e), os.getpid(), threading.current_thread()))
+        except OSError as e:
+            logger.debug(
+                "CoreAgentSocket exception on length _send: "
+                "%r on PID: %s on thread: %s",
+                e,
+                os.getpid(),
+                threading.current_thread(),
+            )
             return None
 
         try:
             self.socket.sendall(data.encode())
-        except (OSError) as e:
-            logger.debug("CoreAgentSocket exception on data _send: %s on PID: %s on thread: %s" % (repr(e), os.getpid(), threading.current_thread()))
+        except OSError as e:
+            logger.debug(
+                "CoreAgentSocket exception on data _send: "
+                "%r on PID: %s on thread: %s",
+                e,
+                os.getpid(),
+                threading.current_thread(),
+            )
             return None
 
-        if do_async is True:
+        if do_async:
             return True
         else:
-            # TODO read respnse back in to command
-            response = self._read_response()
+            # TODO do something with the response sent back in reply to command
+            self._read_response()
             return True
 
     def _message_length(self, body):
         length = len(body)
-        return struct.pack('>I', length)
+        return struct.pack(">I", length)
 
     def _read_response(self):
         try:
             raw_size = self.socket.recv(4)
-            size = struct.unpack('>I', raw_size)[0]
+            size = struct.unpack(">I", raw_size)[0]
             message = bytearray(0)
 
             while len(message) < size:
@@ -178,34 +190,41 @@ class CoreAgentSocket(threading.Thread):
                 message += recv
 
             return message
-        except (OSError) as e:
-            logger.debug('CoreAgentSocket error on read response: %s' % repr(e))
+        except OSError as e:
+            logger.debug("CoreAgentSocket error on read response: %r", e)
             return None
 
     def _register(self):
-        self._send(Register(app=self.config.value('name'),
-                            key=self.config.value('key')))
+        self._send(
+            Register(app=self.config.value("name"), key=self.config.value("key"))
+        )
 
     def _connect(self, connect_attempts=5, retry_wait_secs=1):
         for attempt in range(1, connect_attempts):
-            logger.debug('CoreAgentSocket attempt %d, connecting to %s, PID: %s, Thread: %s', attempt, self.socket_path, os.getpid(), threading.current_thread())
+            logger.debug(
+                "CoreAgentSocket attempt %d, connecting to %s, PID: %s, Thread: %s",
+                attempt,
+                self.socket_path,
+                os.getpid(),
+                threading.current_thread(),
+            )
             try:
                 self.socket.connect(self.socket_path)
                 self.socket.settimeout(0.5)
-                logger.debug('CoreAgentSocket is connected')
+                logger.debug("CoreAgentSocket is connected")
                 return True
-            except (OSError) as e:
-                logger.debug('CoreAgentSocket connection error: %s', repr(e))
+            except OSError as e:
+                logger.debug("CoreAgentSocket connection error: %r", e)
                 if attempt >= connect_attempts:
                     return False
                 time.sleep(retry_wait_secs)
                 continue
 
     def _disconnect(self):
-        logger.debug('CoreAgentSocket disconnecting from %s', self.socket_path)
+        logger.debug("CoreAgentSocket disconnecting from %s", self.socket_path)
         try:
             self.socket.close()
-        except (OSError) as e:
-            logger.debug('CoreAgentSocket exception on disconnect: %s' % repr(e))
+        except OSError as e:
+            logger.debug("CoreAgentSocket exception on disconnect: %r", e)
         finally:
             self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)

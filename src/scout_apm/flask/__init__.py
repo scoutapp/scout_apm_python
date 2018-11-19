@@ -1,10 +1,12 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from flask import current_app
 from flask.globals import _request_ctx_stack
 
 import scout_apm.core
 from scout_apm.core.config import ScoutConfig
-from scout_apm.core.tracked_request import TrackedRequest
 from scout_apm.core.monkey import CallableProxy
+from scout_apm.core.tracked_request import TrackedRequest
 
 
 class ScoutApm(object):
@@ -36,11 +38,12 @@ class ScoutApm(object):
         Copies SCOUT_* settings in the app into Scout's config lookup
         """
         configs = {}
-        configs['application_root'] = self.app.instance_path
-        for name in filter(lambda x: x.startswith('SCOUT_'), current_app.config):
-            value = current_app.config[name]
-            clean_name = name.replace('SCOUT_', '').lower()
-            configs[clean_name] = value
+        configs["application_root"] = self.app.instance_path
+        for name in current_app.config:
+            if name.startswith("SCOUT_"):
+                value = current_app.config[name]
+                clean_name = name.replace("SCOUT_", "").lower()
+                configs[clean_name] = value
         ScoutConfig.set(**configs)
 
     #############################
@@ -54,7 +57,7 @@ class ScoutApm(object):
         app = current_app
 
         # Return flask's default options response. See issue #40
-        if req.method == 'OPTIONS':
+        if req.method == "OPTIONS":
             return app.make_default_options_response()
 
         if req.routing_exception is not None:
@@ -66,11 +69,8 @@ class ScoutApm(object):
 
         # Wrap the real view_func
         view_func = self.wrap_view_func(
-            app,
-            rule,
-            req,
-            app.view_functions[rule.endpoint],
-            req.view_args)
+            app, rule, req, app.view_functions[rule.endpoint], req.view_args
+        )
 
         return view_func(**req.view_args)
 
@@ -81,19 +81,20 @@ class ScoutApm(object):
         """ This method is called just before the flask view is called.
         This is done by the dispatch_request method.
         """
-        operation = view_func.__module__ + '.' + view_func.__name__
+        operation = view_func.__module__ + "." + view_func.__name__
         return self.trace_view_function(
-                        view_func,
-                        ('Controller', {'path': req.path, 'name': operation}))
+            view_func, ("Controller", {"path": req.path, "name": operation})
+        )
 
     def trace_view_function(self, func, info):
         try:
+
             def tracing_function(original, *args, **kwargs):
                 entry_type, detail = info
 
                 operation = entry_type
-                if detail['name'] is not None:
-                    operation = operation + '/' + detail['name']
+                if detail["name"] is not None:
+                    operation = operation + "/" + detail["name"]
 
                 tr = TrackedRequest.instance()
                 tr.mark_real_request()
@@ -115,16 +116,15 @@ class ScoutApm(object):
                 try:
                     return original(*args, **kwargs)
                 except Exception as e:
-                    TrackedRequest.instance().tag('error', 'true')
+                    TrackedRequest.instance().tag("error", "true")
                     raise e
                 finally:
                     TrackedRequest.instance().stop_span()
 
             return CallableProxy(func, tracing_function)
-        except Exception as err:
+        except Exception:
             # If we can't wrap for any reason, just return the original
             return func
 
     def process_response(self, response):
         return response
-

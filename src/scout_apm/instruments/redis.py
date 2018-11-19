@@ -1,21 +1,21 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
 
-from scout_apm.core.tracked_request import TrackedRequest
 from scout_apm.core.monkey import monkeypatch_method
+from scout_apm.core.tracked_request import TrackedRequest
 
 logger = logging.getLogger(__name__)
 
 
-class Instrument:
+class Instrument(object):
     def __init__(self):
         self.installed = False
 
     def installable(self):
         try:
-            from redis import StrictRedis
-            from redis.client import BasePipeline
+            from redis import StrictRedis  # noqa: F401
+            from redis.client import BasePipeline  # noqa: F401
         except ImportError:
             logger.info("Unable to import for Redis instruments")
             return False
@@ -45,18 +45,21 @@ class Instrument:
             def execute_command(original, self, *args, **kwargs):
                 try:
                     op = args[0]
-                except(IndexError, TypeError):
-                    op = 'Unknown'
+                except (IndexError, TypeError):
+                    op = "Unknown"
 
                 tr = TrackedRequest.instance()
-                tr.start_span(operation='Redis/{}'.format(op))
+                tr.start_span(operation="Redis/{}".format(op))
 
                 try:
                     return original(*args, **kwargs)
                 finally:
                     tr.stop_span()
+
         except Exception as e:
-            logger.warn('Unable to instrument for Redis StrictRedis.execute_command: {}'.format(repr(e)))
+            logger.warn(
+                "Unable to instrument for Redis StrictRedis.execute_command: %r", e
+            )
 
     def patch_basepipeline(self):
         try:
@@ -65,11 +68,12 @@ class Instrument:
             @monkeypatch_method(BasePipeline)
             def execute(original, self, *args, **kwargs):
                 tr = TrackedRequest.instance()
-                tr.start_span(operation='Redis/MULTI')
+                tr.start_span(operation="Redis/MULTI")
 
                 try:
                     return original(*args, **kwargs)
                 finally:
                     tr.stop_span()
+
         except Exception as e:
-            logger.warn('Unable to instrument for Redis BasePipeline.execute: {}'.format(repr(e)))
+            logger.warn("Unable to instrument for Redis BasePipeline.execute: %r", e)
