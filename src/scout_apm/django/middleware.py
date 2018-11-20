@@ -140,7 +140,7 @@ class OldStyleViewMiddleware(object):
             tr.stop_span()
         return response
 
-    def process_exception(request, exception):
+    def process_exception(self, request, exception):
         tr = TrackedRequest.instance()
 
         if (
