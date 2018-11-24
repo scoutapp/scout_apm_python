@@ -6,17 +6,15 @@ env:
 language: python
 matrix:
   include:
-    - python: 3.6
-      env:
-        - BUILD_SDIST="true"
     - python: 3.7
       dist: xenial
       sudo: true
       env:
+        - BUILD_SDIST="true"
         - BUILD_WHEEL="true"
         - CIBW_SKIP="cp27-* cp33-*"
-        - CIBW_TEST_COMMAND="/project/ci/cibuildwheel.sh"
-        - CIBW_TEST_REQUIRES="tox"
+        - CIBW_TEST_COMMAND="py.test {project}/tests"
+        - CIBW_TEST_REQUIRES="Django\>=1.11,\<2.0 pytest"
         - CIBW_BUILD_VERBOSITY=0
 
 install:
