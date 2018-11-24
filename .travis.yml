@@ -10,8 +10,6 @@ matrix:
       dist: xenial
       sudo: true
       env:
-        - BUILD_SDIST="true"
-        - BUILD_WHEEL="true"
         - CIBW_SKIP="cp27-* cp33-*"
         - CIBW_TEST_COMMAND="py.test {project}/tests"
         - CIBW_TEST_REQUIRES="Django\>=1.11,\<2.0 pytest"
@@ -22,13 +20,8 @@ install:
   - pip3 install tox
 
 script:
-  - if [ "${BUILD_WHEEL:-}" == "true" ]; then
-      cibuildwheel --output-dir wheelhouse;
-    fi
-  - if [ "${BUILD_SDIST:-}" == "true" ]; then
-      export TOXENV=`tox --listenvs | grep "py${TRAVIS_PYTHON_VERSION/./}-" | tr '\n' ','`;
-      tox -v && python3 setup.py sdist --dist-dir=wheelhouse;
-    fi
+  - cibuildwheel --output-dir wheelhouse
+  - export TOXENV=`tox --listenvs | grep "py${TRAVIS_PYTHON_VERSION/./}-" | tr '\n' ','`; tox -v && python3 setup.py sdist --dist-dir=wheelhouse;
   - if [ "${TRAVIS_TAG:-}" != "" ]; then
       pip3 install -U twine;
       python3 -m twine upload --skip-existing wheelhouse/*;
