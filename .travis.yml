@@ -19,7 +19,14 @@ script:
 
 jobs:
   include:
+    - stage: test
+      name: "Check code style"
+      python: "3.7"  # prevent matrix expansion
+      script:
+        - pip install --upgrade tox
+        - tox -e check
     - stage: build
+      name: "Build and upload distributions"
       python: "3.7"  # prevent matrix expansion
       env:
         - CIBW_SKIP="cp33-*"
