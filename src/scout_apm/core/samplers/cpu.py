@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 class Cpu(object):
     def __init__(self):
-        self.last_run = datetime.now()
+        self.last_run = datetime.utcnow()
         self.last_cpu_times = psutil.Process().cpu_times()
         self.num_processors = psutil.cpu_count()
 
@@ -24,7 +24,7 @@ class Cpu(object):
         return "Process CPU"
 
     def run(self):
-        now = datetime.now()
+        now = datetime.utcnow()
         process = psutil.Process()  # get a handle on the current process
         cpu_times = process.cpu_times()
 
