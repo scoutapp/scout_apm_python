@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import os
 import sys
 from glob import glob
@@ -27,7 +25,7 @@ setup_args = {
     "author_email": "support@scoutapp.com",
     "license": "MIT",
     "zip_safe": False,
-    "python_requires": ">=3.4, <4",
+    "python_requires": ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4",
     "packages": find_packages("src"),
     "package_dir": {"": "src"},
     "py_modules": [os.splitext(os.basename(path))[0] for path in glob("src/*.py")],
@@ -49,6 +47,8 @@ setup_args = {
         "Operating System :: MacOS",
         "Operating System :: POSIX",
         "Operating System :: POSIX :: Linux",
+        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
