@@ -70,7 +70,7 @@ class ViewTimingMiddleware(object):
                 span.operation = "Controller/" + view_name
                 Context.add("path", request.path)
                 Context.add("user_ip", RemoteIp.lookup_from_headers(request.META))
-                if request.user is not None:
+                if getattr(request, "user", None) is not None:
                     Context.add("username", request.user.get_username())
         except Exception:
             pass
