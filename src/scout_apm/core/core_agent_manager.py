@@ -37,17 +37,18 @@ class CoreAgentManager(object):
             return False
 
         if not self.verify():
-            if AgentContext.instance.config.value("core_agent_download"):
-                self.download()
-            else:
+            if not AgentContext.instance.config.value("core_agent_download"):
                 logger.debug(
                     "Not attempting to download Core Agent due "
                     "to 'core_agent_download' setting."
                 )
+                return False
 
-        if not self.verify():
-            logger.debug("Failed to verify Core Agent. Not launching Core Agent.")
-            return False
+            self.download()
+
+            if not self.verify():
+                logger.debug("Failed to verify Core Agent. Not launching Core Agent.")
+                return False
 
         return self.run()
 
