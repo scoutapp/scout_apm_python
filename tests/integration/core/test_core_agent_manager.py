@@ -14,35 +14,19 @@ try:
 except ImportError:  # Python 2.7
     from mock import patch
 
-try:
-    from tempfile import TemporaryDirectory
-except ImportError:  # Python < 3.2
-    from contextlib import contextmanager
-    from tempfile import mkdtemp
-    from shutil import rmtree
 
-    @contextmanager
-    def TemporaryDirectory():
-        tempdir = mkdtemp()
-        try:
-            yield tempdir
-        finally:
-            rmtree(tempdir)
-
-
-# Start and stop the core agent in a session-scoped fixture
-# to avoid downloading and launching it repeatedly.
-# Use a specific temporary directory for isolation.
-@pytest.fixture(scope="session")
-def core_agent_manager():
-    with TemporaryDirectory() as core_agent_dir:
-        # Shorten path to socket to prevent core-agent from failing with:
-        #   Error opening listener on socket: Custom { kind: InvalidInput,
-        #   error: StringError("path must be shorter than SUN_LEN") }
-        socket_path = "{}/test.sock".format(core_agent_dir)
-        ScoutConfig.set(core_agent_dir=core_agent_dir, socket_path=socket_path)
-        AgentContext.build()
+@pytest.fixture
+def core_agent_manager(core_agent_dir):
+    # Shorten path to socket to prevent core-agent from failing with:
+    #   Error opening listener on socket: Custom { kind: InvalidInput,
+    #   error: StringError("path must be shorter than SUN_LEN") }
+    socket_path = "{}/test.sock".format(core_agent_dir)
+    ScoutConfig.set(core_agent_dir=core_agent_dir, socket_path=socket_path)
+    AgentContext.build()
+    try:
         yield CoreAgentManager()
+    finally:
+        ScoutConfig.reset_all()
 
 
 def is_running(core_agent_manager):

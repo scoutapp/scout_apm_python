@@ -90,7 +90,7 @@ class ScoutConfig(object):
         This is meant for use in testing.
         """
         global SCOUT_PYTHON_VALUES
-        SCOUT_PYTHON_VALUES = {}
+        SCOUT_PYTHON_VALUES.clear()
 
 
 # Module-level data, the ScoutConfig.set(key="value") adds to this
