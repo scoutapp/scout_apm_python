@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 register = Library()
 
 
-class DecoratingParserProxy(object):
+class DecoratingParserProxy(object):  # pragma: no cover
     """
     Mocks out the django template parser, passing templatetags through but
     first wrapping them to include performance data
@@ -41,7 +41,7 @@ class DecoratingParserProxy(object):
 
 
 @register.tag
-def load(parser, token):
+def load(parser, token):  # pragma: no cover
     decorating_parser = DecoratingParserProxy(parser)
     return defaulttags.load(decorating_parser, token)
 
