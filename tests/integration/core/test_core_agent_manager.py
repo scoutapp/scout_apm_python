@@ -23,9 +23,11 @@ def core_agent_manager(core_agent_dir):
     socket_path = "{}/test.sock".format(core_agent_dir)
     ScoutConfig.set(core_agent_dir=core_agent_dir, socket_path=socket_path)
     AgentContext.build()
+    core_agent_manager = CoreAgentManager()
     try:
-        yield CoreAgentManager()
+        yield core_agent_manager
     finally:
+        assert not is_running(core_agent_manager)
         ScoutConfig.reset_all()
 
 
