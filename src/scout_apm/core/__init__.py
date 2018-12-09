@@ -11,10 +11,8 @@ from scout_apm.core.metadata import AppMetadata
 
 try:
     from scout_apm.core import objtrace
-
-    HAS_OBJTRACE = True
 except ImportError:
-    HAS_OBJTRACE = False
+    objtrace = None
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +31,7 @@ def install(*args, **kwargs):
 
     InstrumentManager().install_all()
 
-    if HAS_OBJTRACE:
+    if objtrace is not None:
         objtrace.enable()
 
     logger.debug("APM Launching on PID: %s", getpid())

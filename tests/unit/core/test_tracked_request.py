@@ -2,25 +2,42 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from datetime import datetime, timedelta
 
+import pytest
+
 from scout_apm.core.tracked_request import TrackedRequest
 
 try:
-    from scout_apm.core import objtrace  # noqa: F401
-
-    HAS_OBJTRACE = True
+    from scout_apm.core import objtrace
 except ImportError:
-    HAS_OBJTRACE = False
+    objtrace = None
 
 
-def test_instance():
+@pytest.fixture
+def tr():
+    request = TrackedRequest()
+    try:
+        yield request
+    finally:
+        request.finish()
+
+
+def test_tracked_request_instance_is_a_singleton():
     tr1 = TrackedRequest.instance()
     tr2 = TrackedRequest.instance()
-    assert tr1.req_id == tr2.req_id
-    assert tr1 == tr2
+    try:
+        assert tr2 is tr1
+    finally:
+        tr1.finish()
+        tr2.finish()
 
 
-def test_tag_request():
-    tr = TrackedRequest()
+def test_real_request(tr):
+    assert not tr.is_real_request()
+    tr.mark_real_request()
+    assert tr.is_real_request()
+
+
+def test_tag_request(tr):
 
     tr.tag("foo", "bar")
 
@@ -28,33 +45,47 @@ def test_tag_request():
     assert tr.tags["foo"] == "bar"
 
 
-def test_tag_span():
-    tr = TrackedRequest()
+def test_tag_request_overwrite(tr):
+
+    tr.tag("foo", "bar")
+    tr.tag("foo", "baz")
+
+    assert len(tr.tags) == 1
+    assert tr.tags["foo"] == "baz"
+
+
+def test_tag_span(tr):
     span = tr.start_span()
-    span.tag("a", "b")
+    span.tag("foo", "bar")
     tr.stop_span()
 
-    assert tr.complete_spans[0].tags["a"] == "b"
+    assert tr.complete_spans[0].tags["foo"] == "bar"
 
 
-def test_start_span_wires_parents():
-    tr = TrackedRequest()
+def test_tag_span_overwrite(tr):
+    span = tr.start_span()
+    span.tag("foo", "bar")
+    span.tag("foo", "baz")
+    tr.stop_span()
+
+    assert tr.complete_spans[0].tags["foo"] == "baz"
+
+
+def test_start_span_wires_parents(tr):
     span1 = tr.start_span()
     span2 = tr.start_span()
     assert span1.parent is None
     assert span2.parent == span1.span_id
 
 
-def test_tags_allocations_for_spans():
-    if HAS_OBJTRACE:
-        tr = TrackedRequest()
-        span = tr.start_span()
-        tr.stop_span()
-        assert span.tags["allocations"] > 0
+@pytest.mark.skipif(objtrace is None, reason="objtrace extension isn't available")
+def test_tags_allocations_for_spans(tr):
+    span = tr.start_span()
+    tr.stop_span()
+    assert span.tags["allocations"] > 0
 
 
-def test_start_span_does_not_ignore_children():
-    tr = TrackedRequest()
+def test_start_span_does_not_ignore_children(tr):
     tr.start_span(operation="parent")
     child1 = tr.start_span()
     assert not child1.ignore
@@ -69,8 +100,7 @@ def test_start_span_does_not_ignore_children():
     assert "parent" == tr.complete_spans[2].operation
 
 
-def test_start_span_ignores_children():
-    tr = TrackedRequest()
+def test_start_span_ignores_children(tr):
     tr.start_span(operation="parent", ignore_children=True)
     child1 = tr.start_span()
     assert child1.ignore
@@ -85,8 +115,7 @@ def test_start_span_ignores_children():
     assert "parent" == tr.complete_spans[0].operation
 
 
-def test_span_captures_backtrace():
-    tr = TrackedRequest()
+def test_span_captures_backtrace(tr):
     span = tr.start_span(
         operation="Sql/Work", start_time=datetime.utcnow() - timedelta(seconds=1)
     )
@@ -94,8 +123,7 @@ def test_span_captures_backtrace():
     assert span.tags["stack"]
 
 
-def test_span_does_not_capture_backtrace():
-    tr = TrackedRequest()
+def test_span_does_not_capture_backtrace(tr):
     controller = tr.start_span(
         operation="Controller/Work",
         start_time=datetime.utcnow() - timedelta(seconds=10),
@@ -108,3 +136,20 @@ def test_span_does_not_capture_backtrace():
     tr.stop_span()
     assert "stack" not in controller.tags
     assert "stack" not in middleware.tags
+
+
+def test_extra_stop_span_is_ignored(tr):
+    tr.stop_span()  # does not crash
+
+
+def test_finish_does_not_capture_memory(tr):
+    tr.finish()
+
+    assert "mem_delta" not in tr.tags
+
+
+def test_finish_does_captures_memory_on_real_requests(tr):
+    tr.mark_real_request()
+    tr.finish()
+
+    assert "mem_delta" in tr.tags
