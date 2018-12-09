@@ -11,6 +11,7 @@ from django.test.utils import modify_settings, override_settings
 from webtest import TestApp
 
 from scout_apm.api import Config
+from scout_apm.core.tracked_request import TrackedRequest
 
 from .django_app import app as app_unused  # noqa: F401
 
@@ -67,7 +68,20 @@ def app_with_scout(config=None):
                 Config.reset_all()
 
 
-def test_home():
+@pytest.fixture
+def finish_tracked_request_if_old_style_middlware():
+    # It appears that the current implementation of old-style middleware
+    # doesn't always pair start_span() and stop_span() calls. This leaks
+    # unfinished TrackedRequest instances across tests.
+    # Sweep the dirt under the rug until there's a better solution :-(
+    try:
+        yield
+    finally:
+        if django.VERSION < (2, 0):
+            TrackedRequest.instance().finish()
+
+
+def test_home(finish_tracked_request_if_old_style_middlware):
     with app_with_scout() as app:
         response = TestApp(app).get("/")
         assert response.status_int == 200
@@ -77,12 +91,12 @@ def test_home():
 # defaults to the old style. Also test with the new style in that case.
 @new_style
 @old_style
-def test_home_new_style():
+def test_home_new_style(finish_tracked_request_if_old_style_middlware):
     with override_settings(MIDDLEWARE=[]):
-        test_home()
+        test_home(finish_tracked_request_if_old_style_middlware)
 
 
-def test_hello():
+def test_hello(finish_tracked_request_if_old_style_middlware):
     with app_with_scout() as app:
         response = TestApp(app).get("/hello/")
         assert response.status_int == 200
@@ -92,12 +106,12 @@ def test_hello():
 # defaults to the old style. Also test with the new style in that case.
 @new_style
 @old_style
-def test_hello_new_style():
+def test_hello_new_style(finish_tracked_request_if_old_style_middlware):
     with override_settings(MIDDLEWARE=[]):
-        test_hello()
+        test_hello(finish_tracked_request_if_old_style_middlware)
 
 
-def test_not_found():
+def test_not_found(finish_tracked_request_if_old_style_middlware):
     with app_with_scout() as app:
         response = TestApp(app).get("/not-found/", expect_errors=True)
         assert response.status_int == 404
@@ -107,12 +121,12 @@ def test_not_found():
 # defaults to the old style. Also test with the new style in that case.
 @new_style
 @old_style
-def test_not_found_new_style():
+def test_not_found_new_style(finish_tracked_request_if_old_style_middlware):
     with override_settings(MIDDLEWARE=[]):
-        test_not_found()
+        test_not_found(finish_tracked_request_if_old_style_middlware)
 
 
-def test_server_error():
+def test_server_error(finish_tracked_request_if_old_style_middlware):
     with app_with_scout() as app:
         response = TestApp(app).get("/crash/", expect_errors=True)
         assert response.status_int == 500
@@ -122,12 +136,12 @@ def test_server_error():
 # defaults to the old style. Also test with the new style in that case.
 @new_style
 @old_style
-def test_server_error_new_style():
+def test_server_error_new_style(finish_tracked_request_if_old_style_middlware):
     with override_settings(MIDDLEWARE=[]):
-        test_server_error()
+        test_server_error(finish_tracked_request_if_old_style_middlware)
 
 
-def test_sql():
+def test_sql(finish_tracked_request_if_old_style_middlware):
     with app_with_scout() as app:
         response = TestApp(app).get("/sql/")
         assert response.status_int == 200
@@ -137,20 +151,22 @@ def test_sql():
 @patch(
     "scout_apm.core.n_plus_one_call_set.NPlusOneCallSetItem.should_capture_backtrace"
 )
-def test_sql_capture_backtrace(should_capture_backtrace):
+def test_sql_capture_backtrace(
+    should_capture_backtrace, finish_tracked_request_if_old_style_middlware
+):
     should_capture_backtrace.return_value = True
     with app_with_scout() as app:
         response = TestApp(app).get("/sql/")
         assert response.status_int == 200
 
 
-def test_template():
+def test_template(finish_tracked_request_if_old_style_middlware):
     with app_with_scout() as app:
         response = TestApp(app).get("/template/")
         assert response.status_int == 200
 
 
-def test_no_monitor():
+def test_no_monitor(finish_tracked_request_if_old_style_middlware):
     # With an empty config, "scout.monitor" defaults to "false".
     with app_with_scout({}) as app:
         response = TestApp(app).get("/hello/")
@@ -201,7 +217,7 @@ class FakeAuthenticationMiddleware(object):
 
 
 @old_style
-def test_old_style_username():
+def test_old_style_username(finish_tracked_request_if_old_style_middlware):
     with override_settings(
         MIDDLEWARE_CLASSES=[__name__ + ".FakeAuthenticationMiddleware"]
     ):
@@ -218,7 +234,7 @@ class CrashyAuthenticationMiddleware(object):
 
 
 @old_style
-def test_old_style_username_exception():
+def test_old_style_username_exception(finish_tracked_request_if_old_style_middlware):
     with override_settings(
         MIDDLEWARE_CLASSES=[__name__ + ".CrashyAuthenticationMiddleware"]
     ):
@@ -245,7 +261,9 @@ def test_middleware(list_or_tuple):
 
 @pytest.mark.parametrize("list_or_tuple", [list, tuple])
 @old_style
-def test_old_style_middleware(list_or_tuple):
+def test_old_style_middleware(
+    list_or_tuple, finish_tracked_request_if_old_style_middlware
+):
     with override_settings(
         MIDDLEWARE_CLASSES=list_or_tuple(["django.middleware.common.CommonMiddleware"])
     ):

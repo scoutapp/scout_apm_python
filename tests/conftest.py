@@ -3,6 +3,7 @@ import os
 import pytest
 
 from scout_apm.core.config import SCOUT_PYTHON_VALUES
+from scout_apm.core.tracked_request import TrackedRequest
 
 # Env variables have precedence over Python configs in ScoutConfig.
 # Unset all Scout env variables to prevent interference with tests.
@@ -20,10 +21,14 @@ class ConfigLeak(GlobalStateLeak):
     """Exception raised when a test leaks changes in ScoutConfig."""
 
 
+class TrackedRequestLeak(GlobalStateLeak):
+    """Exception raised when a test leaks an unfinished TrackedRequest."""
+
+
 @pytest.fixture(autouse=True)
 def isolate_global_state():
     """
-    Isolate global state in ScoutConfig.
+    Isolate global state in ScoutConfig and TrackedRequest.
 
     Since scout_apm relies heavily on global variables, it's unfortunately
     easy to leak state changes after a test, which can affect later tests.
@@ -49,6 +54,25 @@ def isolate_global_state():
             raise ConfigLeak("Env config changes: %r" % SCOUT_ENV_VARS)
         if SCOUT_PYTHON_VALUES:
             raise ConfigLeak("Python config changes: %r" % SCOUT_PYTHON_VALUES)
+
+        try:
+            request = TrackedRequest._thread_lookup.instance
+        except AttributeError:
+            pass
+        else:
+            if request is not None:
+                raise TrackedRequestLeak(
+                    "Unfinished request: "
+                    "active spans = %r, complete spans = %r, tags = %r"
+                    % (
+                        [(span.operation, span.tags) for span in request.active_spans],
+                        [
+                            (span.operation, span.tags)
+                            for span in request.complete_spans
+                        ],
+                        request.tags,
+                    )
+                )
 
 
 try:
