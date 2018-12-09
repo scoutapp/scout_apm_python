@@ -2,6 +2,7 @@ import os
 
 import pytest
 
+from scout_apm.core import socket as scout_apm_core_socket
 from scout_apm.core.config import SCOUT_PYTHON_VALUES
 from scout_apm.core.tracked_request import TrackedRequest
 
@@ -91,9 +92,19 @@ except ImportError:  # Python < 3.2
             rmtree(tempdir)
 
 
-# Create a temporary directory for the duration of the test session to ensure
-# isolation and to avoid downloading the core agent in each test.
-@pytest.fixture(scope="session")
+# Create a temporary directory for isolation between test sessions.
+# Do it once per test session to avoid downloading the core agent repeatedly.
+@pytest.fixture(autouse=True, scope="session")
 def core_agent_dir():
     with TemporaryDirectory() as temp_dir:
         yield temp_dir
+
+
+# Make all timeouts shorter so that tests exercising them run faster.
+@pytest.fixture(autouse=True, scope="session")
+def short_timeouts():
+    scout_apm_core_socket.SECOND = 0.01
+    try:
+        yield
+    finally:
+        scout_apm_core_socket.SECOND = 1
