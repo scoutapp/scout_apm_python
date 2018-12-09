@@ -34,7 +34,7 @@ class CoreAgentManager(object):
                 "Not attempting to launch Core Agent "
                 "due to 'core_agent_launch' setting."
             )
-            return
+            return False
 
         if not self.verify():
             if AgentContext.instance.config.value("core_agent_download"):

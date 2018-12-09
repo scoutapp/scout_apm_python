@@ -37,8 +37,10 @@ def install(*args, **kwargs):
         objtrace.enable()
 
     logger.debug("APM Launching on PID: %s", getpid())
-    CoreAgentManager().launch()
+    launched = CoreAgentManager().launch()
 
     AppMetadata.report()
-    AgentContext.socket().stop()
+    if launched:
+        AgentContext.socket().stop()
+
     return True
