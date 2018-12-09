@@ -39,8 +39,6 @@ jobs:
       python: "3.7"  # prevent matrix expansion
       env:
         - CIBW_SKIP="cp33-*"
-        - CIBW_TEST_COMMAND="py.test {project}/tests"
-        - CIBW_TEST_REQUIRES="bottle celery Django\>=1.11,\<2.0 elasticsearch flask flask-sqlalchemy jinja2 mock pymongo pyramid pytest redis sqlalchemy urllib3 webtest"
         - TWINE_USERNAME=scout
         - secure: "ohvspT59/b71SdnIFf/HA5552tGaYWLYTUV2IQ/ZNxrTiJd/hcm5eBbfAkOUiC6l2cxdHt+cAyRh27us32z7F29qzlSzrWkTD18pvFKjSGtaa2X0aBTiollfiGgiXpdT5wiDoyjyGWti3q4CpwOZjrpB/rZx0DUxdRejf0cQfs/6W8xqei/PeSTAY+58eRxKUo9JOsEObDgpjJFSWTHVip6Rm0C8zG5fEal6OEMozP+LncSzxIPZiaA0x82nYSMSBQiJXqgX6x1iNDUVl9W1wwghPjCxhz1n6kUtoKOnLcz2VhtmzR+rFDXcdgIr3l9HsSaj8t/jRIPwyUuB1DDamKWuEC0dFrqeTraOKz/t7eZkSpKa+jRaNUC4RLPSSNJVC3hEH8WlNIAyCGyvYv0RAGEYzrWcl0QZQgn1s205uIVKF8v3bepAV4oPUOEjhAk3+kVhBDLrUHWnDtLzQxPJOcC/PpMIkXx5+ZCADJrkmppEAtv+gAbHIE5gcodvyGgUc1ynp/Ul2LQxUX7KUopZBkBtFomRJWOXli5rV9tc8It+m91Xua6+jRB8UePyHw2KLGoABulNNoGSvr+uRdH8Ph/4des33iikTEnEDBk740NAsMW1pExMMlXAdaYScpBjCu7z3MrSCs4oraCVJ1g9nqbc7ugxVqMPC97fu7XKpe8="
       script:
