@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 
-from scout_apm.core.monkey import monkeypatch_method
+from scout_apm.core.monkey import monkeypatch_method, unpatch_method
 from scout_apm.core.tracked_request import TrackedRequest
 
 logger = logging.getLogger(__name__)
@@ -14,7 +14,7 @@ def import_Redis_and_Pipeline():
     if redis.VERSION[0] >= 3:
         from redis import Redis  # noqa: F401
         from redis.client import Pipeline  # noqa: F401
-    else:
+    else:  # pragma: no cover
         from redis import StrictRedis as Redis  # noqa: F401
         from redis.client import BasePipeline as Pipeline  # noqa: F401
 
@@ -49,6 +49,16 @@ class Instrument(object):
         logger.info("Instrumented Redis")
         return True
 
+    def uninstall(self):
+        if not self.installed:
+            logger.info("Redis instruments are not installed. Skipping.")
+            return False
+
+        self.installed = False
+
+        self.unpatch_redis()
+        self.unpatch_pipeline()
+
     def patch_redis(self):
         try:
             Redis, _Pipeline = import_Redis_and_Pipeline()
@@ -73,6 +83,11 @@ class Instrument(object):
                 "Unable to instrument for Redis StrictRedis.execute_command: %r", e
             )
 
+    def unpatch_redis(self):
+        Redis, _Pipeline = import_Redis_and_Pipeline()
+
+        unpatch_method(Redis, "execute_command")
+
     def patch_pipeline(self):
         try:
             _Redis, Pipeline = import_Redis_and_Pipeline()
@@ -89,3 +104,8 @@ class Instrument(object):
 
         except Exception as e:
             logger.warn("Unable to instrument for Redis BasePipeline.execute: %r", e)
+
+    def unpatch_pipeline(self):
+        _Redis, Pipeline = import_Redis_and_Pipeline()
+
+        unpatch_method(Pipeline, "execute")
