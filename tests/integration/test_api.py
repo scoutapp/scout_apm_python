@@ -1,3 +1,5 @@
+# coding: utf-8
+
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from scout_apm.api import (
@@ -85,6 +87,39 @@ def test_instrument_decorator_default_tags():
     assert span.tags["x"] == 99
 
 
+def test_instrument_non_ascii_params():
+    # Save TR here, so it doesn't disappear on us when span finishes
+    tr = TrackedRequest.instance()
+
+    @instrument(operation="Faire le café", kind="Personnalisé")
+    def make_coffee():
+        pass
+
+    make_coffee()
+
+    span = tr.complete_spans[-1]
+    assert span.operation == "Personnalisé/Faire le café"
+
+
+def test_instrument_non_ascii_bytes_params():
+    # Save TR here, so it doesn't disappear on us when span finishes
+    tr = TrackedRequest.instance()
+
+    # On Python 2, user code that doesn't enable unicode_literals may contain
+    # non-ASCII bystrings. For writing a test that works across Python versions,
+    # the easiest is to create bytestrings by encoding unicode strings.
+    @instrument(
+        operation="Faire le café".encode("utf-8"), kind="Personnalisé".encode("utf-8")
+    )
+    def make_coffee():
+        pass
+
+    make_coffee()
+
+    span = tr.complete_spans[-1]
+    assert span.operation == "Personnalisé/Faire le café"
+
+
 def test_web_transaction_start_stop():
     tr = TrackedRequest.instance()
 
@@ -120,6 +155,32 @@ def test_web_transaction_decorator():
     assert span.operation == "Controller/Bar"
 
 
+def test_web_transaction_non_ascii_params():
+    tr = TrackedRequest.instance()
+
+    @WebTransaction("Acheter du café")
+    def buy_coffee():
+        pass
+
+    buy_coffee()
+
+    span = tr.complete_spans[-1]
+    assert span.operation == "Controller/Acheter du café"
+
+
+def test_web_transaction_non_ascii_bytes_params():
+    tr = TrackedRequest.instance()
+
+    @WebTransaction("Acheter du café".encode("utf-8"))
+    def buy_coffee():
+        pass
+
+    buy_coffee()
+
+    span = tr.complete_spans[-1]
+    assert span.operation == "Controller/Acheter du café"
+
+
 def test_background_transaction_start_stop():
     tr = TrackedRequest.instance()
 
@@ -153,6 +214,32 @@ def test_background_transaction_decorator():
 
     span = tr.complete_spans[-1]
     assert span.operation == "Job/Bar"
+
+
+def test_background_transaction_non_ascii_params():
+    tr = TrackedRequest.instance()
+
+    @BackgroundTransaction("Acheter du café")
+    def buy_coffee():
+        pass
+
+    buy_coffee()
+
+    span = tr.complete_spans[-1]
+    assert span.operation == "Job/Acheter du café"
+
+
+def test_background_transaction_non_ascii_bytes_params():
+    tr = TrackedRequest.instance()
+
+    @BackgroundTransaction("Acheter du café".encode("utf-8"))
+    def buy_coffee():
+        pass
+
+    buy_coffee()
+
+    span = tr.complete_spans[-1]
+    assert span.operation == "Job/Acheter du café"
 
 
 def test_context():
