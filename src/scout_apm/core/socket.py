@@ -19,6 +19,8 @@ except ImportError:
     import Queue as queue
 
 
+SECOND = 1  # time unit - monkey-patched in tests to make them run faster
+
 logger = logging.getLogger(__name__)
 
 
@@ -80,7 +82,8 @@ class CoreAgentSocket(threading.Thread):
     def stop(self):
         if self._started_event.is_set():
             self._stop_event.set()
-            self._stopped_event.wait(2)
+            self.command_queue.put(None, False)  # unblock self.command_queue.get
+            self._stopped_event.wait(2 * SECOND)
             if self._stopped_event.is_set():
                 return True
             else:
@@ -99,9 +102,9 @@ class CoreAgentSocket(threading.Thread):
             self._register()
             while True:
                 try:
-                    body = self.command_queue.get(block=True, timeout=1)
+                    body = self.command_queue.get(block=True, timeout=1 * SECOND)
                 except queue.Empty:
-                    continue
+                    body = None
 
                 if body is not None:
                     result = self._send(body)
@@ -121,7 +124,7 @@ class CoreAgentSocket(threading.Thread):
                     logger.debug("CoreAgentSocket thread stopping.")
                     break
         except Exception:
-            logger.debug("CoreAgentSocket thread exception")
+            logger.debug("CoreAgentSocket thread exception.")
         finally:
             self._started_event.clear()
             self._stop_event.clear()
@@ -135,7 +138,7 @@ class CoreAgentSocket(threading.Thread):
             # TODO mark the command as not queued?
             logger.debug("CoreAgentSocket error on send: %r", e)
 
-    def _send(self, command, do_async=False):
+    def _send(self, command):
         msg = command.message()
 
         try:
@@ -168,12 +171,10 @@ class CoreAgentSocket(threading.Thread):
             )
             return None
 
-        if do_async:
-            return True
-        else:
-            # TODO do something with the response sent back in reply to command
-            self._read_response()
-            return True
+        # TODO do something with the response sent back in reply to command
+        self._read_response()
+
+        return True
 
     def _message_length(self, body):
         length = len(body)
@@ -200,7 +201,7 @@ class CoreAgentSocket(threading.Thread):
         )
 
     def _connect(self, connect_attempts=5, retry_wait_secs=1):
-        for attempt in range(1, connect_attempts):
+        for attempt in range(1, connect_attempts + 1):
             logger.debug(
                 "CoreAgentSocket attempt %d, connecting to %s, PID: %s, Thread: %s",
                 attempt,
@@ -210,21 +211,21 @@ class CoreAgentSocket(threading.Thread):
             )
             try:
                 self.socket.connect(self.socket_path)
-                self.socket.settimeout(0.5)
+                self.socket.settimeout(0.5 * SECOND)
                 logger.debug("CoreAgentSocket is connected")
                 return True
-            except OSError as e:
+            except socket.error as e:
                 logger.debug("CoreAgentSocket connection error: %r", e)
+                # Return without waiting when reaching the maximum number of attempts.
                 if attempt >= connect_attempts:
                     return False
-                time.sleep(retry_wait_secs)
-                continue
+                time.sleep(retry_wait_secs * SECOND)
 
     def _disconnect(self):
         logger.debug("CoreAgentSocket disconnecting from %s", self.socket_path)
         try:
             self.socket.close()
-        except OSError as e:
+        except socket.error as e:
             logger.debug("CoreAgentSocket exception on disconnect: %r", e)
         finally:
             self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)

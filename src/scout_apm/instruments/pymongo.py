@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 
 # Used in the exec() call below.
-from scout_apm.core.monkey import monkeypatch_method  # noqa: F401
+from scout_apm.core.monkey import monkeypatch_method, unpatch_method  # noqa: F401
 from scout_apm.core.tracked_request import TrackedRequest  # noqa: F401
 
 logger = logging.getLogger(__name__)
@@ -67,7 +67,8 @@ class Instrument(object):
 
         try:
             from pymongo.collection import Collection  # noqa: F401
-        except ImportError:
+        # There is no way the import can fail if self.installable() succeeded.
+        except ImportError:  # pragma: no cover
             logger.info(
                 "Unable to import for PyMongo instruments. Instrument install failed."
             )
@@ -99,4 +100,17 @@ def {method_str}(original, self, *args, **kwargs):
                 logger.warn(
                     "Unable to instrument for PyMongo Collection.%s: %r", method_str, e
                 )
+                return False
         return True
+
+    def uninstall(self):
+        if not self.installed:
+            logger.info("PyMongo instruments are not installed. Skipping.")
+            return False
+
+        self.installed = False
+
+        from pymongo.collection import Collection
+
+        for method_str in self.__class__.PYMONGO_METHODS:
+            unpatch_method(Collection, method_str)

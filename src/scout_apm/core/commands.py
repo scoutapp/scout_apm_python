@@ -14,8 +14,8 @@ INVALID_DATE = datetime(year=2000, month=1, day=1)
 
 class Register(object):
     def __init__(self, *args, **kwargs):
-        self.app = kwargs.get("app", None)
-        self.key = kwargs.get("key", None)
+        self.app = kwargs.get("app")
+        self.key = kwargs.get("key")
 
     def message(self):
         logging.info("Registering with app=%s key=%s" % (self.app, self.key))
@@ -32,10 +32,10 @@ class Register(object):
 class StartSpan(object):
     def __init__(self, *args, **kwargs):
         self.timestamp = kwargs.get("timestamp") or INVALID_DATE
-        self.request_id = kwargs.get("request_id", None)
-        self.span_id = kwargs.get("span_id", None)
-        self.parent = kwargs.get("parent", None)
-        self.operation = kwargs.get("operation", None)
+        self.request_id = kwargs.get("request_id")
+        self.span_id = kwargs.get("span_id")
+        self.parent = kwargs.get("parent")
+        self.operation = kwargs.get("operation")
 
     def message(self):
         return {
@@ -51,9 +51,9 @@ class StartSpan(object):
 
 class StopSpan(object):
     def __init__(self, *args, **kwargs):
-        self.request_id = kwargs.get("request_id", None)
-        self.span_id = kwargs.get("span_id", None)
         self.timestamp = kwargs.get("timestamp") or INVALID_DATE
+        self.request_id = kwargs.get("request_id")
+        self.span_id = kwargs.get("span_id")
 
     def message(self):
         return {
@@ -68,7 +68,7 @@ class StopSpan(object):
 class StartRequest(object):
     def __init__(self, *args, **kwargs):
         self.timestamp = kwargs.get("timestamp") or INVALID_DATE
-        self.request_id = kwargs.get("request_id", None)
+        self.request_id = kwargs.get("request_id")
 
     def message(self):
         return {
@@ -82,7 +82,7 @@ class StartRequest(object):
 class FinishRequest(object):
     def __init__(self, *args, **kwargs):
         self.timestamp = kwargs.get("timestamp") or INVALID_DATE
-        self.request_id = kwargs.get("request_id", None)
+        self.request_id = kwargs.get("request_id")
 
     def message(self):
         return {
@@ -96,10 +96,10 @@ class FinishRequest(object):
 class TagSpan(object):
     def __init__(self, *args, **kwargs):
         self.timestamp = kwargs.get("timestamp") or INVALID_DATE
-        self.request_id = kwargs.get("request_id", None)
-        self.span_id = kwargs.get("span_id", None)
-        self.tag = kwargs.get("tag", None)
-        self.value = kwargs.get("value", None)
+        self.request_id = kwargs.get("request_id")
+        self.span_id = kwargs.get("span_id")
+        self.tag = kwargs.get("tag")
+        self.value = kwargs.get("value")
 
     def message(self):
         return {
@@ -116,9 +116,9 @@ class TagSpan(object):
 class TagRequest(object):
     def __init__(self, *args, **kwargs):
         self.timestamp = kwargs.get("timestamp") or INVALID_DATE
-        self.request_id = kwargs.get("request_id", None)
-        self.tag = kwargs.get("tag", None)
-        self.value = kwargs.get("value", None)
+        self.request_id = kwargs.get("request_id")
+        self.tag = kwargs.get("tag")
+        self.value = kwargs.get("value")
 
     def message(self):
         return {
@@ -133,17 +133,17 @@ class TagRequest(object):
 
 class ApplicationEvent(object):
     def __init__(self, *args, **kwargs):
+        self.timestamp = kwargs.get("timestamp") or INVALID_DATE
         self.event_type = kwargs.get("event_type", "")
         self.event_value = kwargs.get("event_value", "")
-        self.timestamp = kwargs.get("timestamp") or INVALID_DATE
         self.source = kwargs.get("source", "")
 
     def message(self):
         return {
             "ApplicationEvent": {
+                "timestamp": self.timestamp.isoformat() + "Z",
                 "event_type": self.event_type,
                 "event_value": self.event_value,
-                "timestamp": self.timestamp.isoformat() + "Z",
                 "source": self.source,
             }
         }

@@ -274,3 +274,8 @@ def monkeypatch_method(cls, method_name=None):
         return func
 
     return decorator
+
+
+# Slightly annoying signature because there are no unbound methods in Python 3.
+def unpatch_method(cls, method_name):
+    type.__setattr__(cls, method_name, getattr(cls, method_name).__subject__)

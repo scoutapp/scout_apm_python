@@ -22,8 +22,10 @@ class MiddlewareTimingMiddleware(object):
         operation = "Middleware"
 
         TrackedRequest.instance().start_span(operation=operation)
-        response = self.get_response(request)
-        TrackedRequest.instance().stop_span()
+        try:
+            response = self.get_response(request)
+        finally:
+            TrackedRequest.instance().stop_span()
         return response
 
 
@@ -55,8 +57,10 @@ class ViewTimingMiddleware(object):
         # process_view
         operation = "Unknown"
         tr.start_span(operation=operation)
-        response = self.get_response(request)
-        tr.stop_span()
+        try:
+            response = self.get_response(request)
+        finally:
+            tr.stop_span()
         return response
 
     def process_view(self, request, view_func, view_args, view_kwargs):

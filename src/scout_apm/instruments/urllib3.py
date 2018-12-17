@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 
-from scout_apm.core.monkey import monkeypatch_method
+from scout_apm.core.monkey import monkeypatch_method, unpatch_method
 from scout_apm.core.tracked_request import TrackedRequest
 
 logger = logging.getLogger(__name__)
@@ -30,12 +30,6 @@ class Instrument(object):
 
         self.installed = True
 
-        self.patch_connectionpool()
-
-        logger.info("Instrumented Urllib3")
-        return True
-
-    def patch_connectionpool(self):
         try:
             from urllib3 import HTTPConnectionPool
 
@@ -44,9 +38,9 @@ class Instrument(object):
                 method = "Unknown"
                 url = "Unknown"
                 try:
-                    if "method" in kwargs:
+                    try:
                         method = kwargs["method"]
-                    else:
+                    except KeyError:
                         method = args[0]
                     url = "{}".format(self._absolute_url("/"))
                 except Exception as e:
@@ -63,7 +57,22 @@ class Instrument(object):
                 finally:
                     tr.stop_span()
 
+            logger.info("Instrumented Urllib3")
+
         except Exception as e:
             logger.warn(
                 "Unable to instrument for Urllib3 HTTPConnectionPool.urlopen: %r", e
             )
+            return False
+        return True
+
+    def uninstall(self):
+        if not self.installed:
+            logger.info("Urllib3 instruments are not installed. Skipping.")
+            return False
+
+        self.installed = False
+
+        from urllib3 import HTTPConnectionPool
+
+        unpatch_method(HTTPConnectionPool, "urlopen")

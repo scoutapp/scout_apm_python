@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 
 # Used in the exec() call below.
-from scout_apm.core.monkey import monkeypatch_method
+from scout_apm.core.monkey import monkeypatch_method, unpatch_method
 from scout_apm.core.tracked_request import TrackedRequest
 
 logger = logging.getLogger(__name__)
@@ -42,7 +42,7 @@ class Instrument(object):
 
     def installable(self):
         try:
-            from elasticsearch.client import Elasticsearch  # noqa: F401
+            from elasticsearch import Elasticsearch  # noqa: F401
             from elasticsearch import Transport  # noqa: F401
         except ImportError:
             logger.info("Unable to import for Elasticsearch instruments")
@@ -62,9 +62,19 @@ class Instrument(object):
         self.instrument_client()
         self.instrument_transport()
 
+    def uninstall(self):
+        if not self.installed:
+            logger.info("Elasticsearch instruments are not installed. Skipping.")
+            return False
+
+        self.installed = False
+
+        self.uninstrument_client()
+        self.uninstrument_transport()
+
     def instrument_client(self):
         try:
-            from elasticsearch.client import Elasticsearch  # noqa: F401
+            from elasticsearch import Elasticsearch  # noqa: F401
         except ImportError:
             logger.info(
                 "Unable to import for Elasticsearch Client instruments. "
@@ -101,7 +111,14 @@ def {method_str}(original, self, *args, **kwargs):
                     method_str,
                     e,
                 )
+                return False
         return True
+
+    def uninstrument_client(self):
+        from elasticsearch import Elasticsearch
+
+        for method_str in self.__class__.CLIENT_METHODS:
+            unpatch_method(Elasticsearch, method_str)
 
     def instrument_transport(self):
         try:
@@ -166,4 +183,10 @@ def {method_str}(original, self, *args, **kwargs):
                 "Unable to instrument for Elasticsearch Transport.perform_request: %r",
                 e,
             )
+            return False
         return True
+
+    def uninstrument_transport(self):
+        from elasticsearch import Transport
+
+        unpatch_method(Transport, "perform_request")

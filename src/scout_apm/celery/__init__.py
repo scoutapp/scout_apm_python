@@ -29,3 +29,8 @@ def install():
 
     task_prerun.connect(prerun_callback)
     task_postrun.connect(postrun_callback)
+
+
+def uninstall():
+    task_prerun.disconnect(prerun_callback)
+    task_postrun.disconnect(postrun_callback)

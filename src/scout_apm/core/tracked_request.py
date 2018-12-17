@@ -12,10 +12,8 @@ from scout_apm.core.thread_local import ThreadLocalSingleton
 
 try:
     from scout_apm.core import objtrace
-
-    HAS_OBJTRACE = True
 except ImportError:
-    HAS_OBJTRACE = False
+    objtrace = None
 
 logger = logging.getLogger(__name__)
 
@@ -71,13 +69,11 @@ class TrackedRequest(ThreadLocalSingleton):
         return new_span
 
     def stop_span(self):
-        stopping_span = None
         try:
             stopping_span = self.active_spans.pop()
         except IndexError as e:
             logger.debug("Exception when stopping span: %r", e)
-
-        if stopping_span is not None:
+        else:
             stopping_span.stop()
             if not stopping_span.ignore:
                 stopping_span.annotate()
@@ -121,7 +117,7 @@ class Span(object):
         self.ignore_children = kwargs.get("ignore_children", False)
         self.parent = kwargs.get("parent", None)
         self.tags = kwargs.get("tags", {})
-        if HAS_OBJTRACE:
+        if objtrace is not None:
             self.start_objtrace_counts = kwargs.get(
                 "start_objtrace_counts", objtrace.get_counts()
             )
@@ -133,7 +129,7 @@ class Span(object):
 
     def stop(self):
         self.end_time = datetime.utcnow()
-        if HAS_OBJTRACE:
+        if objtrace is not None:
             self.end_objtrace_counts = objtrace.get_counts()
         else:
             self.end_objtrace_counts = (0, 0, 0, 0)
@@ -153,9 +149,6 @@ class Span(object):
             # Current, running duration
             return (datetime.utcnow() - self.start_time).total_seconds()
 
-    def duration_in_ms(self):
-        return self.duration() / 1000
-
     # Add any interesting annotations to the span. Assumes that we are in the
     # process of stopping this span.
     def annotate(self):
@@ -171,7 +164,7 @@ class Span(object):
             self.capture_backtrace()
 
     def calculate_allocations(self):
-        if not HAS_OBJTRACE:
+        if objtrace is None:
             return 0
 
         start_allocs = (

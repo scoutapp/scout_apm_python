@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 
-from scout_apm.core.monkey import monkeypatch_method
+from scout_apm.core.monkey import monkeypatch_method, unpatch_method
 from scout_apm.core.tracked_request import TrackedRequest
 
 logger = logging.getLogger(__name__)
@@ -48,4 +48,16 @@ class Instrument(object):
 
         except Exception as e:
             logger.warn("Unable to instrument for Jinja2 Template.render: %r", e)
+            return False
         return True
+
+    def uninstall(self):
+        if not self.installed:
+            logger.info("Jinja2 instruments are not installed. Skipping.")
+            return False
+
+        self.installed = False
+
+        from jinja2 import Template
+
+        unpatch_method(Template, "render")

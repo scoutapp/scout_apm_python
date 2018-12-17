@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 import os
+import sys
 
 from scout_apm.core.git_revision import GitRevision
 from scout_apm.core.platform_detection import PlatformDetection
@@ -40,6 +41,9 @@ class ScoutConfig(object):
         for layer in self.layers:
             if layer.has_config(key):
                 return layer
+        else:  # pragma: no cover
+            # Not reachable because ScoutConfigNull returns None for all keys.
+            assert False, "key not found in any layer"
 
     def log(self):
         logger.debug("Configuration Loaded:")
@@ -49,8 +53,8 @@ class ScoutConfig(object):
 
     def known_keys(self):
         return [
-            "application_root",
             "app_server",
+            "application_root",
             "core_agent_dir",
             "core_agent_download",
             "core_agent_launch",
@@ -59,12 +63,12 @@ class ScoutConfig(object):
             "download_url",
             "framework",
             "framework_version",
-            "revision_sha",
-            "key",
             "hostname",
+            "key",
             "log_level",
-            "name",
             "monitor",
+            "name",
+            "revision_sha",
             "socket_path",
         ]
 
@@ -86,7 +90,7 @@ class ScoutConfig(object):
         This is meant for use in testing.
         """
         global SCOUT_PYTHON_VALUES
-        SCOUT_PYTHON_VALUES = {}
+        SCOUT_PYTHON_VALUES.clear()
 
 
 # Module-level data, the ScoutConfig.set(key="value") adds to this
@@ -228,12 +232,15 @@ class ScoutConfigNull(object):
         return None
 
 
+string_type = str if sys.version_info[0] >= 3 else basestring  # noqa: F821
+
+
 class BooleanConversion(object):
     @classmethod
     def convert(cls, value):
         if isinstance(value, bool):
             return value
-        if isinstance(value, str):
+        if isinstance(value, string_type):
             return value.lower() in ("yes", "true", "t", "1")
         # Unknown type - default to false?
         return False
@@ -246,9 +253,9 @@ class ListConversion(object):
             return value
         if isinstance(value, tuple):
             return list(value)
-        if isinstance(value, str):
+        if isinstance(value, string_type):
             # Split on commas
-            return value.split(",")
+            return [item.strip() for item in value.split(",") if item]
         # Unknown type - default to empty?
         return []
 
