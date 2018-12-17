@@ -29,6 +29,19 @@ else:
     from contextlib import ContextDecorator
 
 
+text_type = str if sys.version_info[0] >= 3 else unicode  # noqa: F821
+
+
+def text(value, encoding="utf-8", errors="strict"):
+    """Convert a value to str on Python 3 and unicode on Python 2."""
+    if isinstance(value, text_type):
+        return value
+    elif isinstance(value, bytes):
+        return text_type(value, encoding, errors)
+    else:
+        return text_type(value)
+
+
 class Context(ScoutContext):
     pass
 
@@ -43,7 +56,7 @@ def install(*args, **kwargs):
 
 class instrument(ContextDecorator):
     def __init__(self, operation, kind="Custom", tags={}):
-        self.operation = kind + "/" + operation
+        self.operation = text(kind) + "/" + text(operation)
         self.tags = tags
 
     def __enter__(self):
@@ -71,12 +84,12 @@ class Transaction(ContextDecorator):
     """
 
     def __init__(self, name, tags={}):
-        self.name = name
+        self.name = text(name)
         self.tags = tags
 
     @classmethod
     def start(cls, kind, name, tags={}):
-        operation = kind + "/" + name
+        operation = text(kind) + "/" + text(name)
 
         tr = TrackedRequest.instance()
         tr.mark_real_request()
@@ -106,7 +119,7 @@ class Transaction(ContextDecorator):
 class WebTransaction(Transaction):
     @classmethod
     def start(cls, name, tags={}):
-        Transaction.start("Controller", name, tags)
+        Transaction.start("Controller", text(name), tags)
 
     def __enter__(self):
         Transaction.start("Controller", self.name, self.tags)
@@ -115,7 +128,7 @@ class WebTransaction(Transaction):
 class BackgroundTransaction(Transaction):
     @classmethod
     def start(cls, name, tags={}):
-        Transaction.start("Job", name, tags)
+        Transaction.start("Job", text(name), tags)
 
     def __enter__(self):
         Transaction.start("Job", self.name, self.tags)
