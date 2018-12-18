@@ -132,3 +132,7 @@ class BackgroundTransaction(Transaction):
 
     def __enter__(self):
         Transaction.start("Job", self.name, self.tags)
+
+
+def ignore_current_transaction():
+    TrackedRequest.instance().tag("ignore_transaction", True)
