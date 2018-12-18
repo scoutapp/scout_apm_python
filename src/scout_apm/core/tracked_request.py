@@ -95,7 +95,8 @@ class TrackedRequest(ThreadLocalSingleton):
             self.end_time = datetime.utcnow()
         if self.is_real_request():
             self.tag("mem_delta", Memory.get_delta(self.memory_start))
-            RequestManager.instance().add_request(self)
+            if not self.is_ignored():
+                RequestManager.instance().add_request(self)
             Samplers.ensure_running()
 
         # This can fail if the Tracked Request was created directly,
@@ -104,6 +105,10 @@ class TrackedRequest(ThreadLocalSingleton):
             self.release()
         except Exception:
             pass
+
+    # A request is ignored if the tag "ignore_transaction" is set to True
+    def is_ignored(self):
+        return self.tags.get("ignore_transaction", False)
 
 
 class Span(object):
