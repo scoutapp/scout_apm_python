@@ -153,3 +153,9 @@ def test_finish_does_captures_memory_on_real_requests(tr):
     tr.finish()
 
     assert "mem_delta" in tr.tags
+
+
+def test_is_ignored(tr):
+    assert not tr.is_ignored()
+    tr.tag("ignore_transaction", True)
+    assert tr.is_ignored()

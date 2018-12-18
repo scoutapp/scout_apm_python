@@ -7,6 +7,7 @@ from scout_apm.api import (
     Config,
     Context,
     WebTransaction,
+    ignore_transaction,
     instrument,
 )
 from scout_apm.core.tracked_request import TrackedRequest
@@ -258,3 +259,13 @@ def test_config():
         Config.set(revision_sha="4de21f8ea228a082d4f039c0c991ee41dfb6f9d8")
     finally:
         Config.reset_all()
+
+
+def test_ignore_transaction():
+    tr = TrackedRequest.instance()
+
+    ignore_transaction()
+
+    tr.finish()
+
+    assert tr.tags["ignore_transaction"]

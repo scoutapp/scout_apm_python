@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 
 from scout_apm.api.context import Context
+from scout_apm.core.ignore import ignore_path
 from scout_apm.core.remote_ip import RemoteIp
 from scout_apm.core.tracked_request import TrackedRequest
 
@@ -68,6 +69,9 @@ class ViewTimingMiddleware(object):
         Capture details about the view_func that is about to execute
         """
         try:
+            if ignore_path(request.path):
+                TrackedRequest.instance().tag("ignore_transaction", True)
+
             view_name = request.resolver_match._func_path
             span = TrackedRequest.instance().current_span()
             if span is not None:

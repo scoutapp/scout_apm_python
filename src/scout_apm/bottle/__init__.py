@@ -6,6 +6,7 @@ import scout_apm.core
 from scout_apm.api.context import Context
 from scout_apm.core.config import ScoutConfig
 from scout_apm.core.context import AgentContext
+from scout_apm.core.ignore import ignore_path
 from scout_apm.core.tracked_request import TrackedRequest
 
 
@@ -50,6 +51,9 @@ class ScoutPlugin(object):
                     path = "/{}".format(path)
 
                 tr.start_span(operation="Controller{}".format(path))
+
+                if ignore_path(path):
+                    tr.tag("ignore_transaction", True)
 
                 try:
                     Context.add("path", path)

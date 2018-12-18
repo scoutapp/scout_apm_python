@@ -54,6 +54,10 @@ def install(*args, **kwargs):
     scout_apm.core.install(*args, **kwargs)
 
 
+def ignore_transaction():
+    TrackedRequest.instance().tag("ignore_transaction", True)
+
+
 class instrument(ContextDecorator):
     def __init__(self, operation, kind="Custom", tags={}):
         self.operation = text(kind) + "/" + text(operation)

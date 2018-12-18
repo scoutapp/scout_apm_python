@@ -64,6 +64,7 @@ class ScoutConfig(object):
             "framework",
             "framework_version",
             "hostname",
+            "ignore",
             "key",
             "log_level",
             "monitor",
@@ -265,4 +266,5 @@ CONVERSIONS = {
     "core_agent_launch": BooleanConversion,
     "monitor": BooleanConversion,
     "disabled_instruments": ListConversion,
+    "ignore": ListConversion,
 }
