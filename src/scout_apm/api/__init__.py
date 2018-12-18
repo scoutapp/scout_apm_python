@@ -134,5 +134,5 @@ class BackgroundTransaction(Transaction):
         Transaction.start("Job", self.name, self.tags)
 
 
-def ignore_current_transaction():
+def ignore_transaction():
     TrackedRequest.instance().tag("ignore_transaction", True)
