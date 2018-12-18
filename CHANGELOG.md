@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.0] 2018-12-18
+
+### Added
+
+- Python 2.7 support
+- Ability to 'ignore' requests via configuration option and `scout_apm.api` (PR #144)
+
 ## [1.3.8] 2018-09-28
 
 ### Added
