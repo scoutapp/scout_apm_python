@@ -5,6 +5,7 @@ from flask.globals import _request_ctx_stack
 
 import scout_apm.core
 from scout_apm.core.config import ScoutConfig
+from scout_apm.core.ignore import ignore_path
 from scout_apm.core.monkey import CallableProxy
 from scout_apm.core.tracked_request import TrackedRequest
 
@@ -102,6 +103,9 @@ class ScoutApm(object):
 
                 for key in detail:
                     span.tag(key, detail[key])
+
+                if ignore_path(detail.get("path", "")):
+                    tr.tag("ignore_transaction", True)
 
                 # And the custom View stuff
                 #  request = args[0]

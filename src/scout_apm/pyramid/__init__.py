@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import scout_apm.core
 from scout_apm.api.context import Context
 from scout_apm.core.config import ScoutConfig
+from scout_apm.core.ignore import ignore_path
 from scout_apm.core.tracked_request import TrackedRequest
 
 
@@ -25,6 +26,9 @@ def instruments(handler, registry):
         try:
             tr = TrackedRequest.instance()
             span = tr.start_span(operation="Controller/Pyramid")
+
+            if ignore_path(request.path):
+                tr.tag("ignore_transaction", True)
 
             # Capture what we can from the request, but never fail
             try:
