@@ -3,9 +3,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 
 from scout_apm.api.context import Context
+from scout_apm.core.ignore import ignore_path
 from scout_apm.core.remote_ip import RemoteIp
 from scout_apm.core.tracked_request import TrackedRequest
-from scout_apm.core.ignore import ignore_path
 
 logger = logging.getLogger(__name__)
 
