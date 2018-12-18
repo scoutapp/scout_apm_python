@@ -268,4 +268,4 @@ def test_ignore_transaction():
 
     tr.finish()
 
-    assert tr.tags["ignore_transaction"] == True
+    assert tr.tags["ignore_transaction"]
