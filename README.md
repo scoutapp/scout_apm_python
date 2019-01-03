@@ -8,7 +8,8 @@ Monitor the performance of Python Django apps, Flask apps, and Celery workers wi
 
 Python Versions:
 
-* Python 3.4+ ([request Python 2.7 support](https://github.com/scoutapp/scout_apm_python/issues/45))
+* Python 3.4+
+* Python 2.7
 
 Scout APM works with the following frameworks:
 
