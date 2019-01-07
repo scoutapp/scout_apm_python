@@ -6,6 +6,7 @@ import sys
 
 from scout_apm.core.git_revision import GitRevision
 from scout_apm.core.platform_detection import PlatformDetection
+from scout_apm.core.util import octal
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +59,7 @@ class ScoutConfig(object):
             "core_agent_dir",
             "core_agent_download",
             "core_agent_launch",
+            "core_agent_permissions",
             "core_agent_version",
             "disabled_instruments",
             "download_url",
@@ -72,6 +74,16 @@ class ScoutConfig(object):
             "revision_sha",
             "socket_path",
         ]
+
+    def core_agent_permissions(self):
+        try:
+            return octal(self.value("core_agent_permissions"))
+        except ValueError as e:
+            logger.error("Invalid core_agent_permissions value: %s."
+                         " Using default: %s",
+                         repr(e),
+                         0o700)
+            return 0o700
 
     @classmethod
     def set(cls, **kwargs):
@@ -195,6 +207,7 @@ class ScoutConfigDefaults(object):
             "core_agent_dir": "/tmp/scout_apm_core",
             "core_agent_download": True,
             "core_agent_launch": True,
+            "core_agent_permissions": 700
             "core_agent_version": "v1.1.8",  # can be an exact tag name, or 'latest'
             "disabled_instruments": [],
             "download_url": "https://s3-us-west-1.amazonaws.com/scout-public-downloads/apm_core_agent/release",  # noqa: E501
