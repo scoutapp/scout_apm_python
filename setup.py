@@ -37,7 +37,7 @@ setup_args = {
             "core-agent-manager = scout_apm.core.cli.core_agent_manager:main"
         ]
     },
-    "install_requires": ["psutil", "PyYAML", "requests"],
+    "install_requires": ["psutil", "requests"],
     "keywords": "apm performance monitoring development",
     "classifiers": [
         "Development Status :: 5 - Production/Stable",

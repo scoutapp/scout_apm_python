@@ -89,7 +89,7 @@ for example 2.7 and 3.7. In that case, do the whole setup for each virtualenv.
 
 Install all test dependencies:
 
-    $ pip install bottle celery Django elasticsearch flask flask-sqlalchemy jinja2 mock psutil pymongo pyramid pytest pytest-travis-fold pytest-cov PyYAML redis requests sqlalchemy urllib3 webtest
+    $ pip install bottle celery Django elasticsearch flask flask-sqlalchemy jinja2 mock psutil pymongo pyramid pytest pytest-travis-fold pytest-cov redis requests sqlalchemy urllib3 webtest
 
 Run tests with:
 
