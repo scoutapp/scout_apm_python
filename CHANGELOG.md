@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.0.1] 2019-01-07
+
+### Added
+
+- Adds `core_agent_permissions` configuration option. (PR #147)
+
+### Fixed
+
+- Remove unused dependency on PyYAML (PR #146)
+
 ## [2.0.0] 2018-12-18
 
 ### Added

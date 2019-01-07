@@ -16,7 +16,7 @@ compile_extensions = True
 
 setup_args = {
     "name": "scout_apm",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "description": "Scout Application Performance Monitoring Agent",
     "long_description": long_description,
     "long_description_content_type": "text/markdown",
