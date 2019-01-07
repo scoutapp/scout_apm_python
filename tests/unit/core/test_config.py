@@ -78,19 +78,19 @@ def test_log_config():
 
 def test_core_agent_permissions_default():
     config = ScoutConfig()
-    assert 0o700 == config.core_agent_permissions
+    assert 0o700 == config.core_agent_permissions()
 
 
 def test_core_agent_permissions_custom():
     ScoutConfig.set(core_agent_permissions=770)
     config = ScoutConfig()
-    assert 0o770 == config.core_agent_permissions
+    assert 0o770 == config.core_agent_permissions()
 
 
 def test_core_agent_permissions_invalid_uses_default():
     ScoutConfig.set(core_agent_permissions="THIS IS INVALID")
     config = ScoutConfig()
-    assert 0o700 == config.core_agent_permissions
+    assert 0o700 == config.core_agent_permissions()
 
 
 def test_null_config_name():
