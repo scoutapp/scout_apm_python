@@ -76,6 +76,29 @@ def test_log_config():
         ScoutConfig.reset_all()
 
 
+def test_core_agent_permissions_default():
+    config = ScoutConfig()
+    assert 0o700 == config.core_agent_permissions()
+
+
+def test_core_agent_permissions_custom():
+    ScoutConfig.set(core_agent_permissions=770)
+    config = ScoutConfig()
+    try:
+        assert 0o770 == config.core_agent_permissions()
+    finally:
+        ScoutConfig.reset_all()
+
+
+def test_core_agent_permissions_invalid_uses_default():
+    ScoutConfig.set(core_agent_permissions="THIS IS INVALID")
+    config = ScoutConfig()
+    try:
+        assert 0o700 == config.core_agent_permissions()
+    finally:
+        ScoutConfig.reset_all()
+
+
 def test_null_config_name():
     # For coverage... this is never called elsewhere.
     ScoutConfigNull().name()
