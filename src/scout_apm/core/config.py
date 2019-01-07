@@ -79,10 +79,11 @@ class ScoutConfig(object):
         try:
             return octal(self.value("core_agent_permissions"))
         except ValueError as e:
-            logger.error("Invalid core_agent_permissions value: %s."
-                         " Using default: %s",
-                         repr(e),
-                         0o700)
+            logger.error(
+                "Invalid core_agent_permissions value: %s." " Using default: %s",
+                repr(e),
+                0o700,
+            )
             return 0o700
 
     @classmethod

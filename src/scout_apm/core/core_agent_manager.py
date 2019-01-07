@@ -146,8 +146,9 @@ class CoreAgentDownloader(object):
 
     def create_core_agent_dir(self):
         try:
-            os.makedirs(self.destination,
-                        AgentContext.instance.config.core_agent_permissions())
+            os.makedirs(
+                self.destination, AgentContext.instance.config.core_agent_permissions()
+            )
         except OSError:
             pass
 
