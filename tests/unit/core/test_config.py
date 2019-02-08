@@ -47,7 +47,7 @@ def test_override_triple():
     config = ScoutConfig()
     try:
         assert re.match(
-            r"v([^-]*)-(x86_64|i686|unknown)-unknown-linux-musl",
+            r"scout_apm_core-v.*-unknown-linux-musl",
             config.value("core_agent_full_name"),
         )
     finally:
