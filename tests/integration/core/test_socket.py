@@ -6,7 +6,7 @@ import pytest
 
 from scout_apm.core.socket import CoreAgentSocket
 
-from .test_core_agent_manager import (  # noqa: F401
+from .test_core_agent_manager import (  # noqa: F401,F811
     core_agent_manager,
     is_running,
     shutdown,
@@ -19,7 +19,7 @@ except ImportError:  # Python 2.7
 
 
 @pytest.fixture  # noqa: F811
-def running_agent(core_agent_manager):
+def running_agent(core_agent_manager):  # noqa: F811
     assert not is_running(core_agent_manager)
     assert core_agent_manager.launch()
     time.sleep(0.01)  # wait for agent to start running
