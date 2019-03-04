@@ -94,7 +94,7 @@ class Transaction(ContextDecorator):
     def start(cls, kind, name, tags={}):
         operation = text(kind) + "/" + text(name)
 
-        self.tr = TrackedRequest.instance()
+        tr = TrackedRequest.instance()
         tr.mark_real_request()
         span = tr.start_span(operation=operation)
         for key, value in tags.items():
@@ -124,7 +124,8 @@ class WebTransaction(Transaction):
         return Transaction.start("Controller", text(name), tags)
 
     def __enter__(self):
-        return Transaction.start("Controller", self.name, self.tags)
+        self.tr = Transaction.start("Controller", self.name, self.tags)
+        return self.tr
 
 
 class BackgroundTransaction(Transaction):
@@ -133,4 +134,5 @@ class BackgroundTransaction(Transaction):
         Transaction.start("Job", text(name), tags)
 
     def __enter__(self):
-        Transaction.start("Job", self.name, self.tags)
+        self.tr = Transaction.start("Job", self.name, self.tags)
+        return self.tr
