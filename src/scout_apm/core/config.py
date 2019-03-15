@@ -190,8 +190,11 @@ class ScoutConfigDerived(object):
         return "{name}-{version}-{triple}".format(
             name="scout_apm_core",
             version=self.config.value("core_agent_version"),
-            triple=PlatformDetection.get_triple(),
+            triple=self.config.value("core_agent_triple"),
         )
+
+    def derive_core_agent_triple(self):
+        return PlatformDetection.get_triple()
 
 
 class ScoutConfigDefaults(object):

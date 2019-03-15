@@ -42,6 +42,18 @@ def test_get_derived_config_value():
         ScoutConfig.reset_all()
 
 
+def test_override_triple():
+    ScoutConfig.set(core_agent_triple="unknown-linux-musl")
+    config = ScoutConfig()
+    try:
+        assert re.match(
+            r"scout_apm_core-v.*-unknown-linux-musl",
+            config.value("core_agent_full_name"),
+        )
+    finally:
+        ScoutConfig.reset_all()
+
+
 def test_get_default_config_value():
     config = ScoutConfig()
     assert config.value("core_agent_dir") == "/tmp/scout_apm_core"
