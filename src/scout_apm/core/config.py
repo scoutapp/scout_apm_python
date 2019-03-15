@@ -72,6 +72,7 @@ class ScoutConfig(object):
             "monitor",
             "name",
             "revision_sha",
+            "scm_subdirectory",
             "socket_path",
         ]
 
@@ -220,6 +221,7 @@ class ScoutConfigDefaults(object):
             "monitor": False,
             "name": "",
             "revision_sha": GitRevision().detect(),
+            "scm_subdirectory": "",
         }
 
     def has_config(self, key):
