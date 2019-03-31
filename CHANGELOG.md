@@ -1,5 +1,11 @@
 # Changelog
 
+## Pending Release
+
+### Fixed
+
+- Fixed Elasticsearch integration for queries passing 'index' to `elasticsearch-py` as a list (PR #156)
+
 ## [2.0.1] 2019-01-07
 
 ### Added
