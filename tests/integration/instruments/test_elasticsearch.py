@@ -54,26 +54,12 @@ def test_search():
 
 def test_search_no_indexes_string():
     with es_with_scout() as es:
-        es.search(
-            index='',
-            body={
-                "query": {
-                    "term": {"user" : "kimchy"},
-                },
-            }
-        )
+        es.search(index="", body={"query": {"term": {"user": "kimchy"}}})
 
 
 def test_search_no_indexes_list():
     with es_with_scout() as es:
-        es.search(
-            index=[],
-            body={
-                "query": {
-                    "term": {"user" : "kimchy"},
-                },
-            }
-        )
+        es.search(index=[], body={"query": {"term": {"user": "kimchy"}}})
 
 
 def test_perform_request_missing_url():
