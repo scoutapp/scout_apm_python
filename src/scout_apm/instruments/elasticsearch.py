@@ -84,11 +84,14 @@ class Instrument(object):
 
         for method_str in self.__class__.CLIENT_METHODS:
             try:
-                code_str = """
+                code_str = """\
 @monkeypatch_method(Elasticsearch)
 def {method_str}(original, self, *args, **kwargs):
     tr = TrackedRequest.instance()
-    index = kwargs.get('index', 'Unknown').title()
+    index = kwargs.get('index', 'Unknown')
+    if isinstance(index, (list, tuple)):
+        index = ','.join(index)
+    index = index.title()
     name = '/'.join(['Elasticsearch', index, '{camel_name}'])
     tr.start_span(operation=name, ignore_children=True)
 
