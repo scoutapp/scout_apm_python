@@ -40,6 +40,7 @@ class AppMetadata(object):
                 "libraries": cls.get_python_packages_versions(),
                 "paas": "",
                 "application_root": config.value("application_root"),
+                "scm_subdirectory": config.value("scm_subdirectory"),
                 "git_sha": config.value("revision_sha"),
             }
         except Exception as e:
