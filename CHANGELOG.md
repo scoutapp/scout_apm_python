@@ -1,10 +1,21 @@
 # Changelog
 
-## Pending Release
+## [2.0.3] 2019-04-10
+
+### Added
+
+- Add 'scm_subdirecoty' config option (PR #155)
 
 ### Fixed
 
 - Fixed Elasticsearch integration for queries passing 'index' to `elasticsearch-py` as a list (PR #156)
+- Fixes "Registering with app" log message not using configured logger (PR #154)
+
+## [2.0.2] 2019-02-11
+
+### Added
+
+- Add platform triple to config (PR #151)
 
 ## [2.0.1] 2019-01-07
 
