@@ -19,11 +19,11 @@ Scout APM works with the following frameworks:
 * Pyramid 1.8+
 * Bottle 0.12+
 
-For frameworks not listed above, you can use the agent's instrumentation API. See the [Python help docs](http://help.apm.scoutapp.com/#python-agent) for more information.
+For frameworks not listed above, you can use the agent's instrumentation API. See the [Python help docs](http://docs.scoutapm.com/#python-agent) for more information.
 
 ## Quick Start
 
-__A Scout account is required. [Signup for Scout](https://apm.scoutapp.com/users/sign_up).__
+__A Scout account is required. [Signup for Scout](https://scoutapm.com/users/sign_up).__
 
 ```sh
 pip install scout-apm
@@ -100,13 +100,13 @@ scout = ScoutPlugin()
 bottle.install(scout)
 ```
 
-For full installation instructions, including information on configuring Scout via environment variables, see our [Python docs](http://help.apm.scoutapp.com/#python-agent).
+For full installation instructions, including information on configuring Scout via environment variables, see our [Python docs](http://docs.scoutapm.com/#python-agent).
 
 ## Documentation
 
 For full installation and troubleshooting documentation, visit our
-[help site](http://help.apm.scoutapp.com/#python-agent).
+[help site](http://docs.scoutapm.com/#python-agent).
 
 ## Support
 
-Please contact us at support@scoutapp.com or create an issue in this repo.
+Please contact us at support@scoutapm.com or create an issue in this repo.

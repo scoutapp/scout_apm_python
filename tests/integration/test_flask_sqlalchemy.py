@@ -14,7 +14,7 @@ def conn_with_scout():
     with app_with_scout() as app:
         app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
         db = SQLAlchemy(app)
-        # Setup according to http://help.apm.scoutapp.com/#flask-sqlalchemy
+        # Setup according to http://docs.scoutapm.com/#flask-sqlalchemy
         instrument_sqlalchemy(db)
         conn = db.engine.connect()
         try:
