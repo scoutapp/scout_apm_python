@@ -1,6 +1,8 @@
 # Changelog
 
-## Pending Release
+## [2.0.4] 2019-04-18
+
+### Fixed
 
 - Fix 'ignore' functionality on Django < 1.10
 
