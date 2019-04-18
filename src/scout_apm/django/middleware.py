@@ -91,11 +91,6 @@ class ViewTimingMiddleware(object):
         """
         TrackedRequest.instance().tag("error", "true")
 
-    #  def process_template_response(self, request, response):
-    #      """
-    #      """
-    #      pass
-
 
 class OldStyleMiddlewareTimingMiddleware(object):
     """
@@ -124,6 +119,9 @@ class OldStyleViewMiddleware(object):
 
     def process_view(self, request, view_func, view_func_args, view_func_kwargs):
         tr = TrackedRequest.instance()
+
+        if ignore_path(request.path):
+            tr.tag("ignore_transaction", True)
 
         view_name = request.resolver_match._func_path
         operation = "Controller/" + view_name

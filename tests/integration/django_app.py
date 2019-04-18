@@ -64,11 +64,11 @@ except ImportError:  # Django < 2.0
     from django.conf.urls import url
 
     urlpatterns = [
-        url("^$", home),
-        url("^hello/$", hello),
-        url("^crash/$", crash),
-        url("^sql/$", sql),
-        url("^template/$", template),
+        url(r"^$", home),
+        url(r"^hello/$", hello),
+        url(r"^crash/$", crash),
+        url(r"^sql/$", sql),
+        url(r"^template/$", template),
     ]
 
 

@@ -1,10 +1,14 @@
 # Changelog
 
+## Pending Release
+
+- Fix 'ignore' functionality on Django < 1.10
+
 ## [2.0.3] 2019-04-10
 
 ### Added
 
-- Add 'scm_subdirecoty' config option (PR #155)
+- Add 'scm_subdirectory' config option (PR #155)
 
 ### Fixed
 
