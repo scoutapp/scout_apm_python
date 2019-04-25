@@ -2,6 +2,11 @@
 
 ## Pending
 
+### Added
+
+- Tested on Django 2.2
+- Added PyPI Trove classifiers for supported Django versions
+
 ### Fixed
 
 - Stop warnings from using deprecated method `logger.warn`
