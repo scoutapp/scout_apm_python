@@ -31,7 +31,7 @@ def app_with_scout(config=None):
     # Save a reference to the original configuration and make changes in a copy.
     app_config = app.config.copy()
 
-    # Setup according to http://docs.scoutapm.com/#bottle
+    # Setup according to https://docs.scoutapm.com/#bottle
     app.config.update(config)
     scout = ScoutPlugin()
     app.install(scout)

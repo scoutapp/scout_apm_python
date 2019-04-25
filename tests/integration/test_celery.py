@@ -21,7 +21,7 @@ def app_with_scout(config=None):
     # Disable running the agent.
     config["core_agent_launch"] = False
 
-    # Setup according to http://docs.scoutapm.com/#celery
+    # Setup according to https://docs.scoutapm.com/#celery
     Config.set(**config)
     scout_apm.celery.install()
     try:
