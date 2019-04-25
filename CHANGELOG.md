@@ -1,5 +1,11 @@
 # Changelog
 
+## Pending
+
+### Fixed
+
+- Stop warnings from using deprecated method `logger.warn`
+
 ## [2.0.4] 2019-04-18
 
 ### Fixed

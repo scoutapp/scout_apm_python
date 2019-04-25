@@ -48,7 +48,7 @@ class Instrument(object):
             logger.info("Unable to import for Elasticsearch instruments")
             return False
         if self.installed:
-            logger.warn("Elasticsearch Instruments are already installed.")
+            logger.warning("Elasticsearch Instruments are already installed.")
             return False
         return True
 
@@ -109,7 +109,7 @@ def {method_str}(original, self, *args, **kwargs):
                 logger.info("Instrumented Elasticsearch Elasticsearch.%s", method_str)
 
             except Exception as e:
-                logger.warn(
+                logger.warning(
                     "Unable to instrument for Elasticsearch Elasticsearch.%s: %r",
                     method_str,
                     e,
@@ -182,7 +182,7 @@ def {method_str}(original, self, *args, **kwargs):
             logger.info("Instrumented Elasticsearch Transport")
 
         except Exception as e:
-            logger.warn(
+            logger.warning(
                 "Unable to instrument for Elasticsearch Transport.perform_request: %r",
                 e,
             )

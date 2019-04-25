@@ -19,7 +19,7 @@ class Instrument(object):
             logger.info("Unable to import for Urllib3 instruments")
             return False
         if self.installed:
-            logger.warn("Urllib3 Instruments are already installed.")
+            logger.warning("Urllib3 Instruments are already installed.")
             return False
         return True
 
@@ -60,7 +60,7 @@ class Instrument(object):
             logger.info("Instrumented Urllib3")
 
         except Exception as e:
-            logger.warn(
+            logger.warning(
                 "Unable to instrument for Urllib3 HTTPConnectionPool.urlopen: %r", e
             )
             return False

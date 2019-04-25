@@ -54,7 +54,7 @@ class Instrument(object):
             logger.info("Unable to import for PyMongo instruments")
             return False
         if self.installed:
-            logger.warn("PyMongo Instruments are already installed.")
+            logger.warning("PyMongo Instruments are already installed.")
             return False
         return True
 
@@ -97,7 +97,7 @@ def {method_str}(original, self, *args, **kwargs):
                 logger.info("Instrumented PyMongo Collection.%s", method_str)
 
             except Exception as e:
-                logger.warn(
+                logger.warning(
                     "Unable to instrument for PyMongo Collection.%s: %r", method_str, e
                 )
                 return False
