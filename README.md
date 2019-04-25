@@ -33,15 +33,15 @@ pip install scout-apm
 
 ```python
 # settings.py
-INSTALLED_APPS = (
-  'scout_apm.django', # should be listed first
-  # ... other apps ...
-)
+INSTALLED_APPS = [
+    "scout_apm.django",  # should be listed first
+    # ... other apps ...
+]
 
 # Scout settings
 SCOUT_MONITOR = True
-SCOUT_KEY     = "[AVAILABLE IN THE SCOUT UI]"
-SCOUT_NAME    = "A FRIENDLY NAME FOR YOUR APP"
+SCOUT_KEY = "[AVAILABLE IN THE SCOUT UI]"
+SCOUT_NAME = "A FRIENDLY NAME FOR YOUR APP"
 ```
 
 ### Flask
@@ -54,16 +54,16 @@ from scout_apm.flask.sqlalchemy import instrument_sqlalchemy
 
 # Setup a flask 'app' as normal
 
-## Attaches ScoutApm to the Flask App
+# Attach ScoutApm to the Flask App
 ScoutApm(app)
 
-## Instrument the SQLAlchemy handle
+# Instrument the SQLAlchemy handle
 instrument_sqlalchemy(db)
 
 # Scout settings
-app.config['SCOUT_MONITOR'] = True
-app.config['SCOUT_KEY']     = "[AVAILABLE IN THE SCOUT UI]"
-app.config['SCOUT_NAME']    = "A FRIENDLY NAME FOR YOUR APP"
+app.config["SCOUT_MONITOR"] = True
+app.config["SCOUT_KEY"] = "[AVAILABLE IN THE SCOUT UI]"
+app.config["SCOUT_NAME"] = "A FRIENDLY NAME FOR YOUR APP"
 ```
 
 ### Pyramid
@@ -74,14 +74,14 @@ Add the `SCOUT_*` settings to the Pyramid config, and then `config.include('scou
 ```python
 import scout_apm.pyramid
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     with Configurator() as config:
         config.add_settings(
-            SCOUT_KEY = '...',
-            SCOUT_MONITOR = True,
-            SCOUT_NAME = 'My Pyramid App'
+            SCOUT_KEY="...",
+            SCOUT_MONITOR=True,
+            SCOUT_NAME="My Pyramid App"
         )
-        config.include('scout_apm.pyramid')
+        config.include("scout_apm.pyramid")
 
         # Rest of your config...
 ```
@@ -92,9 +92,11 @@ if __name__ == '__main__':
 from scout_apm.bottle import ScoutPlugin
 
 app = bottle.default_app()
-app.config.update({'scout.name': "YOUR_APP_NAME",
-                   'scout.key': "YOUR_KEY"
-                   'scout.monitor': "true"})
+app.config.update({
+    "scout.name": "YOUR_APP_NAME",
+    "scout.key": "YOUR_KEY",
+    "scout.monitor": "true",
+})
 
 scout = ScoutPlugin()
 bottle.install(scout)
