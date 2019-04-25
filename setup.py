@@ -8,7 +8,8 @@ long_description = (
     "Scout Application Performance Monitoring Agent - https://scoutapm.com"
 )
 if os.path.exists("README.md"):
-    long_description = open("README.md").read()
+    with open("README.md", "r") as fp:
+        long_description = fp.read()
 
 # Try to compile the extensions, except for platforms or versions
 # where our extensions are not supported
