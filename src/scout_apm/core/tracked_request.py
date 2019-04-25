@@ -172,12 +172,12 @@ class Span(object):
     def annotate(self):
         self.tag("allocations", self.calculate_allocations())
         # Don't capture backtraces for Controller or Middleware
-        if self.operation is not None:
-            if self.operation.startswith("Controller") or self.operation.startswith(
-                "Middleware"
-            ):
-                return
-        slow_threshold = 0.500
+        if self.operation is not None and (
+            self.operation.startswith(("Controller", "Middleware"))
+            or self.operation == "QueueTime/Request"
+        ):
+            return
+        slow_threshold = 0.5
         if self.duration() > slow_threshold:
             self.capture_backtrace()
 

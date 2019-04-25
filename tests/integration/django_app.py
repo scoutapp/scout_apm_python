@@ -12,6 +12,8 @@ settings.configure(
     ALLOWED_HOSTS=["*"],
     DATABASES={"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"}},
     DEBUG=True,
+    # Enable the following for debugging exceptions:
+    # DEBUG_PROPAGATE_EXCEPTIONS=True,
     ROOT_URLCONF=__name__,
     SECRET_KEY="********",
     TEMPLATES=[{"BACKEND": "django.template.backends.django.DjangoTemplates"}],
