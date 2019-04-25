@@ -28,7 +28,7 @@ def app_with_scout(config=None):
     # Disable running the agent.
     config["SCOUT_CORE_AGENT_LAUNCH"] = False
 
-    # Setup according to http://docs.scoutapm.com/#flask
+    # Setup according to https://docs.scoutapm.com/#flask
     scout = ScoutApm(app)
     for key, value in config.items():
         app.config[key] = value

@@ -42,7 +42,7 @@ def app_with_scout(config=None):
     # Disable running the agent.
     config["SCOUT_CORE_AGENT_LAUNCH"] = False
 
-    # Setup according to http://docs.scoutapm.com/#django
+    # Setup according to https://docs.scoutapm.com/#django
     with override_settings(**config):
         # Prevent durable changes to MIDDLEWARE and MIDDLEWARE_CLASSES by
         # replacing them with a copy of their value.
