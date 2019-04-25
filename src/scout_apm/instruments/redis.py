@@ -32,7 +32,7 @@ class Instrument(object):
             logger.info("Unable to import for Redis instruments")
             return False
         if self.installed:
-            logger.warn("Redis Instruments are already installed.")
+            logger.warning("Redis Instruments are already installed.")
             return False
         return True
 
@@ -79,7 +79,7 @@ class Instrument(object):
                     tr.stop_span()
 
         except Exception as e:
-            logger.warn(
+            logger.warning(
                 "Unable to instrument for Redis StrictRedis.execute_command: %r", e
             )
 
@@ -103,7 +103,7 @@ class Instrument(object):
                     tr.stop_span()
 
         except Exception as e:
-            logger.warn("Unable to instrument for Redis BasePipeline.execute: %r", e)
+            logger.warning("Unable to instrument for Redis BasePipeline.execute: %r", e)
 
     def unpatch_pipeline(self):
         _Redis, Pipeline = import_Redis_and_Pipeline()

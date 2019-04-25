@@ -19,7 +19,7 @@ class Instrument(object):
             logger.info("Unable to import for Jinja2 instruments")
             return False
         if self.installed:
-            logger.warn("Jinja2 Instruments are already installed.")
+            logger.warning("Jinja2 Instruments are already installed.")
             return False
         return True
 
@@ -47,7 +47,7 @@ class Instrument(object):
             logger.info("Instrumented Jinja2")
 
         except Exception as e:
-            logger.warn("Unable to instrument for Jinja2 Template.render: %r", e)
+            logger.warning("Unable to instrument for Jinja2 Template.render: %r", e)
             return False
         return True
 
