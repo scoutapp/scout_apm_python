@@ -41,33 +41,40 @@ class ScoutApmDjangoConfig(AppConfig):
 
         # If MIDDLEWARE is set, update that, with handling of tuple vs array forms
         if getattr(settings, "MIDDLEWARE", None) is not None:
+            timing_middleware = "scout_apm.django.middleware.MiddlewareTimingMiddleware"
+            view_middleware = "scout_apm.django.middleware.ViewTimingMiddleware"
+
             if isinstance(settings.MIDDLEWARE, tuple):
-                settings.MIDDLEWARE = (
-                    ("scout_apm.django.middleware.MiddlewareTimingMiddleware",)
-                    + settings.MIDDLEWARE
-                    + ("scout_apm.django.middleware.ViewTimingMiddleware",)
-                )
+                if timing_middleware not in settings.MIDDLEWARE:
+                    settings.MIDDLEWARE = (timing_middleware,) + settings.MIDDLEWARE
+                if view_middleware not in settings.MIDDLEWARE:
+                    settings.MIDDLEWARE = settings.MIDDLEWARE + (view_middleware,)
             else:
-                settings.MIDDLEWARE.insert(
-                    0, "scout_apm.django.middleware.MiddlewareTimingMiddleware"
-                )
-                settings.MIDDLEWARE.append(
-                    "scout_apm.django.middleware.ViewTimingMiddleware"
-                )
+                if timing_middleware not in settings.MIDDLEWARE:
+                    settings.MIDDLEWARE.insert(0, timing_middleware)
+                if view_middleware not in settings.MIDDLEWARE:
+                    settings.MIDDLEWARE.append(view_middleware)
 
         # Otherwise, we're doing old style middleware, do the same thing with
         # the same handling of tuple vs array forms
         else:
+            timing_middleware = (
+                "scout_apm.django.middleware.OldStyleMiddlewareTimingMiddleware"
+            )
+            view_middleware = "scout_apm.django.middleware.OldStyleViewMiddleware"
+
             if isinstance(settings.MIDDLEWARE_CLASSES, tuple):
-                settings.MIDDLEWARE_CLASSES = (
-                    ("scout_apm.django.middleware.OldStyleMiddlewareTimingMiddleware",)
-                    + settings.MIDDLEWARE_CLASSES
-                    + ("scout_apm.django.middleware.OldStyleViewMiddleware",)
-                )
+                if timing_middleware not in settings.MIDDLEWARE_CLASSES:
+                    settings.MIDDLEWARE_CLASSES = (
+                        timing_middleware,
+                    ) + settings.MIDDLEWARE_CLASSES
+
+                if view_middleware not in settings.MIDDLEWARE_CLASSES:
+                    settings.MIDDLEWARE_CLASSES = settings.MIDDLEWARE_CLASSES + (
+                        view_middleware,
+                    )
             else:
-                settings.MIDDLEWARE_CLASSES.insert(
-                    0, "scout_apm.django.middleware.OldStyleMiddlewareTimingMiddleware"
-                )
-                settings.MIDDLEWARE_CLASSES.append(
-                    "scout_apm.django.middleware.OldStyleViewMiddleware"
-                )
+                if timing_middleware not in settings.MIDDLEWARE_CLASSES:
+                    settings.MIDDLEWARE_CLASSES.insert(0, timing_middleware)
+                if view_middleware not in settings.MIDDLEWARE_CLASSES:
+                    settings.MIDDLEWARE_CLASSES.append(view_middleware)
