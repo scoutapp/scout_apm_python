@@ -2,70 +2,60 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import datetime as dt
-import os.path
 import sys
 import time
 from contextlib import contextmanager
 
 import django
 import pytest
+from django.apps import apps
 from django.conf import settings
 from django.core.wsgi import get_wsgi_application
-from django.test.utils import modify_settings, override_settings
+from django.test.utils import override_settings
 from webtest import TestApp
 
 from scout_apm.api import Config
 from scout_apm.compat import datetime_to_timestamp
 from scout_apm.core.tracked_request import TrackedRequest
 from tests.compat import mock
+from tests.integration import django_app  # noqa  # force import to configure
 from tests.integration.util import parametrize_user_ip_headers
-
-from .django_app import app as app_unused  # noqa: F401
 
 skip_unless_new_style_middleware = pytest.mark.skipif(
     django.VERSION < (1, 10), reason="new-style middleware was added in Django 1.10"
 )
 
 skip_unless_old_style_middleware = pytest.mark.skipif(
-    django.VERSION >= (2, 0), reason="old-style middleware was removed in Django 2.0"
+    django.VERSION >= (1, 10), reason="new-style middleware was added in Django 1.10"
 )
 
 
+@pytest.fixture(autouse=True)
+def ensure_no_django_config_applied_after_tests():
+    """
+    Prevent state leaking into the non-Django tests. All config needs to be set
+    with @override_settings so that the on_setting_changed handler removes
+    them from the dictionary afterwards.
+    """
+    yield
+    assert all(
+        (key != "BASE_DIR" and not key.startswith("SCOUT_")) for key in dir(settings)
+    )
+
+
 @contextmanager
-def app_with_scout(config=None):
+def app_with_scout(**settings):
     """
-    Context manager that configures and installs the Scout plugin for Django.
+    Context manager that simply overrides settings. Unlike the other web
+    frameworks, Django is a singleton application, so we can't smoothly
+    uninstall and reinstall scout per test.
     """
-    # Enable Scout by default in tests.
-    if config is None:
-        config = {"SCOUT_MONITOR": True}
-
-    # Disable running the agent.
-    config["SCOUT_CORE_AGENT_LAUNCH"] = False
-
-    # Setup according to https://docs.scoutapm.com/#django
-    with override_settings(**config):
-        # Prevent durable changes to MIDDLEWARE and MIDDLEWARE_CLASSES by
-        # replacing them with a copy of their value.
-        for name in ["MIDDLEWARE", "MIDDLEWARE_CLASSES"]:
-            try:
-                value = getattr(settings, name)
-            except AttributeError:
-                pass
-            else:
-                setattr(settings, name, value)
-        # Scout settings must be overridden before inserting scout_apm.django
-        # in INSTALLED_APPS because ScoutApmDjangoConfig.ready() accesses it.
-        with modify_settings(INSTALLED_APPS={"prepend": "scout_apm.django"}):
-            try:
-                # Django initializes middleware when in creates the WSGI app.
-                # Modifying MIDDLEWARE setting has no effect on the app.
-                # Create a new WSGI app to account for the new middleware
-                # that "scout_apm.django" injected.
-                yield get_wsgi_application()
-            finally:
-                # Reset Scout configuration.
-                Config.reset_all()
+    settings.setdefault("SCOUT_MONITOR", True)
+    settings["SCOUT_CORE_AGENT_LAUNCH"] = False
+    with override_settings(**settings):
+        # Have to create a new WSGI app each time because the middleware stack
+        # within it is static
+        yield get_wsgi_application()
 
 
 @pytest.fixture(autouse=True)
@@ -77,8 +67,20 @@ def finish_tracked_request_if_old_style_middlware():
     try:
         yield
     finally:
-        if django.VERSION < (2, 0):
+        if django.VERSION < (1, 10):
             TrackedRequest.instance().finish()
+
+
+def test_on_setting_changed_application_root():
+    with app_with_scout(BASE_DIR="/tmp/foobar"):
+        assert Config().value("application_root") == "/tmp/foobar"
+    assert Config().value("application_root") == ""
+
+
+def test_on_setting_changed_monitor():
+    with app_with_scout(SCOUT_MONITOR=True):
+        assert Config().value("monitor") is True
+    assert Config().value("monitor") is False
 
 
 def test_home(tracked_requests):
@@ -99,7 +101,7 @@ def test_home(tracked_requests):
 
 
 def test_ignore(tracked_requests):
-    with app_with_scout({"SCOUT_MONITOR": True, "SCOUT_IGNORE": "/"}) as app:
+    with app_with_scout(SCOUT_IGNORE="/") as app:
         response = TestApp(app).get("/")
 
     assert response.status_int == 200
@@ -121,15 +123,6 @@ def test_user_ip(headers, extra_environ, expected, tracked_requests):
     assert tracked_request.tags["user_ip"] == expected
 
 
-# During the transition between old-style and new-style middleware, Django
-# defaults to the old style. Also test with the new style in that case.
-@skip_unless_new_style_middleware
-@skip_unless_old_style_middleware
-def test_home_new_style(tracked_requests):
-    with override_settings(MIDDLEWARE=[]):
-        test_home(tracked_requests)
-
-
 def test_hello(tracked_requests):
     with app_with_scout() as app:
         response = TestApp(app).get("/hello/")
@@ -141,15 +134,6 @@ def test_hello(tracked_requests):
         "Controller/tests.integration.django_app.hello",
         "Middleware",
     ]
-
-
-# During the transition between old-style and new-style middleware, Django
-# defaults to the old style. Also test with the new style in that case.
-@skip_unless_new_style_middleware
-@skip_unless_old_style_middleware
-def test_hello_new_style(tracked_requests):
-    with override_settings(MIDDLEWARE=[]):
-        test_hello(tracked_requests)
 
 
 def test_not_found(tracked_requests):
@@ -169,15 +153,6 @@ def test_not_found(tracked_requests):
             "Unknown",
             "Middleware",
         ]
-
-
-# During the transition between old-style and new-style middleware, Django
-# defaults to the old style. Also test with the new style in that case.
-@skip_unless_new_style_middleware
-@skip_unless_old_style_middleware
-def test_not_found_new_style(tracked_requests):
-    with override_settings(MIDDLEWARE=[]):
-        test_not_found(tracked_requests)
 
 
 def test_server_error(tracked_requests):
@@ -203,15 +178,6 @@ def test_server_error(tracked_requests):
             "Middleware",
         ]
     assert [s.operation for s in spans] == expected
-
-
-# During the transition between old-style and new-style middleware, Django
-# defaults to the old style. Also test with the new style in that case.
-@skip_unless_new_style_middleware
-@skip_unless_old_style_middleware
-def test_server_error_new_style(tracked_requests):
-    with override_settings(MIDDLEWARE=[]):
-        test_server_error(tracked_requests)
 
 
 def test_sql(tracked_requests):
@@ -270,8 +236,7 @@ def test_template(tracked_requests):
 
 @pytest.mark.xfail(reason="Test setup doesn't reset state fully at the moment.")
 def test_no_monitor(tracked_requests):
-    # With an empty config, "scout.monitor" defaults to "false".
-    with app_with_scout({}) as app:
+    with app_with_scout(SCOUT_MONITOR=False) as app:
         response = TestApp(app).get("/hello/")
         assert response.status_int == 200
 
@@ -290,11 +255,15 @@ def fake_authentication_middleware(get_response):
 
 @skip_unless_new_style_middleware
 def test_username(tracked_requests):
-    with override_settings(MIDDLEWARE=[__name__ + ".fake_authentication_middleware"]):
-        with app_with_scout() as app:
-            response = TestApp(app).get("/hello/")
-            assert response.status_int == 200
+    new_middleware = (
+        settings.MIDDLEWARE[:1]
+        + [__name__ + ".fake_authentication_middleware"]
+        + settings.MIDDLEWARE[1:]
+    )
+    with app_with_scout(MIDDLEWARE=new_middleware) as app:
+        response = TestApp(app).get("/hello/")
 
+    assert response.status_int == 200
     assert len(tracked_requests) == 1
     tr = tracked_requests[0]
     assert tr.tags["username"] == "scout"
@@ -312,11 +281,15 @@ def crashy_authentication_middleware(get_response):
 
 @skip_unless_new_style_middleware
 def test_username_exception(tracked_requests):
-    with override_settings(MIDDLEWARE=[__name__ + ".crashy_authentication_middleware"]):
-        with app_with_scout() as app:
-            response = TestApp(app).get("/")
+    new_middleware = (
+        settings.MIDDLEWARE[:1]
+        + [__name__ + ".crashy_authentication_middleware"]
+        + settings.MIDDLEWARE[1:]
+    )
+    with app_with_scout(MIDDLEWARE=new_middleware) as app:
+        response = TestApp(app).get("/")
 
-        assert response.status_int == 200
+    assert response.status_int == 200
     assert len(tracked_requests) == 1
     tr = tracked_requests[0]
     assert "username" not in tr.tags
@@ -331,11 +304,13 @@ class FakeAuthenticationMiddleware(object):
 
 @skip_unless_old_style_middleware
 def test_old_style_username(tracked_requests):
-    with override_settings(
-        MIDDLEWARE_CLASSES=[__name__ + ".FakeAuthenticationMiddleware"]
-    ):
-        with app_with_scout() as app:
-            response = TestApp(app).get("/")
+    new_middleware = (
+        settings.MIDDLEWARE_CLASSES[:1]
+        + [__name__ + ".FakeAuthenticationMiddleware"]
+        + settings.MIDDLEWARE_CLASSES[1:]
+    )
+    with app_with_scout(MIDDLEWARE_CLASSES=new_middleware) as app:
+        response = TestApp(app).get("/")
 
     assert response.status_int == 200
     assert len(tracked_requests) == 1
@@ -353,11 +328,13 @@ class CrashyAuthenticationMiddleware(object):
 
 @skip_unless_old_style_middleware
 def test_old_style_username_exception(tracked_requests):
-    with override_settings(
-        MIDDLEWARE_CLASSES=[__name__ + ".CrashyAuthenticationMiddleware"]
-    ):
-        with app_with_scout() as app:
-            response = TestApp(app).get("/")
+    new_middleware = (
+        settings.MIDDLEWARE_CLASSES[:1]
+        + [__name__ + ".CrashyAuthenticationMiddleware"]
+        + settings.MIDDLEWARE_CLASSES[1:]
+    )
+    with app_with_scout(MIDDLEWARE_CLASSES=new_middleware) as app:
+        response = TestApp(app).get("/")
 
     assert response.status_int == 200
     assert len(tracked_requests) == 1
@@ -417,48 +394,55 @@ def test_queue_time_future(tracked_requests):
     ]
 
 
-@pytest.mark.parametrize("list_or_tuple", [list, tuple])
-@skip_unless_new_style_middleware
-def test_middleware(list_or_tuple):
-    with override_settings(
-        MIDDLEWARE=list_or_tuple(["django.middleware.common.CommonMiddleware"])
-    ):
-        with app_with_scout():
-            assert settings.MIDDLEWARE == list_or_tuple(
-                [
-                    "scout_apm.django.middleware.MiddlewareTimingMiddleware",
-                    "django.middleware.common.CommonMiddleware",
-                    "scout_apm.django.middleware.ViewTimingMiddleware",
-                ]
-            )
-
-
-@pytest.mark.parametrize("list_or_tuple", [list, tuple])
 @skip_unless_old_style_middleware
-def test_old_style_middleware(list_or_tuple):
-    with override_settings(
-        MIDDLEWARE_CLASSES=list_or_tuple(["django.middleware.common.CommonMiddleware"])
-    ):
-        with app_with_scout():
-            assert settings.MIDDLEWARE_CLASSES == list_or_tuple(
-                [
-                    "scout_apm.django.middleware.OldStyleMiddlewareTimingMiddleware",
-                    "django.middleware.common.CommonMiddleware",
-                    "scout_apm.django.middleware.OldStyleViewMiddleware",
-                ]
-            )
+@pytest.mark.parametrize("list_or_tuple", [list, tuple])
+@pytest.mark.parametrize("preinstalled", [True, False])
+def test_install_middleware_old_style(list_or_tuple, preinstalled):
+    if preinstalled:
+        middleware = list_or_tuple(
+            [
+                "scout_apm.django.middleware.OldStyleMiddlewareTimingMiddleware",
+                "django.middleware.common.CommonMiddleware",
+                "scout_apm.django.middleware.OldStyleViewMiddleware",
+            ]
+        )
+    else:
+        middleware = list_or_tuple(["django.middleware.common.CommonMiddleware"])
+
+    with override_settings(MIDDLEWARE_CLASSES=middleware):
+        apps.get_app_config("scout_apm").install_middleware()
+
+        assert settings.MIDDLEWARE_CLASSES == list_or_tuple(
+            [
+                "scout_apm.django.middleware.OldStyleMiddlewareTimingMiddleware",
+                "django.middleware.common.CommonMiddleware",
+                "scout_apm.django.middleware.OldStyleViewMiddleware",
+            ]
+        )
 
 
-def test_application_root():
-    """
-    A BASE_DIR setting is mapped to the application_root config parameter.
+@skip_unless_new_style_middleware
+@pytest.mark.parametrize("list_or_tuple", [list, tuple])
+@pytest.mark.parametrize("preinstalled", [True, False])
+def test_install_middleware_new_style(list_or_tuple, preinstalled):
+    if preinstalled:
+        middleware = list_or_tuple(
+            [
+                "scout_apm.django.middleware.MiddlewareTimingMiddleware",
+                "django.middleware.common.CommonMiddleware",
+                "scout_apm.django.middleware.ViewTimingMiddleware",
+            ]
+        )
+    else:
+        middleware = list_or_tuple(["django.middleware.common.CommonMiddleware"])
 
-    Django doesn't have a BASE_DIR setting. However the default project
-    template creates it in order to define other settings. As a consequence,
-    most Django projets have it.
+    with override_settings(MIDDLEWARE=middleware):
+        apps.get_app_config("scout_apm").install_middleware()
 
-    """
-    base_dir = os.path.dirname(__file__)
-    with override_settings(BASE_DIR=base_dir):
-        with app_with_scout():
-            assert Config().value("application_root") == base_dir
+        assert settings.MIDDLEWARE == list_or_tuple(
+            [
+                "scout_apm.django.middleware.MiddlewareTimingMiddleware",
+                "django.middleware.common.CommonMiddleware",
+                "scout_apm.django.middleware.ViewTimingMiddleware",
+            ]
+        )

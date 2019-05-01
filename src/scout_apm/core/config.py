@@ -96,6 +96,15 @@ class ScoutConfig(object):
             SCOUT_PYTHON_VALUES[key] = value
 
     @classmethod
+    def unset(cls, *keys):
+        """
+        Removes a configuration value for the Scout agent.
+        """
+        global SCOUT_PYTHON_VALUES
+        for key in keys:
+            SCOUT_PYTHON_VALUES.pop(key, None)
+
+    @classmethod
     def reset_all(cls):
         """
         Remove all configuration settings set via `ScoutConfig.set(...)`.
