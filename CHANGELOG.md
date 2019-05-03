@@ -6,6 +6,7 @@
 
 - Tested on Django 2.2
 - Added PyPI Trove classifiers for supported Django versions
+- Track usernames on Django < 1.10
 
 ### Fixed
 

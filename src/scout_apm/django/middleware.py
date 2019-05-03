@@ -133,6 +133,12 @@ class OldStyleViewMiddleware(object):
         # if we're matched up when stopping
         request.scout_view_span = span
 
+        try:
+            if getattr(request, "user", None) is not None:
+                Context.add("username", request.user.get_username())
+        except Exception:
+            pass
+
         return None
 
     # Process Response could be called without ever having called process_view.

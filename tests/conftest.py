@@ -4,7 +4,14 @@ import pytest
 
 from scout_apm.core import socket as scout_apm_core_socket
 from scout_apm.core.config import SCOUT_PYTHON_VALUES
+from scout_apm.core.request_manager import RequestBuffer
 from scout_apm.core.tracked_request import TrackedRequest
+
+try:
+    from unittest import mock
+except ImportError:
+    # Python 2
+    import mock
 
 # Env variables have precedence over Python configs in ScoutConfig.
 # Unset all Scout env variables to prevent interference with tests.
@@ -108,3 +115,21 @@ def short_timeouts():
         yield
     finally:
         scout_apm_core_socket.SECOND = 1
+
+
+@pytest.fixture
+def tracked_requests():
+    """
+    Gather all TrackedRequests that are buffered during a test into a list.
+    """
+    requests = []
+    orig_flush_request = RequestBuffer.flush_request
+
+    def wrapped_flush_request(self, request):
+        requests.append(request)
+        return orig_flush_request(self, request)
+
+    RequestBuffer.flush_request = wrapped_flush_request
+
+    with mock.patch.object(RequestBuffer, "flush_request", wrapped_flush_request):
+        yield requests
