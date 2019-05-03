@@ -47,6 +47,8 @@ def load(parser, token):  # pragma: no cover
 
 
 class TemplateInstrument(object):
+    installed = False
+
     @staticmethod
     def install():
         # Our eventual aim is to patch the render() method on the Node objects
@@ -70,6 +72,9 @@ class TemplateInstrument(object):
 
         # XXX: Stopped working in Django 1.9
         #  add_to_builtins('apm.instruments.view')
+        if TemplateInstrument.installed:
+            return
+        TemplateInstrument.installed = True
 
         @trace_method(Template)
         def __init__(self, *args, **kwargs):

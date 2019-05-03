@@ -49,6 +49,8 @@ class _DetailedTracingCursorWrapper(CursorWrapper):
 
 
 class SQLInstrument(object):
+    installed = False
+
     @staticmethod
     def install():
         """
@@ -56,6 +58,9 @@ class SQLInstrument(object):
         method of BaseDatabaseWrapper, to return a wrapper that instruments any
         calls going through it.
         """
+        if SQLInstrument.installed:
+            return
+        SQLInstrument.installed = True
 
         @monkeypatch_method(BaseDatabaseWrapper)
         def cursor(original, self, *args, **kwargs):

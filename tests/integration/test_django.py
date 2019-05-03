@@ -80,94 +80,174 @@ def finish_tracked_request_if_old_style_middlware():
             TrackedRequest.instance().finish()
 
 
-def test_home():
+def test_home(tracked_requests):
     with app_with_scout() as app:
         response = TestApp(app).get("/")
         assert response.status_int == 200
 
+    assert len(tracked_requests) == 1
+    spans = tracked_requests[0].complete_spans
+    assert [s.operation for s in spans] == [
+        "Controller/tests.integration.django_app.home",
+        "Middleware",
+    ]
+
 
 # During the transition between old-style and new-style middleware, Django
 # defaults to the old style. Also test with the new style in that case.
 @skip_unless_new_style_middleware
 @skip_unless_old_style_middleware
-def test_home_new_style():
+def test_home_new_style(tracked_requests):
     with override_settings(MIDDLEWARE=[]):
-        test_home()
+        test_home(tracked_requests)
 
 
-def test_hello():
+def test_hello(tracked_requests):
     with app_with_scout() as app:
         response = TestApp(app).get("/hello/")
         assert response.status_int == 200
 
+    assert len(tracked_requests) == 1
+    spans = tracked_requests[0].complete_spans
+    assert [s.operation for s in spans] == [
+        "Controller/tests.integration.django_app.hello",
+        "Middleware",
+    ]
+
 
 # During the transition between old-style and new-style middleware, Django
 # defaults to the old style. Also test with the new style in that case.
 @skip_unless_new_style_middleware
 @skip_unless_old_style_middleware
-def test_hello_new_style():
+def test_hello_new_style(tracked_requests):
     with override_settings(MIDDLEWARE=[]):
-        test_hello()
+        test_hello(tracked_requests)
 
 
-def test_not_found():
+def test_not_found(tracked_requests):
     with app_with_scout() as app:
         response = TestApp(app).get("/not-found/", expect_errors=True)
         assert response.status_int == 404
 
+    if django.VERSION < (1, 10) or settings.MIDDLEWARE is None:
+        # Old style middleware doesn't currently pick up 404's
+        assert len(tracked_requests) == 0
+    else:
+        assert len(tracked_requests) == 1
+        spans = tracked_requests[0].complete_spans
+        assert [s.operation for s in spans] == [
+            "Template/Compile/<Unknown Template>",
+            "Template/Render/<Unknown Template>",
+            "Unknown",
+            "Middleware",
+        ]
+
 
 # During the transition between old-style and new-style middleware, Django
 # defaults to the old style. Also test with the new style in that case.
 @skip_unless_new_style_middleware
 @skip_unless_old_style_middleware
-def test_not_found_new_style():
+def test_not_found_new_style(tracked_requests):
     with override_settings(MIDDLEWARE=[]):
-        test_not_found()
+        test_not_found(tracked_requests)
 
 
-def test_server_error():
+def test_server_error(tracked_requests):
     with app_with_scout() as app:
         response = TestApp(app).get("/crash/", expect_errors=True)
         assert response.status_int == 500
 
+    assert len(tracked_requests) == 1
+    spans = tracked_requests[0].complete_spans
+    # Different processing order on old-style middleware
+    if django.VERSION < (1, 10) or settings.MIDDLEWARE is None:
+        expected = [
+            "Controller/tests.integration.django_app.crash",
+            "Template/Compile/<Unknown Template>",
+            "Template/Render/<Unknown Template>",
+            "Middleware",
+        ]
+    else:
+        expected = [
+            "Template/Compile/<Unknown Template>",
+            "Template/Render/<Unknown Template>",
+            "Controller/tests.integration.django_app.crash",
+            "Middleware",
+        ]
+    assert [s.operation for s in spans] == expected
+
 
 # During the transition between old-style and new-style middleware, Django
 # defaults to the old style. Also test with the new style in that case.
 @skip_unless_new_style_middleware
 @skip_unless_old_style_middleware
-def test_server_error_new_style():
+def test_server_error_new_style(tracked_requests):
     with override_settings(MIDDLEWARE=[]):
-        test_server_error()
+        test_server_error(tracked_requests)
 
 
-def test_sql():
+def test_sql(tracked_requests):
     with app_with_scout() as app:
         response = TestApp(app).get("/sql/")
         assert response.status_int == 200
+
+    assert len(tracked_requests) == 1
+    spans = tracked_requests[0].complete_spans
+    assert [s.operation for s in spans] == [
+        "SQL/Query",
+        "SQL/Many",
+        "SQL/Query",
+        "Controller/tests.integration.django_app.sql",
+        "Middleware",
+    ]
 
 
 # Monkey patch should_capture_backtrace in order to keep the test fast.
 @patch(
     "scout_apm.core.n_plus_one_call_set.NPlusOneCallSetItem.should_capture_backtrace"
 )
-def test_sql_capture_backtrace(should_capture_backtrace):
+def test_sql_capture_backtrace(should_capture_backtrace, tracked_requests):
     should_capture_backtrace.return_value = True
     with app_with_scout() as app:
         response = TestApp(app).get("/sql/")
         assert response.status_int == 200
 
+    assert len(tracked_requests) == 1
+    spans = tracked_requests[0].complete_spans
+    assert [s.operation for s in spans] == [
+        "SQL/Query",
+        "SQL/Many",
+        "SQL/Query",
+        "Controller/tests.integration.django_app.sql",
+        "Middleware",
+    ]
 
-def test_template():
+
+def test_template(tracked_requests):
     with app_with_scout() as app:
         response = TestApp(app).get("/template/")
         assert response.status_int == 200
 
+    assert len(tracked_requests) == 1
+    spans = tracked_requests[0].complete_spans
+    print([s.operation for s in spans])
+    assert [s.operation for s in spans] == [
+        "Template/Compile/<Unknown Template>",
+        "Block/Render/name",
+        "Template/Render/<Unknown Template>",
+        "Controller/tests.integration.django_app.template",
+        "Middleware",
+    ]
 
-def test_no_monitor():
+
+@pytest.mark.xfail(reason="Test setup doesn't reset state fully at the moment.")
+def test_no_monitor(tracked_requests):
     # With an empty config, "scout.monitor" defaults to "false".
     with app_with_scout({}) as app:
         response = TestApp(app).get("/hello/")
         assert response.status_int == 200
+
+    assert len(tracked_requests) == 0
 
 
 def fake_authentication_middleware(get_response):
@@ -181,11 +261,15 @@ def fake_authentication_middleware(get_response):
 
 
 @skip_unless_new_style_middleware
-def test_username():
+def test_username(tracked_requests):
     with override_settings(MIDDLEWARE=[__name__ + ".fake_authentication_middleware"]):
         with app_with_scout() as app:
             response = TestApp(app).get("/hello/")
             assert response.status_int == 200
+
+    assert len(tracked_requests) == 1
+    tr = tracked_requests[0]
+    assert tr.tags["username"] == "scout"
 
 
 def crashy_authentication_middleware(get_response):
@@ -199,11 +283,15 @@ def crashy_authentication_middleware(get_response):
 
 
 @skip_unless_new_style_middleware
-def test_username_exception():
+def test_username_exception(tracked_requests):
     with override_settings(MIDDLEWARE=[__name__ + ".crashy_authentication_middleware"]):
         with app_with_scout() as app:
             response = TestApp(app).get("/hello/")
             assert response.status_int == 200
+
+    assert len(tracked_requests) == 1
+    tr = tracked_requests[0]
+    assert "username" not in tr.tags
 
 
 class FakeAuthenticationMiddleware(object):
@@ -214,13 +302,18 @@ class FakeAuthenticationMiddleware(object):
 
 
 @skip_unless_old_style_middleware
-def test_old_style_username():
+def test_old_style_username(tracked_requests):
     with override_settings(
         MIDDLEWARE_CLASSES=[__name__ + ".FakeAuthenticationMiddleware"]
     ):
         with app_with_scout() as app:
             response = TestApp(app).get("/hello/")
             assert response.status_int == 200
+
+    assert len(tracked_requests) == 1
+    tr = tracked_requests[0]
+    print(tr.tags)
+    assert tr.tags["username"] == "scout"
 
 
 class CrashyAuthenticationMiddleware(object):
@@ -231,13 +324,17 @@ class CrashyAuthenticationMiddleware(object):
 
 
 @skip_unless_old_style_middleware
-def test_old_style_username_exception():
+def test_old_style_username_exception(tracked_requests):
     with override_settings(
         MIDDLEWARE_CLASSES=[__name__ + ".CrashyAuthenticationMiddleware"]
     ):
         with app_with_scout() as app:
             response = TestApp(app).get("/hello/")
             assert response.status_int == 200
+
+    assert len(tracked_requests) == 1
+    tr = tracked_requests[0]
+    assert "username" not in tr.tags
 
 
 @pytest.mark.parametrize("list_or_tuple", [list, tuple])
