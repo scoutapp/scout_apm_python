@@ -1,6 +1,7 @@
 import os
 
 import pytest
+from webtest import TestApp
 
 from scout_apm.core import socket as scout_apm_core_socket
 from scout_apm.core.config import SCOUT_PYTHON_VALUES
@@ -19,6 +20,14 @@ except ImportError:
 for key in os.environ.keys():
     if key.startswith("SCOUT_"):
         del os.environ[key]
+
+
+# Prevent pytest from trying to collect webtest's TestApp as a test class:
+#     PytestWarning: cannot collect test class 'TestApp'
+#     because it has a __init__ constructor
+# As per https://github.com/pytest-dev/pytest/issues/477
+
+TestApp.__test__ = False
 
 
 class GlobalStateLeak(Exception):
