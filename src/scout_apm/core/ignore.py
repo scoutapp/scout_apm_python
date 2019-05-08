@@ -1,3 +1,4 @@
+# coding=utf-8
 from scout_apm.core.context import AgentContext
 
 
