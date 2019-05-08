@@ -13,6 +13,7 @@ from .test_flask import app_with_scout
 def conn_with_scout():
     with app_with_scout() as app:
         app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+        app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
         db = SQLAlchemy(app)
         # Setup according to https://docs.scoutapm.com/#flask-sqlalchemy
         instrument_sqlalchemy(db)
