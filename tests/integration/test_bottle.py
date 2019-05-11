@@ -7,13 +7,9 @@ from webtest import TestApp
 
 from scout_apm.api import Config
 from scout_apm.bottle import ScoutPlugin
+from tests.compat import mock
 
 from .bottle_app import app
-
-try:
-    from unittest.mock import PropertyMock, patch
-except ImportError:  # Python 2
-    from mock import PropertyMock, patch
 
 
 @contextmanager
@@ -83,7 +79,9 @@ def test_no_monitor():
         assert response.status_int == 200
 
 
-@patch("bottle.Request.remote_addr", new_callable=PropertyMock, side_effect=ValueError)
+@mock.patch(
+    "bottle.Request.remote_addr", new_callable=mock.PropertyMock, side_effect=ValueError
+)
 def test_remote_addr_exception(remote_addr):
     """
     Scout doesn't crash if bottle.Request.remote_addr raises an exception.

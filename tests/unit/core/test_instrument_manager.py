@@ -4,11 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from scout_apm.core.config import ScoutConfig
 from scout_apm.core.context import AgentContext
 from scout_apm.core.instrument_manager import InstrumentManager
-
-try:
-    from unittest.mock import patch
-except ImportError:  # Python 2.7
-    from mock import patch
+from tests.compat import mock
 
 # Default instrument name
 default_instrument_installed = False
@@ -90,7 +86,7 @@ def test_install_all_installs_only_enabled_instruments():
     AgentContext.build()
 
     try:
-        with patch(
+        with mock.patch(
             "scout_apm.core.instrument_manager.InstrumentManager.install"
         ) as install:
             # Only the last instrument is installed.

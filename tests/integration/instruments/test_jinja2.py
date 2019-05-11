@@ -7,12 +7,7 @@ from contextlib import contextmanager
 import jinja2
 
 from scout_apm.instruments.jinja2 import Instrument
-
-try:
-    from unittest.mock import patch
-except ImportError:  # Python 2
-    from mock import patch
-
+from tests.compat import mock
 
 instrument = Instrument()
 
@@ -70,7 +65,7 @@ def test_install_no_jinja2_module():
         assert not instrument.installed
 
 
-@patch("scout_apm.instruments.jinja2.monkeypatch_method", side_effect=RuntimeError)
+@mock.patch("scout_apm.instruments.jinja2.monkeypatch_method", side_effect=RuntimeError)
 def test_install_failure(monkeypatch_method):
     try:
         assert not instrument.install()  # doesn't crash

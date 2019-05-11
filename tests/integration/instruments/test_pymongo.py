@@ -9,12 +9,7 @@ import pymongo
 import pytest
 
 from scout_apm.instruments.pymongo import Instrument
-
-try:
-    from unittest.mock import patch
-except ImportError:  # Python 2
-    from mock import patch
-
+from tests.compat import mock
 
 # e.g. export MONGODB_URL="mongodb://localhost:27017/"
 MONGODB_URL = os.environ.get("MONGODB_URL")
@@ -78,7 +73,9 @@ def test_install_no_pymongo_module():
         assert not instrument.installed
 
 
-@patch("scout_apm.instruments.pymongo.monkeypatch_method", side_effect=RuntimeError)
+@mock.patch(
+    "scout_apm.instruments.pymongo.monkeypatch_method", side_effect=RuntimeError
+)
 def test_install_failure(monkeypatch_method):
     try:
         assert not instrument.install()  # doesn't crash

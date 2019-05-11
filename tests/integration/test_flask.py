@@ -7,13 +7,9 @@ from webtest import TestApp
 
 from scout_apm.api import Config
 from scout_apm.flask import ScoutApm
+from tests.compat import mock
 
 from .flask_app import app
-
-try:
-    from unittest.mock import patch
-except ImportError:  # Python 2.7
-    from mock import patch
 
 
 @contextmanager
@@ -86,7 +82,7 @@ def test_no_monitor():
         assert response.status_int == 200
 
 
-@patch("scout_apm.core.monkey.CallableProxy", side_effect=ValueError)
+@mock.patch("scout_apm.core.monkey.CallableProxy", side_effect=ValueError)
 def test_wrapping_exception(CallableProxy):
     """
     Scout doesn't crash if scout_apm.core.monkey.CallableProxy raises an exception.

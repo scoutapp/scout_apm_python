@@ -6,6 +6,7 @@ import pytest
 from scout_apm.core.context import AgentContext
 from scout_apm.core.request_manager import RequestManager
 from scout_apm.core.tracked_request import TrackedRequest
+from tests.compat import mock
 
 from .test_commands import (
     END_TIME,
@@ -14,11 +15,6 @@ from .test_commands import (
     START_TIME,
     START_TIME_STR,
 )
-
-try:
-    from unittest.mock import patch
-except ImportError:  # Python 2.7
-    from mock import patch
 
 
 @pytest.fixture
@@ -36,7 +32,7 @@ def tracked_request():
 
 # Flushing at every request seems to defeat the point of buffering.
 # However this is the current behavior, so let's test it.
-@patch("scout_apm.core.socket.CoreAgentSocket.send")
+@mock.patch("scout_apm.core.socket.CoreAgentSocket.send")
 def test_add_request_flushes_every_request(send, tracked_request):
     AgentContext.build()
 
@@ -70,7 +66,7 @@ def test_add_request_flushes_every_request(send, tracked_request):
     assert not manager.request_buffer._requests  # buffer is empty
 
 
-@patch("scout_apm.core.socket.CoreAgentSocket.send")
+@mock.patch("scout_apm.core.socket.CoreAgentSocket.send")
 def test_add_request_handles_only_finished_requests(send, tracked_request):
     AgentContext.build()
 
@@ -84,7 +80,7 @@ def test_add_request_handles_only_finished_requests(send, tracked_request):
     assert not manager.request_buffer._requests  # buffer is empty
 
 
-@patch("scout_apm.core.socket.CoreAgentSocket.send")
+@mock.patch("scout_apm.core.socket.CoreAgentSocket.send")
 def test_add_request_handles_only_real_requests(send, tracked_request):
     AgentContext.build()
 

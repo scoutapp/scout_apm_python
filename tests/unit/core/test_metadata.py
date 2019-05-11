@@ -7,14 +7,10 @@ import py
 
 from scout_apm.core.context import AgentContext
 from scout_apm.core.metadata import AppMetadata
-
-try:
-    from unittest.mock import patch
-except ImportError:  # Python 2.7
-    from mock import patch
+from tests.compat import mock
 
 
-@patch("scout_apm.core.socket.CoreAgentSocket.send")
+@mock.patch("scout_apm.core.socket.CoreAgentSocket.send")
 def test_report_app_metadata(send):
     AgentContext.build()
 
@@ -30,11 +26,11 @@ def test_report_app_metadata(send):
     assert ("py", py.version) in message["ApplicationEvent"]["event_value"]["libraries"]
 
 
-@patch("scout_apm.core.socket.CoreAgentSocket.send")
+@mock.patch("scout_apm.core.socket.CoreAgentSocket.send")
 def test_report_app_metadata_error_getting_data(send):
     AgentContext.build()
 
-    with patch(
+    with mock.patch(
         "scout_apm.core.metadata.AppMetadata.get_python_packages_versions",
         side_effect=RuntimeError,
     ):
@@ -49,7 +45,7 @@ def test_report_app_metadata_error_getting_data(send):
     assert message["ApplicationEvent"]["event_value"] == {}
 
 
-@patch("scout_apm.core.socket.CoreAgentSocket.send")
+@mock.patch("scout_apm.core.socket.CoreAgentSocket.send")
 def test_report_app_metadata_no_pkg_resources(send):
     AgentContext.build()
 

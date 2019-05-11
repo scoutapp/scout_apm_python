@@ -6,17 +6,13 @@ import time
 import pytest
 
 from scout_apm.core.socket import CoreAgentSocket
+from tests.compat import mock
 
 from .test_core_agent_manager import (  # noqa: F401,F811
     core_agent_manager,
     is_running,
     shutdown,
 )
-
-try:
-    from unittest.mock import patch
-except ImportError:  # Python 2.7
-    from mock import patch
 
 
 @pytest.fixture  # noqa: F811
@@ -85,7 +81,7 @@ def test_send_serialization_error(socket):
     socket.send(NonSerializableCommand())
 
 
-@patch("socket.socket.sendall")
+@mock.patch("socket.socket.sendall")
 def test_send_network_error(sendall, socket):
     sendall.side_effect = OSError
     socket.send(Command())

@@ -14,9 +14,8 @@ Configure it with the SCOUT_MONITOR, SCOUT_KEY, and SCOUT_NAME env variables.
 
 """
 
-from tests.integration import test_bottle, test_django, test_flask, test_pyramid
-
 import scout_apm.api
+from tests.integration import test_bottle, test_django, test_flask, test_pyramid
 
 # Launch Scout APM agent
 print("Installing Scout APM")

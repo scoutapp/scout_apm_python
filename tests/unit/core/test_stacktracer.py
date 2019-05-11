@@ -6,11 +6,7 @@ import pytest
 from scout_apm.core.monkey import unpatch_method
 from scout_apm.core.stacktracer import trace_function, trace_method
 from scout_apm.core.tracked_request import TrackedRequest
-
-try:
-    from unittest.mock import patch
-except ImportError:  # Python 2.7
-    from mock import patch
+from tests.compat import mock
 
 
 class TraceMe(object):
@@ -48,7 +44,7 @@ def test_trace_function_callable_info(tracked_request):
     assert span.operation == "Test/Function/trace_me"
 
 
-@patch("scout_apm.core.stacktracer.CallableProxy", side_effect=RuntimeError)
+@mock.patch("scout_apm.core.stacktracer.CallableProxy", side_effect=RuntimeError)
 def test_trace_function_exception(CallableProxy, tracked_request):
     traced = trace_function(trace_me, lambda: ("Test/Function", {"name": "trace_me"}))
     assert traced is trace_me  # patching failed

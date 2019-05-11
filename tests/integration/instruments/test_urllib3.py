@@ -9,12 +9,7 @@ import pytest
 import urllib3
 
 from scout_apm.instruments.urllib3 import Instrument
-
-try:
-    from unittest.mock import patch
-except ImportError:  # Python 2
-    from mock import patch
-
+from tests.compat import mock
 
 # e.g. export URLLIB3_URL="http://httpbin.org/"
 # or export URLLIB3_URL="http://localhost:9200/" (re-use Elasticsearch!)
@@ -57,7 +52,7 @@ def test_request():
 
 # I can't trigger a failure to get instrument data through a public API.
 # Somewhat surprisingly, the request still succeeds.
-@patch("urllib3.HTTPConnectionPool._absolute_url", side_effect=RuntimeError)
+@mock.patch("urllib3.HTTPConnectionPool._absolute_url", side_effect=RuntimeError)
 def test_urlopen_exception(_absolute_url):
     with urllib3_with_scout():
         http = urllib3.PoolManager()
@@ -90,7 +85,9 @@ def test_install_no_urllib3_module():
         assert not instrument.installed
 
 
-@patch("scout_apm.instruments.urllib3.monkeypatch_method", side_effect=RuntimeError)
+@mock.patch(
+    "scout_apm.instruments.urllib3.monkeypatch_method", side_effect=RuntimeError
+)
 def test_install_failure(monkeypatch_method):
     try:
         assert not instrument.install()  # doesn't crash
