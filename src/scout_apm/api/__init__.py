@@ -2,35 +2,14 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
-import sys
 
 import scout_apm.core
 from scout_apm.api.context import Context as ScoutContext
+from scout_apm.compat import ContextDecorator, text_type
 from scout_apm.core.config import ScoutConfig
 from scout_apm.core.tracked_request import TrackedRequest
 
 logger = logging.getLogger(__name__)
-
-
-# Python 2 (and very early 3.x) didn't have ContextDecorator, so define it for ourselves
-if sys.version_info < (3, 2):
-    import functools
-
-    class ContextDecorator(object):
-        def __call__(self, f):
-            @functools.wraps(f)
-            def decorated(*args, **kwds):
-                with self:
-                    return f(*args, **kwds)
-
-            return decorated
-
-
-else:
-    from contextlib import ContextDecorator
-
-
-text_type = str if sys.version_info[0] >= 3 else unicode  # noqa: F821
 
 
 def text(value, encoding="utf-8", errors="strict"):

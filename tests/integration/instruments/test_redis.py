@@ -9,12 +9,7 @@ import pytest
 import redis
 
 from scout_apm.instruments.redis import Instrument
-
-try:
-    from unittest.mock import patch
-except ImportError:  # Python 2
-    from mock import patch
-
+from tests.compat import mock
 
 # e.g. export REDIS_URL="redis://localhost:6379/0"
 REDIS_URL = os.environ.get("REDIS_URL")
@@ -110,7 +105,7 @@ def test_patch_redis_no_redis_module():
         instrument.patch_redis()  # doesn't crash
 
 
-@patch("scout_apm.instruments.redis.monkeypatch_method", side_effect=RuntimeError)
+@mock.patch("scout_apm.instruments.redis.monkeypatch_method", side_effect=RuntimeError)
 def test_patch_redis_install_failure(monkeypatch_method):
     instrument.patch_redis()  # doesn't crash
 
@@ -120,7 +115,7 @@ def test_patch_pipeline_no_redis_module():
         instrument.patch_pipeline()  # doesn't crash
 
 
-@patch("scout_apm.instruments.redis.monkeypatch_method", side_effect=RuntimeError)
+@mock.patch("scout_apm.instruments.redis.monkeypatch_method", side_effect=RuntimeError)
 def test_patch_pipeline_install_failure(monkeypatch_method):
     instrument.patch_pipeline()  # doesn't crash
 

@@ -9,12 +9,7 @@ import elasticsearch
 import pytest
 
 from scout_apm.instruments.elasticsearch import Instrument
-
-try:
-    from unittest.mock import patch
-except ImportError:  # Python 2
-    from mock import patch
-
+from tests.compat import mock
 
 # e.g. export ELASTICSEARCH_URL="http://localhost:9200/"
 ELASTICSEARCH_URL = os.environ.get("ELASTICSEARCH_URL")
@@ -115,7 +110,7 @@ def test_instrument_client_no_elasticsearch_module():
         assert not instrument.instrument_client()
 
 
-@patch(
+@mock.patch(
     "scout_apm.instruments.elasticsearch.monkeypatch_method", side_effect=RuntimeError
 )
 def test_instrument_client_install_failure(monkeypatch_method):
@@ -127,7 +122,7 @@ def test_instrument_transport_no_elasticsearch_module():
         assert not instrument.instrument_transport()
 
 
-@patch(
+@mock.patch(
     "scout_apm.instruments.elasticsearch.monkeypatch_method", side_effect=RuntimeError
 )
 def test_instrument_transport_install_failure(monkeypatch_method):

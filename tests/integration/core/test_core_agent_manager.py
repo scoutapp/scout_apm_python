@@ -9,11 +9,7 @@ import pytest
 from scout_apm.core.config import ScoutConfig
 from scout_apm.core.context import AgentContext
 from scout_apm.core.core_agent_manager import CoreAgentManager
-
-try:
-    from unittest.mock import patch
-except ImportError:  # Python 2.7
-    from mock import patch
+from tests.compat import mock
 
 
 @pytest.fixture
@@ -54,7 +50,7 @@ def shutdown(core_agent_manager):
 # Tests must execute in the order in which they are defined.
 
 
-@patch("scout_apm.core.core_agent_manager.logger")
+@mock.patch("scout_apm.core.core_agent_manager.logger")
 def test_no_launch(logger, core_agent_manager):
     ScoutConfig.set(core_agent_launch=False)
     try:
@@ -67,7 +63,7 @@ def test_no_launch(logger, core_agent_manager):
         ScoutConfig.set(core_agent_launch=True)
 
 
-@patch("scout_apm.core.core_agent_manager.logger")
+@mock.patch("scout_apm.core.core_agent_manager.logger")
 def test_no_verify(logger, core_agent_manager):
     ScoutConfig.set(core_agent_download=False)
     try:
@@ -88,15 +84,15 @@ def test_download_and_launch(core_agent_manager):
     shutdown(core_agent_manager)
 
 
-@patch("scout_apm.core.core_agent_manager.logger")
+@mock.patch("scout_apm.core.core_agent_manager.logger")
 def test_verify_error(logger, core_agent_manager):
-    with patch(
+    with mock.patch(
         "scout_apm.core.core_agent_manager.sha256_digest",
         return_value="not the expected digest",
     ):
         # Patch out the download() method to avoid downloading again
         # the agent and not make the tests slower than necessary.
-        with patch("scout_apm.core.core_agent_manager.CoreAgentManager.download"):
+        with mock.patch("scout_apm.core.core_agent_manager.CoreAgentManager.download"):
             assert not core_agent_manager.launch()
             assert not is_running(core_agent_manager)
             logger.debug.assert_called_with(
@@ -104,9 +100,9 @@ def test_verify_error(logger, core_agent_manager):
             )
 
 
-@patch("scout_apm.core.core_agent_manager.logger")
+@mock.patch("scout_apm.core.core_agent_manager.logger")
 def test_launch_error(logger, core_agent_manager):
-    with patch(
+    with mock.patch(
         "scout_apm.core.core_agent_manager.CoreAgentManager.agent_binary",
         return_value=[core_agent_manager.core_agent_bin_path, "fail"],
     ):

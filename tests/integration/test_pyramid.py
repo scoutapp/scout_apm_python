@@ -7,13 +7,9 @@ import pytest
 from webtest import TestApp
 
 from scout_apm.api import Config
+from tests.compat import mock
 
 from .pyramid_app import app_configurator
-
-try:
-    from unittest.mock import PropertyMock, patch
-except ImportError:  # Python 2
-    from mock import PropertyMock, patch
 
 
 @contextmanager
@@ -73,9 +69,9 @@ def test_no_monitor():
         assert response.status_int == 200
 
 
-@patch(
+@mock.patch(
     "pyramid.request.Request.remote_addr",
-    new_callable=PropertyMock,
+    new_callable=mock.PropertyMock,
     side_effect=ValueError,
 )
 def test_remote_addr_exception(remote_addr):

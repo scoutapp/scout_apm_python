@@ -6,11 +6,7 @@ from contextlib import contextmanager
 from sqlalchemy import create_engine
 
 from scout_apm.sqlalchemy import instrument_sqlalchemy
-
-try:
-    from unittest.mock import patch
-except ImportError:  # Python 2.7
-    from mock import patch
+from tests.compat import mock
 
 
 @contextmanager
@@ -35,7 +31,7 @@ def test_hello():
 
 
 # Monkey patch should_capture_backtrace in order to keep the test fast.
-@patch(
+@mock.patch(
     "scout_apm.core.n_plus_one_call_set.NPlusOneCallSetItem.should_capture_backtrace"
 )
 def test_hello_capture_backtrace(should_capture_backtrace):

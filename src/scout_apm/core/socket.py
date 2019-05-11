@@ -9,16 +9,9 @@ import struct
 import threading
 import time
 
+from scout_apm.compat import queue
 from scout_apm.core.commands import Register
 from scout_apm.core.config import ScoutConfig
-
-try:
-    # Python 3.x
-    import queue
-except ImportError:
-    # Python 2.x
-    import Queue as queue
-
 
 SECOND = 1  # time unit - monkey-patched in tests to make them run faster
 

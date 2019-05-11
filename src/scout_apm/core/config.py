@@ -3,8 +3,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 import os
-import sys
 
+from scout_apm.compat import string_type
 from scout_apm.core.git_revision import GitRevision
 from scout_apm.core.platform_detection import PlatformDetection
 from scout_apm.core.util import octal
@@ -251,9 +251,6 @@ class ScoutConfigNull(object):
 
     def value(self, key):
         return None
-
-
-string_type = str if sys.version_info[0] >= 3 else basestring  # noqa: F821
 
 
 class BooleanConversion(object):

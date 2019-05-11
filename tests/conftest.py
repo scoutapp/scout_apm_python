@@ -8,12 +8,7 @@ from scout_apm.core import socket as scout_apm_core_socket
 from scout_apm.core.config import SCOUT_PYTHON_VALUES
 from scout_apm.core.request_manager import RequestBuffer
 from scout_apm.core.tracked_request import TrackedRequest
-
-try:
-    from unittest import mock
-except ImportError:
-    # Python 2
-    import mock
+from tests.compat import TemporaryDirectory, mock
 
 # Env variables have precedence over Python configs in ScoutConfig.
 # Unset all Scout env variables to prevent interference with tests.
@@ -91,22 +86,6 @@ def isolate_global_state():
                         request.tags,
                     )
                 )
-
-
-try:
-    from tempfile import TemporaryDirectory
-except ImportError:  # Python < 3.2
-    from contextlib import contextmanager
-    from tempfile import mkdtemp
-    from shutil import rmtree
-
-    @contextmanager
-    def TemporaryDirectory():
-        tempdir = mkdtemp()
-        try:
-            yield tempdir
-        finally:
-            rmtree(tempdir)
 
 
 # Create a temporary directory for isolation between test sessions.

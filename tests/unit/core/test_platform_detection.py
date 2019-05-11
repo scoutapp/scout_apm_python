@@ -1,19 +1,11 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import sys
-
 import pytest
 
+from scout_apm.compat import string_type
 from scout_apm.core.platform_detection import PlatformDetection
-
-try:
-    from unittest.mock import patch
-except ImportError:  # Python 2.7
-    from mock import patch
-
-
-string_type = str if sys.version_info[0] >= 3 else basestring  # noqa: F821
+from tests.compat import mock
 
 
 def test_get_triple():
@@ -30,7 +22,7 @@ def test_get_triple():
         ("", "unknown"),
     ],
 )
-@patch("platform.machine")
+@mock.patch("platform.machine")
 def test_arch(platform_machine, machine, arch):
     platform_machine.return_value = machine
     assert PlatformDetection.arch() == arch
@@ -45,7 +37,7 @@ def test_arch(platform_machine, machine, arch):
         ("", "unknown"),
     ],
 )
-@patch("platform.system")
+@mock.patch("platform.system")
 def test_platform(platform_system, system, platform):
     platform_system.return_value = system
     assert PlatformDetection.platform() == platform
@@ -59,13 +51,13 @@ def test_platform(platform_system, system, platform):
         (b"", "gnu"),
     ],
 )
-@patch("subprocess.check_output")
+@mock.patch("subprocess.check_output")
 def test_libc(check_output, output, libc):
     check_output.return_value = output
     assert PlatformDetection.libc() == libc
 
 
-@patch("subprocess.check_output")
+@mock.patch("subprocess.check_output")
 def test_libc_no_ldd(check_output):
     check_output.side_effect = OSError
     assert PlatformDetection.libc() == "gnu"

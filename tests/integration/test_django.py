@@ -13,14 +13,9 @@ from webtest import TestApp
 
 from scout_apm.api import Config
 from scout_apm.core.tracked_request import TrackedRequest
+from tests.compat import mock
 
 from .django_app import app as app_unused  # noqa: F401
-
-try:
-    from unittest.mock import Mock, patch
-except ImportError:  # Python 2
-    from mock import Mock, patch
-
 
 skip_unless_new_style_middleware = pytest.mark.skipif(
     django.VERSION < (1, 10), reason="new-style middleware was added in Django 1.10"
@@ -204,7 +199,7 @@ def test_sql(tracked_requests):
 
 
 # Monkey patch should_capture_backtrace in order to keep the test fast.
-@patch(
+@mock.patch(
     "scout_apm.core.n_plus_one_call_set.NPlusOneCallSetItem.should_capture_backtrace"
 )
 def test_sql_capture_backtrace(should_capture_backtrace, tracked_requests):
@@ -254,7 +249,7 @@ def test_no_monitor(tracked_requests):
 def fake_authentication_middleware(get_response):
     def middleware(request):
         # Mock the User instance to avoid a dependency on django.contrib.auth.
-        request.user = Mock()
+        request.user = mock.Mock()
         request.user.get_username.return_value = "scout"
         return get_response(request)
 
@@ -276,7 +271,7 @@ def test_username(tracked_requests):
 def crashy_authentication_middleware(get_response):
     def middleware(request):
         # Mock the User instance to avoid a dependency on django.contrib.auth.
-        request.user = Mock()
+        request.user = mock.Mock()
         request.user.get_username.side_effect = ValueError
         return get_response(request)
 
@@ -298,7 +293,7 @@ def test_username_exception(tracked_requests):
 class FakeAuthenticationMiddleware(object):
     def process_request(self, request):
         # Mock the User instance to avoid a dependency on django.contrib.auth.
-        request.user = Mock()
+        request.user = mock.Mock()
         request.user.get_username.return_value = "scout"
 
 
@@ -320,7 +315,7 @@ def test_old_style_username(tracked_requests):
 class CrashyAuthenticationMiddleware(object):
     def process_request(self, request):
         # Mock the User instance to avoid a dependency on django.contrib.auth.
-        request.user = Mock()
+        request.user = mock.Mock()
         request.user.get_username.side_effect = ValueError
 
 
