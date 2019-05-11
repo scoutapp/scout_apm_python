@@ -111,7 +111,7 @@ class CoreAgentManager(object):
             return False
 
         bin_path = self.core_agent_dir + "/" + manifest.bin_name
-        if SHA256.digest(bin_path) == manifest.sha256:
+        if sha256_digest(bin_path) == manifest.sha256:
             self.core_agent_bin_path = bin_path
             self.core_agent_bin_version = manifest.bin_version
             return True
@@ -228,15 +228,13 @@ class CoreAgentManifest(object):
         return self.valid
 
 
-class SHA256(object):
-    @staticmethod
-    def digest(filename, block_size=65536):
-        try:
-            sha256 = hashlib.sha256()
-            with open(filename, "rb") as f:
-                for block in iter(lambda: f.read(block_size), b""):
-                    sha256.update(block)
-            return sha256.hexdigest()
-        except OSError as e:
-            logger.debug("Error on digest: %r", e)
-            return None
+def sha256_digest(filename, block_size=65536):
+    try:
+        sha256 = hashlib.sha256()
+        with open(filename, "rb") as f:
+            for block in iter(lambda: f.read(block_size), b""):
+                sha256.update(block)
+        return sha256.hexdigest()
+    except OSError as e:
+        logger.debug("Error on digest: %r", e)
+        return None

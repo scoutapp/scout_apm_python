@@ -49,23 +49,14 @@ class _DetailedTracingCursorWrapper(CursorWrapper):
                 span.capture_backtrace()
 
 
-class SQLInstrument(object):
-    installed = False
+def install_sql_instrumentation():
+    if getattr(install_sql_instrumentation, "installed", False):
+        return
+    install_sql_instrumentation.installed = True
 
-    @staticmethod
-    def install():
-        """
-        Installs ScoutApm SQL Instrumentation by monkeypatching the `cursor`
-        method of BaseDatabaseWrapper, to return a wrapper that instruments any
-        calls going through it.
-        """
-        if SQLInstrument.installed:
-            return
-        SQLInstrument.installed = True
+    @monkeypatch_method(BaseDatabaseWrapper)
+    def cursor(original, self, *args, **kwargs):
+        result = original(*args, **kwargs)
+        return _DetailedTracingCursorWrapper(result, self)
 
-        @monkeypatch_method(BaseDatabaseWrapper)
-        def cursor(original, self, *args, **kwargs):
-            result = original(*args, **kwargs)
-            return _DetailedTracingCursorWrapper(result, self)
-
-        logger.debug("Monkey patched SQL")
+    logger.debug("Monkey patched SQL")

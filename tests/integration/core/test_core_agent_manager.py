@@ -91,7 +91,7 @@ def test_download_and_launch(core_agent_manager):
 @patch("scout_apm.core.core_agent_manager.logger")
 def test_verify_error(logger, core_agent_manager):
     with patch(
-        "scout_apm.core.core_agent_manager.SHA256.digest",
+        "scout_apm.core.core_agent_manager.sha256_digest",
         return_value="not the expected digest",
     ):
         # Patch out the download() method to avoid downloading again
