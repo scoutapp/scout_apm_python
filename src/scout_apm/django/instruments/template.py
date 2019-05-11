@@ -47,55 +47,52 @@ def load(parser, token):  # pragma: no cover
     return defaulttags.load(decorating_parser, token)
 
 
-class TemplateInstrument(object):
-    installed = False
+def install_template_instrumentation():
+    if getattr(install_template_instrumentation, "installed", False):
+        return
+    install_template_instrumentation.installed = True
 
-    @staticmethod
-    def install():
-        # Our eventual aim is to patch the render() method on the Node objects
-        # corresponding to custom template tags. However we have to jump through
-        # a number of hoops in order to get access to the object.
-        #
-        # 1. Add ourselves to the set of built in template tags
-        #    This allows us to replace the 'load' template tag which controls
-        #    the loading of custom template tags
-        # 2. Delegate to default load with replaced parser
-        #    We provide our own parser class so we can catch and intercept
-        #    calls to add_library.
-        # 3. add_library receives a library of template tags
-        #    It iterates through each template tag, wrapping its compile function
-        # 4. compile is called as part of compiling the template
-        #    Our wrapper is called instead of the original templatetag compile
-        #    function. We delegate to the original function, but then modify
-        #    the resulting object by wrapping its render() function. This
-        #    render() function is what ends up being timed and appearing in the
-        #    tree.
+    # Our eventual aim is to patch the render() method on the Node objects
+    # corresponding to custom template tags. However we have to jump through
+    # a number of hoops in order to get access to the object.
+    #
+    # 1. Add ourselves to the set of built in template tags
+    #    This allows us to replace the 'load' template tag which controls
+    #    the loading of custom template tags
+    # 2. Delegate to default load with replaced parser
+    #    We provide our own parser class so we can catch and intercept
+    #    calls to add_library.
+    # 3. add_library receives a library of template tags
+    #    It iterates through each template tag, wrapping its compile function
+    # 4. compile is called as part of compiling the template
+    #    Our wrapper is called instead of the original templatetag compile
+    #    function. We delegate to the original function, but then modify
+    #    the resulting object by wrapping its render() function. This
+    #    render() function is what ends up being timed and appearing in the
+    #    tree.
 
-        # XXX: Stopped working in Django 1.9
-        #  add_to_builtins('apm.instruments.view')
-        if TemplateInstrument.installed:
-            return
-        TemplateInstrument.installed = True
+    # XXX: Stopped working in Django 1.9
+    #  add_to_builtins('apm.instruments.view')
 
-        @trace_method(Template)
-        def __init__(self, *args, **kwargs):
-            name = args[2] if len(args) >= 3 else "<Unknown Template>"
-            return ("Template/Compile", {"name": name})
+    @trace_method(Template)
+    def __init__(self, *args, **kwargs):
+        name = args[2] if len(args) >= 3 else "<Unknown Template>"
+        return ("Template/Compile", {"name": name})
 
-        @trace_method(Template)
-        def render(self, *args, **kwargs):
-            name = self.name if self.name is not None else "<Unknown Template>"
-            return ("Template/Render", {"name": name})
+    @trace_method(Template)
+    def render(self, *args, **kwargs):
+        name = self.name if self.name is not None else "<Unknown Template>"
+        return ("Template/Render", {"name": name})
 
-        @trace_method(BlockNode)  # noqa: F811
-        def render(self, *args, **kwargs):
-            return ("Block/Render", {"name": self.name})
+    @trace_method(BlockNode)  # noqa: F811
+    def render(self, *args, **kwargs):
+        return ("Block/Render", {"name": self.name})
 
-        logger.debug("Monkey patched Templates")
+    logger.debug("Monkey patched Templates")
 
-        # XXX: Figure this out, causes exception that the "resolve_context" key
-        # isn't in dict
-        # Also will need to figure out the name hash
-        #  @trace_method(TemplateResponse)
-        #  def resolve_context(self, *args, **kwargs):
-        #  return ('Template/Context', {})
+    # XXX: Figure this out, causes exception that the "resolve_context" key
+    # isn't in dict
+    # Also will need to figure out the name hash
+    #  @trace_method(TemplateResponse)
+    #  def resolve_context(self, *args, **kwargs):
+    #  return ('Template/Context', {})

@@ -4,11 +4,12 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 
 from django.apps import AppConfig
+from django.conf import settings
 
 import scout_apm.core
-from scout_apm.django.config import ConfigAdapter
-from scout_apm.django.instruments.sql import SQLInstrument
-from scout_apm.django.instruments.template import TemplateInstrument
+from scout_apm.core.config import ScoutConfig
+from scout_apm.django.instruments.sql import install_sql_instrumentation
+from scout_apm.django.instruments.template import install_template_instrumentation
 
 logger = logging.getLogger(__name__)
 
@@ -18,8 +19,7 @@ class ScoutApmDjangoConfig(AppConfig):
     verbose_name = "Scout Apm (Django)"
 
     def ready(self):
-        # Copy django configuration to scout_apm's config
-        ConfigAdapter.install()
+        self.copy_config()
 
         # Finish installing the agent. If the agent isn't installed for any
         # reason, return without installing instruments
@@ -30,8 +30,19 @@ class ScoutApmDjangoConfig(AppConfig):
         self.install_middleware()
 
         # Setup Instruments
-        SQLInstrument.install()
-        TemplateInstrument.install()
+        install_sql_instrumentation()
+        install_template_instrumentation()
+
+    def copy_config(self):
+        configs = {}
+        if getattr(settings, "BASE_DIR", None) is not None:
+            configs["application_root"] = settings.BASE_DIR
+        for name in dir(settings):
+            if name.startswith("SCOUT_"):
+                value = getattr(settings, name)
+                clean_name = name.replace("SCOUT_", "").lower()
+                configs[clean_name] = value
+        ScoutConfig.set(**configs)
 
     def install_middleware(self):
         """
