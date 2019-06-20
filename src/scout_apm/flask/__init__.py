@@ -12,20 +12,13 @@ from scout_apm.core.tracked_request import TrackedRequest
 
 
 class ScoutApm(object):
-    def __init__(self, app=None):
+    def __init__(self, app):
         self.app = app
-        if app is not None:
-            self.init_app(app)
-
-    def init_app(self, app):
-        self.app = app
-
         app.before_first_request(self.before_first_request)
-        app.before_request(self.process_request)
-        app.after_request(self.process_response)
-
-        # Monkey-patch the Flask.dispatch_request method
-        app.dispatch_request = self.dispatch_request
+        # Wrap the Flask.dispatch_request method
+        app.dispatch_request = CallableProxy(
+            app.dispatch_request, self.wrapped_dispatch_request
+        )
 
     #############
     #  Startup  #
@@ -48,88 +41,44 @@ class ScoutApm(object):
                 configs[clean_name] = value
         ScoutConfig.set(**configs)
 
-    #############################
-    #  Request Lifecycle hooks  #
-    #############################
+    ############################
+    #  Request Lifecycle hook  #
+    ############################
 
-    def dispatch_request(self):
-        """Modified version of Flask.dispatch_request to call process_view."""
+    def wrapped_dispatch_request(self, original, *args, **kwargs):
+        request = _request_ctx_stack.top.request
 
-        req = _request_ctx_stack.top.request
-        app = current_app
+        # Copied logic from Flask
+        if request.routing_exception is not None:
+            return original(*args, **kwargs)
 
-        # Return flask's default options response. See issue #40
-        if req.method == "OPTIONS":
-            return app.make_default_options_response()
+        rule = request.url_rule
+        view_func = self.app.view_functions[rule.endpoint]
 
-        if req.routing_exception is not None:
-            app.raise_routing_exception(req)
+        path = request.path
+        name = view_func.__module__ + "." + view_func.__name__
+        operation = "Controller/" + name
 
-        # The routing rule has some handy attributes to extract how Flask found
-        # this endpoint
-        rule = req.url_rule
+        tracked_request = TrackedRequest.instance()
+        tracked_request.mark_real_request()
+        span = tracked_request.start_span(operation=operation)
+        span.tag("path", path)
+        span.tag("name", name)
 
-        # Wrap the real view_func
-        view_func = self.wrap_view_func(
-            app, rule, req, app.view_functions[rule.endpoint], req.view_args
-        )
+        if ignore_path(path):
+            tracked_request.tag("ignore_transaction", True)
 
-        return view_func(**req.view_args)
+        # Extract headers
+        #  regex = re.compile('^HTTP_')
+        #  headers = dict((regex.sub('', header), value) for (header, value)
+        #  in request.META.items() if header.startswith('HTTP_'))
 
-    def process_request(self):
-        pass
+        #  span.tag('remote_addr', request.META['REMOTE_ADDR'])
 
-    def wrap_view_func(self, app, rule, req, view_func, view_kwargs):
-        """ This method is called just before the flask view is called.
-        This is done by the dispatch_request method.
-        """
-        operation = view_func.__module__ + "." + view_func.__name__
-        return self.trace_view_function(
-            view_func, ("Controller", {"path": req.path, "name": operation})
-        )
-
-    def trace_view_function(self, func, info):
         try:
-
-            def tracing_function(original, *args, **kwargs):
-                entry_type, detail = info
-
-                operation = entry_type
-                if detail["name"] is not None:
-                    operation = operation + "/" + detail["name"]
-
-                tr = TrackedRequest.instance()
-                tr.mark_real_request()
-                span = tr.start_span(operation=operation)
-
-                for key in detail:
-                    span.tag(key, detail[key])
-
-                if ignore_path(detail.get("path", "")):
-                    tr.tag("ignore_transaction", True)
-
-                # And the custom View stuff
-                #  request = args[0]
-
-                # Extract headers
-                #  regex = re.compile('^HTTP_')
-                #  headers = dict((regex.sub('', header), value) for (header, value)
-                #  in request.META.items() if header.startswith('HTTP_'))
-
-                #  span.tag('remote_addr', request.META['REMOTE_ADDR'])
-
-                try:
-                    return original(*args, **kwargs)
-                except Exception as e:
-                    TrackedRequest.instance().tag("error", "true")
-                    raise e
-                finally:
-                    TrackedRequest.instance().stop_span()
-
-            return CallableProxy(func, tracing_function)
-        except Exception:
-            # If we can't wrap for any reason, just return the original
-            return func
-
-    def process_response(self, response):
-        return response
+            return original(*args, **kwargs)
+        except Exception as exc:
+            tracked_request.tag("error", "true")
+            raise exc
+        finally:
+            tracked_request.stop_span()

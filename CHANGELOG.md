@@ -7,6 +7,8 @@
 - Tested on Django 2.2
 - Added PyPI Trove classifiers for supported Django versions
 - Track usernames on Django < 1.10
+- Fix Flask integration to track some missed requests such as automatic
+  `OPTONS` responses.
 
 ### Fixed
 
