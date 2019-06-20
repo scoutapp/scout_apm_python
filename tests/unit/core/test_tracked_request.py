@@ -81,6 +81,7 @@ def test_start_span_wires_parents(tr):
 
 @pytest.mark.skipif(objtrace is None, reason="objtrace extension isn't available")
 def test_tags_allocations_for_spans(tr):
+    objtrace.enable()
     span = tr.start_span()
     tr.stop_span()
     assert span.tags["allocations"] > 0
