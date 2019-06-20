@@ -22,6 +22,10 @@ def tr():
         request.finish()
 
 
+def test_tracked_request_repr(tr):
+    assert repr(tr).startswith("<TrackedRequest(")
+
+
 def test_tracked_request_instance_is_a_singleton():
     tr1 = TrackedRequest.instance()
     tr2 = TrackedRequest.instance()
@@ -39,7 +43,6 @@ def test_real_request(tr):
 
 
 def test_tag_request(tr):
-
     tr.tag("foo", "bar")
 
     assert len(tr.tags) == 1
@@ -53,6 +56,14 @@ def test_tag_request_overwrite(tr):
 
     assert len(tr.tags) == 1
     assert tr.tags["foo"] == "baz"
+
+
+def test_span_repr(tr):
+    span = tr.start_span()
+    try:
+        assert repr(span).startswith("<Span(")
+    finally:
+        tr.stop_span()
 
 
 def test_tag_span(tr):
