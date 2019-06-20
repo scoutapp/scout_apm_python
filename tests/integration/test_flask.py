@@ -3,13 +3,13 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from contextlib import contextmanager
 
+import pytest
+from flask import Flask
 from webtest import TestApp
 
 from scout_apm.api import Config
 from scout_apm.flask import ScoutApm
 from tests.compat import mock
-
-from .flask_app import app
 
 
 @contextmanager
@@ -25,65 +25,98 @@ def app_with_scout(config=None):
     # Disable running the agent.
     config["SCOUT_CORE_AGENT_LAUNCH"] = False
 
+    # Basic Flask app
+    app = Flask("test_app")
+
+    @app.route("/")
+    def home():
+        return "Welcome home."
+
+    @app.route("/hello/")
+    def hello():
+        return "Hello World!"
+
+    @app.route("/crash/")
+    def crash():
+        raise ValueError("BØØM!")  # non-ASCII
+
     # Setup according to https://docs.scoutapm.com/#flask
-    scout = ScoutApm(app)
-    for key, value in config.items():
-        app.config[key] = value
+    ScoutApm(app)
+    app.config.update(config)
+
     try:
         yield app
     finally:
-        # Restore original configuration.
-        assert app.before_first_request_funcs == [scout.before_first_request]
-        assert app.before_request_funcs == {None: [scout.process_request]}
-        assert app.after_request_funcs == {None: [scout.process_response]}
-        assert app.dispatch_request == scout.dispatch_request
-        del app.before_first_request_funcs[:]
-        del app.before_request_funcs[None][:]
-        del app.after_request_funcs[None][:]
-        del app.dispatch_request
-        # Reset Scout configuration.
         Config.reset_all()
 
 
-def test_home():
+def test_home(tracked_requests):
     with app_with_scout() as app:
         response = TestApp(app).get("/")
         assert response.status_int == 200
 
+    assert len(tracked_requests) == 1
+    spans = tracked_requests[0].complete_spans
+    assert [s.operation for s in spans] == [
+        "Controller/tests.integration.test_flask.home"
+    ]
 
-def test_hello():
+
+def test_hello(tracked_requests):
     with app_with_scout() as app:
         response = TestApp(app).get("/hello/")
         assert response.status_int == 200
 
+    assert len(tracked_requests) == 1
+    spans = tracked_requests[0].complete_spans
+    assert [s.operation for s in spans] == [
+        "Controller/tests.integration.test_flask.hello"
+    ]
 
-def test_not_found():
+
+def test_not_found(tracked_requests):
     with app_with_scout() as app:
         response = TestApp(app).get("/not-found/", expect_errors=True)
         assert response.status_int == 404
 
+    assert tracked_requests == []
 
-def test_server_error():
+
+def test_server_error(tracked_requests):
     with app_with_scout() as app:
         response = TestApp(app).get("/crash/", expect_errors=True)
         assert response.status_int == 500
 
+    assert len(tracked_requests) == 1
+    spans = tracked_requests[0].complete_spans
+    assert [s.operation for s in spans] == [
+        "Controller/tests.integration.test_flask.crash"
+    ]
 
-def test_options():
+
+def test_automatic_options(tracked_requests):
+    """
+    We don't want to capture automatic options
+    """
     with app_with_scout() as app:
         response = TestApp(app).options("/hello/")
         assert response.status_int == 200
 
+    assert tracked_requests == []
 
-def test_no_monitor():
+
+@pytest.mark.xfail(reason="Integration still captures requests with monitor=False")
+def test_no_monitor(tracked_requests):
     # With an empty config, "SCOUT_MONITOR" defaults to False.
     with app_with_scout({}) as app:
         response = TestApp(app).get("/hello/")
         assert response.status_int == 200
 
+    assert tracked_requests == []
+
 
 @mock.patch("scout_apm.core.monkey.CallableProxy", side_effect=ValueError)
-def test_wrapping_exception(CallableProxy):
+def test_wrapping_exception(CallableProxy, tracked_requests):
     """
     Scout doesn't crash if scout_apm.core.monkey.CallableProxy raises an exception.
 
@@ -93,3 +126,5 @@ def test_wrapping_exception(CallableProxy):
     with app_with_scout() as app:
         response = TestApp(app).get("/hello/")
         assert response.status_int == 200
+
+    assert tracked_requests == []
