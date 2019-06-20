@@ -38,6 +38,12 @@ class TrackedRequest(ThreadLocalSingleton):
         self.callset = NPlusOneCallSet()
         logger.debug("Starting request: %s", self.req_id)
 
+    def __repr__(self):
+        # Incomplete to avoid TMI
+        return "<TrackedRequest(req_id={}, tags={})>".format(
+            repr(self.req_id), repr(self.tags)
+        )
+
     def mark_real_request(self):
         self.real_request = True
 
@@ -132,6 +138,12 @@ class Span(object):
                 "start_objtrace_counts", (0, 0, 0, 0)
             )
         self.end_objtrace_counts = kwargs.get("end_objtrace_counts", (0, 0, 0, 0))
+
+    def __repr__(self):
+        # Incomplete to avoid TMI
+        return "<Span(span_id={}, operation={}, ignore={}, tags={})>".format(
+            repr(self.span_id), repr(self.operation), repr(self.ignore), repr(self.tags)
+        )
 
     def stop(self):
         self.end_time = datetime.utcnow()
