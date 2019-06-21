@@ -9,11 +9,10 @@ from webtest import TestApp
 
 from scout_apm.api import Config
 from scout_apm.falcon import ScoutMiddleware
-from tests.compat import mock
 
 
 @contextmanager
-def app_with_scout(config=None, middleware=None):
+def app_with_scout(config=None, middleware=None, scout_middleware_index=999):
     """
     Context manager that yields a fresh Falcon app with Scout configured.
     """
@@ -27,8 +26,10 @@ def app_with_scout(config=None, middleware=None):
     # Basic Falcon app
     if middleware is None:
         middleware = []
-    middleware.append(ScoutMiddleware(config=config))
+    scout_middleware = ScoutMiddleware(config=config)
+    middleware.insert(scout_middleware_index, scout_middleware)
     app = falcon.API(middleware=middleware)
+    scout_middleware.set_api(app)
 
     class HomeResource(object):
         def on_get(self, req, resp):
@@ -55,6 +56,24 @@ def app_with_scout(config=None, middleware=None):
         Config.reset_all()
 
 
+def test_use_without_set_api():
+    app = falcon.API(middleware=[ScoutMiddleware(config={})])
+
+    with pytest.raises(RuntimeError) as excinfo:
+        TestApp(app).get("/")
+
+    assert str(excinfo.value) == "Call ScoutMiddleware.set_api() before requests begin"
+
+
+def test_set_api_wrong_type():
+    scout_middleware = ScoutMiddleware(config={})
+
+    with pytest.raises(ValueError) as excinfo:
+        scout_middleware.set_api(None)
+
+    assert str(excinfo.value) == "api should be an instance of falcon.API"
+
+
 def test_home(tracked_requests):
     with app_with_scout() as app:
         response = TestApp(app).get("/")
@@ -73,43 +92,30 @@ def test_home(tracked_requests):
 
 
 @pytest.mark.parametrize(
-    "frame_mocker",
+    "headers, extra_environ, expected",
     [
-        # This checks the branch where stack inspection isn't possible, which
-        # according to the inspect.currentframe() docs, is "some
-        # implementations" of Python. For the record, it does work in
-        # PyPy3.5-7.0.0:
-        mock.patch("scout_apm.falcon.inspect.currentframe", return_value=None),
-        # This checks the unlikely branch that somehow we can inspect the
-        # current frame but not see the frame above it to find the "responder"
-        # variable:
-        mock.patch(
-            "scout_apm.falcon.inspect.currentframe", return_value=mock.Mock(f_back=None)
+        ({}, {}, None),
+        ({}, {"REMOTE_ADDR": "1.1.1.1"}, "1.1.1.1"),
+        ({"x-forwarded-for": "1.1.1.1"}, {}, "1.1.1.1"),
+        ({"x-forwarded-for": "1.1.1.1,2.2.2.2"}, {}, "1.1.1.1"),
+        ({"x-forwarded-for": "1.1.1.1"}, {"REMOTE_ADDR": "2.2.2.2"}, "1.1.1.1"),
+        (
+            {"x-forwarded-for": "1.1.1.1", "client-ip": "2.2.2.2"},
+            {"REMOTE_ADDR": "3.3.3.3"},
+            "1.1.1.1",
         ),
-        # This tests the future where Falcon is refactored so that 'responder'
-        # is no longer the name for the responder method or it's not
-        # visible in the frame above the middleware's process_response. Basically
-        # if this line, or similar, are changed:
-        # https://github.com/falconry/falcon/blob/7372895e0132fa7c626d9afde0d9e07e37655486/falcon/api.py#L247
-        mock.patch(
-            "scout_apm.falcon.inspect.currentframe",
-            return_value=mock.Mock(f_back=mock.Mock(f_locals={})),
-        ),
+        ({"client-ip": "1.1.1.1"}, {}, "1.1.1.1"),
+        ({"client-ip": "1.1.1.1,2.2.2.2"}, {}, "1.1.1.1"),
+        ({"client-ip": "1.1.1.1"}, {"REMOTE_ADDR": "2.2.2.2"}, "1.1.1.1"),
+        ({"client-ip": "1.1.1.1"}, {"REMOTE_ADDR": "2.2.2.2"}, "1.1.1.1"),
     ],
 )
-def test_home_stack_inspection_failures(frame_mocker, tracked_requests):
-    with app_with_scout() as app, frame_mocker:
-        response = TestApp(app).get("/")
+def test_user_ip(headers, extra_environ, expected, tracked_requests):
+    with app_with_scout() as app:
+        TestApp(app).get("/", headers=headers, extra_environ=extra_environ)
 
-    assert response.status_int == 200
-    assert response.text == "Welcome home."
-    assert len(tracked_requests) == 1
     tracked_request = tracked_requests[0]
-    assert tracked_request.tags["path"] == "/"
-    assert tracked_request.active_spans == []
-    assert len(tracked_request.complete_spans) == 1
-    span = tracked_request.complete_spans[0]
-    assert span.operation == "Controller/tests.integration.test_falcon.HomeResource/GET"
+    assert tracked_request.tags["user_ip"] == expected
 
 
 def test_home_suffixed(tracked_requests):
@@ -158,6 +164,44 @@ def test_middleware_returning_early_from_process_request(tracked_requests):
     assert response.status_int == 200
     assert response.text == "Shortcut!"
     assert tracked_requests == []
+
+
+def test_middleware_deleting_scout_tracked_request(tracked_requests):
+    class AdversarialMiddleware(object):
+        def process_request(self, req, resp):
+            pass
+
+        def process_resource(self, req, resp, resource, params):
+            req.context.saved_scout_tracked_request = req.context.scout_tracked_request
+            del req.context.scout_tracked_request
+
+        def process_response(self, req, resp, resource, req_succeeded):
+            pass
+
+    class AdversarialUndoMiddleware(object):
+        def process_request(self, req, resp):
+            pass
+
+        def process_resource(self, req, resp, resource, params):
+            req.context.scout_tracked_request = req.context.saved_scout_tracked_request
+            del req.context.saved_scout_tracked_request
+
+        def process_response(self, req, resp, resource, req_succeeded):
+            pass
+
+    with app_with_scout(
+        middleware=[AdversarialMiddleware(), AdversarialUndoMiddleware()],
+        scout_middleware_index=1,
+    ) as app:
+        response = TestApp(app).get("/")
+
+    assert response.status_int == 200
+    assert response.text == "Welcome home."
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert tracked_request.tags["path"] == "/"
+    assert tracked_request.active_spans == []
+    assert tracked_request.complete_spans == []
 
 
 def test_middleware_returning_early_from_process_resource(tracked_requests):
