@@ -6,7 +6,7 @@ import re
 
 import pytest
 
-from scout_apm.core.config import ScoutConfig, ScoutConfigDefaults, ScoutConfigNull
+from scout_apm.core.config import ScoutConfig, ScoutConfigNull
 from tests.compat import mock
 
 
@@ -179,19 +179,18 @@ def test_list_conversion_from_python(original, converted):
 
 
 @pytest.mark.parametrize(
-    "values,expected",
+    "environ,expected",
     [
         ({}, ""),
         ({"HEROKU_SLUG_COMMIT": "FROM_HEROKU"}, "FROM_HEROKU"),
         ({"SCOUT_REVISION_SHA": "FROM_SCOUT"}, "FROM_SCOUT"),
         (
             {"HEROKU_SLUG_COMMIT": "FROM_HEROKU", "SCOUT_REVISION_SHA": "FROM_SCOUT"},
-            "FROM_HEROKU",
+            "FROM_SCOUT",
         ),
         ({"HEROKU_SLUG_COMMIT": "", "SCOUT_REVISION_SHA": ""}, ""),
     ],
 )
-def test_defaults_git_revision_sha(values, expected):
-    with mock.patch.dict(os.environ, clear=True, **values):
-        defaults = ScoutConfigDefaults()
-        assert defaults.value("revision_sha") == expected
+def test_revision_sha(environ, expected):
+    with mock.patch.dict(os.environ, clear=True, **environ):
+        assert ScoutConfig().value("revision_sha") == expected

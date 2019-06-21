@@ -228,9 +228,9 @@ class ScoutConfigDefaults(object):
         }
 
     def _git_revision_sha(self):
-        return os.environ.get("HEROKU_SLUG_COMMIT") or os.environ.get(
-            "SCOUT_REVISION_SHA", ""
-        )
+        # N.B. The environment variable SCOUT_REVISION_SHA may also be used,
+        # but that will be picked up by ScoutConfigEnv
+        return os.environ.get("HEROKU_SLUG_COMMIT", "")
 
     def has_config(self, key):
         return key in self.defaults
