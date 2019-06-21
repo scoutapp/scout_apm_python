@@ -14,6 +14,7 @@ Python Versions:
 Scout APM works with the following frameworks:
 
 * Django 1.8+
+* Falcon 2.0+
 * Flask 0.10+
 * Celery 3.1+
 * Pyramid 1.8+
