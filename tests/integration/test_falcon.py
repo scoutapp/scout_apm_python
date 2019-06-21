@@ -1,6 +1,7 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import sys
 from contextlib import contextmanager
 
 import falcon
@@ -111,6 +112,11 @@ def test_home(tracked_requests):
     ],
 )
 def test_user_ip(headers, extra_environ, expected, tracked_requests):
+    if sys.version_info[0] == 2:
+        # Required for WebTest lint
+        headers = {str(k): str(v) for k, v in headers.items()}
+        extra_environ = {str(k): str(v) for k, v in extra_environ.items()}
+
     with app_with_scout() as app:
         TestApp(app).get("/", headers=headers, extra_environ=extra_environ)
 
