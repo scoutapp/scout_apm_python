@@ -43,6 +43,7 @@ setup_args = {
     "keywords": "apm performance monitoring development",
     "classifiers": [
         "Development Status :: 5 - Production/Stable",
+        "Framework :: Bottle",
         "Framework :: Django",
         "Framework :: Django :: 1.8",
         "Framework :: Django :: 1.9",
@@ -51,6 +52,8 @@ setup_args = {
         "Framework :: Django :: 2.0",
         "Framework :: Django :: 2.1",
         "Framework :: Django :: 2.2",
+        "Framework :: Flask",
+        "Framework :: Pyramid",
         "Intended Audience :: Developers",
         "Topic :: System :: Monitoring",
         "License :: OSI Approved :: MIT License",
