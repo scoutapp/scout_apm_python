@@ -6,6 +6,7 @@
 
 - Add support to Django integration for tracking request queue timing from the
   value of the `X-Queue-Start` or `X-Request-Start` header
+- Add Falcon integration.
 
 ## [2.0.5] 2019-06-21
 
