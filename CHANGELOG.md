@@ -1,18 +1,17 @@
 # Changelog
 
-## Pending
+## [2.0.5] 2019-06-21
 
 ### Added
 
 - Tested on Django 2.2
 - Added PyPI Trove classifiers for frameworks
 - Track usernames on Django < 1.10
-- Fix Flask integration to track some missed requests such as automatic
-  `OPTONS` responses.
 
 ### Fixed
 
 - Stop warnings from using deprecated method `logger.warn`
+- Track some missed requests on Flask such as automatic `OPTIONS` responses
 
 ## [2.0.4] 2019-04-18
 
