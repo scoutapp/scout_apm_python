@@ -49,10 +49,10 @@ def test_find_one():
 
 
 def test_installed():
-    assert not instrument.installed
+    assert not Instrument.installed
     with client_with_scout():
-        assert instrument.installed
-    assert not instrument.installed
+        assert Instrument.installed
+    assert not Instrument.installed
 
 
 def test_installable():
@@ -70,7 +70,7 @@ def test_installable_no_pymongo_module():
 def test_install_no_pymongo_module():
     with no_pymongo():
         assert not instrument.install()
-        assert not instrument.installed
+        assert not Instrument.installed
 
 
 @mock.patch(
@@ -81,15 +81,17 @@ def test_install_failure(monkeypatch_method):
         assert not instrument.install()  # doesn't crash
     finally:
         # Currently installed = True even if installing failed.
-        instrument.installed = False
+        Instrument.installed = False
 
 
 def test_install_is_idempotent():
     with client_with_scout():
-        assert instrument.installed
+        assert Instrument.installed
         instrument.install()  # does nothing, doesn't crash
+        assert Instrument.installed
 
 
 def test_uninstall_is_idempotent():
-    assert not instrument.installed
+    assert not Instrument.installed
     instrument.uninstall()  # does nothing, doesn't crash
+    assert not Instrument.installed

@@ -10,8 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class Instrument(object):
-    def __init__(self):
-        self.installed = False
+    installed = False
 
     def installable(self):
         try:
@@ -29,7 +28,7 @@ class Instrument(object):
             logger.info("Jinja2 instruments are not installable. Skipping.")
             return False
 
-        self.installed = True
+        self.__class__.installed = True
 
         try:
             from jinja2 import Template
@@ -57,7 +56,7 @@ class Instrument(object):
             logger.info("Jinja2 instruments are not installed. Skipping.")
             return False
 
-        self.installed = False
+        self.__class__.installed = False
 
         from jinja2 import Template
 

@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 
-# Used in the exec() call below.
 from scout_apm.core.monkey import monkeypatch_method, unpatch_method
 from scout_apm.core.tracked_request import TrackedRequest
 
@@ -11,6 +10,8 @@ logger = logging.getLogger(__name__)
 
 
 class Instrument(object):
+    installed = False
+
     CLIENT_METHODS = [
         "bulk",
         "count",
@@ -38,9 +39,6 @@ class Instrument(object):
         "update_by_query",
     ]
 
-    def __init__(self):
-        self.installed = False
-
     def installable(self):
         try:
             from elasticsearch import Elasticsearch  # noqa: F401
@@ -58,7 +56,7 @@ class Instrument(object):
             logger.info("Elasticsearch instruments are not installable. Skipping.")
             return False
 
-        self.installed = True
+        self.__class__.installed = True
 
         self.instrument_client()
         self.instrument_transport()
@@ -68,7 +66,7 @@ class Instrument(object):
             logger.info("Elasticsearch instruments are not installed. Skipping.")
             return False
 
-        self.installed = False
+        self.__class__.installed = False
 
         self.uninstrument_client()
         self.uninstrument_transport()

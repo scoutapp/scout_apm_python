@@ -76,10 +76,10 @@ def test_perform_request_bad_url():
 
 
 def test_installed():
-    assert not instrument.installed
+    assert not Instrument.installed
     with redis_with_scout():
-        assert instrument.installed
-    assert not instrument.installed
+        assert Instrument.installed
+    assert not Instrument.installed
 
 
 def test_installable():
@@ -97,7 +97,7 @@ def test_installable_no_redis_module():
 def test_install_no_redis_module():
     with no_redis():
         assert not instrument.install()
-        assert not instrument.installed
+        assert not Instrument.installed
 
 
 def test_patch_redis_no_redis_module():
@@ -122,10 +122,12 @@ def test_patch_pipeline_install_failure(monkeypatch_method):
 
 def test_install_is_idempotent():
     with redis_with_scout():
-        assert instrument.installed
+        assert Instrument.installed
         instrument.install()  # does nothing, doesn't crash
+        assert Instrument.installed
 
 
 def test_uninstall_is_idempotent():
-    assert not instrument.installed
+    assert not Instrument.installed
     instrument.uninstall()  # does nothing, doesn't crash
+    assert not Instrument.installed

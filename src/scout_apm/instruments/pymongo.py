@@ -11,6 +11,8 @@ logger = logging.getLogger(__name__)
 
 
 class Instrument(object):
+    installed = False
+
     PYMONGO_METHODS = [
         "aggregate",
         "bulk_write",
@@ -45,9 +47,6 @@ class Instrument(object):
         "update_one",
     ]
 
-    def __init__(self):
-        self.installed = False
-
     def installable(self):
         try:
             from pymongo.collection import Collection  # noqa: F401
@@ -64,7 +63,7 @@ class Instrument(object):
             logger.info("PyMongo instruments are not installable. Skipping.")
             return False
 
-        self.installed = True
+        self.__class__.installed = True
 
         try:
             from pymongo.collection import Collection  # noqa: F401
@@ -109,7 +108,7 @@ def {method_str}(original, self, *args, **kwargs):
             logger.info("PyMongo instruments are not installed. Skipping.")
             return False
 
-        self.installed = False
+        self.__class__.installed = False
 
         from pymongo.collection import Collection
 

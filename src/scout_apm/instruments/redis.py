@@ -23,8 +23,7 @@ def import_Redis_and_Pipeline():
 
 
 class Instrument(object):
-    def __init__(self):
-        self.installed = False
+    installed = False
 
     def installable(self):
         try:
@@ -42,7 +41,7 @@ class Instrument(object):
             logger.info("Redis instruments are not installable. Skipping.")
             return False
 
-        self.installed = True
+        self.__class__.installed = True
 
         self.patch_redis()
         self.patch_pipeline()
@@ -55,7 +54,7 @@ class Instrument(object):
             logger.info("Redis instruments are not installed. Skipping.")
             return False
 
-        self.installed = False
+        self.__class__.installed = False
 
         self.unpatch_redis()
         self.unpatch_pipeline()
