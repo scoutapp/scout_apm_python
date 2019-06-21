@@ -5,7 +5,6 @@ import logging
 import os
 
 from scout_apm.compat import string_type
-from scout_apm.core.git_revision import GitRevision
 from scout_apm.core.platform_detection import PlatformDetection
 from scout_apm.core.util import octal
 
@@ -224,9 +223,14 @@ class ScoutConfigDefaults(object):
             "log_level": "info",
             "monitor": False,
             "name": "",
-            "revision_sha": GitRevision().detect(),
+            "revision_sha": self._git_revision_sha(),
             "scm_subdirectory": "",
         }
+
+    def _git_revision_sha(self):
+        return os.environ.get("HEROKU_SLUG_COMMIT") or os.environ.get(
+            "SCOUT_REVISION_SHA", ""
+        )
 
     def has_config(self, key):
         return key in self.defaults

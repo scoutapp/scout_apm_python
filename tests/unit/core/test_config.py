@@ -6,7 +6,8 @@ import re
 
 import pytest
 
-from scout_apm.core.config import ScoutConfig, ScoutConfigNull
+from scout_apm.core.config import ScoutConfig, ScoutConfigDefaults, ScoutConfigNull
+from tests.compat import mock
 
 
 def test_get_config_value_from_env():
@@ -175,3 +176,22 @@ def test_list_conversion_from_python(original, converted):
         assert config.value("disabled_instruments") == converted
     finally:
         ScoutConfig.reset_all()
+
+
+@pytest.mark.parametrize(
+    "values,expected",
+    [
+        ({}, ""),
+        ({"HEROKU_SLUG_COMMIT": "FROM_HEROKU"}, "FROM_HEROKU"),
+        ({"SCOUT_REVISION_SHA": "FROM_SCOUT"}, "FROM_SCOUT"),
+        (
+            {"HEROKU_SLUG_COMMIT": "FROM_HEROKU", "SCOUT_REVISION_SHA": "FROM_SCOUT"},
+            "FROM_HEROKU",
+        ),
+        ({"HEROKU_SLUG_COMMIT": "", "SCOUT_REVISION_SHA": ""}, ""),
+    ],
+)
+def test_defaults_git_revision_sha(values, expected):
+    with mock.patch.dict(os.environ, clear=True, **values):
+        defaults = ScoutConfigDefaults()
+        assert defaults.value("revision_sha") == expected
