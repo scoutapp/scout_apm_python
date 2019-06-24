@@ -1,7 +1,9 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import datetime as dt
 import os.path
+import time
 from contextlib import contextmanager
 
 import django
@@ -12,6 +14,7 @@ from django.test.utils import modify_settings, override_settings
 from webtest import TestApp
 
 from scout_apm.api import Config
+from scout_apm.compat import datetime_to_timestamp
 from scout_apm.core.tracked_request import TrackedRequest
 from tests.compat import mock
 
@@ -331,6 +334,58 @@ def test_old_style_username_exception(tracked_requests):
     assert len(tracked_requests) == 1
     tr = tracked_requests[0]
     assert "username" not in tr.tags
+
+
+@pytest.mark.parametrize("header_name", ["X-Queue-Start", "X-Request-Start"])
+def test_queue_time(header_name, tracked_requests):
+    # Not testing floats due to Python 2/3 rounding differences
+    queue_start = int(datetime_to_timestamp(dt.datetime.utcnow()) - 2)
+    with app_with_scout() as app:
+        response = TestApp(app).get(
+            "/", headers={header_name: str("t=") + str(queue_start)}
+        )
+        assert response.status_int == 200
+
+    assert len(tracked_requests) == 1
+    queue_time_ns = tracked_requests[0].tags["scout.queue_time_ns"]
+    # Upper bound assumes we didn't take more than 2s to run this test...
+    assert queue_time_ns >= 2000000000 and queue_time_ns < 4000000000
+
+
+@pytest.mark.parametrize(
+    "header_value",
+    [
+        str(""),
+        str("t=X"),  # first character not a digit
+        str("t=0.3f"),  # raises ValueError on float() conversion
+        str(datetime_to_timestamp(dt.datetime.utcnow()) + 1000.0),  # in future
+        str(datetime_to_timestamp(dt.datetime(2009, 1, 1))),  # before ambig cutoff
+    ],
+)
+def test_queue_time_invalid(header_value, tracked_requests):
+    with app_with_scout() as app:
+        response = TestApp(app).get("/", headers={"X-Queue-Start": header_value})
+        assert response.status_int == 200
+
+    assert len(tracked_requests) == 1
+    assert "scout.queue_time_ns" not in tracked_requests[0].tags
+
+
+def test_queue_time_future(tracked_requests):
+    # Not testing floats due to Python 2/3 rounding differences
+    queue_start = int(time.time() + 2)
+    with app_with_scout() as app:
+        response = TestApp(app).get(
+            "/", headers={"X-Queue-Start": str("t=") + str(queue_start)}
+        )
+        assert response.status_int == 200
+
+    assert len(tracked_requests) == 1
+    spans = tracked_requests[0].complete_spans
+    assert [s.operation for s in spans] == [
+        "Controller/tests.integration.django_app.home",
+        "Middleware",
+    ]
 
 
 @pytest.mark.parametrize("list_or_tuple", [list, tuple])
