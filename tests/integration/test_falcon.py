@@ -106,7 +106,10 @@ def test_home_without_set_api(caplog, tracked_requests):
         (
             "scout_apm.falcon",
             logging.WARNING,
-            "ScoutMiddleware.set_api() should be called before requests begin for more detail",
+            (
+                "ScoutMiddleware.set_api() should be called before requests "
+                "begin for more detail"
+            ),
         )
     ]
 
