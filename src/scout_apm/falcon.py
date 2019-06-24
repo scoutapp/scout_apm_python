@@ -1,11 +1,15 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import logging
+
 import falcon
 
 from scout_apm.api import install
 from scout_apm.core.ignore import ignore_path
 from scout_apm.core.tracked_request import TrackedRequest
+
+logger = logging.getLogger(__name__)
 
 # Falcon Middleware docs:
 # https://falcon.readthedocs.io/en/stable/api/middleware.html
@@ -26,13 +30,6 @@ class ScoutMiddleware(object):
         self.api = api
 
     def process_request(self, req, resp):
-        if self.api is None:
-            raise RuntimeError(
-                "Call {}.set_api() before requests begin".format(
-                    self.__class__.__name__
-                )
-            )
-
         tracked_request = TrackedRequest.instance()
         tracked_request.mark_real_request()
         req.context.scout_tracked_request = tracked_request
@@ -60,13 +57,24 @@ class ScoutMiddleware(object):
             # lost, other problems might occur.
             return
 
-        # Find the current responder's name. Falcon passes middleware the
-        # current resource but unfortunately not the method being called, hence
-        # we have to go through routing again.
-        responder, _params, _resource, _uri_template = self.api._get_responder(req)
-        operation = "Controller/{}.{}.{}".format(
-            resource.__module__, resource.__class__.__name__, responder.__name__
-        )
+        if self.api is None:
+            logger.warning(
+                (
+                    "{}.set_api() should be called before requests begin for "
+                    "more detail"
+                ).format(self.__class__.__name__)
+            )
+            operation = "Controller/{}.{}.{}".format(
+                resource.__module__, resource.__class__.__name__, req.method
+            )
+        else:
+            # Find the current responder's name. Falcon passes middleware the
+            # current resource but unfortunately not the method being called, hence
+            # we have to go through routing again.
+            responder, _params, _resource, _uri_template = self.api._get_responder(req)
+            operation = "Controller/{}.{}.{}".format(
+                resource.__module__, resource.__class__.__name__, responder.__name__
+            )
 
         span = tracked_request.start_span(operation=operation)
         req.context.scout_resource_span = span

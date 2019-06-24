@@ -1,6 +1,7 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import logging
 import sys
 from contextlib import contextmanager
 
@@ -13,7 +14,7 @@ from scout_apm.falcon import ScoutMiddleware
 
 
 @contextmanager
-def app_with_scout(config=None, middleware=None):
+def app_with_scout(config=None, middleware=None, set_api=True):
     """
     Context manager that yields a fresh Falcon app with Scout configured.
     """
@@ -33,7 +34,8 @@ def app_with_scout(config=None, middleware=None):
     middleware[scout_index] = scout_middleware
 
     app = falcon.API(middleware=middleware)
-    scout_middleware.set_api(app)
+    if set_api:
+        scout_middleware.set_api(app)
 
     class HomeResource(object):
         def on_get(self, req, resp):
@@ -60,15 +62,6 @@ def app_with_scout(config=None, middleware=None):
         Config.reset_all()
 
 
-def test_use_without_set_api():
-    app = falcon.API(middleware=[ScoutMiddleware(config={})])
-
-    with pytest.raises(RuntimeError) as excinfo:
-        TestApp(app).get("/")
-
-    assert str(excinfo.value) == "Call ScoutMiddleware.set_api() before requests begin"
-
-
 def test_set_api_wrong_type():
     scout_middleware = ScoutMiddleware(config={})
 
@@ -93,6 +86,29 @@ def test_home(tracked_requests):
     assert (
         span.operation == "Controller/tests.integration.test_falcon.HomeResource.on_get"
     )
+
+
+def test_home_without_set_api(caplog, tracked_requests):
+    with app_with_scout(set_api=False) as app:
+        response = TestApp(app).get("/")
+
+    assert response.status_int == 200
+    assert response.text == "Welcome home."
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert tracked_request.tags["path"] == "/"
+    assert tracked_request.active_spans == []
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "Controller/tests.integration.test_falcon.HomeResource.GET"
+    falcon_log_tuples = [x for x in caplog.record_tuples if x[0] == "scout_apm.falcon"]
+    assert falcon_log_tuples == [
+        (
+            "scout_apm.falcon",
+            logging.WARNING,
+            "ScoutMiddleware.set_api() should be called before requests begin for more detail",
+        )
+    ]
 
 
 @pytest.mark.parametrize(
