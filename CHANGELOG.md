@@ -1,12 +1,22 @@
 # Changelog
 
+## Pending
+
+### Added
+
+- Track user IP on Flask
+
+### Fixed
+
+- Track path and user IP on Django < 1.10
+
 ## [2.1.0] 2019-06-25
 
 ### Added
 
 - Add support to Django integration for tracking request queue timing from the
   value of the `X-Queue-Start` or `X-Request-Start` header
-- Add Falcon integration.
+- Add Falcon integration
 
 ## [2.0.5] 2019-06-21
 

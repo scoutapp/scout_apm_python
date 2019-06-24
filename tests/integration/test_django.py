@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import datetime as dt
 import os.path
+import sys
 import time
 from contextlib import contextmanager
 
@@ -82,14 +83,59 @@ def finish_tracked_request_if_old_style_middlware():
 def test_home(tracked_requests):
     with app_with_scout() as app:
         response = TestApp(app).get("/")
-        assert response.status_int == 200
 
+    assert response.status_int == 200
+    assert response.text == "Welcome home."
     assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert tracked_request.tags["path"] == "/"
+    assert tracked_request.tags["user_ip"] is None
     spans = tracked_requests[0].complete_spans
     assert [s.operation for s in spans] == [
         "Controller/tests.integration.django_app.home",
         "Middleware",
     ]
+
+
+def test_ignore(tracked_requests):
+    with app_with_scout({"SCOUT_MONITOR": True, "SCOUT_IGNORE": "/"}) as app:
+        response = TestApp(app).get("/")
+
+    assert response.status_int == 200
+    assert response.text == "Welcome home."
+    assert tracked_requests == []
+
+
+@pytest.mark.parametrize(
+    "headers, extra_environ, expected",
+    [
+        ({}, {}, None),
+        ({}, {"REMOTE_ADDR": "1.1.1.1"}, "1.1.1.1"),
+        ({"x-forwarded-for": "1.1.1.1"}, {}, "1.1.1.1"),
+        ({"x-forwarded-for": "1.1.1.1,2.2.2.2"}, {}, "1.1.1.1"),
+        ({"x-forwarded-for": "1.1.1.1"}, {"REMOTE_ADDR": "2.2.2.2"}, "1.1.1.1"),
+        (
+            {"x-forwarded-for": "1.1.1.1", "client-ip": "2.2.2.2"},
+            {"REMOTE_ADDR": "3.3.3.3"},
+            "1.1.1.1",
+        ),
+        ({"client-ip": "1.1.1.1"}, {}, "1.1.1.1"),
+        ({"client-ip": "1.1.1.1,2.2.2.2"}, {}, "1.1.1.1"),
+        ({"client-ip": "1.1.1.1"}, {"REMOTE_ADDR": "2.2.2.2"}, "1.1.1.1"),
+        ({"client-ip": "1.1.1.1"}, {"REMOTE_ADDR": "2.2.2.2"}, "1.1.1.1"),
+    ],
+)
+def test_user_ip(headers, extra_environ, expected, tracked_requests):
+    if sys.version_info[0] == 2:
+        # Required for WebTest lint
+        headers = {str(k): str(v) for k, v in headers.items()}
+        extra_environ = {str(k): str(v) for k, v in extra_environ.items()}
+
+    with app_with_scout() as app:
+        TestApp(app).get("/", headers=headers, extra_environ=extra_environ)
+
+    tracked_request = tracked_requests[0]
+    assert tracked_request.tags["user_ip"] == expected
 
 
 # During the transition between old-style and new-style middleware, Django
@@ -285,9 +331,9 @@ def crashy_authentication_middleware(get_response):
 def test_username_exception(tracked_requests):
     with override_settings(MIDDLEWARE=[__name__ + ".crashy_authentication_middleware"]):
         with app_with_scout() as app:
-            response = TestApp(app).get("/hello/")
-            assert response.status_int == 200
+            response = TestApp(app).get("/")
 
+        assert response.status_int == 200
     assert len(tracked_requests) == 1
     tr = tracked_requests[0]
     assert "username" not in tr.tags
@@ -306,9 +352,9 @@ def test_old_style_username(tracked_requests):
         MIDDLEWARE_CLASSES=[__name__ + ".FakeAuthenticationMiddleware"]
     ):
         with app_with_scout() as app:
-            response = TestApp(app).get("/hello/")
-            assert response.status_int == 200
+            response = TestApp(app).get("/")
 
+    assert response.status_int == 200
     assert len(tracked_requests) == 1
     tr = tracked_requests[0]
     print(tr.tags)
@@ -328,9 +374,9 @@ def test_old_style_username_exception(tracked_requests):
         MIDDLEWARE_CLASSES=[__name__ + ".CrashyAuthenticationMiddleware"]
     ):
         with app_with_scout() as app:
-            response = TestApp(app).get("/hello/")
-            assert response.status_int == 200
+            response = TestApp(app).get("/")
 
+    assert response.status_int == 200
     assert len(tracked_requests) == 1
     tr = tracked_requests[0]
     assert "username" not in tr.tags
@@ -344,8 +390,8 @@ def test_queue_time(header_name, tracked_requests):
         response = TestApp(app).get(
             "/", headers={header_name: str("t=") + str(queue_start)}
         )
-        assert response.status_int == 200
 
+    assert response.status_int == 200
     assert len(tracked_requests) == 1
     queue_time_ns = tracked_requests[0].tags["scout.queue_time_ns"]
     # Upper bound assumes we didn't take more than 2s to run this test...
@@ -365,8 +411,8 @@ def test_queue_time(header_name, tracked_requests):
 def test_queue_time_invalid(header_value, tracked_requests):
     with app_with_scout() as app:
         response = TestApp(app).get("/", headers={"X-Queue-Start": header_value})
-        assert response.status_int == 200
 
+    assert response.status_int == 200
     assert len(tracked_requests) == 1
     assert "scout.queue_time_ns" not in tracked_requests[0].tags
 
@@ -378,8 +424,8 @@ def test_queue_time_future(tracked_requests):
         response = TestApp(app).get(
             "/", headers={"X-Queue-Start": str("t=") + str(queue_start)}
         )
-        assert response.status_int == 200
 
+    assert response.status_int == 200
     assert len(tracked_requests) == 1
     spans = tracked_requests[0].complete_spans
     assert [s.operation for s in spans] == [
