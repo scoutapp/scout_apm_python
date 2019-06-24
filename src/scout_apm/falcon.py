@@ -1,14 +1,11 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import falcon
+
 from scout_apm.api import install
 from scout_apm.core.ignore import ignore_path
 from scout_apm.core.tracked_request import TrackedRequest
-
-try:
-    import falcon
-except ImportError:  # pragma: no cover
-    falcon = None
 
 # Falcon Middleware docs:
 # https://falcon.readthedocs.io/en/stable/api/middleware.html
