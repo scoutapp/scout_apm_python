@@ -13,7 +13,7 @@ from scout_apm.falcon import ScoutMiddleware
 
 
 @contextmanager
-def app_with_scout(config=None, middleware=None, scout_middleware_index=999):
+def app_with_scout(config=None, middleware=None):
     """
     Context manager that yields a fresh Falcon app with Scout configured.
     """
@@ -26,9 +26,12 @@ def app_with_scout(config=None, middleware=None, scout_middleware_index=999):
 
     # Basic Falcon app
     if middleware is None:
-        middleware = []
+        middleware = ["scout"]
+    scout_index = middleware.index("scout")
+    assert scout_index != -1
     scout_middleware = ScoutMiddleware(config=config)
-    middleware.insert(scout_middleware_index, scout_middleware)
+    middleware[scout_index] = scout_middleware
+
     app = falcon.API(middleware=middleware)
     scout_middleware.set_api(app)
 
@@ -164,7 +167,7 @@ def test_middleware_returning_early_from_process_request(tracked_requests):
         def process_response(self, req, resp, resource, req_succeeded):
             pass
 
-    with app_with_scout(middleware=[ShortcutMiddleware()]) as app:
+    with app_with_scout(middleware=[ShortcutMiddleware(), "scout"]) as app:
         response = TestApp(app).get("/")
 
     assert response.status_int == 200
@@ -196,8 +199,7 @@ def test_middleware_deleting_scout_tracked_request(tracked_requests):
             pass
 
     with app_with_scout(
-        middleware=[AdversarialMiddleware(), AdversarialUndoMiddleware()],
-        scout_middleware_index=1,
+        middleware=[AdversarialMiddleware(), "scout", AdversarialUndoMiddleware()]
     ) as app:
         response = TestApp(app).get("/")
 
@@ -223,7 +225,7 @@ def test_middleware_returning_early_from_process_resource(tracked_requests):
         def process_response(self, req, resp, resource, req_succeeded):
             pass
 
-    with app_with_scout(middleware=[ShortcutMiddleware()]) as app:
+    with app_with_scout(middleware=[ShortcutMiddleware(), "scout"]) as app:
         response = TestApp(app).get("/")
 
     assert response.status_int == 200
