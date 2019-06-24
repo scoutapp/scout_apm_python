@@ -66,9 +66,9 @@ class CoreAgentManager(object):
                 + self.config_file()
                 + self.socket_path()
             )
-        except Exception as e:
+        except Exception as exc:
             # TODO detect failure of launch properly
-            logger.error("Error running Core Agent: %r", e)
+            logger.error("Error running Core Agent: %r", exc)
             return False
         return True
 
