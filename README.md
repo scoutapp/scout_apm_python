@@ -73,7 +73,7 @@ scout_middleware = ScoutMiddleware(config={
     "name": "A FRIENDLY NAME FOR YOUR APP",
 })
 api = falcon.API(middleware=[ScoutMiddleware()])
-# Required for accessing API internals, Falcon doesn't provide it default
+# Required for accessing extra per-request information
 scout_middleware.set_api(api)
 ```
 
