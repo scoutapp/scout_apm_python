@@ -13,7 +13,7 @@ from scout_apm.core.tracked_request import TrackedRequest
 
 class ScoutMiddleware(object):
     """
-    Falcon Middleware for integration with Scout APMi.
+    Falcon Middleware for integration with Scout APM.
     """
 
     def __init__(self, config):
