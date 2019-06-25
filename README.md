@@ -14,6 +14,7 @@ Python Versions:
 Scout APM works with the following frameworks:
 
 * Django 1.8+
+* Falcon 2.0+
 * Flask 0.10+
 * Celery 3.1+
 * Pyramid 1.8+
@@ -29,6 +30,22 @@ __A Scout account is required. [Signup for Scout](https://scoutapm.com/users/sig
 pip install scout-apm
 ```
 
+### Bottle
+
+```python
+from scout_apm.bottle import ScoutPlugin
+
+app = bottle.default_app()
+app.config.update({
+    "scout.name": "YOUR_APP_NAME",
+    "scout.key": "YOUR_KEY",
+    "scout.monitor": "true",
+})
+
+scout = ScoutPlugin()
+bottle.install(scout)
+```
+
 ### Django
 
 ```python
@@ -42,6 +59,22 @@ INSTALLED_APPS = [
 SCOUT_MONITOR = True
 SCOUT_KEY = "[AVAILABLE IN THE SCOUT UI]"
 SCOUT_NAME = "A FRIENDLY NAME FOR YOUR APP"
+```
+
+### Falcon
+
+```python
+import falcon
+from scout_apm.falcon import ScoutMiddleware
+
+scout_middleware = ScoutMiddleware(config={
+    "key": "[AVAILABLE IN THE SCOUT UI]",
+    "monitor": True,
+    "name": "A FRIENDLY NAME FOR YOUR APP",
+})
+api = falcon.API(middleware=[ScoutMiddleware()])
+# Required for accessing extra per-request information
+scout_middleware.set_api(api)
 ```
 
 ### Flask
@@ -84,22 +117,6 @@ if __name__ == "__main__":
         config.include("scout_apm.pyramid")
 
         # Rest of your config...
-```
-
-### Bottle
-
-```python
-from scout_apm.bottle import ScoutPlugin
-
-app = bottle.default_app()
-app.config.update({
-    "scout.name": "YOUR_APP_NAME",
-    "scout.key": "YOUR_KEY",
-    "scout.monitor": "true",
-})
-
-scout = ScoutPlugin()
-bottle.install(scout)
 ```
 
 For full installation instructions, including information on configuring Scout via environment variables, see our [Python docs](https://docs.scoutapm.com/#python-agent).
