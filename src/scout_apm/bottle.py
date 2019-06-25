@@ -4,7 +4,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from bottle import request
 
 import scout_apm.core
-from scout_apm.api.context import Context
 from scout_apm.core.config import ScoutConfig
 from scout_apm.core.context import AgentContext
 from scout_apm.core.ignore import ignore_path
@@ -35,42 +34,43 @@ class ScoutPlugin(object):
             return callback
 
         def wrapper(*args, **kwargs):
+            tracked_request = TrackedRequest.instance()
+            tracked_request.mark_real_request()
+
+            if request.route.name is not None:
+                path = request.route.name
+            else:
+                path = request.route.rule
+            if path == "/":
+                path = "/home"
+            if not path.startswith("/"):
+                path = "/{}".format(path)
+
+            tracked_request.tag("path", path)
+            if ignore_path(path):
+                tracked_request.tag("ignore_transaction", True)
+
+            tracked_request.start_span(operation="Controller{}".format(path))
+
             try:
-                tr = TrackedRequest.instance()
-                tr.mark_real_request()
-                path = "Unknown"
+                # Determine a remote IP to associate with the request. The
+                # value is spoofable by the requester so this is not suitable
+                # to use in any security sensitive context.
+                user_ip = (
+                    request.headers.get("x-forwarded-for", "").split(",")[0]
+                    or request.headers.get("client-ip", "").split(",")[0]
+                    or request.environ.get("REMOTE_ADDR")
+                )
+                tracked_request.tag("user_ip", user_ip)
+            except Exception:
+                pass
 
-                if request.route.name is not None:
-                    path = request.route.name
-                else:
-                    path = request.route.rule
-
-                if path == "/":
-                    path = "/home"
-
-                if not path.startswith("/"):
-                    path = "/{}".format(path)
-
-                tr.start_span(operation="Controller{}".format(path))
-
-                if ignore_path(path):
-                    tr.tag("ignore_transaction", True)
-
-                try:
-                    Context.add("path", path)
-                    Context.add("user_ip", request.remote_addr)
-                except Exception:
-                    pass
-
-                try:
-                    response = callback(*args, **kwargs)
-                except Exception:
-                    tr.tag("error", "true")
-                    raise
-
+            try:
+                return callback(*args, **kwargs)
+            except Exception:
+                tracked_request.tag("error", "true")
+                raise
             finally:
-                tr.stop_span()
-
-            return response
+                tracked_request.stop_span()
 
         return wrapper
