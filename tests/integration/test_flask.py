@@ -10,6 +10,7 @@ from webtest import TestApp
 
 from scout_apm.api import Config
 from scout_apm.flask import ScoutApm
+from tests.integration.util import parametrize_user_ip_headers
 
 
 @contextmanager
@@ -68,25 +69,7 @@ def test_home(tracked_requests):
     assert span.tags["name"] == "tests.integration.test_flask.home"
 
 
-@pytest.mark.parametrize(
-    "headers, extra_environ, expected",
-    [
-        ({}, {}, None),
-        ({}, {"REMOTE_ADDR": "1.1.1.1"}, "1.1.1.1"),
-        ({"x-forwarded-for": "1.1.1.1"}, {}, "1.1.1.1"),
-        ({"x-forwarded-for": "1.1.1.1,2.2.2.2"}, {}, "1.1.1.1"),
-        ({"x-forwarded-for": "1.1.1.1"}, {"REMOTE_ADDR": "2.2.2.2"}, "1.1.1.1"),
-        (
-            {"x-forwarded-for": "1.1.1.1", "client-ip": "2.2.2.2"},
-            {"REMOTE_ADDR": "3.3.3.3"},
-            "1.1.1.1",
-        ),
-        ({"client-ip": "1.1.1.1"}, {}, "1.1.1.1"),
-        ({"client-ip": "1.1.1.1,2.2.2.2"}, {}, "1.1.1.1"),
-        ({"client-ip": "1.1.1.1"}, {"REMOTE_ADDR": "2.2.2.2"}, "1.1.1.1"),
-        ({"client-ip": "1.1.1.1"}, {"REMOTE_ADDR": "2.2.2.2"}, "1.1.1.1"),
-    ],
-)
+@parametrize_user_ip_headers
 def test_user_ip(headers, extra_environ, expected, tracked_requests):
     if sys.version_info[0] == 2:
         # Required for WebTest lint

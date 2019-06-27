@@ -18,6 +18,7 @@ from scout_apm.api import Config
 from scout_apm.compat import datetime_to_timestamp
 from scout_apm.core.tracked_request import TrackedRequest
 from tests.compat import mock
+from tests.integration.util import parametrize_user_ip_headers
 
 from .django_app import app as app_unused  # noqa: F401
 
@@ -106,25 +107,7 @@ def test_ignore(tracked_requests):
     assert tracked_requests == []
 
 
-@pytest.mark.parametrize(
-    "headers, extra_environ, expected",
-    [
-        ({}, {}, None),
-        ({}, {"REMOTE_ADDR": "1.1.1.1"}, "1.1.1.1"),
-        ({"x-forwarded-for": "1.1.1.1"}, {}, "1.1.1.1"),
-        ({"x-forwarded-for": "1.1.1.1,2.2.2.2"}, {}, "1.1.1.1"),
-        ({"x-forwarded-for": "1.1.1.1"}, {"REMOTE_ADDR": "2.2.2.2"}, "1.1.1.1"),
-        (
-            {"x-forwarded-for": "1.1.1.1", "client-ip": "2.2.2.2"},
-            {"REMOTE_ADDR": "3.3.3.3"},
-            "1.1.1.1",
-        ),
-        ({"client-ip": "1.1.1.1"}, {}, "1.1.1.1"),
-        ({"client-ip": "1.1.1.1,2.2.2.2"}, {}, "1.1.1.1"),
-        ({"client-ip": "1.1.1.1"}, {"REMOTE_ADDR": "2.2.2.2"}, "1.1.1.1"),
-        ({"client-ip": "1.1.1.1"}, {"REMOTE_ADDR": "2.2.2.2"}, "1.1.1.1"),
-    ],
-)
+@parametrize_user_ip_headers
 def test_user_ip(headers, extra_environ, expected, tracked_requests):
     if sys.version_info[0] == 2:
         # Required for WebTest lint

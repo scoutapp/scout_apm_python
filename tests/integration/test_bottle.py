@@ -1,14 +1,16 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import sys
 from contextlib import contextmanager
 
-from bottle import Bottle
+from bottle import Bottle, WSGIHeaderDict
 from webtest import TestApp
 
 from scout_apm.api import Config
 from scout_apm.bottle import ScoutPlugin
 from tests.compat import mock
+from tests.integration.util import parametrize_user_ip_headers
 
 
 @contextmanager
@@ -68,6 +70,46 @@ def test_home(tracked_requests):
     assert span.operation == "Controller/home"
 
 
+@parametrize_user_ip_headers
+def test_user_ip(headers, extra_environ, expected, tracked_requests):
+    if sys.version_info[0] == 2:
+        # Required for WebTest lint
+        headers = {str(k): str(v) for k, v in headers.items()}
+        extra_environ = {str(k): str(v) for k, v in extra_environ.items()}
+
+    with app_with_scout() as app:
+        TestApp(app).get("/", headers=headers, extra_environ=extra_environ)
+
+    tracked_request = tracked_requests[0]
+    assert tracked_request.tags["user_ip"] == expected
+
+
+def test_user_ip_error(tracked_requests):
+    orig_headers_get = WSGIHeaderDict.get
+
+    def crashy_get(self, key, *args, **kwargs):
+        if key == "x-forwarded-for":
+            raise ValueError("Don't try get *that* header!")
+        return orig_headers_get(key, *args, **kwargs)
+
+    with mock.patch.object(
+        WSGIHeaderDict, "get", new=crashy_get
+    ), app_with_scout() as app:
+        TestApp(app).get("/")
+
+    tracked_request = tracked_requests[0]
+    assert "user_ip" not in tracked_request.tags
+
+
+def test_home_ignored(tracked_requests):
+    with app_with_scout({"scout.monitor": True, "scout.ignore": ["/"]}) as app:
+        response = TestApp(app).get("/")
+
+    assert response.status_int == 200
+    assert response.text == "Welcome home."
+    assert tracked_requests == []
+
+
 def test_hello(tracked_requests):
     with app_with_scout() as app:
         response = TestApp(app).get("/hello/")
@@ -124,20 +166,3 @@ def test_no_monitor(tracked_requests):
     assert response.status_int == 200
     assert response.text == "Hello World!"
     assert tracked_requests == []
-
-
-@mock.patch(
-    "bottle.Request.remote_addr", new_callable=mock.PropertyMock, side_effect=ValueError
-)
-def test_remote_addr_exception(remote_addr, tracked_requests):
-    """
-    Scout doesn't crash if bottle.Request.remote_addr raises an exception.
-
-    This cannot be tested without mocking because it should never happen.
-
-    """
-    with app_with_scout() as app:
-        TestApp(app).get("/hello/")
-
-    assert len(tracked_requests) == 1
-    assert "user_ip" not in tracked_requests[0].tags
