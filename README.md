@@ -6,21 +6,18 @@ Monitor the performance of Python Django apps, Flask apps, and Celery workers wi
 
 ## Requirements
 
-Python Versions:
+Python 2.7 or 3.4+.
 
-* Python 3.4+
-* Python 2.7
+Scout APM has integrations for the following frameworks:
 
-Scout APM works with the following frameworks:
-
+* Bottle 0.12+
+* Celery 3.1+
 * Django 1.8+
 * Falcon 2.0+
 * Flask 0.10+
-* Celery 3.1+
 * Pyramid 1.8+
-* Bottle 0.12+
 
-For frameworks not listed above, you can use the agent's instrumentation API. See the [Python help docs](https://docs.scoutapm.com/#python-agent) for more information.
+For other frameworks, you can use the agent's instrumentation API. See the [Python help docs](https://docs.scoutapm.com/#python-agent) for more information.
 
 ## Quick Start
 
@@ -119,12 +116,11 @@ if __name__ == "__main__":
         # Rest of your config...
 ```
 
-For full installation instructions, including information on configuring Scout via environment variables, see our [Python docs](https://docs.scoutapm.com/#python-agent).
-
 ## Documentation
 
-For full installation and troubleshooting documentation, visit our
-[help site](https://docs.scoutapm.com/#python-agent).
+For full installation instructions, including information on configuring Scout
+via environment variables and troubleshooting documentation, see our
+[Python docs](https://docs.scoutapm.com/#python-agent).
 
 ## Support
 
