@@ -3,10 +3,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from contextlib import contextmanager
 
+from celery import Celery
+
 import scout_apm.celery
 from scout_apm.api import Config
-
-from . import celery_app as app
 
 
 @contextmanager
@@ -22,9 +22,16 @@ def app_with_scout(config=None):
     # Disable running the agent.
     config["core_agent_launch"] = False
 
+    app = Celery("tasks", broker="memory://")
+
+    @app.task
+    def hello():
+        return "Hello World!"
+
     # Setup according to https://docs.scoutapm.com/#celery
     Config.set(**config)
     scout_apm.celery.install()
+
     try:
         yield app
     finally:
@@ -33,14 +40,24 @@ def app_with_scout(config=None):
         Config.reset_all()
 
 
-def test_hello():
+def test_hello(tracked_requests):
     with app_with_scout() as app:
-        res = app.hello.apply()
-        assert res.result == "Hello World!"
+        result = app.tasks["tests.integration.test_celery.hello"].apply()
+
+    assert result.result == "Hello World!"
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert tracked_request.active_spans == []
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "Job/tests.integration.test_celery.hello"
+    assert span.tags["queue"] == "default"
 
 
-def test_no_monitor():
+def test_no_monitor(tracked_requests):
     # With an empty config, "monitor" defaults to False.
     with app_with_scout({}) as app:
-        res = app.hello.apply()
-        assert res.result == "Hello World!"
+        result = app.tasks["tests.integration.test_celery.hello"].apply()
+
+    assert result.result == "Hello World!"
+    assert tracked_requests == []
