@@ -68,12 +68,15 @@ class ScoutApm(object):
         if ignore_path(path):
             tracked_request.tag("ignore_transaction", True)
 
-        # Extract headers
-        #  regex = re.compile('^HTTP_')
-        #  headers = dict((regex.sub('', header), value) for (header, value)
-        #  in request.META.items() if header.startswith('HTTP_'))
-
-        #  span.tag('remote_addr', request.META['REMOTE_ADDR'])
+        # Determine a remote IP to associate with the request. The value is
+        # spoofable by the requester so this is not suitable to use in any
+        # security sensitive context.
+        user_ip = (
+            request.headers.get("x-forwarded-for", default="").split(",")[0]
+            or request.headers.get("client-ip", default="").split(",")[0]
+            or request.remote_addr
+        )
+        tracked_request.tag("user_ip", user_ip)
 
         try:
             return original(*args, **kwargs)

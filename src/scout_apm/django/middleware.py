@@ -3,10 +3,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 
-from scout_apm.api.context import Context
 from scout_apm.compat import datetime_to_timestamp
 from scout_apm.core.ignore import ignore_path
-from scout_apm.core.remote_ip import RemoteIp
 from scout_apm.core.tracked_request import TrackedRequest
 from scout_apm.core.util import convert_ambiguous_timestamp_to_ns
 
@@ -45,6 +43,37 @@ def track_request_queue_time(request, tracked_request):
 
     queue_time_ns = int(tr_start_timestamp_ns - start_timestamp_ns)
     tracked_request.tag("scout.queue_time_ns", queue_time_ns)
+
+
+def get_operation_name(request):
+    view_name = request.resolver_match._func_path
+    return "Controller/" + view_name
+
+
+def track_request_view_data(request, tracked_request):
+    tracked_request.tag("path", request.path)
+    if ignore_path(request.path):
+        tracked_request.tag("ignore_transaction", True)
+
+    try:
+        # Determine a remote IP to associate with the request. The value is
+        # spoofable by the requester so this is not suitable to use in any
+        # security sensitive context.
+        user_ip = (
+            request.META.get("HTTP_X_FORWARDED_FOR", "").split(",")[0]
+            or request.META.get("HTTP_CLIENT_IP", "").split(",")[0]
+            or request.META.get("REMOTE_ADDR", None)
+        )
+        tracked_request.tag("user_ip", user_ip)
+    except Exception:
+        pass
+
+    user = getattr(request, "user", None)
+    if user is not None:
+        try:
+            tracked_request.tag("username", user.get_username())
+        except Exception:
+            pass
 
 
 class MiddlewareTimingMiddleware(object):
@@ -106,20 +135,12 @@ class ViewTimingMiddleware(object):
         """
         Capture details about the view_func that is about to execute
         """
-        try:
-            if ignore_path(request.path):
-                TrackedRequest.instance().tag("ignore_transaction", True)
+        tracked_request = TrackedRequest.instance()
+        track_request_view_data(request, tracked_request)
 
-            view_name = request.resolver_match._func_path
-            span = TrackedRequest.instance().current_span()
-            if span is not None:
-                span.operation = "Controller/" + view_name
-                Context.add("path", request.path)
-                Context.add("user_ip", RemoteIp.lookup_from_headers(request.META))
-                if getattr(request, "user", None) is not None:
-                    Context.add("username", request.user.get_username())
-        except Exception:
-            pass
+        span = tracked_request.current_span()
+        if span is not None:
+            span.operation = get_operation_name(request)
 
     def process_exception(self, request, exception):
         """
@@ -157,48 +178,32 @@ class OldStyleViewMiddleware(object):
         pass
 
     def process_view(self, request, view_func, view_func_args, view_func_kwargs):
-        tr = TrackedRequest.instance()
+        tracked_request = TrackedRequest.instance()
+        tracked_request.mark_real_request()
+        track_request_view_data(request, tracked_request)
 
-        if ignore_path(request.path):
-            tr.tag("ignore_transaction", True)
-
-        view_name = request.resolver_match._func_path
-        operation = "Controller/" + view_name
-
-        span = tr.start_span(operation=operation)
-        tr.mark_real_request()
-
+        span = tracked_request.start_span(operation=get_operation_name(request))
         # Save the span into the request, so we can check
         # if we're matched up when stopping
         request.scout_view_span = span
 
-        try:
-            if getattr(request, "user", None) is not None:
-                Context.add("username", request.user.get_username())
-        except Exception:
-            pass
-
-        return None
-
-    # Process Response could be called without ever having called process_view.
-    # Be careful to not stop a span that never got started
+    # process_response() could be called without process_view() having been
+    # called. Be careful to not stop a span that never got started.
     def process_response(self, request, response):
-        tr = TrackedRequest.instance()
+        tracked_request = TrackedRequest.instance()
         if (
             hasattr(request, "scout_view_span")
-            and tr.current_span() == request.scout_view_span
+            and tracked_request.current_span() == request.scout_view_span
         ):
-            tr.stop_span()
+            tracked_request.stop_span()
         return response
 
     def process_exception(self, request, exception):
-        tr = TrackedRequest.instance()
+        tracked_request = TrackedRequest.instance()
 
         if (
             hasattr(request, "scout_view_span")
-            and tr.current_span() == request.scout_view_span
+            and tracked_request.current_span() == request.scout_view_span
         ):
-            tr.tag("error", "true")
-            tr.stop_span()
-
-        return None
+            tracked_request.tag("error", "true")
+            tracked_request.stop_span()
