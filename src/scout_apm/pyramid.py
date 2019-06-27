@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import scout_apm.core
-from scout_apm.api.context import Context
 from scout_apm.core.config import ScoutConfig
 from scout_apm.core.ignore import ignore_path
 from scout_apm.core.tracked_request import TrackedRequest
@@ -24,34 +23,42 @@ def includeme(config):
 
 def instruments(handler, registry):
     def scout_tween(request):
+        tracked_request = TrackedRequest.instance()
+        span = tracked_request.start_span(operation="Controller/Pyramid")
+
         try:
-            tr = TrackedRequest.instance()
-            span = tr.start_span(operation="Controller/Pyramid")
-
             if ignore_path(request.path):
-                tr.tag("ignore_transaction", True)
+                tracked_request.tag("ignore_transaction", True)
 
-            # Capture what we can from the request, but never fail
+            tracked_request.tag("path", request.path)
+
             try:
-                Context.add("path", request.path)
-                Context.add("user_ip", request.remote_addr)
+                # Determine a remote IP to associate with the request. The value is
+                # spoofable by the requester so this is not suitable to use in any
+                # security sensitive context.
+                user_ip = (
+                    request.headers.get("x-forwarded-for", default="").split(",")[0]
+                    or request.headers.get("client-ip", default="").split(",")[0]
+                    or request.remote_addr
+                )
+                tracked_request.tag("user_ip", user_ip)
             except Exception:
                 pass
 
             try:
                 response = handler(request)
             except Exception:
-                tr.tag("error", "true")
+                tracked_request.tag("error", "true")
                 raise
 
             # This happens further down the call chain. So time it starting
             # above, but only name it if it gets to here.
             if request.matched_route is not None:
-                tr.mark_real_request()
+                tracked_request.mark_real_request()
                 span.operation = "Controller/" + request.matched_route.name
 
         finally:
-            tr.stop_span()
+            tracked_request.stop_span()
 
         return response
 

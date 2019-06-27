@@ -1,6 +1,7 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import sys
 from contextlib import contextmanager
 
 import pytest
@@ -9,7 +10,9 @@ from pyramid.response import Response
 from webtest import TestApp
 
 from scout_apm.api import Config
+from scout_apm.core.tracked_request import TrackedRequest
 from tests.compat import mock
+from tests.integration.util import parametrize_user_ip_headers
 
 
 @contextmanager
@@ -69,21 +72,35 @@ def test_home(tracked_requests):
     assert span.operation == "Controller/home"
 
 
-@mock.patch(
-    "pyramid.request.Request.remote_addr",
-    new_callable=mock.PropertyMock,
-    side_effect=ValueError,
-)
-def test_user_ip_exception(remote_addr, tracked_requests):
+@parametrize_user_ip_headers
+def test_user_ip(headers, extra_environ, expected, tracked_requests):
+    if sys.version_info[0] == 2:
+        # Required for WebTest lint
+        headers = {str(k): str(v) for k, v in headers.items()}
+        extra_environ = {str(k): str(v) for k, v in extra_environ.items()}
+
+    with app_with_scout() as app:
+        TestApp(app).get("/", headers=headers, extra_environ=extra_environ)
+
+    tracked_request = tracked_requests[0]
+    assert tracked_request.tags["user_ip"] == expected
+
+
+def test_user_ip_exception(tracked_requests):
     """
     Scout doesn't crash if pyramid.request.Request.remote_addr raises an exception.
 
     This cannot be tested without mocking because it should never happen.
 
     It's implemented in webob.request.Request and it's just a lookup in environ.
-
     """
-    with app_with_scout() as app:
+    remote_addr_patcher = mock.patch(
+        "pyramid.request.Request.remote_addr",
+        new_callable=mock.PropertyMock,
+        side_effect=ValueError,
+    )
+
+    with app_with_scout() as app, remote_addr_patcher:
         response = TestApp(app).get("/hello/")
 
     assert response.status_int == 200
@@ -106,10 +123,11 @@ def test_hello(tracked_requests):
     assert response.status_int == 200
     assert response.text == "Hello World!"
     assert len(tracked_requests) == 1
-    assert len(tracked_requests[0].complete_spans) == 1
-    span = tracked_requests[0].complete_spans[0]
+    tracked_request = tracked_requests[0]
+    assert tracked_request.tags["path"] == "/hello/"
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
     assert span.operation == "Controller/hello"
-    # assert span.tags["path"] == "/hello/"
 
 
 def test_not_found(tracked_requests):
@@ -118,7 +136,7 @@ def test_not_found(tracked_requests):
 
     assert response.status_int == 404
     assert tracked_requests == []
-    # TODO: assert that tracked request is released
+    assert TrackedRequest._thread_lookup.instance is None
 
 
 def test_server_error(tracked_requests):
@@ -127,7 +145,7 @@ def test_server_error(tracked_requests):
         TestApp(app).get("/crash/", expect_errors=True)
 
     assert tracked_requests == []
-    # TODO: assert that tracked request is released
+    assert TrackedRequest._thread_lookup.instance is None
 
 
 def test_no_monitor(tracked_requests):
