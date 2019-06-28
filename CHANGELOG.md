@@ -5,8 +5,8 @@
 ### Added
 
 - Track user IP on Flask
-- Make user IP tracking on Bottle use the same algorithm that checks for the
-  `client-ip` header
+- Make user IP tracking on Bottle and Pyramid use the same algorithm as other
+  integrations, checking for the `client-ip` header
 
 ### Fixed
 
