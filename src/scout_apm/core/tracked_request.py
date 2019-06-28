@@ -97,8 +97,8 @@ class TrackedRequest(object):
     def stop_span(self):
         try:
             stopping_span = self.active_spans.pop()
-        except IndexError as e:
-            logger.debug("Exception when stopping span: %r", e)
+        except IndexError as exc:
+            logger.debug("Exception when stopping span", exc_info=exc)
         else:
             stopping_span.stop()
             if not stopping_span.ignore:
