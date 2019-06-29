@@ -43,9 +43,9 @@ class Instrument(object):
                     except KeyError:
                         method = args[0]
                     url = "{}".format(self._absolute_url("/"))
-                except Exception as e:
-                    logger.error(
-                        "Could not get instrument data for HTTPConnectionPool: %r", e
+                except Exception:
+                    logger.exception(
+                        "Could not get instrument data for HTTPConnectionPool"
                     )
 
                 tr = TrackedRequest.instance()

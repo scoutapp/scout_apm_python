@@ -66,9 +66,9 @@ class CoreAgentManager(object):
                 + self.config_file()
                 + self.socket_path()
             )
-        except Exception as exc:
+        except Exception:
             # TODO detect failure of launch properly
-            logger.error("Error running Core Agent: %r", exc)
+            logger.exception("Error running Core Agent")
             return False
         return True
 
@@ -140,8 +140,8 @@ class CoreAgentDownloader(object):
             try:
                 self.download_package()
                 self.untar()
-            except OSError as e:
-                logger.error("Exception raised while downloading Core Agent: %r", e)
+            except OSError:
+                logger.exception("Exception raised while downloading Core Agent")
             finally:
                 self.release_download_lock()
 

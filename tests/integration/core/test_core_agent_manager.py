@@ -127,23 +127,16 @@ def test_verify_error(caplog, core_agent_manager):
 
 
 def test_launch_error(caplog, core_agent_manager):
-    class CustomException(ValueError):
-        # Consistent repr() across Python versions
-        def __repr__(self):
-            return "fail"
-
+    exception = ValueError("Hello Fail")
     with mock.patch(
         "scout_apm.core.core_agent_manager.CoreAgentManager.agent_binary",
-        side_effect=CustomException(),
+        side_effect=exception,
     ):
         result = core_agent_manager.launch()
 
     assert not result
     assert not is_running(core_agent_manager)
     assert caplog.record_tuples == [
-        (
-            "scout_apm.core.core_agent_manager",
-            logging.ERROR,
-            "Error running Core Agent: fail",
-        )
+        ("scout_apm.core.core_agent_manager", logging.ERROR, "Error running Core Agent")
     ]
+    assert caplog.records[0].exc_info[1] is exception
