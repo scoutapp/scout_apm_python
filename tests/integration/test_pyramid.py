@@ -10,7 +10,6 @@ from pyramid.response import Response
 from webtest import TestApp
 
 from scout_apm.api import Config
-from scout_apm.core.tracked_request import TrackedRequest
 from tests.compat import mock
 from tests.integration.util import parametrize_user_ip_headers
 
@@ -136,7 +135,6 @@ def test_not_found(tracked_requests):
 
     assert response.status_int == 404
     assert tracked_requests == []
-    assert TrackedRequest._thread_lookup.instance is None
 
 
 def test_server_error(tracked_requests):
@@ -145,7 +143,6 @@ def test_server_error(tracked_requests):
         TestApp(app).get("/crash/", expect_errors=True)
 
     assert tracked_requests == []
-    assert TrackedRequest._thread_lookup.instance is None
 
 
 def test_no_monitor(tracked_requests):
