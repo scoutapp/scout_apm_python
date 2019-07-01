@@ -10,12 +10,12 @@ import pytest
 from django.apps import apps
 from django.conf import settings
 from django.core.wsgi import get_wsgi_application
+from django.http import HttpResponse
 from django.test.utils import override_settings
 from webtest import TestApp
 
 from scout_apm.api import Config
 from scout_apm.compat import datetime_to_timestamp
-from scout_apm.core.tracked_request import TrackedRequest
 from tests.compat import mock
 from tests.integration import django_app  # noqa  # force import to configure
 from tests.integration.util import (
@@ -58,19 +58,6 @@ def app_with_scout(**settings):
         # Have to create a new WSGI app each time because the middleware stack
         # within it is static
         yield get_wsgi_application()
-
-
-@pytest.fixture(autouse=True)
-def finish_tracked_request_if_old_style_middlware():
-    # It appears that the current implementation of old-style middleware
-    # doesn't always pair start_span() and stop_span() calls. This leaks
-    # unfinished TrackedRequest instances across tests.
-    # Sweep the dirt under the rug until there's a better solution :-(
-    try:
-        yield
-    finally:
-        if django.VERSION < (1, 10):
-            TrackedRequest.instance().finish()
 
 
 def test_on_setting_changed_application_root():
@@ -141,45 +128,26 @@ def test_hello(tracked_requests):
 def test_not_found(tracked_requests):
     with app_with_scout() as app:
         response = TestApp(app).get("/not-found/", expect_errors=True)
-        assert response.status_int == 404
 
-    if django.VERSION < (1, 10) or settings.MIDDLEWARE is None:
-        # Old style middleware doesn't currently pick up 404's
-        assert len(tracked_requests) == 0
-    else:
-        assert len(tracked_requests) == 1
-        spans = tracked_requests[0].complete_spans
-        assert [s.operation for s in spans] == [
-            "Template/Compile/<Unknown Template>",
-            "Template/Render/<Unknown Template>",
-            "Unknown",
-            "Middleware",
-        ]
+    assert response.status_int == 404
+    assert len(tracked_requests) == 0
 
 
 def test_server_error(tracked_requests):
     with app_with_scout() as app:
         response = TestApp(app).get("/crash/", expect_errors=True)
-        assert response.status_int == 500
 
+    assert response.status_int == 500
     assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert tracked_request.tags["error"] == "true"
     spans = tracked_requests[0].complete_spans
-    # Different processing order on old-style middleware
-    if django.VERSION < (1, 10) or settings.MIDDLEWARE is None:
-        expected = [
-            "Controller/tests.integration.django_app.crash",
-            "Template/Compile/<Unknown Template>",
-            "Template/Render/<Unknown Template>",
-            "Middleware",
-        ]
-    else:
-        expected = [
-            "Template/Compile/<Unknown Template>",
-            "Template/Render/<Unknown Template>",
-            "Controller/tests.integration.django_app.crash",
-            "Middleware",
-        ]
-    assert [s.operation for s in spans] == expected
+    assert [s.operation for s in spans] == [
+        "Template/Compile/<Unknown Template>",
+        "Template/Render/<Unknown Template>",
+        "Controller/tests.integration.django_app.crash",
+        "Middleware",
+    ]
 
 
 def test_sql(tracked_requests):
@@ -412,3 +380,181 @@ def test_install_middleware_new_style(list_or_tuple, preinstalled):
                 "scout_apm.django.middleware.ViewTimingMiddleware",
             ]
         )
+
+
+class OldStyleOnRequestResponseMiddleware:
+    def process_request(self, request):
+        return HttpResponse("on_request response!")
+
+
+@skip_unless_old_style_middleware
+@pytest.mark.parametrize("middleware_index", [0, 1, 2])
+def test_old_style_on_request_response_middleware(middleware_index, tracked_requests):
+    """
+    Test the case that a middleware got added/injected that generates a
+    response in its process_request, triggering Django's middleware shortcut
+    path. This will not be counted as a real request because it doesn't reach a
+    view.
+    """
+    new_middleware = (
+        settings.MIDDLEWARE_CLASSES[:middleware_index]
+        + [__name__ + "." + OldStyleOnRequestResponseMiddleware.__name__]
+        + settings.MIDDLEWARE_CLASSES[middleware_index:]
+    )
+    with app_with_scout(MIDDLEWARE_CLASSES=new_middleware) as app:
+        response = TestApp(app).get("/")
+
+    assert response.status_int == 200
+    assert response.text == "on_request response!"
+    assert len(tracked_requests) == 0
+
+
+class OldStyleOnResponseResponseMiddleware:
+    def process_response(self, request, response):
+        return HttpResponse("process_response response!")
+
+
+@skip_unless_old_style_middleware
+@pytest.mark.parametrize("middleware_index", [0, 1, 2])
+def test_old_style_on_response_response_middleware(middleware_index, tracked_requests):
+    """
+    Test the case that a middleware got added/injected that generates a fresh
+    response in its process_response. This will count as a real request because
+    it reaches the view, but then the view's response gets replaced on the way
+    out.
+    """
+    new_middleware = (
+        settings.MIDDLEWARE_CLASSES[:middleware_index]
+        + [__name__ + "." + OldStyleOnResponseResponseMiddleware.__name__]
+        + settings.MIDDLEWARE_CLASSES[middleware_index:]
+    )
+    with app_with_scout(MIDDLEWARE_CLASSES=new_middleware) as app:
+        response = TestApp(app).get("/")
+
+    assert response.status_int == 200
+    assert response.text == "process_response response!"
+    assert len(tracked_requests) == 1
+
+
+class OldStyleOnViewResponseMiddleware:
+    def process_view(self, request, view_func, view_func_args, view_func_kwargs):
+        return HttpResponse("process_view response!")
+
+
+@skip_unless_old_style_middleware
+@pytest.mark.parametrize("middleware_index", [0, 1, 2])
+def test_old_style_on_view_response_middleware(middleware_index, tracked_requests):
+    """
+    Test the case that a middleware got added/injected that generates a fresh
+    response in its process_response. This will count as a real request because
+    it reaches the view, but then the view's response gets replaced on the way
+    out.
+    """
+    new_middleware = (
+        settings.MIDDLEWARE_CLASSES[:middleware_index]
+        + [__name__ + "." + OldStyleOnViewResponseMiddleware.__name__]
+        + settings.MIDDLEWARE_CLASSES[middleware_index:]
+    )
+    with app_with_scout(MIDDLEWARE_CLASSES=new_middleware) as app:
+        response = TestApp(app).get("/")
+
+    assert response.status_int == 200
+    assert response.text == "process_view response!"
+    # If the middleware is before OldStyleViewMiddleware, its process_view
+    # won't be called and we won't know to mark the request as real, so it
+    # won't be tracked.
+    if middleware_index < 2:
+        assert len(tracked_requests) == 0
+    else:
+        assert len(tracked_requests) == 1
+
+
+class OldStyleOnExceptionResponseMiddleware:
+    def process_exception(self, request, exception):
+        return HttpResponse("process_exception response!")
+
+
+@skip_unless_old_style_middleware
+@pytest.mark.parametrize("middleware_index", [0, 1, 2])
+def test_old_style_on_exception_response_middleware(middleware_index, tracked_requests):
+    """
+    Test the case that a middleware got added/injected that generates a
+    response in its process_exception. This should follow basically the same
+    path as normal view exception, since Django applies process_response from
+    middleware on the outgoing response.
+    """
+    new_middleware = (
+        settings.MIDDLEWARE_CLASSES[:middleware_index]
+        + [__name__ + "." + OldStyleOnExceptionResponseMiddleware.__name__]
+        + settings.MIDDLEWARE_CLASSES[middleware_index:]
+    )
+    with app_with_scout(MIDDLEWARE_CLASSES=new_middleware) as app:
+        response = TestApp(app).get("/crash/")
+
+    assert response.status_int == 200
+    assert response.text == "process_exception response!"
+    assert len(tracked_requests) == 1
+
+    # In the case that the middleware is added after OldStyleViewMiddleware,
+    # its process_exception won't be called so we won't know it's an error.
+    # Nothing we can do there - but it's a rare case, since we programatically
+    # add our middleware at the end of the stack.
+    if middleware_index != 2:
+        assert tracked_requests[0].tags["error"] == "true"
+
+
+class OldStyleExceptionOnRequestMiddleware:
+    def process_request(self, request):
+        return ValueError("Woops!")
+
+
+@skip_unless_old_style_middleware
+@pytest.mark.parametrize("middleware_index", [0, 1, 2])
+def test_old_style_exception_on_request_middleware(middleware_index, tracked_requests):
+    """
+    Test the case that a middleware got added/injected that raises an exception
+    in its process_request.
+    """
+    new_middleware = (
+        settings.MIDDLEWARE_CLASSES[:middleware_index]
+        + [__name__ + "." + OldStyleExceptionOnRequestMiddleware.__name__]
+        + settings.MIDDLEWARE_CLASSES[middleware_index:]
+    )
+    with app_with_scout(MIDDLEWARE_CLASSES=new_middleware) as app:
+        response = TestApp(app).get("/", expect_errors=True)
+
+    assert response.status_int == 500
+    assert len(tracked_requests) == 0
+
+
+@skip_unless_old_style_middleware
+@pytest.mark.parametrize("url,expected_status", [("/", 200), ("/crash/", 500)])
+def test_old_style_timing_middleware_deleted(url, expected_status, tracked_requests):
+    """
+    Test the case that some adversarial thing fiddled with the settings
+    after app.ready() (like we do!) in order to remove the
+    OldStyleMiddlewareTimingMiddleware. The tracked request won't be started
+    but OldStyleViewMiddleware defends against this.
+    """
+    new_middleware = settings.MIDDLEWARE_CLASSES[1:]
+    with app_with_scout(MIDDLEWARE_CLASSES=new_middleware) as app:
+        response = TestApp(app).get(url, expect_errors=True)
+
+    assert response.status_int == expected_status
+    assert len(tracked_requests) == 0
+
+
+@skip_unless_old_style_middleware
+def test_old_style_view_middleware_deleted(tracked_requests):
+    """
+    Test the case that some adversarial thing fiddled with the settings
+    after app.ready() (like we do!) in order to remove the
+    OldStyleViewMiddleware. The tracked request won't be marked as real since
+    its process_view won't have run.
+    """
+    new_middleware = settings.MIDDLEWARE_CLASSES[:1]
+    with app_with_scout(MIDDLEWARE_CLASSES=new_middleware) as app:
+        response = TestApp(app).get("/")
+
+    assert response.status_int == 200
+    assert len(tracked_requests) == 0

@@ -14,6 +14,8 @@
 
 - Track path and user IP on Django < 1.10
 - The undocumented `core-agent-manager` CLI command works again
+- Consistently track view responses on Django between different versions
+- Avoid unbalanced request tracking in certain cases on Django < 1.10
 
 ## [2.1.0] 2019-06-25
 

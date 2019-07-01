@@ -87,12 +87,10 @@ class ViewTimingMiddleware(object):
         """
 
         tr = TrackedRequest.instance()
-        tr.mark_real_request()
 
         # This operation name won't be recorded unless changed later in
         # process_view
-        operation = "Unknown"
-        tr.start_span(operation=operation)
+        tr.start_span(operation="Unknown")
         try:
             response = self.get_response(request)
         finally:
@@ -104,6 +102,8 @@ class ViewTimingMiddleware(object):
         Capture details about the view_func that is about to execute
         """
         tracked_request = TrackedRequest.instance()
+        tracked_request.mark_real_request()
+
         track_request_view_data(request, tracked_request)
 
         span = tracked_request.current_span()
@@ -127,54 +127,61 @@ class OldStyleMiddlewareTimingMiddleware(object):
 
     def process_request(self, request):
         tracked_request = TrackedRequest.instance()
-        span = tracked_request.start_span(operation="Middleware")
-        request.scout_middleware_span = span
+        request._scout_tracked_request = tracked_request
+
         queue_time = request.META.get("HTTP_X_QUEUE_START") or request.META.get(
             "HTTP_X_REQUEST_START", ""
         )
         track_request_queue_time(queue_time, tracked_request)
 
+        tracked_request.start_span(operation="Middleware")
+
     def process_response(self, request, response):
-        tr = TrackedRequest.instance()
-        if (
-            hasattr(request, "scout_middleware_span")
-            and tr.current_span() == request.scout_middleware_span
-        ):
-            tr.stop_span()
+        # Only stop span if there's a request, but presume we are balanced,
+        # i.e. that custom instrumentation within the application is not
+        # causing errors
+        tracked_request = getattr(request, "_scout_tracked_request", None)
+        if tracked_request is not None:
+            tracked_request.stop_span()
         return response
 
 
 class OldStyleViewMiddleware(object):
-    def process_request(self, request):
-        pass
-
     def process_view(self, request, view_func, view_func_args, view_func_kwargs):
-        tracked_request = TrackedRequest.instance()
+        tracked_request = getattr(request, "_scout_tracked_request", None)
+        if tracked_request is None:
+            # Looks like OldStyleMiddlewareTimingMiddleware didn't run, so
+            # don't do anything
+            return
+
         tracked_request.mark_real_request()
+
         track_request_view_data(request, tracked_request)
 
         span = tracked_request.start_span(operation=get_operation_name(request))
         # Save the span into the request, so we can check
         # if we're matched up when stopping
-        request.scout_view_span = span
+        request._scout_view_span = span
 
-    # process_response() could be called without process_view() having been
-    # called. Be careful to not stop a span that never got started.
     def process_response(self, request, response):
-        tracked_request = TrackedRequest.instance()
-        if (
-            hasattr(request, "scout_view_span")
-            and tracked_request.current_span() == request.scout_view_span
-        ):
+        tracked_request = getattr(request, "_scout_tracked_request", None)
+        if tracked_request is None:
+            # Looks like OldStyleMiddlewareTimingMiddleware didn't run, so
+            # don't do anything
+            return response
+
+        # Only stop span if we started, but presume we are balanced, i.e. that
+        # custom instrumentation within the application is not causing errors
+        span = getattr(request, "_scout_view_span", None)
+        if span is not None:
             tracked_request.stop_span()
         return response
 
     def process_exception(self, request, exception):
-        tracked_request = TrackedRequest.instance()
+        tracked_request = getattr(request, "_scout_tracked_request", None)
+        if tracked_request is None:
+            # Looks like OldStyleMiddlewareTimingMiddleware didn't run, so
+            # don't do anything
+            return
 
-        if (
-            hasattr(request, "scout_view_span")
-            and tracked_request.current_span() == request.scout_view_span
-        ):
-            tracked_request.tag("error", "true")
-            tracked_request.stop_span()
+        tracked_request.tag("error", "true")
