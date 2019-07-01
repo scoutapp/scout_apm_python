@@ -7,6 +7,7 @@ import scout_apm.core
 from scout_apm.core.config import ScoutConfig
 from scout_apm.core.context import AgentContext
 from scout_apm.core.ignore import ignore_path
+from scout_apm.core.queue_time import track_request_queue_time
 from scout_apm.core.tracked_request import TrackedRequest
 
 
@@ -61,9 +62,19 @@ class ScoutPlugin(object):
                     or request.headers.get("client-ip", "").split(",")[0]
                     or request.environ.get("REMOTE_ADDR")
                 )
-                tracked_request.tag("user_ip", user_ip)
             except Exception:
                 pass
+            else:
+                tracked_request.tag("user_ip", user_ip)
+
+            try:
+                queue_time = request.headers.get(
+                    "x-queue-start", ""
+                ) or request.headers.get("x-request-start", "")
+            except Exception:
+                pass
+            else:
+                track_request_queue_time(queue_time, tracked_request)
 
             try:
                 return callback(*args, **kwargs)
