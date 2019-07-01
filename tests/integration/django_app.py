@@ -2,23 +2,36 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import django
 from django.conf import settings
-from django.core.wsgi import get_wsgi_application
 from django.db import connection
 from django.http import HttpResponse
 from django.template import engines
 
-settings.configure(
-    ALLOWED_HOSTS=["*"],
-    DATABASES={"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"}},
-    DEBUG=True,
+config = {
+    "ALLOWED_HOSTS": ["*"],
+    "DATABASES": {
+        "default": {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"}
+    },
+    "DEBUG": True,
     # Enable the following for debugging exceptions:
-    # DEBUG_PROPAGATE_EXCEPTIONS=True,
-    ROOT_URLCONF=__name__,
-    SECRET_KEY="********",
-    TEMPLATES=[{"BACKEND": "django.template.backends.django.DjangoTemplates"}],
-    TIME_ZONE="America/Chicago",
-)
+    # "DEBUG_PROPAGATE_EXCEPTIONS": True,
+    "ROOT_URLCONF": __name__,
+    "SECRET_KEY": "********",
+    "TEMPLATES": [{"BACKEND": "django.template.backends.django.DjangoTemplates"}],
+    "TIME_ZONE": "America/Chicago",
+    # Setup as per https://docs.scoutapm.com/#django but *without* the settings
+    # - these are temporarily set by app_with_scout() to avoid state leak
+    "INSTALLED_APPS": ["scout_apm.django"],
+}
+
+if django.VERSION > (1, 10):
+    config["MIDDLEWARE"] = []
+else:
+    config["MIDDLEWARE_CLASSES"] = []
+
+
+settings.configure(**config)
 
 
 def home(request):
@@ -72,6 +85,3 @@ except ImportError:  # Django < 2.0
         url(r"^sql/$", sql),
         url(r"^template/$", template),
     ]
-
-
-app = get_wsgi_application()
