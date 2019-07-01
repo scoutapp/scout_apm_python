@@ -12,6 +12,7 @@
 ### Fixed
 
 - Track path and user IP on Django < 1.10
+- The undocumented `core-agent-manager` CLI command works again
 
 ## [2.1.0] 2019-06-25
 

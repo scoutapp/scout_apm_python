@@ -4,38 +4,31 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import argparse
 import logging
 
+from scout_apm.core import AgentContext, CoreAgentManager
 
-def download(**kwargs):
-    from scout_apm.core import CoreAgentManager
-
-    core_agent_manager = CoreAgentManager()
-    core_agent_manager.download()
+logger = logging.getLogger(__name__)
 
 
-def launch(**kwargs):
-    from scout_apm.core import CoreAgentManager
-
-    core_agent_manager = CoreAgentManager()
-    core_agent_manager.launch()
-
-
-def main(**kwargs):
+def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-v", "--verbose", help="increase output verbosity", action="count"
     )
 
-    subparsers = parser.add_subparsers(dest="subparser")
+    subparsers = parser.add_subparsers(
+        title="subcommands", description="valid subcommands", dest="subparser"
+    )
     subparsers.add_parser("download")
     subparsers.add_parser("launch")
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if args.verbose is not None:
         if args.verbose >= 2:
-            logging.basicConfig(level=getattr(logging, "DEBUG", None))
-        elif args.verbose == 1:
-            logging.basicConfig(level=getattr(logging, "INFO", None))
+            logging.basicConfig(level=logging.DEBUG)
+        else:
+            logging.basicConfig(level=logging.INFO)
 
-    kwargs = vars(args)
-    globals()[kwargs.pop("subparser")](**kwargs)
+    AgentContext.build()
+    core_agent_manager = CoreAgentManager()
+    getattr(core_agent_manager, args.subparser)()
