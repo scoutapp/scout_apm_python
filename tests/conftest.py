@@ -107,6 +107,18 @@ def short_timeouts():
 
 
 @pytest.fixture
+def tracked_request():
+    """
+    Create a temporary tracked request for the duration of the test.
+    """
+    request = TrackedRequest.instance()
+    try:
+        yield request
+    finally:
+        request.finish()
+
+
+@pytest.fixture
 def tracked_requests():
     """
     Gather all TrackedRequests that are buffered during a test into a list.

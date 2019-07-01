@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import datetime as dt
 import sys
-import time
 from contextlib import contextmanager
 
 import django
@@ -356,42 +355,6 @@ def test_queue_time(header_name, tracked_requests):
     queue_time_ns = tracked_requests[0].tags["scout.queue_time_ns"]
     # Upper bound assumes we didn't take more than 2s to run this test...
     assert queue_time_ns >= 2000000000 and queue_time_ns < 4000000000
-
-
-@pytest.mark.parametrize(
-    "header_value",
-    [
-        str(""),
-        str("t=X"),  # first character not a digit
-        str("t=0.3f"),  # raises ValueError on float() conversion
-        str(datetime_to_timestamp(dt.datetime.utcnow()) + 1000.0),  # in future
-        str(datetime_to_timestamp(dt.datetime(2009, 1, 1))),  # before ambig cutoff
-    ],
-)
-def test_queue_time_invalid(header_value, tracked_requests):
-    with app_with_scout() as app:
-        response = TestApp(app).get("/", headers={"X-Queue-Start": header_value})
-
-    assert response.status_int == 200
-    assert len(tracked_requests) == 1
-    assert "scout.queue_time_ns" not in tracked_requests[0].tags
-
-
-def test_queue_time_future(tracked_requests):
-    # Not testing floats due to Python 2/3 rounding differences
-    queue_start = int(time.time() + 2)
-    with app_with_scout() as app:
-        response = TestApp(app).get(
-            "/", headers={"X-Queue-Start": str("t=") + str(queue_start)}
-        )
-
-    assert response.status_int == 200
-    assert len(tracked_requests) == 1
-    spans = tracked_requests[0].complete_spans
-    assert [s.operation for s in spans] == [
-        "Controller/tests.integration.django_app.home",
-        "Middleware",
-    ]
 
 
 @skip_unless_old_style_middleware

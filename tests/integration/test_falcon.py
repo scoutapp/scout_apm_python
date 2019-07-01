@@ -1,6 +1,7 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import datetime as dt
 import logging
 import sys
 from contextlib import contextmanager
@@ -10,6 +11,7 @@ import pytest
 from webtest import TestApp
 
 from scout_apm.api import Config
+from scout_apm.compat import datetime_to_timestamp
 from scout_apm.falcon import ScoutMiddleware
 from tests.integration.util import parametrize_user_ip_headers
 
@@ -154,6 +156,22 @@ def test_home_ignored(tracked_requests):
     assert response.status_int == 200
     assert response.text == "Welcome home."
     assert tracked_requests == []
+
+
+@pytest.mark.parametrize("header_name", ["X-Queue-Start", "X-Request-Start"])
+def test_queue_time(header_name, tracked_requests):
+    # Not testing floats due to Python 2/3 rounding differences
+    queue_start = int(datetime_to_timestamp(dt.datetime.utcnow()) - 2)
+    with app_with_scout() as app:
+        response = TestApp(app).get(
+            "/", headers={header_name: str("t=") + str(queue_start)}
+        )
+
+    assert response.status_int == 200
+    assert len(tracked_requests) == 1
+    queue_time_ns = tracked_requests[0].tags["scout.queue_time_ns"]
+    # Upper bound assumes we didn't take more than 2s to run this test...
+    assert queue_time_ns >= 2000000000 and queue_time_ns < 4000000000
 
 
 def test_middleware_returning_early_from_process_request(tracked_requests):
