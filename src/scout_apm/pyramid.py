@@ -4,6 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import scout_apm.core
 from scout_apm.core.config import ScoutConfig
 from scout_apm.core.ignore import ignore_path
+from scout_apm.core.queue_time import track_request_queue_time
 from scout_apm.core.tracked_request import TrackedRequest
 
 
@@ -41,9 +42,19 @@ def instruments(handler, registry):
                     or request.headers.get("client-ip", default="").split(",")[0]
                     or request.remote_addr
                 )
-                tracked_request.tag("user_ip", user_ip)
             except Exception:
                 pass
+            else:
+                tracked_request.tag("user_ip", user_ip)
+
+            try:
+                queue_time = request.headers.get(
+                    "x-queue-start", default=""
+                ) or request.headers.get("x-request-start", default="")
+            except Exception:
+                pass
+            else:
+                track_request_queue_time(queue_time, tracked_request)
 
             try:
                 response = handler(request)

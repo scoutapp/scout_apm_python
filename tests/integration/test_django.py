@@ -18,7 +18,10 @@ from scout_apm.compat import datetime_to_timestamp
 from scout_apm.core.tracked_request import TrackedRequest
 from tests.compat import mock
 from tests.integration import django_app  # noqa  # force import to configure
-from tests.integration.util import parametrize_user_ip_headers
+from tests.integration.util import (
+    parametrize_queue_time_header_name,
+    parametrize_user_ip_headers,
+)
 
 skip_unless_new_style_middleware = pytest.mark.skipif(
     django.VERSION < (1, 10), reason="new-style middleware was added in Django 1.10"
@@ -341,7 +344,7 @@ def test_old_style_username_exception(tracked_requests):
     assert "username" not in tr.tags
 
 
-@pytest.mark.parametrize("header_name", ["X-Queue-Start", "X-Request-Start"])
+@parametrize_queue_time_header_name
 def test_queue_time(header_name, tracked_requests):
     # Not testing floats due to Python 2/3 rounding differences
     queue_start = int(datetime_to_timestamp(dt.datetime.utcnow()) - 2)

@@ -13,7 +13,10 @@ from webtest import TestApp
 from scout_apm.api import Config
 from scout_apm.compat import datetime_to_timestamp
 from scout_apm.falcon import ScoutMiddleware
-from tests.integration.util import parametrize_user_ip_headers
+from tests.integration.util import (
+    parametrize_queue_time_header_name,
+    parametrize_user_ip_headers,
+)
 
 
 @contextmanager
@@ -158,7 +161,7 @@ def test_home_ignored(tracked_requests):
     assert tracked_requests == []
 
 
-@pytest.mark.parametrize("header_name", ["X-Queue-Start", "X-Request-Start"])
+@parametrize_queue_time_header_name
 def test_queue_time(header_name, tracked_requests):
     # Not testing floats due to Python 2/3 rounding differences
     queue_start = int(datetime_to_timestamp(dt.datetime.utcnow()) - 2)

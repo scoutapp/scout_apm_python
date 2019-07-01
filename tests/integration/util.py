@@ -3,6 +3,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import pytest
 
+parametrize_queue_time_header_name = pytest.mark.parametrize(
+    "header_name", ["X-Queue-Start", "X-Request-Start"]
+)
+
 parametrize_user_ip_headers = pytest.mark.parametrize(
     "headers, extra_environ, expected",
     [

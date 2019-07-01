@@ -7,7 +7,8 @@
 - Track user IP on Flask
 - Make user IP tracking on Bottle and Pyramid use the same algorithm as other
   integrations, checking for the `client-ip` header
-- Add support to Falcon integration for tracking request queue timing
+- Add support to Bottle, Falcon, Flask and Pyramid integrations for tracking
+  request queue timing
 
 ### Fixed
 
