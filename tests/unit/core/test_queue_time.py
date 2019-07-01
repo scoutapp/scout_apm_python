@@ -2,11 +2,16 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import datetime as dt
+import time
 
 import pytest
 
 from scout_apm.compat import datetime_to_timestamp
-from scout_apm.core.queue_time import track_request_queue_time
+from scout_apm.core.queue_time import (
+    CUTOFF_EPOCH_S,
+    convert_ambiguous_timestamp_to_ns,
+    track_request_queue_time,
+)
 
 
 @pytest.mark.parametrize("with_t", [True, False])
@@ -37,3 +42,24 @@ def test_track_request_queue_time_invalid(header_value, tracked_request):
     track_request_queue_time(header_value, tracked_request)
 
     assert "scout.queue_time_ns" not in tracked_request.tags
+
+
+ref_time_s = time.mktime((2019, 6, 1, 0, 0, 0, 0, 0, 0))
+
+
+@pytest.mark.parametrize(
+    "given,expected",
+    [
+        (ref_time_s, ref_time_s * 1e9),
+        (ref_time_s * 1e3, ref_time_s * 1e9),
+        (ref_time_s * 1e6, ref_time_s * 1e9),
+        (CUTOFF_EPOCH_S + 10, (CUTOFF_EPOCH_S + 10) * 1e9),
+        (0.0, 0.0),
+        (1000.0, 0.0),
+        (float("inf"), float("inf")),
+        (float("-inf"), 0.0),
+        (float("nan"), 0.0),
+    ],
+)
+def test_convert_ambiguous_timestamp_to_ns(given, expected):
+    assert convert_ambiguous_timestamp_to_ns(given) == expected
