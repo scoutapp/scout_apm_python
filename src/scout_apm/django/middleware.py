@@ -3,46 +3,11 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 
-from scout_apm.compat import datetime_to_timestamp
 from scout_apm.core.ignore import ignore_path
+from scout_apm.core.queue_time import track_request_queue_time
 from scout_apm.core.tracked_request import TrackedRequest
-from scout_apm.core.util import convert_ambiguous_timestamp_to_ns
 
 logger = logging.getLogger(__name__)
-
-
-def track_request_queue_time(request, tracked_request):
-    header_value = request.META.get("HTTP_X_QUEUE_START") or request.META.get(
-        "HTTP_X_REQUEST_START", ""
-    )
-    if header_value.startswith("t="):
-        header_value = header_value[2:]
-
-    try:
-        first_char = header_value[0]
-    except IndexError:
-        return
-
-    if not first_char.isdigit():  # filter out negatives, nan, inf, etc.
-        return
-
-    try:
-        ambiguous_start_timestamp = float(header_value)
-    except ValueError:
-        return
-
-    start_timestamp_ns = convert_ambiguous_timestamp_to_ns(ambiguous_start_timestamp)
-    if start_timestamp_ns == 0.0:
-        return
-
-    tr_start_timestamp_ns = datetime_to_timestamp(tracked_request.start_time) * 1e9
-
-    # Ignore if in the future
-    if start_timestamp_ns > tr_start_timestamp_ns:
-        return
-
-    queue_time_ns = int(tr_start_timestamp_ns - start_timestamp_ns)
-    tracked_request.tag("scout.queue_time_ns", queue_time_ns)
 
 
 def get_operation_name(request):
@@ -89,7 +54,10 @@ class MiddlewareTimingMiddleware(object):
         tracked_request = TrackedRequest.instance()
 
         tracked_request.start_span(operation="Middleware")
-        track_request_queue_time(request, tracked_request)
+        queue_time = request.META.get("HTTP_X_QUEUE_START") or request.META.get(
+            "HTTP_X_REQUEST_START", ""
+        )
+        track_request_queue_time(queue_time, tracked_request)
 
         try:
             return self.get_response(request)
@@ -161,7 +129,10 @@ class OldStyleMiddlewareTimingMiddleware(object):
         tracked_request = TrackedRequest.instance()
         span = tracked_request.start_span(operation="Middleware")
         request.scout_middleware_span = span
-        track_request_queue_time(request, tracked_request)
+        queue_time = request.META.get("HTTP_X_QUEUE_START") or request.META.get(
+            "HTTP_X_REQUEST_START", ""
+        )
+        track_request_queue_time(queue_time, tracked_request)
 
     def process_response(self, request, response):
         tr = TrackedRequest.instance()

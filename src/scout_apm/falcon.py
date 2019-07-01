@@ -7,6 +7,7 @@ import falcon
 
 from scout_apm.api import install
 from scout_apm.core.ignore import ignore_path
+from scout_apm.core.queue_time import track_request_queue_time
 from scout_apm.core.tracked_request import TrackedRequest
 
 logger = logging.getLogger(__name__)
@@ -47,6 +48,11 @@ class ScoutMiddleware(object):
             or req.remote_addr
         )
         tracked_request.tag("user_ip", user_ip)
+
+        queue_time = req.get_header("x-queue-start", default="") or req.get_header(
+            "x-request-start", default=""
+        )
+        track_request_queue_time(queue_time, tracked_request)
 
     def process_resource(self, req, resp, resource, params):
         tracked_request = getattr(req.context, "scout_tracked_request", None)
