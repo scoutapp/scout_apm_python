@@ -1,5 +1,10 @@
 # Scout Python APM Agent
 
+[![travis](https://img.shields.io/travis/scoutapp/scout_apm_python/master.svg)](https://travis-ci.org/scoutapp/scout_apm_python)
+[![pypi](https://img.shields.io/pypi/v/scout-apm.svg)](https://pypi.python.org/pypi/scout-apm)
+[![docs](https://img.shields.io/badge/docs-read%20online-green.svg)](https://docs.scoutapm.com/#python-agent)
+[![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
+
 Monitor the performance of Python Django apps, Flask apps, and Celery workers with Scout's [Python APM Agent](https://www.scoutapm.com). Detailed performance metrics and transaction traces are collected once the `scout-apm` package is installed and configured.
 
 ![screenshot](https://s3-us-west-1.amazonaws.com/scout-blog/python_monitoring_release/python_monitoring_screenshot.png)
