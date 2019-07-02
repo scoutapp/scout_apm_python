@@ -84,10 +84,32 @@ def test_hello_worker(celery_app, celery_worker, tracked_requests):
     assert tracked_request.tags["exchange"] == ""
     assert tracked_request.tags["routing_key"] == "celery"
     assert tracked_request.tags["queue"] == "unknown"
+    assert (
+        0.0 <= tracked_request.tags["queue_time"] < 60.0
+    )  # Assume test took <60 seconds
     assert tracked_request.active_spans == []
     assert len(tracked_request.complete_spans) == 1
     span = tracked_request.complete_spans[0]
     assert span.operation == "Job/tests.integration.test_celery.hello"
+
+
+@skip_unless_celery_4_plus
+def test_hello_worker_header_preset(celery_app, celery_worker, tracked_requests):
+    with app_with_scout(app=celery_app) as app:
+        result = (
+            app.tasks["tests.integration.test_celery.hello"]
+            .apply_async(headers={"scout_task_start": "an evil string"})
+            .get()
+        )
+
+    assert result == "Hello World!"
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert tracked_request.active_spans == []
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "Job/tests.integration.test_celery.hello"
+    assert "queue_time" not in span.tags
 
 
 def test_no_monitor(tracked_requests):

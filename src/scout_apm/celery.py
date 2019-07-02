@@ -1,15 +1,33 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from celery.signals import task_postrun, task_prerun
+import datetime as dt
+
+from celery.signals import before_task_publish, task_postrun, task_prerun
 
 import scout_apm.core
+from scout_apm.compat import datetime_to_timestamp
 from scout_apm.core.tracked_request import TrackedRequest
+
+
+def before_publish_callback(headers=None, properties=None, **kwargs):
+    if "scout_task_start" not in headers:
+        headers["scout_task_start"] = datetime_to_timestamp(dt.datetime.utcnow())
 
 
 def prerun_callback(task=None, **kwargs):
     tracked_request = TrackedRequest.instance()
     tracked_request.mark_real_request()
+
+    start = getattr(task.request, "scout_task_start", None)
+    if start is not None:
+        now = datetime_to_timestamp(dt.datetime.utcnow())
+        try:
+            queue_time = now - start
+        except TypeError:
+            pass
+        else:
+            tracked_request.tag("queue_time", queue_time)
 
     delivery_info = task.request.delivery_info
     tracked_request.tag("is_eager", delivery_info.get("is_eager", False))
@@ -30,10 +48,12 @@ def install():
     if not installed:
         return
 
+    before_task_publish.connect(before_publish_callback)
     task_prerun.connect(prerun_callback)
     task_postrun.connect(postrun_callback)
 
 
 def uninstall():
+    before_task_publish.disconnect(before_publish_callback)
     task_prerun.disconnect(prerun_callback)
     task_postrun.disconnect(postrun_callback)
