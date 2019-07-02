@@ -16,6 +16,8 @@
 - The undocumented `core-agent-manager` CLI command works again
 - Consistently track view responses on Django between different versions
 - Avoid unbalanced request tracking in certain cases on Django < 1.10
+- Clarified contents of public API by moving some stuff out of it and setting
+  `scout_apm.api.__all__`
 
 ## [2.1.0] 2019-06-25
 

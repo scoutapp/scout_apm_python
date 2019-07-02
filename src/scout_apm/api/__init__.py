@@ -4,26 +4,35 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 
 import scout_apm.core
-from scout_apm.api.context import Context as ScoutContext
-from scout_apm.compat import ContextDecorator, text_type
+from scout_apm.compat import ContextDecorator, text
 from scout_apm.core.config import ScoutConfig
 from scout_apm.core.tracked_request import TrackedRequest
 
 logger = logging.getLogger(__name__)
 
 
-def text(value, encoding="utf-8", errors="strict"):
-    """Convert a value to str on Python 3 and unicode on Python 2."""
-    if isinstance(value, text_type):
-        return value
-    elif isinstance(value, bytes):
-        return text_type(value, encoding, errors)
-    else:
-        return text_type(value)
+__all__ = [
+    "BackgroundTransaction",
+    "Config",
+    "Context",
+    "WebTransaction",
+    "install",
+    "instrument",
+]
 
 
-class Context(ScoutContext):
-    pass
+class Context(object):
+    @classmethod
+    def add(self, key, value):
+        """Adds context to the currently executing request.
+
+        :key: Any String identifying the request context.
+              Example: "user_ip", "plan", "alert_count"
+        :value: Any json-serializable type.
+              Example: "1.1.1.1", "free", 100
+        :returns: nothing.
+        """
+        TrackedRequest.instance().tag(key, value)
 
 
 class Config(ScoutConfig):
