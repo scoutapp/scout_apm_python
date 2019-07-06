@@ -42,9 +42,10 @@ class ScoutConfig(object):
         for layer in self.layers:
             if layer.has_config(key):
                 return layer
-        else:  # pragma: no cover
-            # Not reachable because ScoutConfigNull returns None for all keys.
-            assert False, "key not found in any layer"
+
+        # Should be unreachable because ScoutConfigNull returns None for all
+        # keys.
+        raise ValueError("key {!r} not found in any layer".format(key))
 
     def log(self):
         logger.debug("Configuration Loaded:")
