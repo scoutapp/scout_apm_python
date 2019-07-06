@@ -142,19 +142,29 @@ def test_server_error(tracked_requests):
     tracked_request = tracked_requests[0]
     assert tracked_request.tags["error"] == "true"
     spans = tracked_requests[0].complete_spans
-    assert [s.operation for s in spans] == [
-        "Template/Compile/<Unknown Template>",
-        "Template/Render/<Unknown Template>",
-        "Controller/tests.integration.django_app.crash",
-        "Middleware",
-    ]
+    operations = [s.operation for s in spans]
+    if django.VERSION >= (1, 9):
+        # Changed in Django 1.9 or later (we only test 1.8 and 1.11 at time of
+        # writing)
+        expected_operations = [
+            "Template/Compile/<Unknown Template>",
+            "Template/Render/<Unknown Template>",
+            "Controller/tests.integration.django_app.crash",
+            "Middleware",
+        ]
+    else:
+        expected_operations = [
+            "Controller/tests.integration.django_app.crash",
+            "Middleware",
+        ]
+    assert operations == expected_operations
 
 
 def test_sql(tracked_requests):
     with app_with_scout() as app:
         response = TestApp(app).get("/sql/")
-        assert response.status_int == 200
 
+    assert response.status_int == 200
     assert len(tracked_requests) == 1
     spans = tracked_requests[0].complete_spans
     assert [s.operation for s in spans] == [
@@ -174,8 +184,8 @@ def test_sql_capture_backtrace(should_capture_backtrace, tracked_requests):
     should_capture_backtrace.return_value = True
     with app_with_scout() as app:
         response = TestApp(app).get("/sql/")
-        assert response.status_int == 200
 
+    assert response.status_int == 200
     assert len(tracked_requests) == 1
     spans = tracked_requests[0].complete_spans
     assert [s.operation for s in spans] == [
@@ -190,8 +200,8 @@ def test_sql_capture_backtrace(should_capture_backtrace, tracked_requests):
 def test_template(tracked_requests):
     with app_with_scout() as app:
         response = TestApp(app).get("/template/")
-        assert response.status_int == 200
 
+    assert response.status_int == 200
     assert len(tracked_requests) == 1
     spans = tracked_requests[0].complete_spans
     print([s.operation for s in spans])
@@ -208,8 +218,8 @@ def test_template(tracked_requests):
 def test_no_monitor(tracked_requests):
     with app_with_scout(SCOUT_MONITOR=False) as app:
         response = TestApp(app).get("/hello/")
-        assert response.status_int == 200
 
+    assert response.status_int == 200
     assert len(tracked_requests) == 0
 
 
