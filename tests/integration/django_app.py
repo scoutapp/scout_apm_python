@@ -13,8 +13,8 @@ config = {
     "DATABASES": {
         "default": {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"}
     },
-    "DEBUG": True,
     # Enable the following for debugging exceptions:
+    # "DEBUG": True,
     # "DEBUG_PROPAGATE_EXCEPTIONS": True,
     "ROOT_URLCONF": __name__,
     "SECRET_KEY": "********",
