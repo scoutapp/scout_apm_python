@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import os
 import re
+import sys
 
 import pytest
 
@@ -26,6 +27,12 @@ def test_get_config_value_from_python():
         assert config.value("socket_path") == "/set/from/python"
     finally:
         ScoutConfig.reset_all()
+
+
+def test_unset_config_value_from_python():
+    ScoutConfig.set(revision_sha="foobar")
+    ScoutConfig.unset("revision_sha")
+    assert ScoutConfig().value("revision_sha") == ""  # from defaults
 
 
 def test_get_derived_config_value():
@@ -64,6 +71,22 @@ def test_get_default_config_value():
 def test_get_undefined_config_value():
     config = ScoutConfig()
     assert config.value("unknown value") is None
+
+
+def test_get_undefined_config_value_null_layer_removed():
+    # For coverage
+    config = ScoutConfig()
+    config.layers = [x for x in config.layers if not isinstance(x, ScoutConfigNull)]
+
+    with pytest.raises(ValueError) as excinfo:
+        config.value("unknown value")
+
+    assert isinstance(excinfo.value, ValueError)
+    if sys.version_info[0] == 2:
+        expected_msg = "key u'unknown value' not found in any layer"
+    else:
+        expected_msg = "key 'unknown value' not found in any layer"
+    assert excinfo.value.args == (expected_msg,)
 
 
 def test_env_outranks_python():
