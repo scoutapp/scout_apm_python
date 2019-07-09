@@ -1,5 +1,4 @@
-# coding: utf-8
-
+# coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from scout_apm.api import (
@@ -10,102 +9,84 @@ from scout_apm.api import (
     ignore_transaction,
     instrument,
 )
-from scout_apm.core.tracked_request import TrackedRequest
 
 
-def test_instrument_context_manager():
-    # Save TR here, so it doesn't disappear on us when span finishes
-    tr = TrackedRequest.instance()
-
+def test_instrument_context_manager(tracked_request):
     with instrument("Test ContextMgr") as inst:
         inst.tag("foo", "bar")
 
-    span = tr.complete_spans[-1]
-    assert span.operation == "Custom/Test ContextMgr"
+    assert len(tracked_request.active_spans) == 0
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.complete_spans[0].operation == "Custom/Test ContextMgr"
 
 
-def test_instrument_decorator():
-    # Save TR here, so it doesn't disappear on us when span finishes
-    tr = TrackedRequest.instance()
-
+def test_instrument_decorator(tracked_request):
     @instrument("Test Decorator")
-    def test():
+    def example():
         pass
 
-    test()
+    example()
 
-    span = tr.complete_spans[-1]
-    assert span.operation == "Custom/Test Decorator"
+    assert len(tracked_request.active_spans) == 0
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.complete_spans[0].operation == "Custom/Test Decorator"
 
 
-def test_instrument_context_manager_with_kind():
-    # Save TR here, so it doesn't disappear on us when span finishes
-    tr = TrackedRequest.instance()
-
+def test_instrument_context_manager_with_kind(tracked_request):
     with instrument("Get", kind="Redis") as inst:
         inst.tag("foo", "bar")
 
-    span = tr.complete_spans[-1]
-    assert span.operation == "Redis/Get"
+    assert len(tracked_request.active_spans) == 0
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.complete_spans[0].operation == "Redis/Get"
 
 
-def test_instrument_decorator_with_kind():
-    # Save TR here, so it doesn't disappear on us when span finishes
-    tr = TrackedRequest.instance()
-
+def test_instrument_decorator_with_kind(tracked_request):
     @instrument("GET example.com", kind="HTTP")
-    def test():
+    def example():
         pass
 
-    test()
+    example()
 
-    span = tr.complete_spans[-1]
-    assert span.operation == "HTTP/GET example.com"
+    assert len(tracked_request.active_spans) == 0
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.complete_spans[0].operation == "HTTP/GET example.com"
 
 
-def test_instrument_context_manager_default_tags():
-    # Save TR here, so it doesn't disappear on us when span finishes
-    tr = TrackedRequest.instance()
-
+def test_instrument_context_manager_default_tags(tracked_request):
     with instrument("tag test", tags={"x": 99}):
         pass
 
-    span = tr.complete_spans[-1]
-    assert span.tags["x"] == 99
+    assert len(tracked_request.active_spans) == 0
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.complete_spans[0].tags["x"] == 99
 
 
-def test_instrument_decorator_default_tags():
-    # Save TR here, so it doesn't disappear on us when span finishes
-    tr = TrackedRequest.instance()
-
+def test_instrument_decorator_default_tags(tracked_request):
     @instrument("tag test", tags={"x": 99})
-    def test():
+    def example():
         pass
 
-    test()
+    example()
 
-    span = tr.complete_spans[-1]
-    assert span.tags["x"] == 99
+    assert len(tracked_request.active_spans) == 0
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.complete_spans[0].tags["x"] == 99
 
 
-def test_instrument_non_ascii_params():
-    # Save TR here, so it doesn't disappear on us when span finishes
-    tr = TrackedRequest.instance()
-
+def test_instrument_non_ascii_params(tracked_request):
     @instrument(operation="Faire le café", kind="Personnalisé")
     def make_coffee():
         pass
 
     make_coffee()
 
-    span = tr.complete_spans[-1]
-    assert span.operation == "Personnalisé/Faire le café"
+    assert len(tracked_request.active_spans) == 0
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.complete_spans[0].operation == "Personnalisé/Faire le café"
 
 
-def test_instrument_non_ascii_bytes_params():
-    # Save TR here, so it doesn't disappear on us when span finishes
-    tr = TrackedRequest.instance()
-
+def test_instrument_non_ascii_bytes_params(tracked_request):
     # On Python 2, user code that doesn't enable unicode_literals may contain
     # non-ASCII bystrings. For writing a test that works across Python versions,
     # the easiest is to create bytestrings by encoding unicode strings.
@@ -117,141 +98,129 @@ def test_instrument_non_ascii_bytes_params():
 
     make_coffee()
 
-    span = tr.complete_spans[-1]
-    assert span.operation == "Personnalisé/Faire le café"
+    assert len(tracked_request.active_spans) == 0
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.complete_spans[0].operation == "Personnalisé/Faire le café"
 
 
-def test_web_transaction_start_stop():
-    tr = TrackedRequest.instance()
-
+def test_web_transaction_start_stop(tracked_request):
     WebTransaction.start("Foo")
     WebTransaction.stop()
 
-    span = tr.complete_spans[-1]
-    assert span.operation == "Controller/Foo"
+    assert len(tracked_request.active_spans) == 0
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.complete_spans[0].operation == "Controller/Foo"
 
 
-def test_web_transaction_context_manager():
-    tr = TrackedRequest.instance()
+def test_web_transaction_context_manager(tracked_request):
     x = 0
 
     with WebTransaction("Foo"):
         x = 1
 
-    span = tr.complete_spans[-1]
     assert x == 1
-    assert span.operation == "Controller/Foo"
+    assert len(tracked_request.active_spans) == 0
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.complete_spans[0].operation == "Controller/Foo"
 
 
-def test_web_transaction_decorator():
-    tr = TrackedRequest.instance()
-
+def test_web_transaction_decorator(tracked_request):
     @WebTransaction("Bar")
     def my_transaction():
         pass
 
     my_transaction()
 
-    span = tr.complete_spans[-1]
-    assert span.operation == "Controller/Bar"
+    assert len(tracked_request.active_spans) == 0
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.complete_spans[0].operation == "Controller/Bar"
 
 
-def test_web_transaction_non_ascii_params():
-    tr = TrackedRequest.instance()
-
+def test_web_transaction_non_ascii_params(tracked_request):
     @WebTransaction("Acheter du café")
     def buy_coffee():
         pass
 
     buy_coffee()
 
-    span = tr.complete_spans[-1]
-    assert span.operation == "Controller/Acheter du café"
+    assert len(tracked_request.active_spans) == 0
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.complete_spans[0].operation == "Controller/Acheter du café"
 
 
-def test_web_transaction_non_ascii_bytes_params():
-    tr = TrackedRequest.instance()
-
+def test_web_transaction_non_ascii_bytes_params(tracked_request):
     @WebTransaction("Acheter du café".encode("utf-8"))
     def buy_coffee():
         pass
 
     buy_coffee()
 
-    span = tr.complete_spans[-1]
-    assert span.operation == "Controller/Acheter du café"
+    assert len(tracked_request.active_spans) == 0
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.complete_spans[0].operation == "Controller/Acheter du café"
 
 
-def test_background_transaction_start_stop():
-    tr = TrackedRequest.instance()
-
+def test_background_transaction_start_stop(tracked_request):
     BackgroundTransaction.start("Foo")
     BackgroundTransaction.stop()
 
-    span = tr.complete_spans[-1]
-    assert span.operation == "Job/Foo"
+    assert len(tracked_request.active_spans) == 0
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.complete_spans[0].operation == "Job/Foo"
 
 
-def test_background_transaction_context_manager():
-    tr = TrackedRequest.instance()
+def test_background_transaction_context_manager(tracked_request):
     x = 0
 
     with BackgroundTransaction("Foo"):
         x = 1
 
-    span = tr.complete_spans[-1]
     assert x == 1
-    assert span.operation == "Job/Foo"
+    assert len(tracked_request.active_spans) == 0
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.complete_spans[0].operation == "Job/Foo"
 
 
-def test_background_transaction_decorator():
-    tr = TrackedRequest.instance()
-
+def test_background_transaction_decorator(tracked_request):
     @BackgroundTransaction("Bar")
     def my_transaction():
         pass
 
     my_transaction()
 
-    span = tr.complete_spans[-1]
-    assert span.operation == "Job/Bar"
+    assert len(tracked_request.active_spans) == 0
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.complete_spans[0].operation == "Job/Bar"
 
 
-def test_background_transaction_non_ascii_params():
-    tr = TrackedRequest.instance()
-
+def test_background_transaction_non_ascii_params(tracked_request):
     @BackgroundTransaction("Acheter du café")
     def buy_coffee():
         pass
 
     buy_coffee()
 
-    span = tr.complete_spans[-1]
-    assert span.operation == "Job/Acheter du café"
+    assert len(tracked_request.active_spans) == 0
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.complete_spans[0].operation == "Job/Acheter du café"
 
 
-def test_background_transaction_non_ascii_bytes_params():
-    tr = TrackedRequest.instance()
-
+def test_background_transaction_non_ascii_bytes_params(tracked_request):
     @BackgroundTransaction("Acheter du café".encode("utf-8"))
     def buy_coffee():
         pass
 
     buy_coffee()
 
-    span = tr.complete_spans[-1]
-    assert span.operation == "Job/Acheter du café"
+    assert len(tracked_request.active_spans) == 0
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.complete_spans[0].operation == "Job/Acheter du café"
 
 
-def test_context():
-    # Save TR here, so it doesn't disappear on us when span finishes
-    tr = TrackedRequest.instance()
-
+def test_context(tracked_request):
     Context.add("x", 99)
 
-    tr.finish()
-
-    assert tr.tags["x"] == 99
+    assert tracked_request.tags["x"] == 99
 
 
 def test_config():
@@ -261,11 +230,7 @@ def test_config():
         Config.reset_all()
 
 
-def test_ignore_transaction():
-    tr = TrackedRequest.instance()
-
+def test_ignore_transaction(tracked_request):
     ignore_transaction()
 
-    tr.finish()
-
-    assert tr.tags["ignore_transaction"]
+    assert tracked_request.tags["ignore_transaction"]

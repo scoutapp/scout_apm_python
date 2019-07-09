@@ -1,8 +1,8 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import datetime as dt
 import sys
-import time
 
 string_type = str if sys.version_info[0] >= 3 else basestring  # noqa: F821
 text_type = str if sys.version_info[0] >= 3 else unicode  # noqa: F821
@@ -31,17 +31,30 @@ except ImportError:
     # Python 2.x
     import Queue as queue
 
-
+# datetime_to_timestamp converts a naive UTC datetime to a unix timestamp
 if sys.version_info >= (3, 3):
 
     def datetime_to_timestamp(datetime_obj):
-        return datetime_obj.timestamp()
+        return datetime_obj.replace(tzinfo=dt.timezone.utc).timestamp()
 
 
 else:
+    _EPOCH = dt.datetime(1970, 1, 1)
 
     def datetime_to_timestamp(datetime_obj):
-        return time.mktime(datetime_obj.timetuple())
+        return (datetime_obj - _EPOCH).total_seconds()
+
+
+def text(value, encoding="utf-8", errors="strict"):
+    """
+    Convert a value to str on Python 3 and unicode on Python 2.
+    """
+    if isinstance(value, text_type):
+        return value
+    elif isinstance(value, bytes):
+        return text_type(value, encoding, errors)
+    else:
+        return text_type(value)
 
 
 __all__ = [
@@ -49,5 +62,6 @@ __all__ = [
     "datetime_to_timestamp",
     "queue",
     "string_type",
+    "text",
     "text_type",
 ]
