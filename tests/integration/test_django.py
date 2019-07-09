@@ -89,7 +89,7 @@ def test_home(tracked_requests):
     ]
 
 
-def test_ignore(tracked_requests):
+def test_home_ignored(tracked_requests):
     with app_with_scout(SCOUT_IGNORE="/") as app:
         response = TestApp(app).get("/")
 

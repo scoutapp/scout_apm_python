@@ -74,6 +74,15 @@ def test_home(tracked_requests):
     assert span.tags["name"] == "tests.integration.test_flask.home"
 
 
+def test_home_ignored(tracked_requests):
+    with app_with_scout({"SCOUT_MONITOR": True, "SCOUT_IGNORE": "/"}) as app:
+        response = TestApp(app).get("/")
+
+    assert response.status_int == 200
+    assert response.text == "Welcome home."
+    assert tracked_requests == []
+
+
 @parametrize_user_ip_headers
 def test_user_ip(headers, extra_environ, expected, tracked_requests):
     if sys.version_info[0] == 2:
