@@ -5,19 +5,29 @@
 ### Added
 
 - Track user IP on Flask
+  ([PR #190](https://github.com/scoutapp/scout_apm_python/pull/190)).
 - Make user IP tracking on Bottle and Pyramid use the same algorithm as other
   integrations, checking for the `client-ip` header
+  ([PR #192](https://github.com/scoutapp/scout_apm_python/pull/192),
+  [PR #195](https://github.com/scoutapp/scout_apm_python/pull/195)).
 - Add support to Bottle, Falcon, Flask and Pyramid integrations for tracking
   request queue timing
+  ([PR #199](https://github.com/scoutapp/scout_apm_python/pull/199),
+  [PR #201](https://github.com/scoutapp/scout_apm_python/pull/201)).
 
 ### Fixed
 
 - Track path and user IP on Django < 1.10
-- The undocumented `core-agent-manager` CLI command works again
+  ([PR #190](https://github.com/scoutapp/scout_apm_python/pull/190)).
+- Fix the undocumented `core-agent-manager` CLI command
+  ([PR #202](https://github.com/scoutapp/scout_apm_python/pull/202)).
 - Consistently track view responses on Django between different versions
+  ([PR #203](https://github.com/scoutapp/scout_apm_python/pull/203)).
 - Avoid unbalanced request tracking in certain cases on Django < 1.10
+  ([PR #203](https://github.com/scoutapp/scout_apm_python/pull/203)).
 - Clarified contents of public API by moving some stuff out of it and setting
   `scout_apm.api.__all__`
+  ([PR #204](https://github.com/scoutapp/scout_apm_python/pull/204)).
 
 ## [2.1.0] 2019-06-25
 
