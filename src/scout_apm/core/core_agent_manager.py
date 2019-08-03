@@ -59,12 +59,15 @@ class CoreAgentManager(object):
     def run(self):
         try:
             subprocess.check_call(
-                self.agent_binary()
-                + self.daemonize_flag()
-                + self.log_level()
-                + self.log_file()
-                + self.config_file()
-                + self.socket_path()
+                (
+                    self.agent_binary()
+                    + self.daemonize_flag()
+                    + self.log_level()
+                    + self.log_file()
+                    + self.config_file()
+                    + self.socket_path()
+                ),
+                close_fds=True,
             )
         except Exception:
             # TODO detect failure of launch properly

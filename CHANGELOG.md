@@ -1,5 +1,13 @@
 # Changelog
 
+## Pending
+
+### Fixed
+
+- Close file descriptors when launching the core agent process. This fixes a
+  bug where uwsgi's HTTP ports would be held by the it on Python 2.7.
+  ([PR #219](https://github.com/scoutapp/scout_apm_python/pull/219)).
+
 ## [2.2.0] 2019-07-27
 
 ### Added
