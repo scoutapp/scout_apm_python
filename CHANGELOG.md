@@ -1,5 +1,13 @@
 # Changelog
 
+## Pending
+
+### Added
+
+- Use Django's native DB instrumentation on Django 2.0+, rather than monkey
+  patching the database cursor.
+  ([PR #218](https://github.com/scoutapp/scout_apm_python/pull/218)).
+
 ## [2.2.1] 2019-08-03
 
 ### Fixed

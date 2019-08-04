@@ -85,16 +85,15 @@ class ViewTimingMiddleware(object):
         be recorded.  This can happen if a middleware further along the stack
         doesn't call onward, and instead returns a response directly.
         """
-
-        tr = TrackedRequest.instance()
+        tracked_request = TrackedRequest.instance()
 
         # This operation name won't be recorded unless changed later in
         # process_view
-        tr.start_span(operation="Unknown")
+        tracked_request.start_span(operation="Unknown")
         try:
             response = self.get_response(request)
         finally:
-            tr.stop_span()
+            tracked_request.stop_span()
         return response
 
     def process_view(self, request, view_func, view_args, view_kwargs):
