@@ -1,6 +1,6 @@
 # Changelog
 
-## Pending
+## [2.3.0] 2019-08-04
 
 ### Added
 
