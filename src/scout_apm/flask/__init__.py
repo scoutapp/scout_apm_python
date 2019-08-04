@@ -62,8 +62,8 @@ class ScoutApm(object):
 
         tracked_request = TrackedRequest.instance()
         tracked_request.mark_real_request()
+        tracked_request.tag("path", path)
         span = tracked_request.start_span(operation=operation)
-        span.tag("path", path)
         span.tag("name", name)
 
         if ignore_path(path):

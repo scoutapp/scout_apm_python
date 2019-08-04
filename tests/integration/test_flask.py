@@ -67,10 +67,11 @@ def test_home(tracked_requests):
     assert response.status_int == 200
     assert response.text == "Welcome home."
     assert len(tracked_requests) == 1
-    assert len(tracked_requests[0].complete_spans) == 1
-    span = tracked_requests[0].complete_spans[0]
+    tracked_request = tracked_requests[0]
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.tags["path"] == "/"
+    span = tracked_request.complete_spans[0]
     assert span.operation == "Controller/tests.integration.test_flask.home"
-    assert span.tags["path"] == "/"
     assert span.tags["name"] == "tests.integration.test_flask.home"
 
 
@@ -120,10 +121,11 @@ def test_hello(tracked_requests):
     assert response.status_int == 200
     assert response.text == "Hello World!"
     assert len(tracked_requests) == 1
-    assert len(tracked_requests[0].complete_spans) == 1
-    span = tracked_requests[0].complete_spans[0]
+    tracked_request = tracked_requests[0]
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.tags["path"] == "/hello/"
+    span = tracked_request.complete_spans[0]
     assert span.operation == "Controller/tests.integration.test_flask.hello"
-    assert span.tags["path"] == "/hello/"
     assert span.tags["name"] == "tests.integration.test_flask.hello"
 
 
@@ -134,10 +136,11 @@ def test_hello_options(tracked_requests):
     assert response.status_int == 200
     assert response.text == "Hello Options!"
     assert len(tracked_requests) == 1
-    assert len(tracked_requests[0].complete_spans) == 1
-    span = tracked_requests[0].complete_spans[0]
+    tracked_request = tracked_requests[0]
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.tags["path"] == "/hello/"
+    span = tracked_request.complete_spans[0]
     assert span.operation == "Controller/tests.integration.test_flask.hello"
-    assert span.tags["path"] == "/hello/"
     assert span.tags["name"] == "tests.integration.test_flask.hello"
 
 
@@ -156,11 +159,11 @@ def test_server_error(tracked_requests):
     assert response.status_int == 500
     assert len(tracked_requests) == 1
     tracked_request = tracked_requests[0]
+    assert tracked_request.tags["path"] == "/crash/"
     assert tracked_request.tags["error"] == "true"
     assert len(tracked_request.complete_spans) == 1
     span = tracked_request.complete_spans[0]
     assert span.operation == "Controller/tests.integration.test_flask.crash"
-    assert span.tags["path"] == "/crash/"
     assert span.tags["name"] == "tests.integration.test_flask.crash"
 
 
