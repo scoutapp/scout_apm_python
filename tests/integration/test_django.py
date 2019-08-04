@@ -122,8 +122,8 @@ def test_user_ip(headers, extra_environ, expected, tracked_requests):
 def test_hello(tracked_requests):
     with app_with_scout() as app:
         response = TestApp(app).get("/hello/")
-        assert response.status_int == 200
 
+    assert response.status_int == 200
     assert len(tracked_requests) == 1
     spans = tracked_requests[0].complete_spans
     assert [s.operation for s in spans] == [
@@ -165,6 +165,19 @@ def test_server_error(tracked_requests):
             "Middleware",
         ]
     assert operations == expected_operations
+
+
+def test_cbv(tracked_requests):
+    with app_with_scout() as app:
+        response = TestApp(app).get("/cbv/")
+
+    assert response.status_int == 200
+    assert len(tracked_requests) == 1
+    spans = tracked_requests[0].complete_spans
+    assert [s.operation for s in spans] == [
+        "Controller/tests.integration.django_app.CbvView",
+        "Middleware",
+    ]
 
 
 def test_sql(tracked_requests):

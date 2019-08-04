@@ -64,6 +64,7 @@ if True:
     from django.http import HttpResponse
     from django.template import engines
     from django.utils.functional import SimpleLazyObject
+    from django.views.generic import View
 
 
 def home(request):
@@ -76,6 +77,11 @@ def hello(request):
 
 def crash(request):
     raise ValueError("BØØM!")  # non-ASCII
+
+
+class CbvView(View):
+    def get(self, request):
+        return HttpResponse("Hello getter")
 
 
 def sql(request):
@@ -110,6 +116,7 @@ def urlpatterns():
             path("", home),
             path("hello/", hello),
             path("crash/", crash),
+            path("cbv/", CbvView.as_view()),
             path("sql/", sql),
             path("template/", template),
             path("admin/", admin.site.urls),
@@ -121,6 +128,7 @@ def urlpatterns():
             url(r"^$", home),
             url(r"^hello/$", hello),
             url(r"^crash/$", crash),
+            url(r"^cbv/$", CbvView.as_view()),
             url(r"^sql/$", sql),
             url(r"^template/$", template),
             url(r"^admin/", admin.site.urls),
