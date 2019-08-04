@@ -8,6 +8,11 @@
   patching the database cursor.
   ([PR #218](https://github.com/scoutapp/scout_apm_python/pull/218)).
 
+### Fixed
+
+- Fix tracking of path on Flask.
+  ([PR #221](https://github.com/scoutapp/scout_apm_python/pull/221)).
+
 ## [2.2.1] 2019-08-03
 
 ### Fixed
