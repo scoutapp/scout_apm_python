@@ -12,8 +12,7 @@ from scout_apm.api import Config
 @contextmanager
 def app_with_scout(config=None):
     """
-    Context manager that configures and installs the Scout plugin for Bottle.
-
+    Context manager that configures a Celery app with Scout installed.
     """
     # Enable Scout by default in tests.
     if config is None:
