@@ -18,6 +18,7 @@ Scout APM has integrations for the following frameworks:
 * Bottle 0.12+
 * Celery 3.1+
 * Django 1.8+
+* Dramatiq 1.0+
 * Falcon 2.0+
 * Flask 0.10+
 * Pyramid 1.8+
