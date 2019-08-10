@@ -8,6 +8,8 @@
   ([PR #223](https://github.com/scoutapp/scout_apm_python/pull/223)).
 - Track Celery task `is_eager`, `exchange`, `routing_key` and `queue` tags
   ([PR #205](https://github.com/scoutapp/scout_apm_python/pull/205)).
+- Track Celery task time in queue with context tag `queue_time`
+  ([PR #206](https://github.com/scoutapp/scout_apm_python/pull/206)).
 
 ## [2.3.0] 2019-08-04
 
