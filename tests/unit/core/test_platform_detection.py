@@ -4,12 +4,12 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 
 from scout_apm.compat import string_type
-from scout_apm.core.platform_detection import PlatformDetection
+from scout_apm.core import platform_detection
 from tests.compat import mock
 
 
 def test_get_triple():
-    assert isinstance(PlatformDetection.get_triple(), string_type)
+    assert isinstance(platform_detection.get_triple(), string_type)
 
 
 @pytest.mark.parametrize(
@@ -23,9 +23,9 @@ def test_get_triple():
     ],
 )
 @mock.patch("platform.machine")
-def test_arch(platform_machine, machine, arch):
+def test_get_arch(platform_machine, machine, arch):
     platform_machine.return_value = machine
-    assert PlatformDetection.arch() == arch
+    assert platform_detection.get_arch() == arch
 
 
 @pytest.mark.parametrize(
@@ -38,9 +38,9 @@ def test_arch(platform_machine, machine, arch):
     ],
 )
 @mock.patch("platform.system")
-def test_platform(platform_system, system, platform):
+def test_get_platform(platform_system, system, platform):
     platform_system.return_value = system
-    assert PlatformDetection.platform() == platform
+    assert platform_detection.get_platform() == platform
 
 
 @pytest.mark.parametrize(
@@ -52,12 +52,14 @@ def test_platform(platform_system, system, platform):
     ],
 )
 @mock.patch("subprocess.check_output")
-def test_libc(check_output, output, libc):
+def test_get_libc(check_output, output, libc):
+    platform_detection._libc = None  # reset cache
     check_output.return_value = output
-    assert PlatformDetection.libc() == libc
+    assert platform_detection.get_libc() == libc
 
 
 @mock.patch("subprocess.check_output")
-def test_libc_no_ldd(check_output):
+def test_get_libc_no_ldd(check_output):
+    platform_detection._libc = None  # reset cache
     check_output.side_effect = OSError
-    assert PlatformDetection.libc() == "gnu"
+    assert platform_detection.get_libc() == "gnu"

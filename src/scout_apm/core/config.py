@@ -5,7 +5,7 @@ import logging
 import os
 
 from scout_apm.compat import string_type
-from scout_apm.core.platform_detection import PlatformDetection
+from scout_apm.core import platform_detection
 from scout_apm.core.util import octal
 
 logger = logging.getLogger(__name__)
@@ -202,7 +202,7 @@ class ScoutConfigDerived(object):
         )
 
     def derive_core_agent_triple(self):
-        return PlatformDetection.get_triple()
+        return platform_detection.get_triple()
 
 
 class ScoutConfigDefaults(object):
