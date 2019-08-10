@@ -142,12 +142,9 @@ def test_null_config_name():
 
 
 def test_boolean_conversion_from_env():
-    os.environ["SCOUT_MONITOR"] = "True"
     config = ScoutConfig()
-    try:
+    with mock.patch.dict(os.environ, {"SCOUT_MONITOR": "True"}):
         assert config.value("monitor") is True
-    finally:
-        del os.environ["SCOUT_MONITOR"]
 
 
 @pytest.mark.parametrize(
@@ -174,12 +171,9 @@ def test_boolean_conversion_from_python(original, converted):
 
 
 def test_list_conversion_from_env():
-    os.environ["SCOUT_DISABLED_INSTRUMENTS"] = "pymongo, redis"
     config = ScoutConfig()
-    try:
+    with mock.patch.dict(os.environ, {"SCOUT_DISABLED_INSTRUMENTS": "pymongo, redis"}):
         assert config.value("disabled_instruments") == ["pymongo", "redis"]
-    finally:
-        del os.environ["SCOUT_DISABLED_INSTRUMENTS"]
 
 
 @pytest.mark.parametrize(

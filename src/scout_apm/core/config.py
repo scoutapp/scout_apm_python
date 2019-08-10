@@ -32,11 +32,8 @@ class ScoutConfig(object):
     def value(self, key):
         value = self.locate_layer_for_key(key).value(key)
         if key in CONVERSIONS:
-            converted_value = CONVERSIONS[key].convert(value)
-        else:
-            converted_value = value
-
-        return converted_value
+            return CONVERSIONS[key](value)
+        return value
 
     def locate_layer_for_key(self, key):
         for layer in self.layers:
@@ -265,35 +262,31 @@ class ScoutConfigNull(object):
         return None
 
 
-class BooleanConversion(object):
-    @classmethod
-    def convert(cls, value):
-        if isinstance(value, bool):
-            return value
-        if isinstance(value, string_type):
-            return value.lower() in ("yes", "true", "t", "1")
-        # Unknown type - default to false?
-        return False
+def convert_to_bool(value):
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, string_type):
+        return value.lower() in ("yes", "true", "t", "1")
+    # Unknown type - default to false?
+    return False
 
 
-class ListConversion(object):
-    @classmethod
-    def convert(cls, value):
-        if isinstance(value, list):
-            return value
-        if isinstance(value, tuple):
-            return list(value)
-        if isinstance(value, string_type):
-            # Split on commas
-            return [item.strip() for item in value.split(",") if item]
-        # Unknown type - default to empty?
-        return []
+def convert_to_list(value):
+    if isinstance(value, list):
+        return value
+    if isinstance(value, tuple):
+        return list(value)
+    if isinstance(value, string_type):
+        # Split on commas
+        return [item.strip() for item in value.split(",") if item]
+    # Unknown type - default to empty?
+    return []
 
 
 CONVERSIONS = {
-    "core_agent_download": BooleanConversion,
-    "core_agent_launch": BooleanConversion,
-    "monitor": BooleanConversion,
-    "disabled_instruments": ListConversion,
-    "ignore": ListConversion,
+    "core_agent_download": convert_to_bool,
+    "core_agent_launch": convert_to_bool,
+    "monitor": convert_to_bool,
+    "disabled_instruments": convert_to_list,
+    "ignore": convert_to_list,
 }
