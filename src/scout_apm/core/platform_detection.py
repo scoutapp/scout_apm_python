@@ -5,59 +5,58 @@ import platform
 import subprocess
 
 
-class PlatformDetection(object):
+def get_triple():
+    return "{arch}-{platform}".format(arch=get_arch(), platform=get_platform())
+
+
+def get_arch():
     """
-    This helps figuring out what platform we're running on, so we can download
-    the correct binary build of Core Agent.
+    What CPU are we on?
     """
+    arch = platform.machine()
+    if arch == "i686":
+        return "i686"
+    elif arch == "x86_64":
+        return "x86_64"
+    else:
+        return "unknown"
 
-    @classmethod
-    def get_triple(cls):
-        return "{arch}-{platform}".format(arch=cls.arch(), platform=cls.platform())
 
-    @classmethod
-    def arch(cls):
-        """
-        What CPU are we on?
-        """
-        arch = platform.machine()
-        if arch == "i686":
-            return "i686"
-        elif arch == "x86_64":
-            return "x86_64"
-        else:
-            return "unknown"
+def get_platform():
+    """
+    What Operating System (and sub-system like glibc / musl)
+    """
+    system_name = platform.system()
+    if system_name == "Linux":
+        libc = get_libc()
+        return "unknown-linux-{libc}".format(libc=libc)
+    elif system_name == "Darwin":
+        return "apple-darwin"
+    else:
+        return "unknown"
 
-    @classmethod
-    def platform(cls):
-        """
-        What Operating System (and sub-system like glibc / musl)
-        """
-        system_name = platform.system()
-        if system_name == "Linux":
-            libc = cls.libc()
-            return "unknown-linux-{libc}".format(libc=libc)
-        elif system_name == "Darwin":
-            return "apple-darwin"
-        else:
-            return "unknown"
 
-    @classmethod
-    def libc(cls):
-        """
-        Alpine linux uses a non glibc version of the standard library, it uses
-        the stripped down musl instead. The core agent can be built against it,
-        but which one is running must be detected. Shelling out to `ldd`
-        appears to be the most reliable way to do this.
-        """
+_libc = None
+
+
+def get_libc():
+    """
+    Alpine linux uses a non glibc version of the standard library, it uses
+    the stripped down musl instead. The core agent can be built against it,
+    but which one is running must be detected. Shelling out to `ldd`
+    appears to be the most reliable way to do this.
+    """
+    global _libc
+    if _libc is None:
         try:
             output = subprocess.check_output(
-                ["ldd", "--version"], stderr=subprocess.STDOUT
+                ["ldd", "--version"], stderr=subprocess.STDOUT, close_fds=True
             )
         except (OSError, subprocess.CalledProcessError):
-            return "gnu"
+            _libc = "gnu"
         else:
             if b"musl" in output:
-                return "musl"
+                _libc = "musl"
             else:
-                return "gnu"
+                _libc = "gnu"
+    return _libc
