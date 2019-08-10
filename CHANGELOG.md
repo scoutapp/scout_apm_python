@@ -6,6 +6,8 @@
 
 - Add Dramatiq integration
   ([PR #223](https://github.com/scoutapp/scout_apm_python/pull/223)).
+- Track Celery task `is_eager`, `exchange`, `routing_key` and `queue` tags
+  ([PR #205](https://github.com/scoutapp/scout_apm_python/pull/205)).
 
 ## [2.3.0] 2019-08-04
 
