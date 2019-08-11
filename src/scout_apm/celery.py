@@ -29,6 +29,13 @@ def prerun_callback(task=None, **kwargs):
         else:
             tracked_request.tag("queue_time", queue_time)
 
+    task_id = getattr(task.request, "id", None)
+    if task_id:
+        tracked_request.tag("task_id", task_id)
+    parent_task_id = getattr(task.request, "parent_id", None)
+    if parent_task_id:
+        tracked_request.tag("parent_task_id", parent_task_id)
+
     delivery_info = task.request.delivery_info
     tracked_request.tag("is_eager", delivery_info.get("is_eager", False))
     tracked_request.tag("exchange", delivery_info.get("exchange", "unknown"))

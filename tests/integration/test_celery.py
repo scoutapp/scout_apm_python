@@ -62,6 +62,7 @@ def test_hello_eager(tracked_requests):
     assert result.result == "Hello World!"
     assert len(tracked_requests) == 1
     tracked_request = tracked_requests[0]
+    assert "task_id" in tracked_request.tags
     assert tracked_request.tags["is_eager"] is True
     assert tracked_request.tags["exchange"] == "unknown"
     assert tracked_request.tags["routing_key"] == "unknown"
@@ -80,6 +81,7 @@ def test_hello_worker(celery_app, celery_worker, tracked_requests):
     assert result == "Hello World!"
     assert len(tracked_requests) == 1
     tracked_request = tracked_requests[0]
+    assert "task_id" in tracked_request.tags
     assert tracked_request.tags["is_eager"] is False
     assert tracked_request.tags["exchange"] == ""
     assert tracked_request.tags["routing_key"] == "celery"
@@ -110,6 +112,23 @@ def test_hello_worker_header_preset(celery_app, celery_worker, tracked_requests)
     span = tracked_request.complete_spans[0]
     assert span.operation == "Job/tests.integration.test_celery.hello"
     assert "queue_time" not in span.tags
+
+
+@skip_unless_celery_4_plus
+def test_hello_worker_chain(celery_app, celery_worker, tracked_requests):
+    with app_with_scout(app=celery_app) as app:
+        hello = app.tasks["tests.integration.test_celery.hello"]
+        result = (hello.si() | hello.si()).apply_async().get()
+
+    assert result == "Hello World!"
+    assert len(tracked_requests) == 2
+    assert [t.complete_spans[0].operation for t in tracked_requests] == [
+        "Job/tests.integration.test_celery.hello",
+        "Job/tests.integration.test_celery.hello",
+    ]
+    assert "parent_task_id" not in tracked_requests[0].tags
+    first_task_id = tracked_requests[0].tags["task_id"]
+    assert tracked_requests[1].tags["parent_task_id"] == first_task_id
 
 
 def test_no_monitor(tracked_requests):

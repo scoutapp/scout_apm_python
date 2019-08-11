@@ -10,6 +10,9 @@
   ([PR #205](https://github.com/scoutapp/scout_apm_python/pull/205)).
 - Track Celery task time in queue with context tag `queue_time`
   ([PR #206](https://github.com/scoutapp/scout_apm_python/pull/206)).
+- Track Celery task ID with context tag `task_id`, and parent task's ID (for
+  chains, chords, etc.) with context tag `parent_task_id`
+  ([PR #227](https://github.com/scoutapp/scout_apm_python/pull/227)).
 - Improve Django admin views' traced names. Before all admin classes' traces
   would be merged by function name such as
   `django.contrib.admin.options.changelist_view`. Now traces appear per admin
