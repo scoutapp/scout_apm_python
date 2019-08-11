@@ -9,6 +9,7 @@ import django
 import pytest
 from django.apps import apps
 from django.conf import settings
+from django.core.management import call_command
 from django.core.wsgi import get_wsgi_application
 from django.http import HttpResponse
 from django.test.utils import override_settings
@@ -57,7 +58,13 @@ def app_with_scout(**settings):
     with override_settings(**settings):
         # Have to create a new WSGI app each time because the middleware stack
         # within it is static
-        yield get_wsgi_application()
+        app = get_wsgi_application()
+        # Run Django checks on first use
+        if not getattr(app_with_scout, "startup_ran", False):
+            call_command("migrate")
+            call_command("check")
+            app_with_scout.startup_ran = True
+        yield app
 
 
 def test_on_setting_changed_application_root():
@@ -214,6 +221,48 @@ def test_template(tracked_requests):
     ]
 
 
+@pytest.mark.skipif(
+    django.VERSION < (1, 9),
+    reason="Django 1.9 added the model_admin attribute this functionality depends on",
+)
+@pytest.mark.parametrize(
+    "url, expected_op_name",
+    [
+        [
+            "/admin/auth/user/",
+            "Controller/django.contrib.auth.admin.UserAdmin.changelist_view",
+        ],
+        [
+            "/admin/auth/user/1/change/",
+            "Controller/django.contrib.auth.admin.UserAdmin.change_view",
+        ],
+    ],
+)
+def test_admin_view_operation_name(url, expected_op_name, tracked_requests):
+    with app_with_scout() as app:
+        from django.contrib.auth.models import User
+
+        User.objects.create_superuser(
+            id=1, username="admin", email="admin@example.com", password="password"
+        )
+        test_app = TestApp(app)
+        login_response = test_app.get("/admin/login/")
+        assert login_response.status_int == 200
+        form = login_response.form
+        form["username"] = "admin"
+        form["password"] = "password"
+        form.submit()
+        response = test_app.get(url)
+
+    assert response.status_int == 200
+    # 3 requests for login GET and POST, then admin page
+    assert len(tracked_requests) == 3
+    # We only care about the last
+    tracked_request = tracked_requests[-1]
+    span = tracked_request.complete_spans[-2]
+    assert span.operation == expected_op_name
+
+
 @pytest.mark.xfail(reason="Test setup doesn't reset state fully at the moment.")
 def test_no_monitor(tracked_requests):
     with app_with_scout(SCOUT_MONITOR=False) as app:
@@ -236,9 +285,9 @@ def fake_authentication_middleware(get_response):
 @skip_unless_new_style_middleware
 def test_username(tracked_requests):
     new_middleware = (
-        settings.MIDDLEWARE[:1]
+        settings.MIDDLEWARE[:-1]
         + [__name__ + ".fake_authentication_middleware"]
-        + settings.MIDDLEWARE[1:]
+        + settings.MIDDLEWARE[-1:]
     )
     with app_with_scout(MIDDLEWARE=new_middleware) as app:
         response = TestApp(app).get("/hello/")
@@ -262,9 +311,9 @@ def crashy_authentication_middleware(get_response):
 @skip_unless_new_style_middleware
 def test_username_exception(tracked_requests):
     new_middleware = (
-        settings.MIDDLEWARE[:1]
+        settings.MIDDLEWARE[:-1]
         + [__name__ + ".crashy_authentication_middleware"]
-        + settings.MIDDLEWARE[1:]
+        + settings.MIDDLEWARE[-1:]
     )
     with app_with_scout(MIDDLEWARE=new_middleware) as app:
         response = TestApp(app).get("/")
@@ -285,9 +334,9 @@ class FakeAuthenticationMiddleware(object):
 @skip_unless_old_style_middleware
 def test_old_style_username(tracked_requests):
     new_middleware = (
-        settings.MIDDLEWARE_CLASSES[:1]
+        settings.MIDDLEWARE_CLASSES[:-1]
         + [__name__ + ".FakeAuthenticationMiddleware"]
-        + settings.MIDDLEWARE_CLASSES[1:]
+        + settings.MIDDLEWARE_CLASSES[-1:]
     )
     with app_with_scout(MIDDLEWARE_CLASSES=new_middleware) as app:
         response = TestApp(app).get("/")
@@ -309,9 +358,9 @@ class CrashyAuthenticationMiddleware(object):
 @skip_unless_old_style_middleware
 def test_old_style_username_exception(tracked_requests):
     new_middleware = (
-        settings.MIDDLEWARE_CLASSES[:1]
+        settings.MIDDLEWARE_CLASSES[:-1]
         + [__name__ + ".CrashyAuthenticationMiddleware"]
-        + settings.MIDDLEWARE_CLASSES[1:]
+        + settings.MIDDLEWARE_CLASSES[-1:]
     )
     with app_with_scout(MIDDLEWARE_CLASSES=new_middleware) as app:
         response = TestApp(app).get("/")
@@ -398,7 +447,7 @@ class OldStyleOnRequestResponseMiddleware:
 
 
 @skip_unless_old_style_middleware
-@pytest.mark.parametrize("middleware_index", [0, 1, 2])
+@pytest.mark.parametrize("middleware_index", [0, 1, 999])
 def test_old_style_on_request_response_middleware(middleware_index, tracked_requests):
     """
     Test the case that a middleware got added/injected that generates a
@@ -425,7 +474,7 @@ class OldStyleOnResponseResponseMiddleware:
 
 
 @skip_unless_old_style_middleware
-@pytest.mark.parametrize("middleware_index", [0, 1, 2])
+@pytest.mark.parametrize("middleware_index", [0, 1, 999])
 def test_old_style_on_response_response_middleware(middleware_index, tracked_requests):
     """
     Test the case that a middleware got added/injected that generates a fresh
@@ -452,7 +501,7 @@ class OldStyleOnViewResponseMiddleware:
 
 
 @skip_unless_old_style_middleware
-@pytest.mark.parametrize("middleware_index", [0, 1, 2])
+@pytest.mark.parametrize("middleware_index", [0, 1, 999])
 def test_old_style_on_view_response_middleware(middleware_index, tracked_requests):
     """
     Test the case that a middleware got added/injected that generates a fresh
@@ -473,7 +522,7 @@ def test_old_style_on_view_response_middleware(middleware_index, tracked_request
     # If the middleware is before OldStyleViewMiddleware, its process_view
     # won't be called and we won't know to mark the request as real, so it
     # won't be tracked.
-    if middleware_index < 2:
+    if middleware_index != 999:
         assert len(tracked_requests) == 0
     else:
         assert len(tracked_requests) == 1
@@ -485,7 +534,7 @@ class OldStyleOnExceptionResponseMiddleware:
 
 
 @skip_unless_old_style_middleware
-@pytest.mark.parametrize("middleware_index", [0, 1, 2])
+@pytest.mark.parametrize("middleware_index", [0, 1, 999])
 def test_old_style_on_exception_response_middleware(middleware_index, tracked_requests):
     """
     Test the case that a middleware got added/injected that generates a
@@ -509,7 +558,7 @@ def test_old_style_on_exception_response_middleware(middleware_index, tracked_re
     # its process_exception won't be called so we won't know it's an error.
     # Nothing we can do there - but it's a rare case, since we programatically
     # add our middleware at the end of the stack.
-    if middleware_index != 2:
+    if middleware_index != 999:
         assert tracked_requests[0].tags["error"] == "true"
 
 
@@ -519,7 +568,7 @@ class OldStyleExceptionOnRequestMiddleware:
 
 
 @skip_unless_old_style_middleware
-@pytest.mark.parametrize("middleware_index", [0, 1, 2])
+@pytest.mark.parametrize("middleware_index", [0, 1, 999])
 def test_old_style_exception_on_request_middleware(middleware_index, tracked_requests):
     """
     Test the case that a middleware got added/injected that raises an exception

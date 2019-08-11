@@ -11,7 +11,20 @@ logger = logging.getLogger(__name__)
 
 
 def get_operation_name(request):
+    view_func = request.resolver_match.func
     view_name = request.resolver_match._func_path
+
+    if hasattr(view_func, "model_admin"):
+        # Seems to comes from Django admin (attribute only set on Django 1.9+)
+        admin_class = view_func.model_admin.__class__
+        view_name = (
+            admin_class.__module__
+            + "."
+            + admin_class.__name__
+            + "."
+            + view_func.__name__
+        )
+
     return "Controller/" + view_name
 
 
