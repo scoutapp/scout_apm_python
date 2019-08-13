@@ -1,6 +1,8 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import datetime as dt
+import sys
 from contextlib import contextmanager
 
 from nameko.containers import get_container_cls
@@ -8,7 +10,12 @@ from nameko.web.handlers import http
 from webtest import TestApp
 
 from scout_apm.api import Config
+from scout_apm.compat import datetime_to_timestamp
 from scout_apm.nameko import ScoutReporter
+from tests.integration.util import (
+    parametrize_queue_time_header_name,
+    parametrize_user_ip_headers,
+)
 
 
 @contextmanager
@@ -70,6 +77,36 @@ def test_home(tracked_requests):
     assert len(tracked_request.complete_spans) == 1
     span = tracked_request.complete_spans[0]
     assert span.operation == "Controller/myservice.home"
+
+
+@parametrize_user_ip_headers
+def test_user_ip(headers, extra_environ, expected, tracked_requests):
+    if sys.version_info[0] == 2:
+        # Required for WebTest lint
+        headers = {str(k): str(v) for k, v in headers.items()}
+        extra_environ = {str(k): str(v) for k, v in extra_environ.items()}
+
+    with app_with_scout() as app:
+        TestApp(app).get("/", headers=headers, extra_environ=extra_environ)
+
+    tracked_request = tracked_requests[0]
+    assert tracked_request.tags["user_ip"] == expected
+
+
+@parametrize_queue_time_header_name
+def test_queue_time(header_name, tracked_requests):
+    # Not testing floats due to Python 2/3 rounding differences
+    queue_start = int(datetime_to_timestamp(dt.datetime.utcnow()) - 2)
+    with app_with_scout() as app:
+        response = TestApp(app).get(
+            "/", headers={header_name: str("t=") + str(queue_start)}
+        )
+
+    assert response.status_int == 200
+    assert len(tracked_requests) == 1
+    queue_time_ns = tracked_requests[0].tags["scout.queue_time_ns"]
+    # Upper bound assumes we didn't take more than 2s to run this test...
+    assert queue_time_ns >= 2000000000 and queue_time_ns < 4000000000
 
 
 def test_server_error(tracked_requests):

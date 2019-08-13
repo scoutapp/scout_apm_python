@@ -7,6 +7,7 @@ from werkzeug.wrappers import Request
 
 import scout_apm.core
 from scout_apm.core.tracked_request import TrackedRequest
+from scout_apm.core.queue_time import track_request_queue_time
 
 
 class ScoutReporter(DependencyProvider):
@@ -26,6 +27,21 @@ class ScoutReporter(DependencyProvider):
             else:
                 if isinstance(request, Request):
                     tracked_request.tag("path", request.path)
+
+                # Determine a remote IP to associate with the request. The value is
+                # spoofable by the requester so this is not suitable to use in any
+                # security sensitive context.
+                user_ip = (
+                    request.headers.get("x-forwarded-for", default="").split(",")[0]
+                    or request.headers.get("client-ip", default="").split(",")[0]
+                    or request.remote_addr
+                )
+                tracked_request.tag("user_ip", user_ip)
+
+                queue_time = request.headers.get(
+                    "x-queue-start", default=""
+                ) or request.headers.get("x-request-start", default="")
+                track_request_queue_time(queue_time, tracked_request)
 
         operation = (
             "Controller/"
