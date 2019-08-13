@@ -13,9 +13,12 @@ from scout_apm.core.queue_time import track_request_queue_time
 
 class ScoutReporter(DependencyProvider):
     def setup(self):
-        scout_apm.core.install()
+        installed = scout_apm.core.install()
+        self._do_nothing = not installed
 
     def worker_setup(self, worker_ctx):
+        if self._do_nothing:
+            return
         tracked_request = TrackedRequest.instance()
         tracked_request.mark_real_request()
 
@@ -57,6 +60,8 @@ class ScoutReporter(DependencyProvider):
         tracked_request.start_span(operation=operation)
 
     def worker_result(self, worker_ctx, result=None, exc_info=None):
+        if self._do_nothing:
+            return
         tracked_request = TrackedRequest.instance()
         if exc_info:
             tracked_request.tag("error", "true")
