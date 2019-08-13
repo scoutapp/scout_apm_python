@@ -26,6 +26,7 @@ def app_with_scout(nameko_config=None, scout_config=None):
     if scout_config is None:
         scout_config = {"monitor": True}
     scout_config["core_agent_launch"] = False
+    Config.set(**scout_config)
 
     # Nameko setup
     class Service(object):
@@ -77,6 +78,15 @@ def test_home(tracked_requests):
     assert len(tracked_request.complete_spans) == 1
     span = tracked_request.complete_spans[0]
     assert span.operation == "Controller/myservice.home"
+
+
+def test_home_ignored(tracked_requests):
+    with app_with_scout(scout_config={"monitor": True, "ignore": ["/"]}) as app:
+        response = TestApp(app).get("/")
+
+    assert response.status_int == 200
+    assert response.text == "Welcome home."
+    assert tracked_requests == []
 
 
 @parametrize_user_ip_headers
