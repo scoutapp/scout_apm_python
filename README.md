@@ -21,6 +21,7 @@ Scout APM has integrations for the following frameworks:
 * Dramatiq 1.0+
 * Falcon 2.0+
 * Flask 0.10+
+* Nameko 2.0+
 * Pyramid 1.8+
 
 For other frameworks, you can use the agent's instrumentation API. See the [Python help docs](https://docs.scoutapm.com/#python-agent) for more information.
