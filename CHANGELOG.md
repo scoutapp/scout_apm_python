@@ -19,6 +19,11 @@
   class, for example `django.contrib.auth.admin.UserAdmin.changelist_view`
   ([PR #226](https://github.com/scoutapp/scout_apm_python/pull/226)).
 
+### Fixed
+
+- Updated Core Agent version to 1.1.11.
+  Fixes `scm_subdirectory` configuration option
+
 ## [2.3.0] 2019-08-04
 
 ### Added
