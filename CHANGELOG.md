@@ -1,6 +1,6 @@
 # Changelog
 
-## Pending
+## [2.4.0] 2019-08-20
 
 ### Added
 
@@ -23,8 +23,8 @@
 
 ### Fixed
 
-- Updated Core Agent version to 1.1.11.
-  Fixes `scm_subdirectory` configuration option
+- Updated Core Agent version to 1.1.11. This fixes the `scm_subdirectory`
+  configuration option.
 
 ## [2.3.0] 2019-08-04
 
