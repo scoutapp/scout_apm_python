@@ -7,8 +7,8 @@ from werkzeug.wrappers import Request
 
 import scout_apm.core
 from scout_apm.core.ignore import ignore_path
-from scout_apm.core.tracked_request import TrackedRequest
 from scout_apm.core.queue_time import track_request_queue_time
+from scout_apm.core.tracked_request import TrackedRequest
 
 
 class ScoutReporter(DependencyProvider):
