@@ -27,7 +27,8 @@ class ScoutApm(object):
 
     def before_first_request(self):
         self.extract_flask_settings()
-        scout_apm.core.install()
+        installed = scout_apm.core.install()
+        self._do_nothing = not installed
 
     def extract_flask_settings(self):
         """
@@ -46,12 +47,15 @@ class ScoutApm(object):
     #  Request Lifecycle hook  #
     ############################
 
-    def wrapped_dispatch_request(self, original, *args, **kwargs):
+    def wrapped_dispatch_request(self, wrapped, *args, **kwargs):
+        if self._do_nothing:
+            return wrapped(*args, **kwargs)
+
         request = _request_ctx_stack.top.request
 
         # Copied logic from Flask
         if request.routing_exception is not None:
-            return original(*args, **kwargs)
+            return wrapped(*args, **kwargs)
 
         rule = request.url_rule
         view_func = self.app.view_functions[rule.endpoint]
@@ -85,7 +89,7 @@ class ScoutApm(object):
         track_request_queue_time(queue_time, tracked_request)
 
         try:
-            return original(*args, **kwargs)
+            return wrapped(*args, **kwargs)
         except Exception as exc:
             tracked_request.tag("error", "true")
             raise exc

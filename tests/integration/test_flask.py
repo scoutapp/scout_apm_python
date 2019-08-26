@@ -6,7 +6,6 @@ import sys
 from contextlib import contextmanager
 
 import flask
-import pytest
 from webtest import TestApp
 
 from scout_apm.api import Config
@@ -180,7 +179,6 @@ def test_automatic_options(tracked_requests):
     ]
 
 
-@pytest.mark.xfail(reason="Integration still captures requests with monitor=False")
 def test_no_monitor(tracked_requests):
     # With an empty config, "SCOUT_MONITOR" defaults to False.
     with app_with_scout({}) as app:
