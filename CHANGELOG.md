@@ -1,5 +1,11 @@
 # Changelog
 
+## Pending
+
+### Added
+
+- Improved logging for debugging customer problems.
+
 ## [2.4.0] 2019-08-20
 
 ### Added
