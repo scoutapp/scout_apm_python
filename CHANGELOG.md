@@ -4,7 +4,10 @@
 
 ### Added
 
-- Improved logging for debugging customer problems.
+- Improved logging for debugging customer problems
+  ([PR #234](https://github.com/scoutapp/scout_apm_python/pull/234)).
+- Fixed Flask to not monitor requests when `SCOUT_MONITOR` is set to `False`
+  ([PR #235](https://github.com/scoutapp/scout_apm_python/pull/235)).
 
 ## [2.4.0] 2019-08-20
 
