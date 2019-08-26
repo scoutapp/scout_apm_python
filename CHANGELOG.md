@@ -6,8 +6,14 @@
 
 - Improved logging for debugging customer problems
   ([PR #234](https://github.com/scoutapp/scout_apm_python/pull/234)).
+
+### Fixed
+
 - Fixed Flask to not monitor requests when `SCOUT_MONITOR` is set to `False`
   ([PR #235](https://github.com/scoutapp/scout_apm_python/pull/235)).
+- Fixed Django to stop monitoring requests when `SCOUT_MONITOR` is set to
+  `False` during runtime
+  ([PR #236](https://github.com/scoutapp/scout_apm_python/pull/236)).
 
 ## [2.4.0] 2019-08-20
 

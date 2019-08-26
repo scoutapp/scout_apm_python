@@ -276,13 +276,20 @@ def test_admin_view_operation_name(url, expected_op_name, tracked_requests):
     assert span.operation == expected_op_name
 
 
-@pytest.mark.xfail(reason="Test setup doesn't reset state fully at the moment.")
 def test_no_monitor(tracked_requests):
     with app_with_scout(SCOUT_MONITOR=False) as app:
         response = TestApp(app).get("/hello/")
 
     assert response.status_int == 200
-    assert len(tracked_requests) == 0
+    assert tracked_requests == []
+
+
+def test_no_monitor_server_error(tracked_requests):
+    with app_with_scout(SCOUT_MONITOR=False) as app:
+        response = TestApp(app).get("/crash/", expect_errors=True)
+
+    assert response.status_int == 500
+    assert tracked_requests == []
 
 
 def fake_authentication_middleware(get_response):
