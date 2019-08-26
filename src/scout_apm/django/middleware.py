@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 
+from scout_apm.core.config import ScoutConfig
 from scout_apm.core.ignore import ignore_path
 from scout_apm.core.queue_time import track_request_queue_time
 from scout_apm.core.tracked_request import TrackedRequest
@@ -64,6 +65,9 @@ class MiddlewareTimingMiddleware(object):
         self.get_response = get_response
 
     def __call__(self, request):
+        if not ScoutConfig().value("monitor"):
+            return self.get_response(request)
+
         tracked_request = TrackedRequest.instance()
 
         tracked_request.start_span(operation="Middleware")
@@ -98,6 +102,9 @@ class ViewTimingMiddleware(object):
         be recorded.  This can happen if a middleware further along the stack
         doesn't call onward, and instead returns a response directly.
         """
+        if not ScoutConfig().value("monitor"):
+            return self.get_response(request)
+
         tracked_request = TrackedRequest.instance()
 
         # This operation name won't be recorded unless changed later in
@@ -113,6 +120,8 @@ class ViewTimingMiddleware(object):
         """
         Capture details about the view_func that is about to execute
         """
+        if not ScoutConfig().value("monitor"):
+            return
         tracked_request = TrackedRequest.instance()
         tracked_request.mark_real_request()
 
@@ -128,6 +137,8 @@ class ViewTimingMiddleware(object):
 
         Does not modify or catch or otherwise change the exception thrown
         """
+        if not ScoutConfig().value("monitor"):
+            return
         TrackedRequest.instance().tag("error", "true")
 
 
@@ -138,6 +149,8 @@ class OldStyleMiddlewareTimingMiddleware(object):
     """
 
     def process_request(self, request):
+        if not ScoutConfig().value("monitor"):
+            return
         tracked_request = TrackedRequest.instance()
         request._scout_tracked_request = tracked_request
 
