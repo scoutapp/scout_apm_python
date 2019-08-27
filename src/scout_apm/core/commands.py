@@ -160,11 +160,9 @@ class BatchCommand(object):
     @classmethod
     def from_tracked_request(cls, request):
         commands = []
-        # Request Start
         commands.append(
             StartRequest(timestamp=request.start_time, request_id=request.req_id)
         )
-        # Request Tags
         for key in request.tags:
             commands.append(
                 TagRequest(
@@ -174,9 +172,8 @@ class BatchCommand(object):
                     value=request.tags[key],
                 )
             )
-        # Spans
+
         for span in request.complete_spans:
-            # Span Start
             commands.append(
                 StartSpan(
                     timestamp=span.start_time,
@@ -186,7 +183,7 @@ class BatchCommand(object):
                     operation=span.operation,
                 )
             )
-            # Span Tags
+
             for key in span.tags:
                 commands.append(
                     TagSpan(
@@ -197,12 +194,6 @@ class BatchCommand(object):
                         value=span.tags[key],
                     )
                 )
-            # Span End
-            if span.end_time is None:
-                logger.debug(
-                    "Invalid Request, span_id: %s had a None end_time", span.span_id
-                )
-                return None
 
             commands.append(
                 StopSpan(
@@ -211,12 +202,6 @@ class BatchCommand(object):
                     span_id=span.span_id,
                 )
             )
-        # Request Finish
-        if request.end_time is None:
-            logger.debug(
-                "Invalid Request, request_id: %s had a None end_time", request.req_id
-            )
-            return None
 
         commands.append(
             FinishRequest(timestamp=request.end_time, request_id=request.req_id)
