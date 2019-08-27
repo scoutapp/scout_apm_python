@@ -1,7 +1,6 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import json
 import logging
 from datetime import datetime
 
@@ -148,17 +147,6 @@ class ApplicationEvent(object):
                 "source": self.source,
             }
         }
-
-
-class CoreAgentVersion(object):
-    def message(self):
-        return {"CoreAgentVersion": {}}
-
-
-class CoreAgentVersionResponse(object):
-    def __init__(self, message):
-        self.loaded = json.loads(message)
-        self.version = self.loaded["CoreAgentVersion"]["version"]
 
 
 class BatchCommand(object):

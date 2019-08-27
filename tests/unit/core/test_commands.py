@@ -189,11 +189,9 @@ END_TIME_STR = "2018-12-01T17:04:34.641403Z"
                 }
             },
         ),
-        (commands.CoreAgentVersion(), {"CoreAgentVersion": {}}),
         (
             commands.BatchCommand(
                 [
-                    commands.CoreAgentVersion(),
                     commands.StartRequest(timestamp=TIMESTAMP, request_id=REQUEST_ID),
                     commands.FinishRequest(timestamp=TIMESTAMP, request_id=REQUEST_ID),
                 ]
@@ -201,7 +199,6 @@ END_TIME_STR = "2018-12-01T17:04:34.641403Z"
             {
                 "BatchCommand": {
                     "commands": [
-                        {"CoreAgentVersion": {}},
                         {
                             "StartRequest": {
                                 "timestamp": TIMESTAMP_STR,
@@ -222,13 +219,6 @@ END_TIME_STR = "2018-12-01T17:04:34.641403Z"
 )
 def test_command_message(command, message):
     assert command.message() == message
-
-
-def test_core_agent_version_response():
-    command = commands.CoreAgentVersionResponse(
-        '{"CoreAgentVersion": {"version": "x.y"}}'
-    )
-    assert command.version == "x.y"
 
 
 def make_tracked_request_instance_deterministic(tr):
