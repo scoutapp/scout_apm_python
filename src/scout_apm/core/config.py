@@ -186,7 +186,7 @@ class ScoutConfigDerived(object):
         return getattr(self, func_name, None)
 
     def derive_socket_path(self):
-        return "{}/{}/core-agent.sock".format(
+        return "{}/{}/scout-agent.sock".format(
             self.config.value("core_agent_dir"),
             self.config.value("core_agent_full_name"),
         )

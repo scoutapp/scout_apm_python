@@ -44,7 +44,7 @@ def test_get_derived_config_value():
             r"-v1\.1\.8"
             r"-(x86_64|i686|unknown)"
             r"-(unknown-linux-gnu|apple-darwin|unknown)"
-            r"/core-agent\.sock",
+            r"/scout-agent\.sock",
             config.value("socket_path"),
         )
     finally:
