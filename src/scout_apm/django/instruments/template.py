@@ -3,9 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 
-# XXX:Changed in Django 1.9
-# https://github.com/jazzband/django-debug-toolbar/issues/739
-#  from django.template.base import Library, Template
 from django.template import Library, Template, defaulttags
 from django.template.loader_tags import BlockNode
 
@@ -89,10 +86,3 @@ def install_template_instrumentation():
         return ("Block/Render", {"name": self.name})
 
     logger.debug("Monkey patched Templates")
-
-    # XXX: Figure this out, causes exception that the "resolve_context" key
-    # isn't in dict
-    # Also will need to figure out the name hash
-    #  @trace_method(TemplateResponse)
-    #  def resolve_context(self, *args, **kwargs):
-    #  return ('Template/Context', {})
