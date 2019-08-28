@@ -313,13 +313,6 @@ def test_batch_command_from_tracked_request_with_tag():
     }
 
 
-def test_batch_command_from_tracked_request_with_unfinished_request():
-    tr = TrackedRequest()
-    make_tracked_request_instance_deterministic(tr)
-    command = commands.BatchCommand.from_tracked_request(tr)
-    assert command is None
-
-
 def test_batch_command_from_tracked_request_with_span():
     tr = TrackedRequest()
     tr.start_span()
@@ -369,22 +362,3 @@ def test_batch_command_from_tracked_request_with_span():
             ]
         }
     }
-
-
-def test_batch_command_from_tracked_request_with_unfinished_span():
-    tr = TrackedRequest()
-    tr.start_span()
-    make_tracked_request_instance_deterministic(tr)
-    command = commands.BatchCommand.from_tracked_request(tr)
-    assert command is None
-
-
-def test_batch_command_from_tracked_request_with_finished_span_but_no_end_time():
-    tr = TrackedRequest()
-    tr.start_span()
-    tr.stop_span()
-    # Not sure how this can happen, but the code currently handles this case.
-    tr.complete_spans[0].end_time = None
-    make_tracked_request_instance_deterministic(tr)
-    command = commands.BatchCommand.from_tracked_request(tr)
-    assert command is None

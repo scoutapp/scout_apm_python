@@ -159,6 +159,7 @@ class BatchCommand(object):
 
     @classmethod
     def from_tracked_request(cls, request):
+        # The TrackedRequest must be finished
         commands = []
         commands.append(
             StartRequest(timestamp=request.start_time, request_id=request.req_id)
