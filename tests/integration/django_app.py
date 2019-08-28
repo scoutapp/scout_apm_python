@@ -1,8 +1,11 @@
 # coding: utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+from functools import wraps
+
 import django
 from django.conf import settings
+from django.template.response import TemplateResponse
 
 config = {
     "ALLOWED_HOSTS": ["*"],
@@ -103,6 +106,25 @@ def template(request):
     return HttpResponse(template.render(context))
 
 
+def exclaimify_template_response_name(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        response = func(*args, **kwargs)
+        response.context_data["name"] = response.context_data["name"] + "!!"
+        return response
+
+    return wrapper
+
+
+@exclaimify_template_response_name
+def template_response(request):
+    template = engines["django"].from_string(
+        "Hello {% block name %}{{ name }}{% endblock %}!"
+    )
+    context = {"name": "World"}
+    return TemplateResponse(request, template, context)
+
+
 @SimpleLazyObject
 def urlpatterns():
     """
@@ -119,6 +141,7 @@ def urlpatterns():
             path("cbv/", CbvView.as_view()),
             path("sql/", sql),
             path("template/", template),
+            path("template-response/", template_response),
             path("admin/", admin.site.urls),
         ]
     except ImportError:  # Django < 2.0
@@ -131,5 +154,6 @@ def urlpatterns():
             url(r"^cbv/$", CbvView.as_view()),
             url(r"^sql/$", sql),
             url(r"^template/$", template),
+            url(r"^template-response/$", template_response),
             url(r"^admin/", admin.site.urls),
         ]

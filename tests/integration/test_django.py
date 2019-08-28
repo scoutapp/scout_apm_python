@@ -234,6 +234,24 @@ def test_template(tracked_requests):
     ]
 
 
+def test_template_response(tracked_requests):
+    with app_with_scout() as app:
+        response = TestApp(app).get("/template-response/")
+
+    assert response.status_int == 200
+    assert response.text == "Hello World!!!"
+    assert len(tracked_requests) == 1
+    spans = tracked_requests[0].complete_spans
+    print([s.operation for s in spans])
+    assert [s.operation for s in spans] == [
+        "Template/Compile/<Unknown Template>",
+        "Block/Render/name",
+        "Template/Render/<Unknown Template>",
+        "Controller/tests.integration.django_app.template_response",
+        "Middleware",
+    ]
+
+
 @pytest.mark.skipif(
     django.VERSION < (1, 9),
     reason="Django 1.9 added the model_admin attribute this functionality depends on",
