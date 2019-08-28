@@ -6,9 +6,9 @@ from webtest import TestApp
 
 from scout_apm.core import socket as scout_apm_core_socket
 from scout_apm.core.config import SCOUT_PYTHON_VALUES
-from scout_apm.core.request_manager import RequestBuffer
+from scout_apm.core.monkey import monkeypatch_method, unpatch_method
 from scout_apm.core.tracked_request import TrackedRequest
-from tests.compat import TemporaryDirectory, mock
+from tests.compat import TemporaryDirectory
 
 # Env variables have precedence over Python configs in ScoutConfig.
 # Unset all Scout env variables to prevent interference with tests.
@@ -52,10 +52,6 @@ def isolate_global_state():
     original author of this fixture is uncomfortable with such an implicit
     behavior. He prefers enforcing an explicit clean up in tests, requiring
     developers to understand how their test affects global state.)
-
-    RequestManager and RequestBuffer aren't convered because the current
-    implementation doesn't buffer anything.
-
     """
     try:
         yield
@@ -124,13 +120,14 @@ def tracked_requests():
     Gather all TrackedRequests that are buffered during a test into a list.
     """
     requests = []
-    orig_flush_request = RequestBuffer.flush_request
 
-    def wrapped_flush_request(self, request):
-        requests.append(request)
-        return orig_flush_request(self, request)
+    @monkeypatch_method(TrackedRequest)
+    def finish(original, self):
+        if self.is_real_request() and not self.is_ignored():
+            requests.append(self)
+        return original()
 
-    RequestBuffer.flush_request = wrapped_flush_request
-
-    with mock.patch.object(RequestBuffer, "flush_request", wrapped_flush_request):
+    try:
         yield requests
+    finally:
+        unpatch_method(TrackedRequest, "finish")

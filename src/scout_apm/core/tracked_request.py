@@ -6,8 +6,9 @@ from datetime import datetime
 from uuid import uuid4
 
 import scout_apm.core.backtrace
+from scout_apm.core.commands import BatchCommand
+from scout_apm.core.context import AgentContext
 from scout_apm.core.n_plus_one_call_set import NPlusOneCallSet
-from scout_apm.core.request_manager import RequestManager
 from scout_apm.core.samplers import Memory, Samplers
 from scout_apm.core.thread_local import ThreadLocalSingleton
 
@@ -103,7 +104,8 @@ class TrackedRequest(ThreadLocalSingleton):
         if self.is_real_request():
             self.tag("mem_delta", Memory.get_delta(self.memory_start))
             if not self.is_ignored():
-                RequestManager.instance().add_request(self)
+                batch_command = BatchCommand.from_tracked_request(self)
+                AgentContext.socket().send(batch_command)
             Samplers.ensure_running()
 
         # This can fail if the Tracked Request was created directly,
