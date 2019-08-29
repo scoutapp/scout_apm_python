@@ -179,17 +179,6 @@ END_TIME_STR = "2018-12-01T17:04:34.641403Z"
             },
         ),
         (
-            commands.ApplicationEvent(),
-            {
-                "ApplicationEvent": {
-                    "timestamp": INVALID_TIMESTAMP_STR,
-                    "event_type": "",
-                    "event_value": "",
-                    "source": "",
-                }
-            },
-        ),
-        (
             commands.BatchCommand(
                 [
                     commands.StartRequest(timestamp=TIMESTAMP, request_id=REQUEST_ID),

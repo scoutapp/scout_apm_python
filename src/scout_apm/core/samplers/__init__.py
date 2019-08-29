@@ -36,15 +36,17 @@ class Samplers(object):
 
                 while True:
                     for instance in instances:
-                        event = ApplicationEvent()
-                        event.event_value = instance.run()
-                        event.event_type = (
-                            instance.metric_type() + "/" + instance.metric_name()
-                        )
-                        event.timestamp = datetime.utcnow()
-                        event.source = "Pid: " + str(getpid())
-
-                        if event.event_value is not None:
+                        event_value = instance.run()
+                        if event_value is not None:
+                            event_type = (
+                                instance.metric_type() + "/" + instance.metric_name()
+                            )
+                            event = ApplicationEvent(
+                                event_value=event_value,
+                                event_type=event_type,
+                                timestamp=datetime.utcnow(),
+                                source="Pid: " + str(getpid()),
+                            )
                             AgentContext.socket().send(event)
                     sleep(60)
         finally:

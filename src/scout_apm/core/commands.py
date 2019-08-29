@@ -132,11 +132,11 @@ class TagRequest(object):
 
 
 class ApplicationEvent(object):
-    def __init__(self, *args, **kwargs):
-        self.timestamp = kwargs.get("timestamp") or INVALID_DATE
-        self.event_type = kwargs.get("event_type", "")
-        self.event_value = kwargs.get("event_value", "")
-        self.source = kwargs.get("source", "")
+    def __init__(self, event_type, event_value, source, timestamp):
+        self.event_type = event_type
+        self.event_value = event_value
+        self.source = source
+        self.timestamp = timestamp
 
     def message(self):
         return {
