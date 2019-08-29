@@ -33,7 +33,7 @@ class Cpu(object):
         if wall_clock_elapsed < timedelta(0):
             self.save_times(now, cpu_times)
             logger.debug(
-                "%s: Negative time elapsed. now: %s, last_run: %s, total time: %s.",
+                "%s: Negative time elapsed. now: %s, last_run: %s.",
                 self.human_name(),
                 now,
                 self.last_run,
@@ -65,22 +65,10 @@ class Cpu(object):
         ).total_seconds()
 
         # If somehow we run for 0 seconds between calls, don't try to divide by 0
-        res = None
         if normalized_wall_clock_elapsed == 0:
             res = 0
         else:
             res = (process_elapsed / normalized_wall_clock_elapsed) * 100
-
-        if res < 0:
-            self.save_times(now, cpu_times)
-            logger.debug(
-                "%s: Negative CPU: %s / %s * 100 ==> %s",
-                self.human_name(),
-                process_elapsed,
-                normalized_wall_clock_elapsed,
-                res,
-            )
-            return None
 
         self.save_times(now, cpu_times)
 
