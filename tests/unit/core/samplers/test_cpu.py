@@ -74,7 +74,7 @@ def test_run(caplog):
 
     result = cpu.run()
 
-    assert isinstance(result, float) and result > 0
+    assert isinstance(result, float) and result >= 0.0
     logger, level, message = caplog.record_tuples[0]
     assert logger == "scout_apm.core.samplers.cpu"
     assert level == logging.DEBUG
