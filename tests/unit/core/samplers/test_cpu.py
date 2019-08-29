@@ -29,9 +29,11 @@ def test_run_negative_time_elapsed(caplog):
     result = cpu.run()
 
     assert result is None
-    assert len(caplog.record_tuples) == 1
-    logger, level, message = caplog.record_tuples[0]
-    assert logger == "scout_apm.core.samplers.cpu"
+    record_tuples = [
+        r for r in caplog.record_tuples if r[0] == "scout_apm.core.samplers.cpu"
+    ]
+    assert len(record_tuples) == 1
+    _, level, message = record_tuples[0]
     assert level == logging.DEBUG
     assert message.startswith("Process CPU: Negative time elapsed. now: ")
 
@@ -46,9 +48,11 @@ def test_run_negative_last_cpu_times(caplog):
     result = cpu.run()
 
     assert result is None
-    assert len(caplog.record_tuples) == 1
-    logger, level, message = caplog.record_tuples[0]
-    assert logger == "scout_apm.core.samplers.cpu"
+    record_tuples = [
+        r for r in caplog.record_tuples if r[0] == "scout_apm.core.samplers.cpu"
+    ]
+    assert len(record_tuples) == 1
+    _, level, message = record_tuples[0]
     assert level == logging.DEBUG
     assert message.startswith("Process CPU: Negative process time elapsed. utime: ")
     assert message.endswith("This is normal to see when starting a forking web server.")
@@ -63,7 +67,10 @@ def test_run_within_zero_seconds(caplog):
     result = cpu.run()
 
     assert result == 0
-    assert caplog.record_tuples == [
+    record_tuples = [
+        r for r in caplog.record_tuples if r[0] == "scout_apm.core.samplers.cpu"
+    ]
+    assert record_tuples == [
         ("scout_apm.core.samplers.cpu", logging.DEBUG, "Process CPU: 0 [0 CPU(s)]")
     ]
 
@@ -75,7 +82,10 @@ def test_run(caplog):
     result = cpu.run()
 
     assert isinstance(result, float) and result >= 0.0
-    logger, level, message = caplog.record_tuples[0]
-    assert logger == "scout_apm.core.samplers.cpu"
+    record_tuples = [
+        r for r in caplog.record_tuples if r[0] == "scout_apm.core.samplers.cpu"
+    ]
+    assert len(record_tuples) == 1
+    _, level, message = record_tuples[0]
     assert level == logging.DEBUG
     assert message.startswith("Process CPU: {}".format(result))
