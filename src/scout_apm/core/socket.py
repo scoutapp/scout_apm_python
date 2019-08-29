@@ -77,8 +77,8 @@ class CoreAgentSocket(threading.Thread):
         if self._started_event.is_set():
             self._stop_event.set()
             self.command_queue.put(None, False)  # unblock self.command_queue.get
-            self._stopped_event.wait(2 * SECOND)
-            if self._stopped_event.is_set():
+            stopped = self._stopped_event.wait(2 * SECOND)
+            if stopped:
                 return True
             else:
                 logger.debug("CoreAgentSocket Failed to stop thread within timeout!")
