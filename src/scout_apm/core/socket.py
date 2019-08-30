@@ -213,7 +213,7 @@ class CoreAgentSocket(threading.Thread):
             )
             try:
                 self.socket.connect(self.socket_path)
-                self.socket.settimeout(0.5 * SECOND)
+                self.socket.settimeout(3 * SECOND)
                 logger.debug("CoreAgentSocket is connected")
                 return True
             except socket.error as exc:
