@@ -7,6 +7,7 @@ import logging
 from psutil._common import pcputimes
 
 from scout_apm.core.samplers.cpu import Cpu
+from tests.compat import mock
 
 
 def test_metric_type():
@@ -87,5 +88,28 @@ def test_run(caplog):
     ]
     assert len(record_tuples) == 1
     _, level, message = record_tuples[0]
+    assert level == logging.DEBUG
+    assert message.startswith("Process CPU: {}".format(result))
+
+
+def test_run_undetermined_cpus(caplog):
+    caplog.set_level(logging.DEBUG)
+    with mock.patch("psutil.cpu_count", return_value=None):
+        cpu = Cpu()
+
+    result = cpu.run()
+
+    assert cpu.num_processors == 1
+    assert isinstance(result, float) and result >= 0.0
+    record_tuples = [
+        r for r in caplog.record_tuples if r[0] == "scout_apm.core.samplers.cpu"
+    ]
+    assert len(record_tuples) == 2
+    assert record_tuples[0] == (
+        "scout_apm.core.samplers.cpu",
+        logging.DEBUG,
+        "Could not determine CPU count - assume there is one.",
+    )
+    _, level, message = record_tuples[1]
     assert level == logging.DEBUG
     assert message.startswith("Process CPU: {}".format(result))
