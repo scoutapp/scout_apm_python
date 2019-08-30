@@ -9,6 +9,8 @@
   ([PR #240](https://github.com/scoutapp/scout_apm_python/pull/240)).
 - Fix CPU statistics to work when the CPU count cannot be determined
   ([PR #245](https://github.com/scoutapp/scout_apm_python/pull/245)).
+- Don't stop the socket thread during startup
+  ([PR #246](https://github.com/scoutapp/scout_apm_python/pull/246)).
 
 ## [2.4.1] 2019-08-26
 
