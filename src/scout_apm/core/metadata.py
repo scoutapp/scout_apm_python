@@ -15,11 +15,12 @@ logger = logging.getLogger(__name__)
 class AppMetadata(object):
     @classmethod
     def report(cls):
-        event = ApplicationEvent()
-        event.event_value = cls.data()
-        event.event_type = "scout.metadata"
-        event.timestamp = datetime.utcnow()
-        event.source = "Pid: " + str(getpid())
+        event = ApplicationEvent(
+            event_type="scout.metadata",
+            event_value=cls.data(),
+            source="Pid: " + str(getpid()),
+            timestamp=datetime.utcnow(),
+        )
         AgentContext.socket().send(event)
 
     @classmethod
