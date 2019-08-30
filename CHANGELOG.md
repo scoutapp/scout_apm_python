@@ -7,6 +7,8 @@
 - Use the same default socket name that the core agent uses when launched alone
   (`core-agent.sock` -> `scout-agent.sock`)
   ([PR #240](https://github.com/scoutapp/scout_apm_python/pull/240)).
+- Fix CPU statistics to work when the CPU count cannot be determined
+  ([PR #245](https://github.com/scoutapp/scout_apm_python/pull/245)).
 
 ## [2.4.1] 2019-08-26
 

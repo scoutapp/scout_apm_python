@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import psutil
 
@@ -14,6 +14,9 @@ class Cpu(object):
         self.last_run = datetime.utcnow()
         self.last_cpu_times = psutil.Process().cpu_times()
         self.num_processors = psutil.cpu_count()
+        if self.num_processors is None:
+            logger.debug("Could not determine CPU count - assume there is one.")
+            self.num_processors = 1
 
     def metric_type(self):
         return "CPU"
@@ -29,8 +32,8 @@ class Cpu(object):
         process = psutil.Process()  # get a handle on the current process
         cpu_times = process.cpu_times()
 
-        wall_clock_elapsed = now - self.last_run
-        if wall_clock_elapsed < timedelta(0):
+        wall_clock_elapsed = (now - self.last_run).total_seconds()
+        if wall_clock_elapsed < 0:
             self.save_times(now, cpu_times)
             logger.debug(
                 "%s: Negative time elapsed. now: %s, last_run: %s.",
@@ -60,9 +63,7 @@ class Cpu(object):
             return None
 
         # Normalized to # of processors
-        normalized_wall_clock_elapsed = (
-            wall_clock_elapsed * self.num_processors
-        ).total_seconds()
+        normalized_wall_clock_elapsed = wall_clock_elapsed * self.num_processors
 
         # If somehow we run for 0 seconds between calls, don't try to divide by 0
         if normalized_wall_clock_elapsed == 0:
