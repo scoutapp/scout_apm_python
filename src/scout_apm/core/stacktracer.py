@@ -1,12 +1,8 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import logging
-
 from scout_apm.core.monkey import CallableProxy, monkeypatch_method
 from scout_apm.core.tracked_request import TrackedRequest
-
-logger = logging.getLogger(__name__)
 
 
 def trace_method(cls, method_name=None):
