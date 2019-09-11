@@ -32,11 +32,12 @@ END_TIME_STR = "2018-12-01T17:04:34.641403Z"
     "command, message",
     [
         (
-            commands.Register(app="test_app", key="test_key"),
+            commands.Register(app="test_app", key="test_key", hostname="test_host"),
             {
                 "Register": {
                     "app": "test_app",
                     "key": "test_key",
+                    "host": "test_host",
                     "language": "python",
                     "api_version": "1.0",
                 }
