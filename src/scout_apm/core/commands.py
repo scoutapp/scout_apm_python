@@ -19,7 +19,10 @@ class Register(object):
         self.hostname = kwargs.get("hostname")
 
     def message(self):
-        logger.info("Registering with app=%s key=%s host=%s" % (self.app, self.key, self.hostname))
+        logger.info(
+            "Registering with app=%s key=%s host=%s"
+            % (self.app, self.key, self.hostname)
+        )
         return {
             "Register": {
                 "app": self.app,
