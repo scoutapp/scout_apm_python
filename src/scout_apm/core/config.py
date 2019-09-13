@@ -223,7 +223,7 @@ class ScoutConfigDefaults(object):
             "download_url": "https://s3-us-west-1.amazonaws.com/scout-public-downloads/apm_core_agent/release",  # noqa: E501
             "framework": "",
             "framework_version": "",
-            "hostname": "",
+            "hostname": None,
             "key": "",
             "log_level": "info",
             "monitor": False,
