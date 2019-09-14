@@ -172,7 +172,7 @@ class Span(object):
     # Add any interesting annotations to the span. Assumes that we are in the
     # process of stopping this span.
     def annotate(self):
-        self.tag("allocations", self.calculate_allocations())
+        self.add_allocation_tags()
         # Don't capture backtraces for Controller or Middleware
         if self.operation is not None and (
             self.operation.startswith(("Controller", "Middleware"))
@@ -183,9 +183,9 @@ class Span(object):
         if self.duration() > slow_threshold:
             self.capture_backtrace()
 
-    def calculate_allocations(self):
+    def add_allocation_tags(self):
         if objtrace is None:
-            return 0
+            return 
 
         start_allocs = (
             self.start_objtrace_counts[0]
@@ -197,23 +197,23 @@ class Span(object):
             + self.end_objtrace_counts[1]
             + self.end_objtrace_counts[2]
         )
-        try:
-            # If even one of the counters rolled over, we're pretty much
-            # guaranteed to have end_allocs be less than start_allocs.
-            # This should rarely happen. Max Unsigned Long Long is a big number
-            if end_allocs - start_allocs < 0:
-                logger.debug(
-                    "End allocation count smaller than start allocation "
-                    "count for span %s: start = %d, end = %d",
-                    self.span_id,
-                    start_allocs,
-                    end_allocs,
-                )
-                return 0
-            return end_allocs - start_allocs
-        except TypeError as e:
-            logger.debug("Exception in calculate_allocations: %r", e)
+
+        # If even one of the counters rolled over, we're pretty much
+        # guaranteed to have end_allocs be less than start_allocs.
+        # This should rarely happen. Max Unsigned Long Long is a big number
+        if end_allocs - start_allocs < 0:
+            logger.debug(
+                "End allocation count smaller than start allocation "
+                "count for span %s: start = %d, end = %d",
+                self.span_id,
+                start_allocs,
+                end_allocs,
+            )
             return 0
+
+        self.tag("allocations", end_allocs - start_allocs)
+        self.tag("start_allocations", start_allocs)
+        self.tag("stop_allocations", end_allocs)
 
     def capture_backtrace(self):
         stack = scout_apm.core.backtrace.capture()
