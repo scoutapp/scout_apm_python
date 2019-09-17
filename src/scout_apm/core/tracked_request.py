@@ -185,7 +185,7 @@ class Span(object):
 
     def add_allocation_tags(self):
         if objtrace is None:
-            return 
+            return
 
         start_allocs = (
             self.start_objtrace_counts[0]
