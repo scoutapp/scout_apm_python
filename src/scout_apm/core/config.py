@@ -218,7 +218,7 @@ class ScoutConfigDefaults(object):
             "core_agent_download": True,
             "core_agent_launch": True,
             "core_agent_permissions": 700,
-            "core_agent_version": "v1.1.11",  # can be an exact tag name, or 'latest'
+            "core_agent_version": "v1.2.0",  # can be an exact tag name, or 'latest'
             "disabled_instruments": [],
             "download_url": "https://s3-us-west-1.amazonaws.com/scout-public-downloads/apm_core_agent/release",  # noqa: E501
             "framework": "",
