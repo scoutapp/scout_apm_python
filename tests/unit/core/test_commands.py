@@ -8,6 +8,11 @@ import pytest
 from scout_apm.core import commands
 from scout_apm.core.tracked_request import TrackedRequest
 
+try:
+    from scout_apm.core import objtrace
+except ImportError:
+    objtrace = None
+
 REQUEST_ID = "req-97c1d72c-5519-4665-85d3-1ac21af39b63"
 SPAN_ID = "span-7dbb0712-e3c5-4b73-b317-f8d2114c5993"
 PARENT_ID = "span-d10de59e-1e9f-46e9-9d5e-81b5bfc091ec"
@@ -306,6 +311,9 @@ def test_batch_command_from_tracked_request_with_tag():
     }
 
 
+@pytest.mark.skipif(
+    objtrace is None, reason="Allocation tags only there when objtrace works"
+)
 def test_batch_command_from_tracked_request_with_span():
     tr = TrackedRequest()
     tr.start_span()
@@ -314,13 +322,10 @@ def test_batch_command_from_tracked_request_with_span():
 
     command = commands.BatchCommand.from_tracked_request(tr)
 
-    message_commands = command.message()['BatchCommand']['commands']
+    message_commands = command.message()["BatchCommand"]["commands"]
     assert len(message_commands) == 7
     assert message_commands[0] == {
-        "StartRequest": {
-            "request_id": REQUEST_ID,
-            "timestamp": START_TIME_STR,
-        }
+        "StartRequest": {"request_id": REQUEST_ID, "timestamp": START_TIME_STR}
     }
     assert message_commands[1] == {
         "StartSpan": {
@@ -331,7 +336,7 @@ def test_batch_command_from_tracked_request_with_span():
             "timestamp": START_TIME_STR,
         }
     }
-    assert sorted(message_commands[2:5], key=lambda c: c['TagSpan']['tag']) == [
+    assert sorted(message_commands[2:5], key=lambda c: c["TagSpan"]["tag"]) == [
         {
             "TagSpan": {
                 "request_id": REQUEST_ID,
@@ -368,8 +373,42 @@ def test_batch_command_from_tracked_request_with_span():
         }
     }
     assert message_commands[6] == {
-        "FinishRequest": {
+        "FinishRequest": {"request_id": REQUEST_ID, "timestamp": END_TIME_STR}
+    }
+
+
+@pytest.mark.skipif(
+    objtrace is not None, reason="Allocation tags only there when objtrace works"
+)
+def test_batch_command_from_tracked_request_with_span_no_objtrace():
+    tr = TrackedRequest()
+    tr.start_span()
+    tr.stop_span()
+    make_tracked_request_instance_deterministic(tr)
+
+    command = commands.BatchCommand.from_tracked_request(tr)
+
+    message_commands = command.message()["BatchCommand"]["commands"]
+    assert len(message_commands) == 4
+    assert message_commands[0] == {
+        "StartRequest": {"request_id": REQUEST_ID, "timestamp": START_TIME_STR}
+    }
+    assert message_commands[1] == {
+        "StartSpan": {
+            "operation": None,
+            "parent_id": None,
             "request_id": REQUEST_ID,
+            "span_id": SPAN_ID,
+            "timestamp": START_TIME_STR,
+        }
+    }
+    assert message_commands[2] == {
+        "StopSpan": {
+            "request_id": REQUEST_ID,
+            "span_id": SPAN_ID,
             "timestamp": END_TIME_STR,
         }
+    }
+    assert message_commands[3] == {
+        "FinishRequest": {"request_id": REQUEST_ID, "timestamp": END_TIME_STR}
     }
