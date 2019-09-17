@@ -197,7 +197,11 @@ class CoreAgentSocket(threading.Thread):
 
     def _register(self):
         self._send(
-            Register(app=self.config.value("name"), key=self.config.value("key"))
+            Register(
+                app=self.config.value("name"),
+                key=self.config.value("key"),
+                hostname=self.config.value("hostname"),
+            )
         )
 
     def _connect(self, connect_attempts=5, retry_wait_secs=1):

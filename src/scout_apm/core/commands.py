@@ -16,13 +16,18 @@ class Register(object):
     def __init__(self, *args, **kwargs):
         self.app = kwargs.get("app")
         self.key = kwargs.get("key")
+        self.hostname = kwargs.get("hostname")
 
     def message(self):
-        logger.info("Registering with app=%s key=%s" % (self.app, self.key))
+        logger.info(
+            "Registering with app=%s key=%s host=%s"
+            % (self.app, self.key, self.hostname)
+        )
         return {
             "Register": {
                 "app": self.app,
                 "key": self.key,
+                "host": self.hostname,
                 "language": "python",
                 "api_version": "1.0",
             }
