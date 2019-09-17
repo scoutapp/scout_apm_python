@@ -340,6 +340,24 @@ def test_batch_command_from_tracked_request_with_span():
                     }
                 },
                 {
+                    "TagSpan": {
+                        "request_id": REQUEST_ID,
+                        "span_id": SPAN_ID,
+                        "tag": "start_allocations",
+                        "timestamp": START_TIME_STR,
+                        "value": 0,
+                    }
+                },
+                {
+                    "TagSpan": {
+                        "request_id": REQUEST_ID,
+                        "span_id": SPAN_ID,
+                        "tag": "stop_allocations",
+                        "timestamp": START_TIME_STR,
+                        "value": 0,
+                    }
+                },
+                {
                     "StopSpan": {
                         "request_id": REQUEST_ID,
                         "span_id": SPAN_ID,
