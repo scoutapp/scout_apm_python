@@ -2,6 +2,17 @@
 
 ## Pending
 
+### Added
+
+- Support the `hostname` setting
+  ([PR #251](https://github.com/scoutapp/scout_apm_python/pull/251)).
+- Support timeline trace view
+  ([PR #252](https://github.com/scoutapp/scout_apm_python/pull/252)).
+- Add API function `rename_transaction()`
+  ([PR #129](https://github.com/scoutapp/scout_apm_python/pull/129)).
+- Updated Core Agent version to 1.2.0 to support new features
+  ([PR #253](https://github.com/scoutapp/scout_apm_python/pull/253)).
+
 ### Fixed
 
 - Use the same default socket name that the core agent uses when launched alone
@@ -9,12 +20,6 @@
   ([PR #240](https://github.com/scoutapp/scout_apm_python/pull/240)).
 - Fix CPU statistics to work when the CPU count cannot be determined
   ([PR #245](https://github.com/scoutapp/scout_apm_python/pull/245)).
-- Support the `hostname` setting
-  ([PR #251](https://github.com/scoutapp/scout_apm_python/pull/251)).
-- Support timeline trace view
-  ([PR #252](https://github.com/scoutapp/scout_apm_python/pull/252)).
-- Add API function `rename_transaction()`
-  ([PR #129](https://github.com/scoutapp/scout_apm_python/pull/129)).
 
 ## [2.4.1] 2019-08-26
 
