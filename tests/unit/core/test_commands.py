@@ -311,65 +311,65 @@ def test_batch_command_from_tracked_request_with_span():
     tr.start_span()
     tr.stop_span()
     make_tracked_request_instance_deterministic(tr)
+
     command = commands.BatchCommand.from_tracked_request(tr)
-    assert command.message() == {
-        "BatchCommand": {
-            "commands": [
-                {
-                    "StartRequest": {
-                        "request_id": REQUEST_ID,
-                        "timestamp": START_TIME_STR,
-                    }
-                },
-                {
-                    "StartSpan": {
-                        "operation": None,
-                        "parent_id": None,
-                        "request_id": REQUEST_ID,
-                        "span_id": SPAN_ID,
-                        "timestamp": START_TIME_STR,
-                    }
-                },
-                {
-                    "TagSpan": {
-                        "request_id": REQUEST_ID,
-                        "span_id": SPAN_ID,
-                        "tag": "allocations",
-                        "timestamp": START_TIME_STR,
-                        "value": 0,
-                    }
-                },
-                {
-                    "TagSpan": {
-                        "request_id": REQUEST_ID,
-                        "span_id": SPAN_ID,
-                        "tag": "start_allocations",
-                        "timestamp": START_TIME_STR,
-                        "value": 0,
-                    }
-                },
-                {
-                    "TagSpan": {
-                        "request_id": REQUEST_ID,
-                        "span_id": SPAN_ID,
-                        "tag": "stop_allocations",
-                        "timestamp": START_TIME_STR,
-                        "value": 0,
-                    }
-                },
-                {
-                    "StopSpan": {
-                        "request_id": REQUEST_ID,
-                        "span_id": SPAN_ID,
-                        "timestamp": END_TIME_STR,
-                    }
-                },
-                {
-                    "FinishRequest": {
-                        "request_id": REQUEST_ID,
-                        "timestamp": END_TIME_STR,
-                    }
-                },
-            ]
+
+    message_commands = command.message()['BatchCommand']['commands']
+    assert len(message_commands) == 7
+    assert message_commands[0] == {
+        "StartRequest": {
+            "request_id": REQUEST_ID,
+            "timestamp": START_TIME_STR,
+        }
+    }
+    assert message_commands[1] == {
+        "StartSpan": {
+            "operation": None,
+            "parent_id": None,
+            "request_id": REQUEST_ID,
+            "span_id": SPAN_ID,
+            "timestamp": START_TIME_STR,
+        }
+    }
+    assert sorted(message_commands[2:5], key=lambda c: c['TagSpan']['tag']) == [
+        {
+            "TagSpan": {
+                "request_id": REQUEST_ID,
+                "span_id": SPAN_ID,
+                "tag": "allocations",
+                "timestamp": START_TIME_STR,
+                "value": 0,
+            }
+        },
+        {
+            "TagSpan": {
+                "request_id": REQUEST_ID,
+                "span_id": SPAN_ID,
+                "tag": "start_allocations",
+                "timestamp": START_TIME_STR,
+                "value": 0,
+            }
+        },
+        {
+            "TagSpan": {
+                "request_id": REQUEST_ID,
+                "span_id": SPAN_ID,
+                "tag": "stop_allocations",
+                "timestamp": START_TIME_STR,
+                "value": 0,
+            }
+        },
+    ]
+    assert message_commands[5] == {
+        "StopSpan": {
+            "request_id": REQUEST_ID,
+            "span_id": SPAN_ID,
+            "timestamp": END_TIME_STR,
+        }
+    }
+    assert message_commands[6] == {
+        "FinishRequest": {
+            "request_id": REQUEST_ID,
+            "timestamp": END_TIME_STR,
         }
     }
