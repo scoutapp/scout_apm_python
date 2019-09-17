@@ -9,6 +9,8 @@
   ([PR #240](https://github.com/scoutapp/scout_apm_python/pull/240)).
 - Fix CPU statistics to work when the CPU count cannot be determined
   ([PR #245](https://github.com/scoutapp/scout_apm_python/pull/245)).
+- Support the `hostname` setting
+  ([PR #251](https://github.com/scoutapp/scout_apm_python/pull/251)).
 - Support timeline trace view
   ([PR #252](https://github.com/scoutapp/scout_apm_python/pull/252)).
 
