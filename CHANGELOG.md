@@ -13,6 +13,8 @@
   ([PR #251](https://github.com/scoutapp/scout_apm_python/pull/251)).
 - Support timeline trace view
   ([PR #252](https://github.com/scoutapp/scout_apm_python/pull/252)).
+- Add API function `rename_transaction()`
+  ([PR #129](https://github.com/scoutapp/scout_apm_python/pull/129)).
 
 ## [2.4.1] 2019-08-26
 
