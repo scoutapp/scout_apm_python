@@ -2,6 +2,8 @@
 
 ## Pending
 
+## [2.5.0] 2019-09-17
+
 ### Added
 
 - Support the `hostname` setting
