@@ -241,6 +241,10 @@ def make_tracked_request_instance_deterministic(tr):
 
         if "allocations" in span.tags:
             span.tags["allocations"] = 0
+        if "start_allocations" in span.tags:
+            span.tags["start_allocations"] = 0
+        if "stop_allocations" in span.tags:
+            span.tags["stop_allocations"] = 0
 
 
 def test_batch_command_from_tracked_request():
