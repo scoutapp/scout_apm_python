@@ -125,3 +125,9 @@ class BackgroundTransaction(Transaction):
 
     def __enter__(self):
         Transaction.start("Job", self.name, self.tags)
+
+
+def rename_transaction(name):
+    if name is not None:
+        tr = TrackedRequest.instance()
+        tr.tag("transaction.name", name)

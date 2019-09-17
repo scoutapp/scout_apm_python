@@ -8,6 +8,7 @@ from scout_apm.api import (
     WebTransaction,
     ignore_transaction,
     instrument,
+    rename_transaction,
 )
 
 
@@ -234,3 +235,11 @@ def test_ignore_transaction(tracked_request):
     ignore_transaction()
 
     assert tracked_request.tags["ignore_transaction"]
+
+
+def test_rename_transaction(tracked_request):
+    assert "transaction.name" not in tracked_request.tags
+
+    rename_transaction("Unit Test")
+
+    assert tracked_request.tags["transaction.name"] == "Unit Test"
