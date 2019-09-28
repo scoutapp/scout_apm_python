@@ -1,4 +1,5 @@
 # coding=utf-8
+import logging
 import os
 
 import pytest
@@ -24,6 +25,14 @@ for key in os.environ.keys():
 # As per https://github.com/pytest-dev/pytest/issues/477
 
 TestApp.__test__ = False
+
+
+# Override built-in caplog fixture to always be at DEBUG level since we have
+# many DEBUG log messages
+@pytest.fixture()
+def caplog(caplog):
+    caplog.set_level(logging.DEBUG)
+    yield caplog
 
 
 class GlobalStateLeak(Exception):

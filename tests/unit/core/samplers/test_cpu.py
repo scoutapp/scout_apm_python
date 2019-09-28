@@ -23,7 +23,6 @@ def test_human_name():
 
 
 def test_run_negative_time_elapsed(caplog):
-    caplog.set_level(logging.DEBUG)
     cpu = Cpu()
     cpu.last_run = dt.datetime.utcnow() + dt.timedelta(days=100)
 
@@ -40,7 +39,6 @@ def test_run_negative_time_elapsed(caplog):
 
 
 def test_run_negative_last_cpu_times(caplog):
-    caplog.set_level(logging.DEBUG)
     cpu = Cpu()
     cpu.last_cpu_times = pcputimes(
         user=1e12, system=1e12, children_user=0.0, children_system=0.0
@@ -60,7 +58,6 @@ def test_run_negative_last_cpu_times(caplog):
 
 
 def test_run_within_zero_seconds(caplog):
-    caplog.set_level(logging.DEBUG)
     cpu = Cpu()
     # Force the calculation of normalized_wall_clock_elapsed to 0
     cpu.num_processors = 0
@@ -77,7 +74,6 @@ def test_run_within_zero_seconds(caplog):
 
 
 def test_run(caplog):
-    caplog.set_level(logging.DEBUG)
     cpu = Cpu()
 
     result = cpu.run()
@@ -93,7 +89,6 @@ def test_run(caplog):
 
 
 def test_run_undetermined_cpus(caplog):
-    caplog.set_level(logging.DEBUG)
     with mock.patch("psutil.cpu_count", return_value=None):
         cpu = Cpu()
 

@@ -1,6 +1,7 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import logging
 import os
 import re
 import sys
@@ -51,16 +52,36 @@ def test_get_derived_config_value():
         ScoutConfig.reset_all()
 
 
-def test_override_triple():
-    ScoutConfig.set(core_agent_triple="unknown-linux-musl")
+def test_override_triple(caplog):
+    triple = "unknown-unknown-linux-musl"
+    ScoutConfig.set(core_agent_triple=triple)
     config = ScoutConfig()
     try:
-        assert re.match(
-            r"scout_apm_core-v.*-unknown-linux-musl",
-            config.value("core_agent_full_name"),
-        )
+        full_name = config.value("core_agent_full_name")
     finally:
         ScoutConfig.reset_all()
+
+    assert full_name.endswith(triple)
+    assert caplog.record_tuples == []
+
+
+def test_override_triple_invalid(caplog):
+    bad_triple = "badtriple"
+    ScoutConfig.set(core_agent_triple=bad_triple)
+    config = ScoutConfig()
+    try:
+        full_name = config.value("core_agent_full_name")
+    finally:
+        ScoutConfig.reset_all()
+
+    assert full_name.endswith(bad_triple)
+    assert caplog.record_tuples == [
+        (
+            "scout_apm.core.config",
+            logging.WARNING,
+            "Invalid value for core_agent_triple: badtriple",
+        )
+    ]
 
 
 def test_get_default_config_value():
