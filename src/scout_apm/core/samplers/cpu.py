@@ -1,8 +1,8 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import datetime as dt
 import logging
-from datetime import datetime
 
 import psutil
 
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 class Cpu(object):
     def __init__(self):
-        self.last_run = datetime.utcnow()
+        self.last_run = dt.datetime.utcnow()
         self.last_cpu_times = psutil.Process().cpu_times()
         self.num_processors = psutil.cpu_count()
         if self.num_processors is None:
@@ -28,7 +28,7 @@ class Cpu(object):
         return "Process CPU"
 
     def run(self):
-        now = datetime.utcnow()
+        now = dt.datetime.utcnow()
         process = psutil.Process()  # get a handle on the current process
         cpu_times = process.cpu_times()
 

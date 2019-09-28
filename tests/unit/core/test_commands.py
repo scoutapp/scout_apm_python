@@ -1,7 +1,7 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import datetime
+import datetime as dt
 
 import pytest
 
@@ -17,13 +17,13 @@ REQUEST_ID = "req-97c1d72c-5519-4665-85d3-1ac21af39b63"
 SPAN_ID = "span-7dbb0712-e3c5-4b73-b317-f8d2114c5993"
 PARENT_ID = "span-d10de59e-1e9f-46e9-9d5e-81b5bfc091ec"
 
-TIMESTAMP = datetime.datetime(2018, 12, 1, 17, 4, 34, 386568)
+TIMESTAMP = dt.datetime(2018, 12, 1, 17, 4, 34, 386568)
 TIMESTAMP_STR = "2018-12-01T17:04:34.386568Z"
 
-START_TIME = datetime.datetime(2018, 12, 1, 17, 4, 34, 78797)
+START_TIME = dt.datetime(2018, 12, 1, 17, 4, 34, 78797)
 START_TIME_STR = "2018-12-01T17:04:34.078797Z"
 
-END_TIME = datetime.datetime(2018, 12, 1, 17, 4, 34, 641403)
+END_TIME = dt.datetime(2018, 12, 1, 17, 4, 34, 641403)
 END_TIME_STR = "2018-12-01T17:04:34.641403Z"
 
 
