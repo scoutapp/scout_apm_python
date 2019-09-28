@@ -2,21 +2,17 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
-# A constant that represents an "unknown" date. Fallback, and will be rejected
-# by the CoreAgent. But important to avoid exceptions if a None timestamp is
-# passed to a Command.
-INVALID_DATE = datetime(year=2000, month=1, day=1)
-
 
 class Register(object):
-    def __init__(self, *args, **kwargs):
-        self.app = kwargs.get("app")
-        self.key = kwargs.get("key")
-        self.hostname = kwargs.get("hostname")
+    __slots__ = ("app", "key", "hostname")
+
+    def __init__(self, app, key, hostname):
+        self.app = app
+        self.key = key
+        self.hostname = hostname
 
     def message(self):
         logger.info(
@@ -35,12 +31,14 @@ class Register(object):
 
 
 class StartSpan(object):
-    def __init__(self, *args, **kwargs):
-        self.timestamp = kwargs.get("timestamp") or INVALID_DATE
-        self.request_id = kwargs.get("request_id")
-        self.span_id = kwargs.get("span_id")
-        self.parent = kwargs.get("parent")
-        self.operation = kwargs.get("operation")
+    __slots__ = ("timestamp", "request_id", "span_id", "parent", "operation")
+
+    def __init__(self, timestamp, request_id, span_id, parent, operation):
+        self.timestamp = timestamp
+        self.request_id = request_id
+        self.span_id = span_id
+        self.parent = parent
+        self.operation = operation
 
     def message(self):
         return {
@@ -55,10 +53,12 @@ class StartSpan(object):
 
 
 class StopSpan(object):
-    def __init__(self, *args, **kwargs):
-        self.timestamp = kwargs.get("timestamp") or INVALID_DATE
-        self.request_id = kwargs.get("request_id")
-        self.span_id = kwargs.get("span_id")
+    __slots__ = ("timestamp", "request_id", "span_id")
+
+    def __init__(self, timestamp, request_id, span_id):
+        self.timestamp = timestamp
+        self.request_id = request_id
+        self.span_id = span_id
 
     def message(self):
         return {
@@ -71,9 +71,11 @@ class StopSpan(object):
 
 
 class StartRequest(object):
-    def __init__(self, *args, **kwargs):
-        self.timestamp = kwargs.get("timestamp") or INVALID_DATE
-        self.request_id = kwargs.get("request_id")
+    __slots__ = ("timestamp", "request_id")
+
+    def __init__(self, timestamp, request_id):
+        self.timestamp = timestamp
+        self.request_id = request_id
 
     def message(self):
         return {
@@ -85,9 +87,11 @@ class StartRequest(object):
 
 
 class FinishRequest(object):
-    def __init__(self, *args, **kwargs):
-        self.timestamp = kwargs.get("timestamp") or INVALID_DATE
-        self.request_id = kwargs.get("request_id")
+    __slots__ = ("timestamp", "request_id")
+
+    def __init__(self, timestamp, request_id):
+        self.timestamp = timestamp
+        self.request_id = request_id
 
     def message(self):
         return {
@@ -99,12 +103,14 @@ class FinishRequest(object):
 
 
 class TagSpan(object):
-    def __init__(self, *args, **kwargs):
-        self.timestamp = kwargs.get("timestamp") or INVALID_DATE
-        self.request_id = kwargs.get("request_id")
-        self.span_id = kwargs.get("span_id")
-        self.tag = kwargs.get("tag")
-        self.value = kwargs.get("value")
+    __slots__ = ("timestamp", "request_id", "span_id", "tag", "value")
+
+    def __init__(self, timestamp, request_id, span_id, tag, value):
+        self.timestamp = timestamp
+        self.request_id = request_id
+        self.span_id = span_id
+        self.tag = tag
+        self.value = value
 
     def message(self):
         return {
@@ -119,11 +125,13 @@ class TagSpan(object):
 
 
 class TagRequest(object):
-    def __init__(self, *args, **kwargs):
-        self.timestamp = kwargs.get("timestamp") or INVALID_DATE
-        self.request_id = kwargs.get("request_id")
-        self.tag = kwargs.get("tag")
-        self.value = kwargs.get("value")
+    __slots__ = ("timestamp", "request_id", "tag", "value")
+
+    def __init__(self, timestamp, request_id, tag, value):
+        self.timestamp = timestamp
+        self.request_id = request_id
+        self.tag = tag
+        self.value = value
 
     def message(self):
         return {
@@ -137,6 +145,8 @@ class TagRequest(object):
 
 
 class ApplicationEvent(object):
+    __slots__ = ("event_type", "event_value", "source", "timestamp")
+
     def __init__(self, event_type, event_value, source, timestamp):
         self.event_type = event_type
         self.event_value = event_value
@@ -155,12 +165,17 @@ class ApplicationEvent(object):
 
 
 class BatchCommand(object):
+    __slots__ = ("commands",)
+
     def __init__(self, commands):
         self.commands = commands
 
     def message(self):
-        messages = [command.message() for command in self.commands]
-        return {"BatchCommand": {"commands": messages}}
+        return {
+            "BatchCommand": {
+                "commands": [command.message() for command in self.commands]
+            }
+        }
 
     @classmethod
     def from_tracked_request(cls, request):
@@ -213,4 +228,4 @@ class BatchCommand(object):
             FinishRequest(timestamp=request.end_time, request_id=request.req_id)
         )
 
-        return BatchCommand(commands)
+        return cls(commands)
