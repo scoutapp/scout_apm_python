@@ -1,9 +1,9 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import datetime as dt
 import logging
 import threading
-from datetime import datetime
 from os import getpid
 from time import sleep
 
@@ -44,7 +44,7 @@ class Samplers(object):
                             event = ApplicationEvent(
                                 event_value=event_value,
                                 event_type=event_type,
-                                timestamp=datetime.utcnow(),
+                                timestamp=dt.datetime.utcnow(),
                                 source="Pid: " + str(getpid()),
                             )
                             AgentContext.socket().send(event)

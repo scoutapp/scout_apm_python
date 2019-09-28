@@ -1,8 +1,8 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import datetime as dt
 import logging
-from datetime import datetime
 from uuid import uuid4
 
 import scout_apm.core.backtrace
@@ -29,7 +29,7 @@ class TrackedRequest(ThreadLocalSingleton):
 
     def __init__(self, *args, **kwargs):
         self.req_id = "req-" + str(uuid4())
-        self.start_time = kwargs.get("start_time", datetime.utcnow())
+        self.start_time = kwargs.get("start_time", dt.datetime.utcnow())
         self.end_time = kwargs.get("end_time", None)
         self.active_spans = kwargs.get("active_spans", [])
         self.complete_spans = kwargs.get("complete_spans", [])
@@ -100,7 +100,7 @@ class TrackedRequest(ThreadLocalSingleton):
     def finish(self):
         logger.debug("Stopping request: %s", self.req_id)
         if self.end_time is None:
-            self.end_time = datetime.utcnow()
+            self.end_time = dt.datetime.utcnow()
         if self.is_real_request():
             self.tag("mem_delta", Memory.get_delta(self.memory_start))
             if not self.is_ignored():
@@ -123,7 +123,7 @@ class TrackedRequest(ThreadLocalSingleton):
 class Span(object):
     def __init__(self, *args, **kwargs):
         self.span_id = kwargs.get("span_id", "span-" + str(uuid4()))
-        self.start_time = kwargs.get("start_time", datetime.utcnow())
+        self.start_time = kwargs.get("start_time", dt.datetime.utcnow())
         self.end_time = kwargs.get("end_time", None)
         self.request_id = kwargs.get("request_id", None)
         self.operation = kwargs.get("operation", None)
@@ -148,7 +148,7 @@ class Span(object):
         )
 
     def stop(self):
-        self.end_time = datetime.utcnow()
+        self.end_time = dt.datetime.utcnow()
         if objtrace is not None:
             self.end_objtrace_counts = objtrace.get_counts()
         else:
@@ -167,7 +167,7 @@ class Span(object):
             return (self.end_time - self.start_time).total_seconds()
         else:
             # Current, running duration
-            return (datetime.utcnow() - self.start_time).total_seconds()
+            return (dt.datetime.utcnow() - self.start_time).total_seconds()
 
     # Add any interesting annotations to the span. Assumes that we are in the
     # process of stopping this span.

@@ -1,9 +1,9 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import datetime as dt
 import logging
 import sys
-from datetime import datetime
 from os import getpid
 
 from scout_apm.core.commands import ApplicationEvent
@@ -19,7 +19,7 @@ class AppMetadata(object):
             event_type="scout.metadata",
             event_value=cls.data(),
             source="Pid: " + str(getpid()),
-            timestamp=datetime.utcnow(),
+            timestamp=dt.datetime.utcnow(),
         )
         AgentContext.socket().send(event)
 
@@ -30,7 +30,7 @@ class AppMetadata(object):
             data = {
                 "language": "python",
                 "version": "{}.{}.{}".format(*sys.version_info[:3]),
-                "server_time": datetime.utcnow().isoformat() + "Z",
+                "server_time": dt.datetime.utcnow().isoformat() + "Z",
                 "framework": config.value("framework"),
                 "framework_version": config.value("framework_version"),
                 "environment": "",
