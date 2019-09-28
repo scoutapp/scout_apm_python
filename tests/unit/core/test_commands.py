@@ -19,7 +19,6 @@ PARENT_ID = "span-d10de59e-1e9f-46e9-9d5e-81b5bfc091ec"
 
 TIMESTAMP = datetime.datetime(2018, 12, 1, 17, 4, 34, 386568)
 TIMESTAMP_STR = "2018-12-01T17:04:34.386568Z"
-INVALID_TIMESTAMP_STR = "2000-01-01T00:00:00Z"
 
 START_TIME = datetime.datetime(2018, 12, 1, 17, 4, 34, 78797)
 START_TIME_STR = "2018-12-01T17:04:34.078797Z"
@@ -62,18 +61,6 @@ END_TIME_STR = "2018-12-01T17:04:34.641403Z"
             },
         ),
         (
-            commands.StartSpan(),
-            {
-                "StartSpan": {
-                    "timestamp": INVALID_TIMESTAMP_STR,
-                    "request_id": None,
-                    "span_id": None,
-                    "parent_id": None,
-                    "operation": None,
-                }
-            },
-        ),
-        (
             commands.StopSpan(
                 timestamp=TIMESTAMP, request_id=REQUEST_ID, span_id=SPAN_ID
             ),
@@ -86,30 +73,12 @@ END_TIME_STR = "2018-12-01T17:04:34.641403Z"
             },
         ),
         (
-            commands.StopSpan(),
-            {
-                "StopSpan": {
-                    "timestamp": INVALID_TIMESTAMP_STR,
-                    "request_id": None,
-                    "span_id": None,
-                }
-            },
-        ),
-        (
             commands.StartRequest(timestamp=TIMESTAMP, request_id=REQUEST_ID),
             {"StartRequest": {"timestamp": TIMESTAMP_STR, "request_id": REQUEST_ID}},
         ),
         (
-            commands.StartRequest(),
-            {"StartRequest": {"timestamp": INVALID_TIMESTAMP_STR, "request_id": None}},
-        ),
-        (
             commands.FinishRequest(timestamp=TIMESTAMP, request_id=REQUEST_ID),
             {"FinishRequest": {"timestamp": TIMESTAMP_STR, "request_id": REQUEST_ID}},
-        ),
-        (
-            commands.FinishRequest(),
-            {"FinishRequest": {"timestamp": INVALID_TIMESTAMP_STR, "request_id": None}},
         ),
         (
             commands.TagSpan(
@@ -130,18 +99,6 @@ END_TIME_STR = "2018-12-01T17:04:34.641403Z"
             },
         ),
         (
-            commands.TagSpan(),
-            {
-                "TagSpan": {
-                    "timestamp": INVALID_TIMESTAMP_STR,
-                    "request_id": None,
-                    "span_id": None,
-                    "tag": None,
-                    "value": None,
-                }
-            },
-        ),
-        (
             commands.TagRequest(
                 timestamp=TIMESTAMP,
                 request_id=REQUEST_ID,
@@ -154,17 +111,6 @@ END_TIME_STR = "2018-12-01T17:04:34.641403Z"
                     "request_id": REQUEST_ID,
                     "tag": "test_tag",
                     "value": "test_value",
-                }
-            },
-        ),
-        (
-            commands.TagRequest(),
-            {
-                "TagRequest": {
-                    "timestamp": INVALID_TIMESTAMP_STR,
-                    "request_id": None,
-                    "tag": None,
-                    "value": None,
                 }
             },
         ),
