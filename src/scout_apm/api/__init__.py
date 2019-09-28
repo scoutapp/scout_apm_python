@@ -1,15 +1,10 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import logging
-
 import scout_apm.core
 from scout_apm.compat import ContextDecorator, text
 from scout_apm.core.config import ScoutConfig
 from scout_apm.core.tracked_request import TrackedRequest
-
-logger = logging.getLogger(__name__)
-
 
 __all__ = [
     "BackgroundTransaction",

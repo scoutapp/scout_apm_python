@@ -1,8 +1,6 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import logging
-
 from django.apps import AppConfig
 from django.conf import settings
 from django.test.signals import setting_changed
@@ -11,8 +9,6 @@ import scout_apm.core
 from scout_apm.core.config import ScoutConfig
 from scout_apm.django.instruments.sql import install_sql_instrumentation
 from scout_apm.django.instruments.template import install_template_instrumentation
-
-logger = logging.getLogger(__name__)
 
 
 class ScoutApmDjangoConfig(AppConfig):

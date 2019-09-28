@@ -1,14 +1,10 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import logging
-
 from scout_apm.core.config import ScoutConfig
 from scout_apm.core.ignore import ignore_path
 from scout_apm.core.queue_time import track_request_queue_time
 from scout_apm.core.tracked_request import TrackedRequest
-
-logger = logging.getLogger(__name__)
 
 
 def get_operation_name(request):
