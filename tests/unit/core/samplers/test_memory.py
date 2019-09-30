@@ -54,8 +54,6 @@ def test_human_name():
 
 
 def test_run(caplog):
-    caplog.set_level(logging.DEBUG)
-
     result = Memory().run()
     assert isinstance(result, float) and result > 0.0
     record_tuples = [

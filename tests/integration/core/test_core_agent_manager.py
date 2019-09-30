@@ -52,7 +52,6 @@ def shutdown(core_agent_manager):
 
 
 def test_no_launch(caplog, core_agent_manager):
-    caplog.set_level(logging.DEBUG)
     ScoutConfig.set(core_agent_launch=False)
 
     try:
@@ -75,7 +74,6 @@ def test_no_launch(caplog, core_agent_manager):
 
 
 def test_no_verify(caplog, core_agent_manager):
-    caplog.set_level(logging.DEBUG)
     ScoutConfig.set(core_agent_download=False)
 
     try:
@@ -103,7 +101,6 @@ def test_download_and_launch(core_agent_manager):
 
 
 def test_verify_error(caplog, core_agent_manager):
-    caplog.set_level(logging.DEBUG)
     digest_patcher = mock.patch(
         "scout_apm.core.core_agent_manager.sha256_digest",
         return_value="not the expected digest",
@@ -127,6 +124,7 @@ def test_verify_error(caplog, core_agent_manager):
 
 
 def test_launch_error(caplog, core_agent_manager):
+    caplog.set_level(logging.ERROR)
     exception = ValueError("Hello Fail")
     with mock.patch(
         "scout_apm.core.core_agent_manager.CoreAgentManager.agent_binary",

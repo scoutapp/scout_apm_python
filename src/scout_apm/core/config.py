@@ -192,10 +192,13 @@ class ScoutConfigDerived(object):
         )
 
     def derive_core_agent_full_name(self):
+        triple = self.config.value("core_agent_triple")
+        if not platform_detection.is_valid_triple(triple):
+            logger.warning("Invalid value for core_agent_triple: %s", triple)
         return "{name}-{version}-{triple}".format(
             name="scout_apm_core",
             version=self.config.value("core_agent_version"),
-            triple=self.config.value("core_agent_triple"),
+            triple=triple,
         )
 
     def derive_core_agent_triple(self):

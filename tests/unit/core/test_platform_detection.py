@@ -9,7 +9,25 @@ from tests.compat import mock
 
 
 def test_get_triple():
-    assert isinstance(platform_detection.get_triple(), string_type)
+    triple = platform_detection.get_triple()
+
+    assert isinstance(triple, string_type)
+    assert platform_detection.is_valid_triple(triple)
+
+
+@pytest.mark.parametrize(
+    "triple, validity",
+    [
+        ("x86_64-apple-darwin", True),
+        ("i686-unknown-linux-gnu", True),
+        ("unknown-unknown-linux-musl", True),
+        ("", False),
+        ("unknown", False),
+        ("---", False),
+    ],
+)
+def test_is_valid_triple(triple, validity):
+    assert platform_detection.is_valid_triple(triple) == validity
 
 
 @pytest.mark.parametrize(
