@@ -40,6 +40,6 @@ class ThreadLocalSingleton(object):
                 self.__class__._thread_lookup.instance = None
 
     @classmethod
-    def __new_instance(cls, *args, **kwargs):
+    def __new_instance(cls, args, kwargs):
         cls._thread_lookup = threading.local()
-        cls._thread_lookup.instance = cls(args, kwargs)
+        cls._thread_lookup.instance = cls(*args, **kwargs)

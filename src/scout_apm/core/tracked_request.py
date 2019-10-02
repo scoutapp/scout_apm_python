@@ -27,34 +27,48 @@ class TrackedRequest(ThreadLocalSingleton):
     their keyname
     """
 
-    def __init__(self, *args, **kwargs):
-        self.req_id = "req-" + str(uuid4())
-        self.start_time = kwargs.get("start_time", dt.datetime.utcnow())
-        self.end_time = kwargs.get("end_time", None)
-        self.active_spans = kwargs.get("active_spans", [])
-        self.complete_spans = kwargs.get("complete_spans", [])
-        self.tags = kwargs.get("tags", {})
-        self.real_request = kwargs.get("real_request", False)
-        self.memory_start = kwargs.get("memory_start", Memory.rss_in_mb())
+    __slots__ = (
+        "request_id",
+        "start_time",
+        "end_time",
+        "active_spans",
+        "complete_spans",
+        "tags",
+        "_is_real_request",
+        "memory_start",
+        "callset",
+    )
+
+    def __init__(self):
+        self.request_id = "req-" + str(uuid4())
+        self.start_time = dt.datetime.utcnow()
+        self.end_time = None
+        self.active_spans = []
+        self.complete_spans = []
+        self.tags = {}
+        self._is_real_request = False
+        self.memory_start = Memory.rss_in_mb()
         self.callset = NPlusOneCallSet()
-        logger.debug("Starting request: %s", self.req_id)
+        logger.debug("Starting request: %s", self.request_id)
 
     def __repr__(self):
         # Incomplete to avoid TMI
-        return "<TrackedRequest(req_id={}, tags={})>".format(
-            repr(self.req_id), repr(self.tags)
+        return "<TrackedRequest(request_id={}, tags={})>".format(
+            repr(self.request_id), repr(self.tags)
         )
 
     def mark_real_request(self):
-        self.real_request = True
+        self._is_real_request = True
 
     def is_real_request(self):
-        return self.real_request
+        return self._is_real_request
 
     def tag(self, key, value):
         if key in self.tags:
             logger.debug(
-                "Overwriting previously set tag for request %s: %s", self.req_id, key
+                "Overwriting previously set tag for request %s: %s",
+                self.request_id,
+                key,
             )
         self.tags[key] = value
 
@@ -70,7 +84,7 @@ class TrackedRequest(ThreadLocalSingleton):
             parent_id = None
 
         kwargs["parent"] = parent_id
-        kwargs["request_id"] = self.req_id
+        kwargs["request_id"] = self.request_id
 
         new_span = Span(**kwargs)
         self.active_spans.append(new_span)
@@ -98,7 +112,7 @@ class TrackedRequest(ThreadLocalSingleton):
 
     # Request is done, release any info we have about it.
     def finish(self):
-        logger.debug("Stopping request: %s", self.req_id)
+        logger.debug("Stopping request: %s", self.request_id)
         if self.end_time is None:
             self.end_time = dt.datetime.utcnow()
         if self.is_real_request():
@@ -121,25 +135,42 @@ class TrackedRequest(ThreadLocalSingleton):
 
 
 class Span(object):
-    def __init__(self, *args, **kwargs):
-        self.span_id = kwargs.get("span_id", "span-" + str(uuid4()))
-        self.start_time = kwargs.get("start_time", dt.datetime.utcnow())
-        self.end_time = kwargs.get("end_time", None)
-        self.request_id = kwargs.get("request_id", None)
-        self.operation = kwargs.get("operation", None)
-        self.ignore = kwargs.get("ignore", False)
-        self.ignore_children = kwargs.get("ignore_children", False)
-        self.parent = kwargs.get("parent", None)
-        self.tags = kwargs.get("tags", {})
+    __slots__ = (
+        "span_id",
+        "start_time",
+        "end_time",
+        "request_id",
+        "operation",
+        "ignore",
+        "ignore_children",
+        "parent",
+        "tags",
+        "start_objtrace_counts",
+        "end_objtrace_counts",
+    )
+
+    def __init__(
+        self,
+        request_id=None,
+        operation=None,
+        ignore=False,
+        ignore_children=False,
+        parent=None,
+    ):
+        self.span_id = "span-" + str(uuid4())
+        self.start_time = dt.datetime.utcnow()
+        self.end_time = None
+        self.request_id = request_id
+        self.operation = operation
+        self.ignore = ignore
+        self.ignore_children = ignore_children
+        self.parent = parent
+        self.tags = {}
         if objtrace is not None:
-            self.start_objtrace_counts = kwargs.get(
-                "start_objtrace_counts", objtrace.get_counts()
-            )
+            self.start_objtrace_counts = objtrace.get_counts()
         else:
-            self.start_objtrace_counts = kwargs.get(
-                "start_objtrace_counts", (0, 0, 0, 0)
-            )
-        self.end_objtrace_counts = kwargs.get("end_objtrace_counts", (0, 0, 0, 0))
+            self.start_objtrace_counts = (0, 0, 0, 0)
+        self.end_objtrace_counts = (0, 0, 0, 0)
 
     def __repr__(self):
         # Incomplete to avoid TMI

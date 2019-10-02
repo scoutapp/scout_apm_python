@@ -129,22 +129,16 @@ def test_start_span_ignores_children(tr):
 
 
 def test_span_captures_backtrace(tr):
-    span = tr.start_span(
-        operation="Sql/Work", start_time=dt.datetime.utcnow() - dt.timedelta(seconds=1)
-    )
+    span = tr.start_span(operation="Sql/Work")
+    # Pretend it was started 1 second ago
+    span.start_time = dt.datetime.utcnow() - dt.timedelta(seconds=1)
     tr.stop_span()
-    assert span.tags["stack"]
+    assert "stack" in span.tags
 
 
 def test_span_does_not_capture_backtrace(tr):
-    controller = tr.start_span(
-        operation="Controller/Work",
-        start_time=dt.datetime.utcnow() - dt.timedelta(seconds=10),
-    )
-    middleware = tr.start_span(
-        operation="Middleware/Work",
-        start_time=dt.datetime.utcnow() - dt.timedelta(seconds=10),
-    )
+    controller = tr.start_span(operation="Controller/Work")
+    middleware = tr.start_span(operation="Middleware/Work")
     tr.stop_span()
     tr.stop_span()
     assert "stack" not in controller.tags
