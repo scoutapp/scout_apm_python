@@ -167,8 +167,8 @@ def make_tracked_request_instance_deterministic(tr):
     Override values in a TrackedRequest instance to make tests determistic.
 
     """
-    assert type(tr.req_id) == type(REQUEST_ID)
-    tr.req_id = REQUEST_ID
+    assert type(tr.request_id) == type(REQUEST_ID)
+    tr.request_id = REQUEST_ID
 
     assert type(tr.start_time) == type(START_TIME)
     tr.start_time = START_TIME

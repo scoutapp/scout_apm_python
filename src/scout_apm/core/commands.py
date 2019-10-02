@@ -182,13 +182,13 @@ class BatchCommand(object):
         # The TrackedRequest must be finished
         commands = []
         commands.append(
-            StartRequest(timestamp=request.start_time, request_id=request.req_id)
+            StartRequest(timestamp=request.start_time, request_id=request.request_id)
         )
         for key in request.tags:
             commands.append(
                 TagRequest(
                     timestamp=request.start_time,
-                    request_id=request.req_id,
+                    request_id=request.request_id,
                     tag=key,
                     value=request.tags[key],
                 )
@@ -209,7 +209,7 @@ class BatchCommand(object):
                 commands.append(
                     TagSpan(
                         timestamp=span.start_time,
-                        request_id=request.req_id,
+                        request_id=request.request_id,
                         span_id=span.span_id,
                         tag=key,
                         value=span.tags[key],
@@ -225,7 +225,7 @@ class BatchCommand(object):
             )
 
         commands.append(
-            FinishRequest(timestamp=request.end_time, request_id=request.req_id)
+            FinishRequest(timestamp=request.end_time, request_id=request.request_id)
         )
 
         return cls(commands)
