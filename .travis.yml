@@ -1,4 +1,4 @@
-dist: xenial    # required for Python 3.7 (travis-ci/travis-ci#9069)
+dist: xenial
 env:
   global:
     - ELASTICSEARCH_URL="http://localhost:9200/"
@@ -20,6 +20,7 @@ python:
   - "3.5"
   - "3.6"
   - "3.7"
+  - "3.8"
 
 script:
   - pip install --upgrade tox
