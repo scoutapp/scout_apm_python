@@ -48,15 +48,15 @@ class instrument(ContextDecorator):
         self.tags = tags
 
     def __enter__(self):
-        tr = TrackedRequest.instance()
-        self.span = tr.start_span(operation=self.operation)
+        tracked_request = TrackedRequest.instance()
+        self.span = tracked_request.start_span(operation=self.operation)
         for key, value in self.tags.items():
             self.tag(key, value)
         return self
 
     def __exit__(self, *exc):
-        tr = TrackedRequest.instance()
-        tr.stop_span()
+        tracked_request = TrackedRequest.instance()
+        tracked_request.stop_span()
         return False
 
     def tag(self, key, value):
@@ -79,17 +79,17 @@ class Transaction(ContextDecorator):
     def start(cls, kind, name, tags={}):
         operation = text(kind) + "/" + text(name)
 
-        tr = TrackedRequest.instance()
-        tr.mark_real_request()
-        span = tr.start_span(operation=operation)
+        tracked_request = TrackedRequest.instance()
+        tracked_request.mark_real_request()
+        span = tracked_request.start_span(operation=operation)
         for key, value in tags.items():
-            tr.tag(key, value)
+            tracked_request.tag(key, value)
         return span
 
     @classmethod
     def stop(cls):
-        tr = TrackedRequest.instance()
-        tr.stop_span()
+        tracked_request = TrackedRequest.instance()
+        tracked_request.stop_span()
         return True
 
     # __enter__ must be defined by child classes.
@@ -124,5 +124,5 @@ class BackgroundTransaction(Transaction):
 
 def rename_transaction(name):
     if name is not None:
-        tr = TrackedRequest.instance()
-        tr.tag("transaction.name", name)
+        tracked_request = TrackedRequest.instance()
+        tracked_request.tag("transaction.name", name)

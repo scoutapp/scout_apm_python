@@ -70,13 +70,13 @@ class Instrument(object):
                 except (IndexError, TypeError):
                     op = "Unknown"
 
-                tr = TrackedRequest.instance()
-                tr.start_span(operation="Redis/{}".format(op))
+                tracked_request = TrackedRequest.instance()
+                tracked_request.start_span(operation="Redis/{}".format(op))
 
                 try:
                     return original(*args, **kwargs)
                 finally:
-                    tr.stop_span()
+                    tracked_request.stop_span()
 
         except Exception as e:
             logger.warning(
@@ -94,13 +94,13 @@ class Instrument(object):
 
             @monkeypatch_method(Pipeline)
             def execute(original, self, *args, **kwargs):
-                tr = TrackedRequest.instance()
-                tr.start_span(operation="Redis/MULTI")
+                tracked_request = TrackedRequest.instance()
+                tracked_request.start_span(operation="Redis/MULTI")
 
                 try:
                     return original(*args, **kwargs)
                 finally:
-                    tr.stop_span()
+                    tracked_request.stop_span()
 
         except Exception as e:
             logger.warning("Unable to instrument for Redis BasePipeline.execute: %r", e)

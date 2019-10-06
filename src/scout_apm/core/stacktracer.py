@@ -17,16 +17,15 @@ def trace_method(cls, method_name=None):
             if detail["name"] is not None:
                 operation = operation + "/" + detail["name"]
 
-            tr = TrackedRequest.instance()
-            span = tr.start_span(operation=operation)
-
-            for key in detail:
-                span.tag(key, detail[key])
+            tracked_request = TrackedRequest.instance()
+            span = tracked_request.start_span(operation=operation)
+            for key, value in detail.items():
+                span.tag(key, value)
 
             try:
                 return original(*args, **kwargs)
             finally:
-                TrackedRequest.instance().stop_span()
+                tracked_request.stop_span()
 
         return tracing_method
 
@@ -46,8 +45,8 @@ def trace_function(func, info):
             if detail["name"] is not None:
                 operation = operation + "/" + detail["name"]
 
-            tr = TrackedRequest.instance()
-            span = tr.start_span(operation=operation)
+            tracked_request = TrackedRequest.instance()
+            span = tracked_request.start_span(operation=operation)
 
             for key in detail:
                 span.tag(key, detail[key])

@@ -48,14 +48,14 @@ class Instrument(object):
                         "Could not get instrument data for HTTPConnectionPool"
                     )
 
-                tr = TrackedRequest.instance()
-                span = tr.start_span(operation="HTTP/{}".format(method))
+                tracked_request = TrackedRequest.instance()
+                span = tracked_request.start_span(operation="HTTP/{}".format(method))
                 span.tag("url", "{}".format(url))
 
                 try:
                     return original(*args, **kwargs)
                 finally:
-                    tr.stop_span()
+                    tracked_request.stop_span()
 
             logger.info("Instrumented Urllib3")
 

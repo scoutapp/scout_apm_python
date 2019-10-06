@@ -86,19 +86,19 @@ class Instrument(object):
                 code_str = """\
 @monkeypatch_method(Elasticsearch)
 def {method_str}(original, self, *args, **kwargs):
-    tr = TrackedRequest.instance()
+    tracked_request = TrackedRequest.instance()
     index = kwargs.get('index', 'Unknown')
     if isinstance(index, (list, tuple)):
         index = ','.join(index)
     index = index.title()
     name = '/'.join(['Elasticsearch', index, '{camel_name}'])
-    tr.start_span(operation=name, ignore_children=True)
+    tracked_request.start_span(operation=name, ignore_children=True)
 
 
     try:
         return original(*args, **kwargs)
     finally:
-        tr.stop_span()
+        tracked_request.stop_span()
 """.format(
                     method_str=method_str,
                     camel_name="".join(c.title() for c in method_str.split("_")),
@@ -168,15 +168,15 @@ def {method_str}(original, self, *args, **kwargs):
                 except IndexError:
                     op = "Unknown"
 
-                tr = TrackedRequest.instance()
-                tr.start_span(
+                tracked_request = TrackedRequest.instance()
+                tracked_request.start_span(
                     operation="Elasticsearch/{}".format(op), ignore_children=True
                 )
 
                 try:
                     return original(*args, **kwargs)
                 finally:
-                    tr.stop_span()
+                    tracked_request.stop_span()
 
             logger.info("Instrumented Elasticsearch Transport")
 

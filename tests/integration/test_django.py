@@ -224,7 +224,6 @@ def test_template(tracked_requests):
     assert response.status_int == 200
     assert len(tracked_requests) == 1
     spans = tracked_requests[0].complete_spans
-    print([s.operation for s in spans])
     assert [s.operation for s in spans] == [
         "Template/Compile/<Unknown Template>",
         "Block/Render/name",
@@ -242,7 +241,6 @@ def test_template_response(tracked_requests):
     assert response.text == "Hello World!!!"
     assert len(tracked_requests) == 1
     spans = tracked_requests[0].complete_spans
-    print([s.operation for s in spans])
     assert [s.operation for s in spans] == [
         "Template/Compile/<Unknown Template>",
         "Block/Render/name",
@@ -332,8 +330,8 @@ def test_username(tracked_requests):
 
     assert response.status_int == 200
     assert len(tracked_requests) == 1
-    tr = tracked_requests[0]
-    assert tr.tags["username"] == "scout"
+    tracked_request = tracked_requests[0]
+    assert tracked_request.tags["username"] == "scout"
 
 
 def crashy_authentication_middleware(get_response):
@@ -358,8 +356,8 @@ def test_username_exception(tracked_requests):
 
     assert response.status_int == 200
     assert len(tracked_requests) == 1
-    tr = tracked_requests[0]
-    assert "username" not in tr.tags
+    tracked_request = tracked_requests[0]
+    assert "username" not in tracked_request.tags
 
 
 class FakeAuthenticationMiddleware(object):
@@ -381,9 +379,8 @@ def test_old_style_username(tracked_requests):
 
     assert response.status_int == 200
     assert len(tracked_requests) == 1
-    tr = tracked_requests[0]
-    print(tr.tags)
-    assert tr.tags["username"] == "scout"
+    tracked_request = tracked_requests[0]
+    assert tracked_request.tags["username"] == "scout"
 
 
 class CrashyAuthenticationMiddleware(object):
@@ -405,8 +402,8 @@ def test_old_style_username_exception(tracked_requests):
 
     assert response.status_int == 200
     assert len(tracked_requests) == 1
-    tr = tracked_requests[0]
-    assert "username" not in tr.tags
+    tracked_request = tracked_requests[0]
+    assert "username" not in tracked_request.tags
 
 
 @parametrize_queue_time_header_name
