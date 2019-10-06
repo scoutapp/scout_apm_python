@@ -7,19 +7,19 @@ from scout_apm.core.tracked_request import TrackedRequest
 
 
 def before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
-    tr = TrackedRequest.instance()
-    span = tr.start_span(operation="SQL/Query")
+    tracked_request = TrackedRequest.instance()
+    span = tracked_request.start_span(operation="SQL/Query")
     span.tag("db.statement", statement)
 
 
 def after_cursor_execute(conn, cursor, statement, parameters, context, executemany):
-    tr = TrackedRequest.instance()
-    span = tr.current_span()
+    tracked_request = TrackedRequest.instance()
+    span = tracked_request.current_span()
     if span is not None:
-        tr.callset.update(statement, 1, span.duration())
-        if tr.callset.should_capture_backtrace(statement):
+        tracked_request.callset.update(statement, 1, span.duration())
+        if tracked_request.callset.should_capture_backtrace(statement):
             span.capture_backtrace()
-    tr.stop_span()
+    tracked_request.stop_span()
 
 
 def instrument_sqlalchemy(engine):

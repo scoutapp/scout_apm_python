@@ -162,22 +162,22 @@ def test_command_message(command, message):
     assert command.message() == message
 
 
-def make_tracked_request_instance_deterministic(tr):
+def make_tracked_request_instance_deterministic(tracked_request):
     """
     Override values in a TrackedRequest instance to make tests determistic.
 
     """
-    assert type(tr.request_id) == type(REQUEST_ID)
-    tr.request_id = REQUEST_ID
+    assert type(tracked_request.request_id) == type(REQUEST_ID)
+    tracked_request.request_id = REQUEST_ID
 
-    assert type(tr.start_time) == type(START_TIME)
-    tr.start_time = START_TIME
+    assert type(tracked_request.start_time) == type(START_TIME)
+    tracked_request.start_time = START_TIME
 
-    if tr.end_time is not None:
-        assert type(tr.end_time) == type(END_TIME)
-        tr.end_time = END_TIME
+    if tracked_request.end_time is not None:
+        assert type(tracked_request.end_time) == type(END_TIME)
+        tracked_request.end_time = END_TIME
 
-    for span in tr.active_spans + tr.complete_spans:
+    for span in tracked_request.active_spans + tracked_request.complete_spans:
         assert type(span.request_id) == type(REQUEST_ID)
         span.request_id = REQUEST_ID
 
@@ -200,10 +200,10 @@ def make_tracked_request_instance_deterministic(tr):
 
 
 def test_batch_command_from_tracked_request():
-    tr = TrackedRequest()
-    tr.finish()
-    make_tracked_request_instance_deterministic(tr)
-    command = commands.BatchCommand.from_tracked_request(tr)
+    tracked_request = TrackedRequest()
+    tracked_request.finish()
+    make_tracked_request_instance_deterministic(tracked_request)
+    command = commands.BatchCommand.from_tracked_request(tracked_request)
     assert command.message() == {
         "BatchCommand": {
             "commands": [
@@ -225,11 +225,11 @@ def test_batch_command_from_tracked_request():
 
 
 def test_batch_command_from_tracked_request_with_tag():
-    tr = TrackedRequest()
-    tr.tag("test_key", "test_value")
-    tr.finish()
-    make_tracked_request_instance_deterministic(tr)
-    command = commands.BatchCommand.from_tracked_request(tr)
+    tracked_request = TrackedRequest()
+    tracked_request.tag("test_key", "test_value")
+    tracked_request.finish()
+    make_tracked_request_instance_deterministic(tracked_request)
+    command = commands.BatchCommand.from_tracked_request(tracked_request)
     assert command.message() == {
         "BatchCommand": {
             "commands": [
@@ -262,12 +262,12 @@ def test_batch_command_from_tracked_request_with_tag():
     objtrace is None, reason="Allocation tags only there when objtrace works"
 )
 def test_batch_command_from_tracked_request_with_span():
-    tr = TrackedRequest()
-    tr.start_span()
-    tr.stop_span()
-    make_tracked_request_instance_deterministic(tr)
+    tracked_request = TrackedRequest()
+    tracked_request.start_span()
+    tracked_request.stop_span()
+    make_tracked_request_instance_deterministic(tracked_request)
 
-    command = commands.BatchCommand.from_tracked_request(tr)
+    command = commands.BatchCommand.from_tracked_request(tracked_request)
 
     message_commands = command.message()["BatchCommand"]["commands"]
     assert len(message_commands) == 7
@@ -328,12 +328,12 @@ def test_batch_command_from_tracked_request_with_span():
     objtrace is not None, reason="Allocation tags only there when objtrace works"
 )
 def test_batch_command_from_tracked_request_with_span_no_objtrace():
-    tr = TrackedRequest()
-    tr.start_span()
-    tr.stop_span()
-    make_tracked_request_instance_deterministic(tr)
+    tracked_request = TrackedRequest()
+    tracked_request.start_span()
+    tracked_request.stop_span()
+    make_tracked_request_instance_deterministic(tracked_request)
 
-    command = commands.BatchCommand.from_tracked_request(tr)
+    command = commands.BatchCommand.from_tracked_request(tracked_request)
 
     message_commands = command.message()["BatchCommand"]["commands"]
     assert len(message_commands) == 4

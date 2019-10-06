@@ -81,8 +81,8 @@ def install_template_instrumentation():
         name = self.name if self.name is not None else "<Unknown Template>"
         return ("Template/Render", {"name": name})
 
-    @trace_method(BlockNode)  # noqa: F811
-    def render(self, *args, **kwargs):
+    @trace_method(BlockNode, "render")
+    def render_block(self, *args, **kwargs):
         return ("Block/Render", {"name": self.name})
 
     logger.debug("Monkey patched Templates")

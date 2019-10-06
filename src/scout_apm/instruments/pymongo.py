@@ -79,15 +79,15 @@ class Instrument(object):
                 code_str = """
 @monkeypatch_method(Collection)
 def {method_str}(original, self, *args, **kwargs):
-    tr = TrackedRequest.instance()
+    tracked_request = TrackedRequest.instance()
     name = '/'.join(['MongoDB', self.name, '{camel_name}'])
-    span = tr.start_span(operation=name, ignore_children=True)
+    span = tracked_request.start_span(operation=name, ignore_children=True)
     span.tag('name', self.name)
 
     try:
         return original(*args, **kwargs)
     finally:
-        tr.stop_span()
+        tracked_request.stop_span()
 """.format(
                     method_str=method_str,
                     camel_name="".join(c.title() for c in method_str.split("_")),
