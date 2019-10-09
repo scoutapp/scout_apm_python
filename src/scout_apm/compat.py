@@ -57,6 +57,12 @@ def text(value, encoding="utf-8", errors="strict"):
         return text_type(value)
 
 
+try:
+    from urllib.parse import urlencode
+except ImportError:
+    from urllib import urlencode
+
+
 __all__ = [
     "ContextDecorator",
     "datetime_to_timestamp",
@@ -64,4 +70,5 @@ __all__ = [
     "string_type",
     "text",
     "text_type",
+    "urlencode",
 ]

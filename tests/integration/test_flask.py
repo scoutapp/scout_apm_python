@@ -83,6 +83,27 @@ def test_home_ignored(tracked_requests):
     assert tracked_requests == []
 
 
+def test_home_filtered_parameter(tracked_requests):
+    with app_with_scout() as app:
+        TestApp(app).get("/", params={"password": "hunter2"})
+
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert tracked_request.tags["path"] == "/?password=%5BFILTERED%5D"
+
+
+def test_home_filtered_parameter_twice(tracked_requests):
+    with app_with_scout() as app:
+        TestApp(app).get("/", params=[("password", "hunter2"), ("password", "hunter3")])
+
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert (
+        tracked_request.tags["path"]
+        == "/?password=%5BFILTERED%5D&password=%5BFILTERED%5D"
+    )
+
+
 @parametrize_user_ip_headers
 def test_user_ip(headers, extra_environ, expected, tracked_requests):
     if sys.version_info[0] == 2:
