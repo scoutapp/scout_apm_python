@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import pytest
 
-from scout_apm.core.requests import filter_path
+from scout_apm.core.web_requests import create_filtered_path
 
 
 @pytest.mark.parametrize(
@@ -23,5 +23,5 @@ from scout_apm.core.requests import filter_path
         ),
     ],
 )
-def test_filter_path(path, params, expected):
-    assert filter_path(path, params) == expected
+def test_create_filtered_path(path, params, expected):
+    assert create_filtered_path(path, params) == expected

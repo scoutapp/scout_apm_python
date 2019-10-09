@@ -34,11 +34,11 @@ FILTER_PARAMETERS = frozenset(
 )
 
 
-def filter_path(path, query_params_iterator):
+def create_filtered_path(path, query_params):
     filtered_params = sorted(
         (
             (k, "[FILTERED]" if k.lower() in FILTER_PARAMETERS else v)
-            for k, v in query_params_iterator
+            for k, v in query_params
         )
     )
     if not filtered_params:

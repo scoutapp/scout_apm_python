@@ -7,9 +7,9 @@ import falcon
 
 from scout_apm.api import install
 from scout_apm.core.ignore import ignore_path
-from scout_apm.core.requests import filter_path
 from scout_apm.core.queue_time import track_request_queue_time
 from scout_apm.core.tracked_request import TrackedRequest
+from scout_apm.core.web_requests import create_filtered_path
 
 logger = logging.getLogger(__name__)
 
@@ -39,10 +39,11 @@ class ScoutMiddleware(object):
         path = req.path
         # Falcon URL parameter values are *either* single items or lists
         url_params = [
-            (k, v) for k, vs in req.params.items()
+            (k, v)
+            for k, vs in req.params.items()
             for v in (vs if isinstance(vs, list) else [vs])
         ]
-        tracked_request.tag("path", filter_path(path, url_params))
+        tracked_request.tag("path", create_filtered_path(path, url_params))
         if ignore_path(path):
             tracked_request.tag("ignore_transaction", True)
 

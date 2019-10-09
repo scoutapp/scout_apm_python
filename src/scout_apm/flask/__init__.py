@@ -7,10 +7,10 @@ from flask.globals import _request_ctx_stack
 import scout_apm.core
 from scout_apm.core.config import ScoutConfig
 from scout_apm.core.ignore import ignore_path
-from scout_apm.core.requests import filter_path
 from scout_apm.core.monkey import CallableProxy
 from scout_apm.core.queue_time import track_request_queue_time
 from scout_apm.core.tracked_request import TrackedRequest
+from scout_apm.core.web_requests import create_filtered_path
 
 
 class ScoutApm(object):
@@ -70,7 +70,9 @@ class ScoutApm(object):
         span.tag("name", name)
 
         path = request.path
-        tracked_request.tag("path", filter_path(path, request.args.items(multi=True)))
+        tracked_request.tag(
+            "path", create_filtered_path(path, request.args.items(multi=True))
+        )
         if ignore_path(path):
             tracked_request.tag("ignore_transaction", True)
 
