@@ -13,6 +13,7 @@ from scout_apm.bottle import ScoutPlugin
 from scout_apm.compat import datetime_to_timestamp
 from tests.compat import mock
 from tests.integration.util import (
+    parametrize_filtered_params,
     parametrize_queue_time_header_name,
     parametrize_user_ip_headers,
 )
@@ -30,7 +31,10 @@ def app_with_scout(config=None):
     # Disable running the agent.
     config["scout.core_agent_launch"] = False
 
-    app = Bottle()
+    app = Bottle(
+        # Enable the following for debugging exceptions:
+        # catchall=False,
+    )
 
     @app.route("/")
     def home():
@@ -73,6 +77,14 @@ def test_home(tracked_requests):
     assert len(tracked_request.complete_spans) == 1
     span = tracked_request.complete_spans[0]
     assert span.operation == "Controller/home"
+
+
+@parametrize_filtered_params
+def test_filtered_params(params, expected_path, tracked_requests):
+    with app_with_scout() as app:
+        TestApp(app).get("/", params=params)
+
+    assert tracked_requests[0].tags["path"] == expected_path
 
 
 @parametrize_user_ip_headers
