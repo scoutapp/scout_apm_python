@@ -2,6 +2,11 @@
 
 ## Pending
 
+### Fixed
+
+- Fix Bottle path tagging to use path from URL rather than controller name
+  ([PR #267](https://github.com/scoutapp/scout_apm_python/pull/267)).
+
 ## [2.5.0] 2019-09-17
 
 ### Added

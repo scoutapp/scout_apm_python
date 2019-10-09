@@ -68,7 +68,7 @@ def test_home(tracked_requests):
     assert response.text == "Welcome home."
     assert len(tracked_requests) == 1
     tracked_request = tracked_requests[0]
-    assert tracked_request.tags["path"] == "/home"
+    assert tracked_request.tags["path"] == "/"
     assert tracked_request.tags["user_ip"] is None
     assert len(tracked_request.complete_spans) == 1
     span = tracked_request.complete_spans[0]

@@ -38,20 +38,20 @@ class ScoutPlugin(object):
             tracked_request = TrackedRequest.instance()
             tracked_request.mark_real_request()
 
-            if request.route.name is not None:
-                path = request.route.name
-            else:
-                path = request.route.rule
-            if path == "/":
-                path = "/home"
-            if not path.startswith("/"):
-                path = "/{}".format(path)
-
+            path = request.path
             tracked_request.tag("path", path)
             if ignore_path(path):
                 tracked_request.tag("ignore_transaction", True)
 
-            tracked_request.start_span(operation="Controller{}".format(path))
+            if request.route.name is not None:
+                controller_name = request.route.name
+            else:
+                controller_name = request.route.rule
+            if controller_name == "/":
+                controller_name = "/home"
+            if not controller_name.startswith("/"):
+                controller_name = "/" + controller_name
+            tracked_request.start_span(operation="Controller{}".format(controller_name))
 
             try:
                 # Determine a remote IP to associate with the request. The
