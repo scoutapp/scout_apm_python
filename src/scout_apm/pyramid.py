@@ -4,6 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import scout_apm.core
 from scout_apm.core.config import ScoutConfig
 from scout_apm.core.ignore import ignore_path
+from scout_apm.core.requests import filter_path
 from scout_apm.core.queue_time import track_request_queue_time
 from scout_apm.core.tracked_request import TrackedRequest
 
@@ -28,10 +29,16 @@ def instruments(handler, registry):
         span = tracked_request.start_span(operation="Controller/Pyramid")
 
         try:
-            if ignore_path(request.path):
+            path = request.path
+            # mixed() returns values as *either* single items or lists
+            url_params = [
+                (k, v)
+                for k, vs in request.GET.dict_of_lists().items()
+                for v in vs
+            ]
+            tracked_request.tag("path", filter_path(path, url_params))
+            if ignore_path(path):
                 tracked_request.tag("ignore_transaction", True)
-
-            tracked_request.tag("path", request.path)
 
             try:
                 # Determine a remote IP to associate with the request. The value is
