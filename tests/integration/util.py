@@ -3,6 +3,20 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import pytest
 
+parametrize_filtered_params = pytest.mark.parametrize(
+    "params, expected_path",
+    [
+        ({"foo": "bar"}, "/?foo=bar"),
+        ([("foo", "bar"), ("foo", "bar2")], "/?foo=bar&foo=bar2"),
+        ({"password": "hunter2"}, "/?password=%5BFILTERED%5D"),
+        (
+            [("password", "hunter2"), ("password", "hunter3")],
+            "/?password=%5BFILTERED%5D&password=%5BFILTERED%5D",
+        ),
+    ],
+)
+
+
 parametrize_queue_time_header_name = pytest.mark.parametrize(
     "header_name", ["X-Queue-Start", "X-Request-Start"]
 )

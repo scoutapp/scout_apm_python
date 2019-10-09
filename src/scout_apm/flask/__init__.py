@@ -10,6 +10,7 @@ from scout_apm.core.ignore import ignore_path
 from scout_apm.core.monkey import CallableProxy
 from scout_apm.core.queue_time import track_request_queue_time
 from scout_apm.core.tracked_request import TrackedRequest
+from scout_apm.core.web_requests import create_filtered_path
 
 
 class ScoutApm(object):
@@ -60,16 +61,18 @@ class ScoutApm(object):
         rule = request.url_rule
         view_func = self.app.view_functions[rule.endpoint]
 
-        path = request.path
         name = view_func.__module__ + "." + view_func.__name__
         operation = "Controller/" + name
 
         tracked_request = TrackedRequest.instance()
         tracked_request.mark_real_request()
-        tracked_request.tag("path", path)
         span = tracked_request.start_span(operation=operation)
         span.tag("name", name)
 
+        path = request.path
+        tracked_request.tag(
+            "path", create_filtered_path(path, request.args.items(multi=True))
+        )
         if ignore_path(path):
             tracked_request.tag("ignore_transaction", True)
 

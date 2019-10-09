@@ -9,6 +9,7 @@ from scout_apm.core.context import AgentContext
 from scout_apm.core.ignore import ignore_path
 from scout_apm.core.queue_time import track_request_queue_time
 from scout_apm.core.tracked_request import TrackedRequest
+from scout_apm.core.web_requests import create_filtered_path
 
 
 class ScoutPlugin(object):
@@ -39,7 +40,10 @@ class ScoutPlugin(object):
             tracked_request.mark_real_request()
 
             path = request.path
-            tracked_request.tag("path", path)
+            # allitems() is an undocumented bottle internal
+            tracked_request.tag(
+                "path", create_filtered_path(path, request.query.allitems())
+            )
             if ignore_path(path):
                 tracked_request.tag("ignore_transaction", True)
 
