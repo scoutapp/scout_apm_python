@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from scout_apm.core.config import ScoutConfig
 from scout_apm.core.ignore import ignore_path
+from scout_apm.core.requests import filter_path
 from scout_apm.core.queue_time import track_request_queue_time
 from scout_apm.core.tracked_request import TrackedRequest
 
@@ -26,8 +27,11 @@ def get_operation_name(request):
 
 
 def track_request_view_data(request, tracked_request):
-    tracked_request.tag("path", request.path)
-    if ignore_path(request.path):
+    path = request.path
+    tracked_request.tag(
+        "path", filter_path(path, [(k, v) for k, vs in request.GET.lists() for v in vs])
+    )
+    if ignore_path(path):
         tracked_request.tag("ignore_transaction", True)
 
     try:

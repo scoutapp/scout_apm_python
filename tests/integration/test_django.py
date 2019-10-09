@@ -20,6 +20,7 @@ from scout_apm.compat import datetime_to_timestamp
 from tests.compat import mock
 from tests.integration import django_app  # noqa  # force import to configure
 from tests.integration.util import (
+    parametrize_filtered_params,
     parametrize_queue_time_header_name,
     parametrize_user_ip_headers,
 )
@@ -103,6 +104,14 @@ def test_home_ignored(tracked_requests):
     assert response.status_int == 200
     assert response.text == "Welcome home."
     assert tracked_requests == []
+
+
+@parametrize_filtered_params
+def test_filtered_params(params, expected_path, tracked_requests):
+    with app_with_scout() as app:
+        TestApp(app).get("/", params=params)
+
+    assert tracked_requests[0].tags["path"] == expected_path
 
 
 @parametrize_user_ip_headers
