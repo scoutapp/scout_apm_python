@@ -1,5 +1,6 @@
 # coding=utf-8
 from scout_apm.compat import urlencode
+from scout_apm.core.context import AgentContext
 
 # Originally derived from:
 # 1. Rails:
@@ -35,6 +36,8 @@ FILTER_PARAMETERS = frozenset(
 
 
 def create_filtered_path(path, query_params):
+    if AgentContext.instance.config.value("uri_reporting") == "path":
+        return path
     filtered_params = sorted(
         (
             (k, "[FILTERED]" if k.lower() in FILTER_PARAMETERS else v)

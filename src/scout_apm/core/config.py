@@ -233,6 +233,7 @@ class ScoutConfigDefaults(object):
             "name": "",
             "revision_sha": self._git_revision_sha(),
             "scm_subdirectory": "",
+            "uri_reporting": "filtered_params",
         }
 
     def _git_revision_sha(self):
