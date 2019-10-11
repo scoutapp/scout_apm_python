@@ -2,6 +2,14 @@
 
 ## Pending
 
+### Added
+
+- Change default "path" tag on web requests to capture query parameters as
+  well. This can be disabled by setting the config value `uri_reporting` to
+  `"path"`
+  ([PR #268](https://github.com/scoutapp/scout_apm_python/pull/268),
+  [PR #269](https://github.com/scoutapp/scout_apm_python/pull/269)).
+
 ### Fixed
 
 - Fix Bottle path tagging to use path from URL rather than controller name
