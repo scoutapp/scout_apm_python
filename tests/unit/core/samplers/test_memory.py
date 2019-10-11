@@ -4,6 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 
 import pytest
+import six
 
 from scout_apm.core.samplers.memory import Memory
 
@@ -23,7 +24,7 @@ def test_rss_to_mb(given, expected):
 
 def test_rss():
     result = Memory.rss()
-    assert isinstance(result, int) and result > 0
+    assert isinstance(result, six.integer_types) and result > 0
 
 
 def test_rss_in_mb():
