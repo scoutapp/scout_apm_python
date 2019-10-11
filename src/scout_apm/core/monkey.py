@@ -1,4 +1,5 @@
 # flake8: noqa
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 # Originally taken from https://pypi.python.org/pypi/ProxyTypes
 # Inlined due to python3 issues with setup.py

@@ -1,4 +1,6 @@
 # coding=utf-8
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import time
 
 from scout_apm.compat import datetime_to_timestamp, urlencode
