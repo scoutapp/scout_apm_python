@@ -150,7 +150,7 @@ def test_not_found(tracked_requests):
 
 
 def test_server_error(tracked_requests):
-    with app_with_scout() as app:
+    with app_with_scout(DEBUG_PROPAGATE_EXCEPTIONS=False) as app:
         response = TestApp(app).get("/crash/", expect_errors=True)
 
     assert response.status_int == 500
@@ -310,7 +310,7 @@ def test_no_monitor(tracked_requests):
 
 
 def test_no_monitor_server_error(tracked_requests):
-    with app_with_scout(SCOUT_MONITOR=False) as app:
+    with app_with_scout(SCOUT_MONITOR=False, DEBUG_PROPAGATE_EXCEPTIONS=False) as app:
         response = TestApp(app).get("/crash/", expect_errors=True)
 
     assert response.status_int == 500
