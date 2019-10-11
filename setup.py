@@ -1,4 +1,6 @@
 # coding=utf-8
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import os
 import sys
 from glob import glob
@@ -32,7 +34,9 @@ setup_args = {
     "package_dir": {"": "src"},
     "py_modules": [os.splitext(os.basename(path))[0] for path in glob("src/*.py")],
     "ext_modules": [
-        Extension("scout_apm.core.objtrace", ["src/scout_apm/core/ext/objtrace.c"])
+        Extension(
+            str("scout_apm.core.objtrace"), [str("src/scout_apm/core/ext/objtrace.c")]
+        )
     ],
     "entry_points": {
         "console_scripts": [
