@@ -20,21 +20,20 @@ from tests.integration.util import (
 
 
 @contextmanager
-def app_with_scout(config=None):
+def app_with_scout(config=None, catchall=False):
     """
     Context manager that configures and installs the Scout plugin for Bottle.
     """
-    # Enable Scout by default in tests.
     if config is None:
-        config = {"scout.monitor": True}
+        config = {}
+
+    # Enable Scout by default in tests.
+    config.setdefault("scout.monitor", True)
 
     # Disable running the agent.
     config["scout.core_agent_launch"] = False
 
-    app = Bottle(
-        # Enable the following for debugging exceptions:
-        # catchall=False,
-    )
+    app = Bottle(catchall=catchall)
 
     @app.route("/")
     def home():
@@ -157,7 +156,7 @@ def test_queue_time_error(tracked_requests):
 
 
 def test_home_ignored(tracked_requests):
-    with app_with_scout({"scout.monitor": True, "scout.ignore": ["/"]}) as app:
+    with app_with_scout({"scout.ignore": ["/"]}) as app:
         response = TestApp(app).get("/")
 
     assert response.status_int == 200
@@ -189,7 +188,7 @@ def test_not_found(tracked_requests):
 
 
 def test_server_error(tracked_requests):
-    with app_with_scout() as app:
+    with app_with_scout(catchall=True) as app:
         response = TestApp(app).get("/crash/", expect_errors=True)
 
     assert response.status_int == 500
@@ -214,8 +213,7 @@ def test_named(tracked_requests):
 
 
 def test_no_monitor(tracked_requests):
-    # With an empty config, "scout.monitor" defaults to False.
-    with app_with_scout({}) as app:
+    with app_with_scout({"scout.monitor": False}) as app:
         response = TestApp(app).get("/hello/")
 
     assert response.status_int == 200

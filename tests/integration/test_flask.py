@@ -24,17 +24,20 @@ def app_with_scout(config=None):
     Context manager that configures and installs the Scout plugin for Bottle.
 
     """
-    # Enable Scout by default in tests.
     if config is None:
-        config = {"SCOUT_MONITOR": True}
+        config = {}
 
     # Disable running the agent.
     config["SCOUT_CORE_AGENT_LAUNCH"] = False
 
+    # Enable Scout by default in tests.
+    config.setdefault("SCOUT_MONITOR", True)
+
+    # Disable Flask's error page to improve debugging
+    config.setdefault("PROPAGATE_EXCEPTIONS", True)
+
     # Basic Flask app
     app = flask.Flask("test_app")
-    # Enable the following for debugging exceptions:
-    # app.config["PROPAGATE_EXCEPTIONS"] = True
 
     @app.route("/")
     def home():
@@ -161,7 +164,7 @@ def test_not_found(tracked_requests):
 
 
 def test_server_error(tracked_requests):
-    with app_with_scout() as app:
+    with app_with_scout({"PROPAGATE_EXCEPTIONS": False}) as app:
         response = TestApp(app).get("/crash/", expect_errors=True)
 
     assert response.status_int == 500
@@ -189,8 +192,7 @@ def test_automatic_options(tracked_requests):
 
 
 def test_no_monitor(tracked_requests):
-    # With an empty config, "SCOUT_MONITOR" defaults to False.
-    with app_with_scout({}) as app:
+    with app_with_scout({"SCOUT_MONITOR": False}) as app:
         response = TestApp(app).get("/hello/")
 
     assert response.status_int == 200
