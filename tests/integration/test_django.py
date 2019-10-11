@@ -608,7 +608,7 @@ def test_old_style_on_exception_response_middleware(middleware_index, tracked_re
 
 class OldStyleExceptionOnRequestMiddleware:
     def process_request(self, request):
-        return ValueError("Woops!")
+        raise ValueError("Woops!")
 
 
 @skip_unless_old_style_middleware
@@ -623,7 +623,9 @@ def test_old_style_exception_on_request_middleware(middleware_index, tracked_req
         + [__name__ + "." + OldStyleExceptionOnRequestMiddleware.__name__]
         + settings.MIDDLEWARE_CLASSES[middleware_index:]
     )
-    with app_with_scout(MIDDLEWARE_CLASSES=new_middleware) as app:
+    with app_with_scout(
+        MIDDLEWARE_CLASSES=new_middleware, DEBUG_PROPAGATE_EXCEPTIONS=False
+    ) as app:
         response = TestApp(app).get("/", expect_errors=True)
 
     assert response.status_int == 500
@@ -640,7 +642,9 @@ def test_old_style_timing_middleware_deleted(url, expected_status, tracked_reque
     but OldStyleViewMiddleware defends against this.
     """
     new_middleware = settings.MIDDLEWARE_CLASSES[1:]
-    with app_with_scout(MIDDLEWARE_CLASSES=new_middleware) as app:
+    with app_with_scout(
+        MIDDLEWARE_CLASSES=new_middleware, DEBUG_PROPAGATE_EXCEPTIONS=False
+    ) as app:
         response = TestApp(app).get(url, expect_errors=True)
 
     assert response.status_int == expected_status
