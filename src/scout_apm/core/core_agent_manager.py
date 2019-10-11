@@ -86,8 +86,16 @@ class CoreAgentManager(object):
         return ["--socket", socket_path]
 
     def log_level(self):
-        level = AgentContext.instance.config.value("log_level")
-        return ["--log-level", level]
+        # Old deprecated name "log_level"
+        log_level = AgentContext.instance.config.value("log_level")
+        if log_level is not None:
+            logger.warn(
+                "The config name 'log_level' is deprecated - "
+                + "please use the new name 'core_agent_log_level' instead."
+            )
+        else:
+            log_level = AgentContext.instance.config.value("core_agent_log_level")
+        return ["--log-level", log_level]
 
     def log_file(self):
         path = AgentContext.instance.config.value("log_file")

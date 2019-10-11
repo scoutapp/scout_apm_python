@@ -2,6 +2,12 @@
 
 ## Pending
 
+### Deprecated
+
+- The `log_level` configuration option is deprecated. Please use the new name
+  `core_agent_log_level` instead
+  ([PR #273](https://github.com/scoutapp/scout_apm_python/pull/273)).
+
 ### Added
 
 - Change default "path" tag on web requests to capture query parameters as

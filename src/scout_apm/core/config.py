@@ -57,6 +57,7 @@ class ScoutConfig(object):
             "core_agent_dir",
             "core_agent_download",
             "core_agent_launch",
+            "core_agent_log_level",
             "core_agent_permissions",
             "core_agent_version",
             "disabled_instruments",
@@ -137,7 +138,7 @@ class ScoutConfigEnv(object):
     Reads configuration from environment by prefixing the key
     requested with "SCOUT_"
 
-    Example: the `log_level` config looks for SCOUT_LOG_LEVEL
+    Example: the `key` config looks for SCOUT_KEY
     environment variable
     """
 
@@ -220,6 +221,7 @@ class ScoutConfigDefaults(object):
             "core_agent_dir": "/tmp/scout_apm_core",
             "core_agent_download": True,
             "core_agent_launch": True,
+            "core_agent_log_level": "info",
             "core_agent_permissions": 700,
             "core_agent_version": "v1.2.0",  # can be an exact tag name, or 'latest'
             "disabled_instruments": [],
@@ -228,7 +230,6 @@ class ScoutConfigDefaults(object):
             "framework_version": "",
             "hostname": None,
             "key": "",
-            "log_level": "info",
             "monitor": False,
             "name": "",
             "revision_sha": self._git_revision_sha(),

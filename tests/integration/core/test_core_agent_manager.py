@@ -138,3 +138,30 @@ def test_launch_error(caplog, core_agent_manager):
         ("scout_apm.core.core_agent_manager", logging.ERROR, "Error running Core Agent")
     ]
     assert caplog.records[0].exc_info[1] is exception
+
+
+def test_log_level(caplog, core_agent_manager):
+    ScoutConfig.set(core_agent_log_level="foo")
+
+    result = core_agent_manager.log_level()
+
+    assert result == ["--log-level", "foo"]
+    assert caplog.record_tuples == []
+
+
+def test_log_level_deprecated(caplog, core_agent_manager):
+    ScoutConfig.set(log_level="foo", core_agent_log_level="bar")
+
+    result = core_agent_manager.log_level()
+
+    assert result == ["--log-level", "foo"]
+    assert caplog.record_tuples == [
+        (
+            "scout_apm.core.core_agent_manager",
+            logging.WARNING,
+            (
+                "The config name 'log_level' is deprecated - please use the new name "
+                + "'core_agent_log_level' instead."
+            ),
+        )
+    ]
