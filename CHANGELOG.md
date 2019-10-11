@@ -15,6 +15,8 @@
   `"path"`
   ([PR #268](https://github.com/scoutapp/scout_apm_python/pull/268),
   [PR #269](https://github.com/scoutapp/scout_apm_python/pull/269)).
+- Track the `urlconf` on Django, for multi-domain support
+  ([PR #276](https://github.com/scoutapp/scout_apm_python/pull/276)).
 
 ### Fixed
 

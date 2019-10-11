@@ -415,6 +415,53 @@ def test_old_style_username_exception(tracked_requests):
     assert "username" not in tracked_request.tags
 
 
+def urlconf_middleware(get_response):
+    def middleware(request):
+        sys.modules["tests.integration.django_app_second_copy"] = django_app
+        request.urlconf = "tests.integration.django_app_second_copy"
+        return get_response(request)
+
+    return middleware
+
+
+@skip_unless_new_style_middleware
+def test_urlconf(tracked_requests):
+    new_middleware = (
+        settings.MIDDLEWARE[:-1]
+        + [__name__ + ".urlconf_middleware"]
+        + settings.MIDDLEWARE[-1:]
+    )
+    with app_with_scout(MIDDLEWARE=new_middleware) as app:
+        response = TestApp(app).get("/hello/")
+
+    assert response.status_int == 200
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert tracked_request.tags["urlconf"] == "tests.integration.django_app_second_copy"
+
+
+class UrlconfMiddleware(object):
+    def process_request(self, request):
+        sys.modules["tests.integration.django_app_second_copy"] = django_app
+        request.urlconf = "tests.integration.django_app_second_copy"
+
+
+@skip_unless_old_style_middleware
+def test_old_style_urlconf(tracked_requests):
+    new_middleware = (
+        settings.MIDDLEWARE_CLASSES[:-1]
+        + [__name__ + ".UrlconfMiddleware"]
+        + settings.MIDDLEWARE_CLASSES[-1:]
+    )
+    with app_with_scout(MIDDLEWARE_CLASSES=new_middleware) as app:
+        response = TestApp(app).get("/")
+
+    assert response.status_int == 200
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert tracked_request.tags["urlconf"] == "tests.integration.django_app_second_copy"
+
+
 @parametrize_queue_time_header_name
 def test_queue_time(header_name, tracked_requests):
     # Not testing floats due to Python 2/3 rounding differences

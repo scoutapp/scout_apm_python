@@ -1,6 +1,9 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import django
+from django.conf import settings
+
 from scout_apm.core.config import ScoutConfig
 from scout_apm.core.tracked_request import TrackedRequest
 from scout_apm.core.web_requests import (
@@ -8,6 +11,11 @@ from scout_apm.core.web_requests import (
     ignore_path,
     track_request_queue_time,
 )
+
+if django.VERSION >= (2, 0):
+    from django.urls import get_urlconf
+else:
+    from django.core.urlresolvers import get_urlconf
 
 
 def get_operation_name(request):
@@ -58,6 +66,8 @@ def track_request_view_data(request, tracked_request):
             tracked_request.tag("username", user.get_username())
         except Exception:
             pass
+
+    tracked_request.tag("urlconf", get_urlconf(settings.ROOT_URLCONF))
 
 
 class MiddlewareTimingMiddleware(object):
