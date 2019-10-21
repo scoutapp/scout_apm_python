@@ -17,6 +17,9 @@
   [PR #269](https://github.com/scoutapp/scout_apm_python/pull/269)).
 - Track the `urlconf` on Django, for multi-domain support
   ([PR #276](https://github.com/scoutapp/scout_apm_python/pull/276)).
+- Track request queue time from the `X-Amzn-Trace-Id` header, which is [sent by
+  AWS ALB's](https://docs.aws.amazon.com/en_pv/elasticloadbalancing/latest/application/load-balancer-request-tracing.html)
+  ([PR #279](https://github.com/scoutapp/scout_apm_python/pull/279)).
 
 ### Fixed
 
