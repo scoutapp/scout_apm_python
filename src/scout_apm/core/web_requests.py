@@ -97,15 +97,15 @@ def track_amazon_request_queue_time(header_value, tracked_request):
     items = header_value.split(";")
     found_item = None
     for item in items:
-        if found_item is None and item.startswith('Root='):
+        if found_item is None and item.startswith("Root="):
             found_item = item
-        elif item.startswith('Self='):
+        elif item.startswith("Self="):
             found_item = item
 
     if found_item is None:
         return False
 
-    pieces = found_item.split('-')
+    pieces = found_item.split("-")
     if len(pieces) != 3:
         return False
 

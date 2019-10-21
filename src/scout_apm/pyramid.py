@@ -63,10 +63,14 @@ def instruments(handler, registry):
             except Exception:
                 pass
             else:
-                tracked_queue_time = track_request_queue_time(queue_time, tracked_request)
+                tracked_queue_time = track_request_queue_time(
+                    queue_time, tracked_request
+                )
             if not tracked_queue_time:
                 try:
-                    amazon_queue_time = request.headers.get("x-amzn-trace-id", default="")
+                    amazon_queue_time = request.headers.get(
+                        "x-amzn-trace-id", default=""
+                    )
                 except Exception:
                     pass
                 else:

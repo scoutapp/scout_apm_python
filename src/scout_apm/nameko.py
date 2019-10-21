@@ -49,8 +49,7 @@ class ScoutReporter(DependencyProvider):
 
         path = request.path
         tracked_request.tag(
-            "path",
-            create_filtered_path(path, request.args.items(multi=True)),
+            "path", create_filtered_path(path, request.args.items(multi=True))
         )
         if ignore_path(path):
             tracked_request.tag("ignore_transaction", True)

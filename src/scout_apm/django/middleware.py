@@ -93,8 +93,7 @@ class MiddlewareTimingMiddleware(object):
         queue_time_tracked = track_request_queue_time(queue_time, tracked_request)
         if not queue_time_tracked:
             track_amazon_request_queue_time(
-                request.META.get("HTTP_X_AMZN_TRACE_ID", ""),
-                tracked_request,
+                request.META.get("HTTP_X_AMZN_TRACE_ID", ""), tracked_request
             )
 
         try:
