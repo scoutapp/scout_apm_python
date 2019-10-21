@@ -176,7 +176,11 @@ class OldStyleMiddlewareTimingMiddleware(object):
         queue_time = request.META.get("HTTP_X_QUEUE_START") or request.META.get(
             "HTTP_X_REQUEST_START", ""
         )
-        track_request_queue_time(queue_time, tracked_request)
+        queue_time_tracked = track_request_queue_time(queue_time, tracked_request)
+        if not queue_time_tracked:
+            track_amazon_request_queue_time(
+                request.META.get("HTTP_X_AMZN_TRACE_ID", ""), tracked_request
+            )
 
         tracked_request.start_span(operation="Middleware")
 
