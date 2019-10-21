@@ -27,12 +27,8 @@ def app_with_scout(config=None):
     if config is None:
         config = {}
 
-    # Disable running the agent.
     config["SCOUT_CORE_AGENT_LAUNCH"] = False
-
-    # Enable Scout by default in tests.
     config.setdefault("SCOUT_MONITOR", True)
-
     # Disable Flask's error page to improve debugging
     config.setdefault("PROPAGATE_EXCEPTIONS", True)
 

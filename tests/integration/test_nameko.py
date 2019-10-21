@@ -25,11 +25,12 @@ def app_with_scout(nameko_config=None, scout_config=None):
     Context manager that yields a fresh Nameko WSGI app with Scout configured.
     """
     if scout_config is None:
-        scout_config = {"monitor": True}
+        scout_config = {}
+
     scout_config["core_agent_launch"] = False
+    scout_config.setdefault("monitor", True)
     Config.set(**scout_config)
 
-    # Nameko setup
     class Service(object):
         name = "myservice"
 
@@ -82,7 +83,7 @@ def test_home(tracked_requests):
 
 
 def test_home_ignored(tracked_requests):
-    with app_with_scout(scout_config={"monitor": True, "ignore": ["/"]}) as app:
+    with app_with_scout(scout_config={"ignore": ["/"]}) as app:
         response = TestApp(app).get("/")
 
     assert response.status_int == 200
