@@ -127,9 +127,9 @@ def test_amazon_queue_time(tracked_requests):
         response = TestApp(app).get(
             "/",
             headers={
-                "X-Amzn-Trace-Id": "Self=1-{}-12456789abcdef012345678".format(
+                "X-Amzn-Trace-Id": str("Self=1-{}-12456789abcdef012345678".format(
                     queue_start
-                )
+                ))
             },
         )
 
