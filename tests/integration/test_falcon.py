@@ -27,12 +27,11 @@ def app_with_scout(config=None, middleware=None, set_api=True):
     """
     # Enable Scout by default in tests.
     if config is None:
-        config = {"monitor": True}
+        config = {}
 
-    # Disable running the agent.
     config["core_agent_launch"] = False
+    config.setdefault("monitor", True)
 
-    # Basic Falcon app
     if middleware is None:
         middleware = ["scout"]
     scout_index = middleware.index("scout")
@@ -154,7 +153,7 @@ def test_home_suffixed(tracked_requests):
 
 
 def test_home_ignored(tracked_requests):
-    with app_with_scout({"monitor": True, "ignore": ["/"]}) as app:
+    with app_with_scout({"ignore": ["/"]}) as app:
         response = TestApp(app).get("/")
 
     assert response.status_int == 200
