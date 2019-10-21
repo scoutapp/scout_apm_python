@@ -155,6 +155,25 @@ def test_queue_time_error(tracked_requests):
     assert "scout.queue_time_ns" not in tracked_request.tags
 
 
+def test_amazon_queue_time(tracked_requests):
+    queue_start = int(datetime_to_timestamp(dt.datetime.utcnow()) - 2)
+    with app_with_scout() as app:
+        response = TestApp(app).get(
+            "/",
+            headers={
+                "X-Amzn-Trace-Id": "Self=1-{}-12456789abcdef012345678".format(
+                    queue_start
+                )
+            },
+        )
+
+    assert response.status_int == 200
+    assert len(tracked_requests) == 1
+    queue_time_ns = tracked_requests[0].tags["scout.queue_time_ns"]
+    # Upper bound assumes we didn't take more than 2s to run this test...
+    assert queue_time_ns >= 2000000000 and queue_time_ns < 4000000000
+
+
 def test_home_ignored(tracked_requests):
     with app_with_scout({"scout.ignore": ["/"]}) as app:
         response = TestApp(app).get("/")
