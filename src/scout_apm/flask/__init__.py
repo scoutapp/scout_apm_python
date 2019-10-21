@@ -11,6 +11,7 @@ from scout_apm.core.tracked_request import TrackedRequest
 from scout_apm.core.web_requests import (
     create_filtered_path,
     ignore_path,
+    track_amazon_request_queue_time,
     track_request_queue_time,
 )
 
@@ -91,7 +92,10 @@ class ScoutApm(object):
         queue_time = request.headers.get(
             "x-queue-start", default=""
         ) or request.headers.get("x-request-start", default="")
-        track_request_queue_time(queue_time, tracked_request)
+        tracked = track_request_queue_time(queue_time, tracked_request)
+        if not tracked:
+            amazon_queue_time = request.headers.get("x-amzn-trace-id", default="")
+            track_amazon_request_queue_time(amazon_queue_time, tracked_request)
 
         try:
             return wrapped(*args, **kwargs)

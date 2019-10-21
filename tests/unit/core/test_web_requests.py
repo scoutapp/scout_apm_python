@@ -13,6 +13,7 @@ from scout_apm.core.web_requests import (
     convert_ambiguous_timestamp_to_ns,
     create_filtered_path,
     ignore_path,
+    track_amazon_request_queue_time,
     track_request_queue_time,
 )
 
@@ -101,7 +102,9 @@ def test_track_request_queue_time_valid(with_t, tracked_request):
     else:
         header_value = str(queue_start)
 
-    track_request_queue_time(header_value, tracked_request)
+    result = track_request_queue_time(header_value, tracked_request)
+
+    assert result is True
     queue_time_ns = tracked_request.tags["scout.queue_time_ns"]
     # Upper bound assumes we didn't take more than 2s to run this test...
     assert queue_time_ns >= 2000000000 and queue_time_ns < 4000000000
@@ -118,8 +121,58 @@ def test_track_request_queue_time_valid(with_t, tracked_request):
     ],
 )
 def test_track_request_queue_time_invalid(header_value, tracked_request):
-    track_request_queue_time(header_value, tracked_request)
+    result = track_request_queue_time(header_value, tracked_request)
 
+    assert result is False
+    assert "scout.queue_time_ns" not in tracked_request.tags
+
+
+@pytest.mark.parametrize(
+    "header_value",
+    [
+        "Root=1-{start_time}-12456789abcdef012345678",
+        "Root=1-{start_time}-12456789abcdef012345678;CalledFrom=app",
+        "Self=1-{start_time}-12456789abcdef012345678",
+        "Self=1-{start_time}-12456789abcdef012345678;Root=1-123-abcdef012345678912345678",
+        "Self=1-{start_time}-12456789abcdef012345678;Root=1-123-abcdef012345678912345678;CalledFrom=app",
+    ],
+)
+def test_track_amazon_request_queue_time_valid(header_value, tracked_request):
+    start_time = int(datetime_to_timestamp(dt.datetime.utcnow()) - 2)
+
+    result = track_amazon_request_queue_time(
+        header_value.format(start_time=start_time), tracked_request
+    )
+
+    assert result is True
+    queue_time_ns = tracked_request.tags["scout.queue_time_ns"]
+    # Upper bound assumes we didn't take more than 2s to run this test...
+    assert queue_time_ns >= 2000000000 and queue_time_ns < 4000000000
+
+
+@pytest.mark.parametrize(
+    "header_value",
+    [
+        str(""),
+        str("!"),  # unaprseable value
+        str("CalledFrom=app"),  # ignorable custom value
+        str("Root=1"),  # missing split
+        str("Root=1;Self=1"),  # two missing split
+        str("Root=1-"),  # empty second value
+        str("Root=whatever;Self=1-"),  # two empty second value
+        str("Root=1--abc"),  # invalid int
+        str("Root=1-abc-abc"),  # invalid int
+        str("Root=1-nan-abc"),  # not a digit
+        str("Root=1-0.3-abc"),  # raises value error on int conversion
+        str("Root=1-0-abc"),  # not a real timestamp
+        str("Root=1-10000000000000000000-abc"),  # far into the future
+        str("CalledFrom=app;Root=1-10000000000000000000-abc"),  # far into the future
+    ],
+)
+def test_track_amazon_request_queue_time_invalid(header_value, tracked_request):
+    result = track_amazon_request_queue_time(header_value, tracked_request)
+
+    assert result is False
     assert "scout.queue_time_ns" not in tracked_request.tags
 
 

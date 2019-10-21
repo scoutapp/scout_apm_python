@@ -68,28 +68,74 @@ def track_request_queue_time(header_value, tracked_request):
     try:
         first_char = header_value[0]
     except IndexError:
-        return
+        return False
 
     if not first_char.isdigit():  # filter out negatives, nan, inf, etc.
-        return
+        return False
 
     try:
         ambiguous_start_timestamp = float(header_value)
     except ValueError:
-        return
+        return False
 
     start_timestamp_ns = convert_ambiguous_timestamp_to_ns(ambiguous_start_timestamp)
     if start_timestamp_ns == 0.0:
-        return
+        return False
 
     tr_start_timestamp_ns = datetime_to_timestamp(tracked_request.start_time) * 1e9
 
     # Ignore if in the future
     if start_timestamp_ns > tr_start_timestamp_ns:
-        return
+        return False
 
     queue_time_ns = int(tr_start_timestamp_ns - start_timestamp_ns)
     tracked_request.tag("scout.queue_time_ns", queue_time_ns)
+    return True
+
+
+def track_amazon_request_queue_time(header_value, tracked_request):
+    items = header_value.split(";")
+    found_item = None
+    for item in items:
+        if found_item is None and item.startswith('Root='):
+            found_item = item
+        elif item.startswith('Self='):
+            found_item = item
+
+    if found_item is None:
+        return False
+
+    pieces = found_item.split('-')
+    if len(pieces) != 3:
+        return False
+
+    timestamp_str = pieces[1]
+
+    try:
+        first_char = timestamp_str[0]
+    except IndexError:
+        return False
+
+    if not first_char.isdigit():
+        return False
+
+    try:
+        start_timestamp_ns = int(timestamp_str) * 1000000000.0
+    except ValueError:
+        return False
+
+    if start_timestamp_ns == 0:
+        return False
+
+    tr_start_timestamp_ns = datetime_to_timestamp(tracked_request.start_time) * 1e9
+
+    # Ignore if in the futuren
+    if start_timestamp_ns > tr_start_timestamp_ns:
+        return False
+
+    queue_time_ns = int(tr_start_timestamp_ns - start_timestamp_ns)
+    tracked_request.tag("scout.queue_time_ns", queue_time_ns)
+    return True
 
 
 # Cutoff epoch is used for determining ambiguous timestamp boundaries, and is
