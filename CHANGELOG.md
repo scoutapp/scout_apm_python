@@ -20,6 +20,8 @@
 - Track request queue time from the `X-Amzn-Trace-Id` header, which is [sent by
   AWS ALB's](https://docs.aws.amazon.com/en_pv/elasticloadbalancing/latest/application/load-balancer-request-tracing.html)
   ([PR #279](https://github.com/scoutapp/scout_apm_python/pull/279)).
+- Updated Core Agent version to 1.2.4 to support new features
+  ([PR #280](https://github.com/scoutapp/scout_apm_python/pull/280)).
 
 ### Fixed
 
