@@ -25,6 +25,12 @@ setup_args = {
     "long_description": long_description,
     "long_description_content_type": "text/markdown",
     "url": "https://github.com/scoutapp/scout_apm_python",
+    "project_urls": {
+        "Documentation": "https://docs.scoutapm.com/#python-agent",
+        "Changelog": (
+            "https://github.com/scoutapp/scout_apm_python/blob/master/CHANGELOG.md"
+        ),
+    },
     "author": "Scout",
     "author_email": "support@scoutapm.com",
     "license": "MIT",
