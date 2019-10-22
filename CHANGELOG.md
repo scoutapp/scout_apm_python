@@ -1,6 +1,6 @@
 # Changelog
 
-## Pending
+## [2.5.0] 2019-10-22
 
 ### Deprecated
 
