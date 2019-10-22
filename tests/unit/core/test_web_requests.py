@@ -133,8 +133,8 @@ def test_track_request_queue_time_invalid(header_value, tracked_request):
         "Root=1-{start_time}-12456789abcdef012345678",
         "Root=1-{start_time}-12456789abcdef012345678;CalledFrom=app",
         "Self=1-{start_time}-12456789abcdef012345678",
-        "Self=1-{start_time}-12456789abcdef012345678;Root=1-123-abcdef012345678912345678",
-        "Self=1-{start_time}-12456789abcdef012345678;Root=1-123-abcdef012345678912345678;CalledFrom=app",
+        "Self=1-{start_time}-12456789abcdef012345678;Root=1-123-abcdef012345678912345678",  # noqa: E501
+        "Self=1-{start_time}-12456789abcdef012345678;Root=1-123-abcdef012345678912345678;CalledFrom=app",  # noqa: E501
     ],
 )
 def test_track_amazon_request_queue_time_valid(header_value, tracked_request):
