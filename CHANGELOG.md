@@ -1,5 +1,12 @@
 # Changelog
 
+## Pending
+
+### Fixed
+
+- Fix warning emitted from using deprecated 'warn' method
+  ([PR #283](https://github.com/scoutapp/scout_apm_python/pull/283)).
+
 ## [2.6.0] 2019-10-22
 
 ### Deprecated
