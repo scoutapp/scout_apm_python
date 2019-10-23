@@ -77,16 +77,17 @@ def instruments(handler, registry):
                     track_amazon_request_queue_time(amazon_queue_time, tracked_request)
 
             try:
-                response = handler(request)
+                try:
+                    response = handler(request)
+                finally:
+                    # Routing further down the call chain. So time it starting
+                    # above, but only name it if it gets a name
+                    if request.matched_route is not None:
+                        tracked_request.mark_real_request()
+                        span.operation = "Controller/" + request.matched_route.name
             except Exception:
                 tracked_request.tag("error", "true")
                 raise
-
-            # This happens further down the call chain. So time it starting
-            # above, but only name it if it gets to here.
-            if request.matched_route is not None:
-                tracked_request.mark_real_request()
-                span.operation = "Controller/" + request.matched_route.name
 
         finally:
             tracked_request.stop_span()
