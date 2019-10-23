@@ -25,10 +25,7 @@ def install(*args, **kwargs):
     context = AgentContext.build(config=ScoutConfig())
 
     if sys.platform == "win32":
-        logger.info(
-            "APM Not Launching on PID: %s - Windows is not supported",
-            getpid(),
-        )
+        logger.info("APM Not Launching on PID: %s - Windows is not supported", getpid())
         return False
 
     if not context.config.value("monitor"):
