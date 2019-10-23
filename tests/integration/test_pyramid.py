@@ -217,7 +217,13 @@ def test_server_error(tracked_requests):
     with app_with_scout() as app, pytest.raises(ValueError):
         TestApp(app).get("/crash/", expect_errors=True)
 
-    assert tracked_requests == []
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert tracked_request.tags["path"] == "/crash/"
+    assert tracked_request.tags["error"] == "true"
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "Controller/crash"
 
 
 def test_no_monitor(tracked_requests):
