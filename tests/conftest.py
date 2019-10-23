@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 import os
+import sys
 
 import pytest
 import wrapt
@@ -35,6 +36,13 @@ TestApp.__test__ = False
 def caplog(caplog):
     caplog.set_level(logging.DEBUG)
     yield caplog
+
+
+# Some files are named to indicate they run on Python 3.6+ only (async
+# related) - ignore collecting them on older versions
+collect_ignore_glob = []
+if sys.version_info < (3, 6):
+    collect_ignore_glob.append("*_py36plus.py")
 
 
 class GlobalStateLeak(Exception):
