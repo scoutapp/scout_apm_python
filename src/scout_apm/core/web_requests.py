@@ -163,3 +163,34 @@ def convert_ambiguous_timestamp_to_ns(timestamp):
     else:
         return 0.0
     return converted_timestamp
+
+
+def werkzeug_track_request_data(werkzeug_request, tracked_request):
+    """
+    Several integrations use Werkzeug requests, so share the code for
+    extracting common data here.
+    """
+    path = werkzeug_request.path
+    tracked_request.tag(
+        "path", create_filtered_path(path, werkzeug_request.args.items(multi=True))
+    )
+    if ignore_path(path):
+        tracked_request.tag("ignore_transaction", True)
+
+    # Determine a remote IP to associate with the request. The value is
+    # spoofable by the requester so this is not suitable to use in any
+    # security sensitive context.
+    user_ip = (
+        werkzeug_request.headers.get("x-forwarded-for", default="").split(",")[0]
+        or werkzeug_request.headers.get("client-ip", default="").split(",")[0]
+        or werkzeug_request.remote_addr
+    )
+    tracked_request.tag("user_ip", user_ip)
+
+    queue_time = werkzeug_request.headers.get(
+        "x-queue-start", default=""
+    ) or werkzeug_request.headers.get("x-request-start", default="")
+    tracked_queue_time = track_request_queue_time(queue_time, tracked_request)
+    if not tracked_queue_time:
+        amazon_queue_time = werkzeug_request.headers.get("x-amzn-trace-id", default="")
+        track_amazon_request_queue_time(amazon_queue_time, tracked_request)
