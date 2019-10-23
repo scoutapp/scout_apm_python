@@ -60,38 +60,24 @@ class ScoutPlugin(object):
                 controller_name = "/" + controller_name
             tracked_request.start_span(operation="Controller{}".format(controller_name))
 
-            try:
-                # Determine a remote IP to associate with the request. The
-                # value is spoofable by the requester so this is not suitable
-                # to use in any security sensitive context.
-                user_ip = (
-                    request.headers.get("x-forwarded-for", "").split(",")[0]
-                    or request.headers.get("client-ip", "").split(",")[0]
-                    or request.environ.get("REMOTE_ADDR")
-                )
-            except Exception:
-                pass
-            else:
-                tracked_request.tag("user_ip", user_ip)
+            # Determine a remote IP to associate with the request. The
+            # value is spoofable by the requester so this is not suitable
+            # to use in any security sensitive context.
+            user_ip = (
+                request.headers.get("x-forwarded-for", "").split(",")[0]
+                or request.headers.get("client-ip", "").split(",")[0]
+                or request.environ.get("REMOTE_ADDR")
+            )
+            tracked_request.tag("user_ip", user_ip)
 
             tracked_queue_time = False
-            try:
-                queue_time = request.headers.get(
-                    "x-queue-start", ""
-                ) or request.headers.get("x-request-start", "")
-            except Exception:
-                pass
-            else:
-                tracked_queue_time = track_request_queue_time(
-                    queue_time, tracked_request
-                )
+            queue_time = request.headers.get(
+                "x-queue-start", ""
+            ) or request.headers.get("x-request-start", "")
+            tracked_queue_time = track_request_queue_time(queue_time, tracked_request)
             if not tracked_queue_time:
-                try:
-                    amazon_queue_time = request.headers.get("x-amzn-trace-id", "")
-                except Exception:
-                    pass
-                else:
-                    track_amazon_request_queue_time(amazon_queue_time, tracked_request)
+                amazon_queue_time = request.headers.get("x-amzn-trace-id", "")
+                track_amazon_request_queue_time(amazon_queue_time, tracked_request)
 
             try:
                 return callback(*args, **kwargs)
