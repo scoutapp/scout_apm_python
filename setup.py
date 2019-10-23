@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import os
 import sys
-from glob import glob
 
 from setuptools import Extension, find_packages, setup
 
@@ -38,7 +37,6 @@ setup_args = {
     "python_requires": ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4",
     "packages": find_packages("src"),
     "package_dir": {str(""): str("src")},
-    "py_modules": [os.splitext(os.basename(path))[0] for path in glob("src/*.py")],
     "ext_modules": [
         Extension(
             str("scout_apm.core.objtrace"), [str("src/scout_apm/core/ext/objtrace.c")]
