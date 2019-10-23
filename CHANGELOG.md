@@ -1,6 +1,6 @@
 # Changelog
 
-## Pending
+## [2.6.1] 2019-10-23
 
 ### Fixed
 
@@ -10,6 +10,9 @@
   ([PR #288](https://github.com/scoutapp/scout_apm_python/pull/288)).
 - Track errors on Pyramid
   ([PR #298](https://github.com/scoutapp/scout_apm_python/pull/298)).
+- Don't start on Windows which is currently not supported
+  (request support on [Issue #101](https://github.com/scoutapp/scout_apm_python/issues/101))
+  ([PR #299](https://github.com/scoutapp/scout_apm_python/pull/299)).
 
 ## [2.6.0] 2019-10-22
 
