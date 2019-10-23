@@ -34,7 +34,6 @@ def app_with_scout(scout_config=None):
         assert scope["type"] == "http"
         body = await receive()
         assert body["type"] == "http.request"
-        print(scope)
         if scope["path"] == "/":
             body = b"Welcome home."
         elif scope["path"] == "/hello/":
