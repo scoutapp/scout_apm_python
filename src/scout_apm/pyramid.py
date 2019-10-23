@@ -41,40 +41,24 @@ def instruments(handler, registry):
             if ignore_path(path):
                 tracked_request.tag("ignore_transaction", True)
 
-            try:
-                # Determine a remote IP to associate with the request. The value is
-                # spoofable by the requester so this is not suitable to use in any
-                # security sensitive context.
-                user_ip = (
-                    request.headers.get("x-forwarded-for", default="").split(",")[0]
-                    or request.headers.get("client-ip", default="").split(",")[0]
-                    or request.remote_addr
-                )
-            except Exception:
-                pass
-            else:
-                tracked_request.tag("user_ip", user_ip)
+            # Determine a remote IP to associate with the request. The value is
+            # spoofable by the requester so this is not suitable to use in any
+            # security sensitive context.
+            user_ip = (
+                request.headers.get("x-forwarded-for", default="").split(",")[0]
+                or request.headers.get("client-ip", default="").split(",")[0]
+                or request.remote_addr
+            )
+            tracked_request.tag("user_ip", user_ip)
 
             tracked_queue_time = False
-            try:
-                queue_time = request.headers.get(
-                    "x-queue-start", default=""
-                ) or request.headers.get("x-request-start", default="")
-            except Exception:
-                pass
-            else:
-                tracked_queue_time = track_request_queue_time(
-                    queue_time, tracked_request
-                )
+            queue_time = request.headers.get(
+                "x-queue-start", default=""
+            ) or request.headers.get("x-request-start", default="")
+            tracked_queue_time = track_request_queue_time(queue_time, tracked_request)
             if not tracked_queue_time:
-                try:
-                    amazon_queue_time = request.headers.get(
-                        "x-amzn-trace-id", default=""
-                    )
-                except Exception:
-                    pass
-                else:
-                    track_amazon_request_queue_time(amazon_queue_time, tracked_request)
+                amazon_queue_time = request.headers.get("x-amzn-trace-id", default="")
+                track_amazon_request_queue_time(amazon_queue_time, tracked_request)
 
             try:
                 response = handler(request)

@@ -100,27 +100,6 @@ def test_user_ip(headers, extra_environ, expected, tracked_requests):
     assert tracked_request.tags["user_ip"] == expected
 
 
-def test_user_ip_error(tracked_requests):
-    """
-    Scout doesn't crash if pyramid.request.Request.remote_addr raises an exception.
-
-    This cannot be tested without mocking because it should never happen.
-
-    It's implemented in webob.request.Request and it's just a lookup in environ.
-    """
-    remote_addr_patcher = mock.patch(
-        "pyramid.request.Request.remote_addr",
-        new_callable=mock.PropertyMock,
-        side_effect=ValueError,
-    )
-
-    with app_with_scout() as app, remote_addr_patcher:
-        response = TestApp(app).get("/hello/")
-
-    assert response.status_int == 200
-    assert "user_ip" not in tracked_requests[0].tags
-
-
 @parametrize_queue_time_header_name
 def test_queue_time(header_name, tracked_requests):
     # Not testing floats due to Python 2/3 rounding differences
@@ -135,31 +114,6 @@ def test_queue_time(header_name, tracked_requests):
     queue_time_ns = tracked_requests[0].tags["scout.queue_time_ns"]
     # Upper bound assumes we didn't take more than 2s to run this test...
     assert queue_time_ns >= 2000000000 and queue_time_ns < 4000000000
-
-
-def test_queue_time_error(tracked_requests):
-    """
-    Scout doesn't crash if pyramid.request.Request.headers.get raises an
-    exception.
-
-    This cannot be tested without mocking because it should never happen.
-    It's implemented in webob.headers.EnvironHeaders as a simple lookup in
-    environ: https://github.com/Pylons/webob/blob/master/src/webob/headers.py
-    """
-    orig_headers_get = EnvironHeaders.get
-
-    def crashy_get(self, key, *args, **kwargs):
-        if key == "x-queue-start":
-            raise ValueError("Don't try get *that* header!")
-        return orig_headers_get(key, *args, **kwargs)
-
-    get_patcher = mock.patch.object(EnvironHeaders, "get", new=crashy_get)
-
-    with app_with_scout() as app, get_patcher:
-        response = TestApp(app).get("/hello/")
-
-    assert response.status_int == 200
-    assert "user_ip" not in tracked_requests[0].tags
 
 
 def test_amazon_queue_time(tracked_requests):
