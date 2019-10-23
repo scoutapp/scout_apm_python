@@ -8,6 +8,10 @@ from setuptools import Extension, find_packages, setup
 with open("README.md", "r") as fp:
     long_description = fp.read()
 
+packages = find_packages("src")
+if sys.version_info < (3, 6):
+    packages = [p for p in packages if not p.startswith('scout_apm.asgi')]
+
 compile_extensions = (
     # Python 3+
     sys.version_info >= (3,)
@@ -43,7 +47,7 @@ setup(
     license="MIT",
     zip_safe=False,
     python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4",
-    packages=find_packages("src"),
+    packages=packages,
     package_dir={str(""): str("src")},
     ext_modules=ext_modules,
     entry_points={
