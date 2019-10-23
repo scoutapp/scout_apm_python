@@ -1,55 +1,59 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import os
 import sys
 
 from setuptools import Extension, find_packages, setup
 
-long_description = (
-    "Scout Application Performance Monitoring Agent - https://scoutapm.com"
+with open("README.md", "r") as fp:
+    long_description = fp.read()
+
+compile_extensions = (
+    # Python 3+
+    sys.version_info >= (3,)
+    # Not Jython
+    and not sys.platform.startswith("java")
+    # Not PyPy
+    and "__pypy__" not in sys.builtin_module_names
 )
-if os.path.exists("README.md"):
-    with open("README.md", "r") as fp:
-        long_description = fp.read()
+if compile_extensions:
+    ext_modules = [
+        Extension(
+            str("scout_apm.core.objtrace"), [str("src/scout_apm/core/ext/objtrace.c")]
+        )
+    ]
+else:
+    ext_modules = []
 
-# Try to compile the extensions, except for platforms or versions
-# where our extensions are not supported
-compile_extensions = True
-
-setup_args = {
-    "name": "scout_apm",
-    "version": "2.6.0",
-    "description": "Scout Application Performance Monitoring Agent",
-    "long_description": long_description,
-    "long_description_content_type": "text/markdown",
-    "url": "https://github.com/scoutapp/scout_apm_python",
-    "project_urls": {
+setup(
+    name="scout_apm",
+    version="2.6.0",
+    description="Scout Application Performance Monitoring Agent",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url="https://github.com/scoutapp/scout_apm_python",
+    project_urls={
         "Documentation": "https://docs.scoutapm.com/#python-agent",
         "Changelog": (
             "https://github.com/scoutapp/scout_apm_python/blob/master/CHANGELOG.md"
         ),
     },
-    "author": "Scout",
-    "author_email": "support@scoutapm.com",
-    "license": "MIT",
-    "zip_safe": False,
-    "python_requires": ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4",
-    "packages": find_packages("src"),
-    "package_dir": {str(""): str("src")},
-    "ext_modules": [
-        Extension(
-            str("scout_apm.core.objtrace"), [str("src/scout_apm/core/ext/objtrace.c")]
-        )
-    ],
-    "entry_points": {
+    author="Scout",
+    author_email="support@scoutapm.com",
+    license="MIT",
+    zip_safe=False,
+    python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4",
+    packages=find_packages("src"),
+    package_dir={str(""): str("src")},
+    ext_modules=ext_modules,
+    entry_points={
         "console_scripts": [
             "core-agent-manager = scout_apm.core.cli.core_agent_manager:main"
         ]
     },
-    "install_requires": ["psutil", "requests"],
-    "keywords": "apm performance monitoring development",
-    "classifiers": [
+    install_requires=["psutil", "requests"],
+    keywords="apm performance monitoring development",
+    classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Framework :: Bottle",
         "Framework :: Django",
@@ -77,18 +81,4 @@ setup_args = {
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
     ],
-}
-
-if sys.version_info <= (3, 0):
-    compile_extensions = False
-
-if sys.platform.startswith("java"):
-    compile_extensions = False
-
-if "__pypy__" in sys.builtin_module_names:
-    compile_extensions = False
-
-if not compile_extensions:
-    del setup_args["ext_modules"]
-
-setup(**setup_args)
+)
