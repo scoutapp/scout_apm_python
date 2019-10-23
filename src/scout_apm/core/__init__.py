@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
+import sys
 from os import getpid
 
 from scout_apm.core.config import ScoutConfig
@@ -22,6 +23,13 @@ def install(*args, **kwargs):
     if "config" in kwargs:
         ScoutConfig().set(**kwargs["config"])
     context = AgentContext.build(config=ScoutConfig())
+
+    if sys.platform == "win32":
+        logger.info(
+            "APM Not Launching on PID: %s - Windows is not supported",
+            getpid(),
+        )
+        return False
 
     if not context.config.value("monitor"):
         logger.info(
