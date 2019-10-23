@@ -8,12 +8,10 @@ from contextlib import contextmanager
 import pytest
 from pyramid.config import Configurator
 from pyramid.response import Response
-from webob.headers import EnvironHeaders
 from webtest import TestApp
 
 from scout_apm.api import Config
 from scout_apm.compat import datetime_to_timestamp
-from tests.compat import mock
 from tests.integration.util import (
     parametrize_filtered_params,
     parametrize_queue_time_header_name,

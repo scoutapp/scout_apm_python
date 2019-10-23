@@ -5,13 +5,12 @@ import datetime as dt
 import sys
 from contextlib import contextmanager
 
-from bottle import Bottle, WSGIHeaderDict
+from bottle import Bottle
 from webtest import TestApp
 
 from scout_apm.api import Config
 from scout_apm.bottle import ScoutPlugin
 from scout_apm.compat import datetime_to_timestamp
-from tests.compat import mock
 from tests.integration.util import (
     parametrize_filtered_params,
     parametrize_queue_time_header_name,
