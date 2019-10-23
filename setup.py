@@ -10,7 +10,7 @@ with open("README.md", "r") as fp:
 
 packages = find_packages("src")
 if sys.version_info < (3, 6):
-    packages = [p for p in packages if not p.startswith('scout_apm.asgi')]
+    packages = [p for p in packages if not p.startswith("scout_apm.asgi")]
 
 compile_extensions = (
     # Python 3+

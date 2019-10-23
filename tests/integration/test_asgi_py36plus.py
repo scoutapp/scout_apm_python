@@ -118,6 +118,6 @@ async def test_server_error(tracked_requests):
     tracked_request = tracked_requests[0]
     assert len(tracked_request.complete_spans) == 1
     assert tracked_request.tags["path"] == "/crash/"
-    assert tracked_request.tags["error"] == 'true'
+    assert tracked_request.tags["error"] == "true"
     span = tracked_request.complete_spans[0]
     assert span.operation == "Controller/GET_/crash/"
