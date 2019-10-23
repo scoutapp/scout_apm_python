@@ -58,9 +58,15 @@ def app_with_scout(config=None, middleware=None, set_api=True):
 
     class CrashResource(object):
         def on_get(self, req, resp):
-            raise falcon.HTTPStatus("748 Confounded by ponies")
+            raise ValueError("BØØM!")  # non-ASCII
 
     app.add_route("/crash", CrashResource())
+
+    class ErrorResource(object):
+        def on_get(self, req, resp):
+            raise falcon.HTTPStatus("748 Confounded by ponies")
+
+    app.add_route("/error", ErrorResource())
 
     try:
         yield app
@@ -301,11 +307,12 @@ def test_not_found(tracked_requests):
 
 
 def test_crash(tracked_requests):
-    with app_with_scout() as app:
-        response = TestApp(app).get("/crash", expect_errors=True)
+    with app_with_scout() as app, pytest.raises(ValueError) as excinfo:
+        # Falcon doesn't do error responses itself for uncaught exceptions,
+        # instead relying on the host WSGI server to do this.
+        TestApp(app).get("/crash")
 
-    assert response.status_int == 748
-    assert response.text == ""
+    assert excinfo.value.args == ("BØØM!",)
     assert len(tracked_requests) == 1
     tracked_request = tracked_requests[0]
     assert tracked_request.tags["path"] == "/crash"
@@ -316,4 +323,23 @@ def test_crash(tracked_requests):
     assert (
         span.operation
         == "Controller/tests.integration.test_falcon.CrashResource.on_get"
+    )
+
+
+def test_error(tracked_requests):
+    with app_with_scout() as app:
+        response = TestApp(app).get("/error", expect_errors=True)
+
+    assert response.status_int == 748
+    assert response.text == ""
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert tracked_request.tags["path"] == "/error"
+    assert tracked_request.tags["error"] == "true"
+    assert tracked_request.active_spans == []
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert (
+        span.operation
+        == "Controller/tests.integration.test_falcon.ErrorResource.on_get"
     )
