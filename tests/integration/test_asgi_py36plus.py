@@ -5,6 +5,7 @@ import functools
 from contextlib import contextmanager
 
 import asgiref.sync
+import pytest
 from asgiref.testing import ApplicationCommunicator
 
 import scout_apm.core
@@ -102,3 +103,21 @@ async def test_home(tracked_requests):
     assert tracked_request.tags["path"] == "/"
     span = tracked_request.complete_spans[0]
     assert span.operation == "Controller/GET_/"
+
+
+@async_to_sync
+async def test_server_error(tracked_requests):
+    with app_with_scout() as app:
+        communicator = ApplicationCommunicator(app, get_scope(path="/crash/"))
+        with pytest.raises(ValueError) as excinfo:
+            await communicator.send_input({"type": "http.request"})
+            await communicator.receive_output()
+
+    assert excinfo.value.args == ("BØØM!",)
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.tags["path"] == "/crash/"
+    assert tracked_request.tags["error"] == 'true'
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "Controller/GET_/crash/"
