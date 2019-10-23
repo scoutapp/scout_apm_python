@@ -91,7 +91,9 @@ class CoreAgentManager(object):
         if log_level is not None:
             logger.warning(
                 "The config name 'log_level' is deprecated - "
-                + "please use the new name 'core_agent_log_level' instead."
+                + "please use the new name 'core_agent_log_level' instead. "
+                + "This might be configured in your environment variables or "
+                + "framework settings as SCOUT_LOG_LEVEL."
             )
         else:
             log_level = AgentContext.instance.config.value("core_agent_log_level")

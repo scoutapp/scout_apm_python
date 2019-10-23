@@ -6,6 +6,8 @@
 
 - Fix warning emitted from using deprecated 'warn' method
   ([PR #283](https://github.com/scoutapp/scout_apm_python/pull/283)).
+- Improve warning message for deprecated `log_level` configuration option
+  ([PR #288](https://github.com/scoutapp/scout_apm_python/pull/288)).
 
 ## [2.6.0] 2019-10-22
 
