@@ -161,7 +161,8 @@ def test_log_level_deprecated(caplog, core_agent_manager):
             logging.WARNING,
             (
                 "The config name 'log_level' is deprecated - please use the new name "
-                + "'core_agent_log_level' instead."
+                + "'core_agent_log_level' instead. This might be configured in your "
+                + "environment variables or framework settings as SCOUT_LOG_LEVEL."
             ),
         )
     ]
