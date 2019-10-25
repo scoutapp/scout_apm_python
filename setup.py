@@ -52,6 +52,7 @@ setup(
         ]
     },
     install_requires=["kwargs-only>=1.0,<2.0", "psutil>=5,<6", "requests>=2,<3"],
+    extras_require={"wsgi": ["werkzeug>=0.16,<1.0"]},
     keywords="apm performance monitoring development",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
