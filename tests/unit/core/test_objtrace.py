@@ -3,19 +3,12 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import pytest
 
-try:
-    from scout_apm.core import objtrace
-except ImportError:
-    objtrace = None
-
-if objtrace is None:
-    pytest.skip("objtrace extension isn't available", allow_module_level=True)
+from scout_apm.core import objtrace
+from tests.tools import skip_if_objtrace_not_extension
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def reset_objtrace_counts():
-    if objtrace is None:
-        return
     objtrace.reset_counts()
     try:
         yield
@@ -23,13 +16,14 @@ def reset_objtrace_counts():
         objtrace.reset_counts()
 
 
-def test_enables_and_disabled(reset_objtrace_counts):
+def test_enables_and_disabled():
     objtrace.enable()
     objtrace.get_counts()
     objtrace.disable()
 
 
-def test_allocation_counts(reset_objtrace_counts):
+@skip_if_objtrace_not_extension
+def test_allocation_counts():
     lists = []
     objtrace.enable()
     for _ in range(100):
@@ -39,7 +33,8 @@ def test_allocation_counts(reset_objtrace_counts):
     assert c[0] > 0
 
 
-def test_frees_counts(reset_objtrace_counts):
+@skip_if_objtrace_not_extension
+def test_frees_counts():
     objtrace.enable()
     for x in (1, 2, 3):
         y = x  # noqa: F841

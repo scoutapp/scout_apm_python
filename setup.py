@@ -19,7 +19,7 @@ compile_extensions = (
 if compile_extensions:
     ext_modules = [
         Extension(
-            str("scout_apm.core.objtrace"), [str("src/scout_apm/core/ext/objtrace.c")]
+            str("scout_apm.core._objtrace"), [str("src/scout_apm/core/_objtrace.c")]
         )
     ]
 else:

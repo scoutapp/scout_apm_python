@@ -7,11 +7,7 @@ import pytest
 
 from scout_apm.core import commands
 from scout_apm.core.tracked_request import TrackedRequest
-
-try:
-    from scout_apm.core import objtrace
-except ImportError:
-    objtrace = None
+from tests.tools import skip_if_objtrace_not_extension
 
 REQUEST_ID = "req-97c1d72c-5519-4665-85d3-1ac21af39b63"
 SPAN_ID = "span-7dbb0712-e3c5-4b73-b317-f8d2114c5993"
@@ -258,9 +254,7 @@ def test_batch_command_from_tracked_request_with_tag():
     }
 
 
-@pytest.mark.skipif(
-    objtrace is None, reason="Allocation tags only there when objtrace works"
-)
+@skip_if_objtrace_not_extension
 def test_batch_command_from_tracked_request_with_span():
     tracked_request = TrackedRequest()
     tracked_request.start_span()
@@ -324,9 +318,7 @@ def test_batch_command_from_tracked_request_with_span():
     }
 
 
-@pytest.mark.skipif(
-    objtrace is not None, reason="Allocation tags only there when objtrace works"
-)
+@skip_if_objtrace_not_extension
 def test_batch_command_from_tracked_request_with_span_no_objtrace():
     tracked_request = TrackedRequest()
     tracked_request.start_span()

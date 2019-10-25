@@ -3,14 +3,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import datetime as dt
 
-import pytest
-
+from scout_apm.core import objtrace
 from scout_apm.core.tracked_request import TrackedRequest
-
-try:
-    from scout_apm.core import objtrace
-except ImportError:
-    objtrace = None
+from tests.tools import skip_if_objtrace_not_extension, skip_if_objtrace_is_extension
 
 
 def test_tracked_request_repr(tracked_request):
@@ -80,12 +75,20 @@ def test_start_span_wires_parents(tracked_request):
     assert span2.parent == span1.span_id
 
 
-@pytest.mark.skipif(objtrace is None, reason="objtrace extension isn't available")
+@skip_if_objtrace_not_extension
 def test_tags_allocations_for_spans(tracked_request):
     objtrace.enable()
     span = tracked_request.start_span()
     tracked_request.stop_span()
     assert span.tags["allocations"] > 0
+
+
+@skip_if_objtrace_is_extension
+def test_tags_allocations_for_spans_no_objtrace_extension(tracked_request):
+    objtrace.enable()
+    span = tracked_request.start_span()
+    tracked_request.stop_span()
+    assert "allocations" not in span.tags
 
 
 def test_start_span_does_not_ignore_children(tracked_request):

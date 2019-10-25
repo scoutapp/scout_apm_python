@@ -5,16 +5,12 @@ import logging
 import sys
 from os import getpid
 
+from scout_apm.core import objtrace
 from scout_apm.core.config import ScoutConfig
 from scout_apm.core.context import AgentContext
 from scout_apm.core.core_agent_manager import CoreAgentManager
 from scout_apm.core.instrument_manager import InstrumentManager
 from scout_apm.core.metadata import AppMetadata
-
-try:
-    from scout_apm.core import objtrace
-except ImportError:
-    objtrace = None
 
 logger = logging.getLogger(__name__)
 
@@ -37,8 +33,7 @@ def install(*args, **kwargs):
 
     InstrumentManager().install_all()
 
-    if objtrace is not None:
-        objtrace.enable()
+    objtrace.enable()
 
     logger.debug("APM Launching on PID: %s", getpid())
     launched = CoreAgentManager().launch()
