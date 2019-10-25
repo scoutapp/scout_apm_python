@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
-import sys
 from contextlib import contextmanager
 
 import pytest
@@ -10,6 +9,7 @@ import urllib3
 
 from scout_apm.instruments.urllib3 import Instrument
 from tests.compat import mock
+from tests.tools import pretend_package_unavailable
 
 # e.g. export URLLIB3_URL="http://httpbin.org/"
 # or export URLLIB3_URL="http://localhost:9200/" (re-use Elasticsearch!)
@@ -32,15 +32,6 @@ def urllib3_with_scout():
         yield
     finally:
         instrument.uninstall()
-
-
-@contextmanager
-def no_urllib3():
-    sys.modules["urllib3"] = None
-    try:
-        yield
-    finally:
-        sys.modules["urllib3"] = urllib3
 
 
 def test_request():
@@ -75,12 +66,12 @@ def test_installable():
 
 
 def test_installable_no_urllib3_module():
-    with no_urllib3():
+    with pretend_package_unavailable("urllib3"):
         assert not instrument.installable()
 
 
 def test_install_no_urllib3_module():
-    with no_urllib3():
+    with pretend_package_unavailable("urllib3"):
         assert not instrument.install()
         assert not Instrument.installed
 

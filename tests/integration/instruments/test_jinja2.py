@@ -1,13 +1,13 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import sys
 from contextlib import contextmanager
 
 import jinja2
 
 from scout_apm.instruments.jinja2 import Instrument
 from tests.compat import mock
+from tests.tools import pretend_package_unavailable
 
 instrument = Instrument()
 
@@ -23,15 +23,6 @@ def jinja2_with_scout():
         yield
     finally:
         instrument.uninstall()
-
-
-@contextmanager
-def no_jinja2():
-    sys.modules["jinja2"] = None
-    try:
-        yield
-    finally:
-        sys.modules["jinja2"] = jinja2
 
 
 def test_render():
@@ -55,12 +46,12 @@ def test_installable():
 
 
 def test_installable_no_jinja2_module():
-    with no_jinja2():
+    with pretend_package_unavailable("jinja2"):
         assert not instrument.installable()
 
 
 def test_install_no_jinja2_module():
-    with no_jinja2():
+    with pretend_package_unavailable("jinja2"):
         assert not instrument.install()
         assert not Instrument.installed
 

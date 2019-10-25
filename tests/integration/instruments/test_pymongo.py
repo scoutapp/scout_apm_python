@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
-import sys
 from contextlib import contextmanager
 
 import pymongo
@@ -10,6 +9,7 @@ import pytest
 
 from scout_apm.instruments.pymongo import Instrument
 from tests.compat import mock
+from tests.tools import pretend_package_unavailable
 
 # e.g. export MONGODB_URL="mongodb://localhost:27017/"
 MONGODB_URL = os.environ.get("MONGODB_URL")
@@ -34,15 +34,6 @@ def client_with_scout():
         instrument.uninstall()
 
 
-@contextmanager
-def no_pymongo():
-    sys.modules["pymongo.collection"] = None
-    try:
-        yield
-    finally:
-        sys.modules["pymongo.collection"] = pymongo.collection
-
-
 def test_find_one():
     with client_with_scout() as client:
         client.local.startup_log.find_one()
@@ -63,12 +54,12 @@ def test_installable():
 
 
 def test_installable_no_pymongo_module():
-    with no_pymongo():
+    with pretend_package_unavailable("pymongo"):
         assert not instrument.installable()
 
 
 def test_install_no_pymongo_module():
-    with no_pymongo():
+    with pretend_package_unavailable("pymongo"):
         assert not instrument.install()
         assert not Instrument.installed
 

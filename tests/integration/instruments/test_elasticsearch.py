@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
-import sys
 from contextlib import contextmanager
 
 import elasticsearch
@@ -10,6 +9,7 @@ import pytest
 
 from scout_apm.instruments.elasticsearch import Instrument
 from tests.compat import mock
+from tests.tools import pretend_package_unavailable
 
 # e.g. export ELASTICSEARCH_URL="http://localhost:9200/"
 ELASTICSEARCH_URL = os.environ.get("ELASTICSEARCH_URL")
@@ -32,15 +32,6 @@ def es_with_scout():
         yield es
     finally:
         instrument.uninstall()
-
-
-@contextmanager
-def no_elasticsearch():
-    sys.modules["elasticsearch"] = None
-    try:
-        yield
-    finally:
-        sys.modules["elasticsearch"] = elasticsearch
 
 
 def test_search():
@@ -95,18 +86,18 @@ def test_installable():
 
 
 def test_installable_no_elasticsearch_module():
-    with no_elasticsearch():
+    with pretend_package_unavailable("elasticsearch"):
         assert not instrument.installable()
 
 
 def test_install_no_elasticsearch_module():
-    with no_elasticsearch():
+    with pretend_package_unavailable("elasticsearch"):
         assert not instrument.install()
         assert not Instrument.installed
 
 
 def test_instrument_client_no_elasticsearch_module():
-    with no_elasticsearch():
+    with pretend_package_unavailable("elasticsearch"):
         assert not instrument.instrument_client()
 
 
@@ -118,7 +109,7 @@ def test_instrument_client_install_failure(monkeypatch_method):
 
 
 def test_instrument_transport_no_elasticsearch_module():
-    with no_elasticsearch():
+    with pretend_package_unavailable("elasticsearch"):
         assert not instrument.instrument_transport()
 
 

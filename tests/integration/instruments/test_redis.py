@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
-import sys
 from contextlib import contextmanager
 
 import pytest
@@ -10,6 +9,7 @@ import redis
 
 from scout_apm.instruments.redis import Instrument
 from tests.compat import mock
+from tests.tools import pretend_package_unavailable
 
 # e.g. export REDIS_URL="redis://localhost:6379/0"
 REDIS_URL = os.environ.get("REDIS_URL")
@@ -33,17 +33,6 @@ def redis_with_scout():
     finally:
         instrument.uninstall()
         pass
-
-
-@contextmanager
-def no_redis():
-    sys.modules["redis"] = None
-    sys.modules["redis.client"] = None
-    try:
-        yield
-    finally:
-        sys.modules["redis"] = redis
-        sys.modules["redis.client"] = redis.client
 
 
 def test_echo():
@@ -90,18 +79,18 @@ def test_installable():
 
 
 def test_installable_no_redis_module():
-    with no_redis():
+    with pretend_package_unavailable("redis"):
         assert not instrument.installable()
 
 
 def test_install_no_redis_module():
-    with no_redis():
+    with pretend_package_unavailable("redis"):
         assert not instrument.install()
         assert not Instrument.installed
 
 
 def test_patch_redis_no_redis_module():
-    with no_redis():
+    with pretend_package_unavailable("redis"):
         instrument.patch_redis()  # doesn't crash
 
 
@@ -111,7 +100,7 @@ def test_patch_redis_install_failure(monkeypatch_method):
 
 
 def test_patch_pipeline_no_redis_module():
-    with no_redis():
+    with pretend_package_unavailable("redis"):
         instrument.patch_pipeline()  # doesn't crash
 
 
