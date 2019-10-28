@@ -5,17 +5,12 @@ import datetime as dt
 import logging
 from uuid import uuid4
 
-import scout_apm.core.backtrace
+from scout_apm.core import backtrace, objtrace
 from scout_apm.core.commands import BatchCommand
 from scout_apm.core.context import AgentContext
 from scout_apm.core.n_plus_one_call_set import NPlusOneCallSet
 from scout_apm.core.samplers import Memory, Samplers
 from scout_apm.core.thread_local import ThreadLocalSingleton
-
-try:
-    from scout_apm.core import objtrace
-except ImportError:
-    objtrace = None
 
 logger = logging.getLogger(__name__)
 
@@ -166,10 +161,7 @@ class Span(object):
         self.ignore_children = ignore_children
         self.parent = parent
         self.tags = {}
-        if objtrace is not None:
-            self.start_objtrace_counts = objtrace.get_counts()
-        else:
-            self.start_objtrace_counts = (0, 0, 0, 0)
+        self.start_objtrace_counts = objtrace.get_counts()
         self.end_objtrace_counts = (0, 0, 0, 0)
 
     def __repr__(self):
@@ -180,10 +172,7 @@ class Span(object):
 
     def stop(self):
         self.end_time = dt.datetime.utcnow()
-        if objtrace is not None:
-            self.end_objtrace_counts = objtrace.get_counts()
-        else:
-            self.end_objtrace_counts = (0, 0, 0, 0)
+        self.end_objtrace_counts = objtrace.get_counts()
 
     def tag(self, key, value):
         if key in self.tags:
@@ -215,7 +204,7 @@ class Span(object):
             self.capture_backtrace()
 
     def add_allocation_tags(self):
-        if objtrace is None:
+        if not objtrace.is_extension:
             return
 
         start_allocs = (
@@ -247,5 +236,4 @@ class Span(object):
         self.tag("stop_allocations", end_allocs)
 
     def capture_backtrace(self):
-        stack = scout_apm.core.backtrace.capture()
-        self.tag("stack", stack)
+        self.tag("stack", backtrace.capture())
