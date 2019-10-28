@@ -20,11 +20,11 @@ class SamplersThread(threading.Thread):
     _stop_event = threading.Event()
 
     @classmethod
-    def ensure_running(cls, *args, **kwargs):
+    def ensure_started(cls):
         with cls._instance_lock:
             if cls._instance is None:
-                cls._instance = cls(args, kwargs)
-            return cls._instance
+                cls._instance = cls(daemon=True)
+                cls._instance.start()
 
     @classmethod
     def ensure_stopped(cls):
@@ -44,37 +44,22 @@ class SamplersThread(threading.Thread):
             cls._instance = None
             cls._stop_event.clear()
 
-    def __init__(self, *args, **kwargs):
-        super(SamplersThread, self).__init__()
-
-        # Set Thread options
-        self.daemon = True
-
-        # start() launches run() in another thread
-        self.start()
-
-    def __del__(self):
-        self.stop()
-
     def run(self):
         logger.debug("Starting Samplers.")
         instances = [Cpu(), Memory()]
 
         while True:
             for instance in instances:
-                event = ApplicationEvent()
-                event.event_value = instance.run()
-                event.event_type = (
-                    instance.metric_type() + "/" + instance.metric_name()
+                event = ApplicationEvent(
+                    event_type=(instance.metric_type() + "/" + instance.metric_name()),
+                    event_value=instance.run(),
+                    timestamp=dt.datetime.utcnow(),
+                    source="Pid: " + str(os.getpid()),
                 )
-                event.timestamp = dt.datetime.utcnow()
-                event.source = "Pid: " + str(os.getpid())
-
                 if event.event_value is not None:
                     AgentContext.socket().send(event)
 
             should_stop = self._stop_event.wait(timeout=60)
             if should_stop:
-                logger.debug("Shutting down samplers thread.")
+                logger.debug("Stopping Samplers.")
                 break
-        self._stopped_event.set()
