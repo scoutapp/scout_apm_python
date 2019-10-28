@@ -2,6 +2,12 @@
 
 ## Pending
 
+### Added
+
+- Python 3.8 testing and PyPI trove classifier - no code changes were required
+  so older versions should work too
+  ([PR #263](https://github.com/scoutapp/scout_apm_python/pull/263)).
+
 ### Fixed
 
 - Changed `scout_apm.api.install()` signature to not take `*args, **kwargs` but
