@@ -34,8 +34,7 @@ class Config(ScoutConfig):
     pass
 
 
-def install(*args, **kwargs):
-    scout_apm.core.install(*args, **kwargs)
+install = scout_apm.core.install
 
 
 def ignore_transaction():

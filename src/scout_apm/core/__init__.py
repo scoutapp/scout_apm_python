@@ -5,6 +5,8 @@ import logging
 import sys
 from os import getpid
 
+from kwargs_only import kwargs_only
+
 from scout_apm.core import objtrace
 from scout_apm.core.config import ScoutConfig
 from scout_apm.core.context import AgentContext
@@ -15,10 +17,12 @@ from scout_apm.core.metadata import AppMetadata
 logger = logging.getLogger(__name__)
 
 
-def install(*args, **kwargs):
-    if "config" in kwargs:
-        ScoutConfig().set(**kwargs["config"])
-    context = AgentContext.build(config=ScoutConfig())
+@kwargs_only
+def install(config=None):
+    scout_config = ScoutConfig()
+    if config is not None:
+        scout_config.set(**config)
+    context = AgentContext.build(config=scout_config)
 
     if sys.platform == "win32":
         logger.info("APM Not Launching on PID: %s - Windows is not supported", getpid())
