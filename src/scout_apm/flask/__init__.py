@@ -64,7 +64,9 @@ class ScoutApm(object):
 
         tracked_request = TrackedRequest.instance()
         tracked_request.mark_real_request()
-        span = tracked_request.start_span(operation=operation)
+        span = tracked_request.start_span(
+            operation=operation, should_capture_backtrace=False
+        )
         span.tag("name", name)
 
         werkzeug_track_request_data(request, tracked_request)

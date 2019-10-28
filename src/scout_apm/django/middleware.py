@@ -86,7 +86,9 @@ class MiddlewareTimingMiddleware(object):
 
         tracked_request = TrackedRequest.instance()
 
-        tracked_request.start_span(operation="Middleware")
+        tracked_request.start_span(
+            operation="Middleware", should_capture_backtrace=False
+        )
         queue_time = request.META.get("HTTP_X_QUEUE_START") or request.META.get(
             "HTTP_X_REQUEST_START", ""
         )
@@ -129,7 +131,7 @@ class ViewTimingMiddleware(object):
 
         # This operation name won't be recorded unless changed later in
         # process_view
-        tracked_request.start_span(operation="Unknown")
+        tracked_request.start_span(operation="Unknown", should_capture_backtrace=False)
         try:
             return self.get_response(request)
         finally:
@@ -182,7 +184,9 @@ class OldStyleMiddlewareTimingMiddleware(object):
                 request.META.get("HTTP_X_AMZN_TRACE_ID", ""), tracked_request
             )
 
-        tracked_request.start_span(operation="Middleware")
+        tracked_request.start_span(
+            operation="Middleware", should_capture_backtrace=False
+        )
 
     def process_response(self, request, response):
         # Only stop span if there's a request, but presume we are balanced,
@@ -206,7 +210,9 @@ class OldStyleViewMiddleware(object):
 
         track_request_view_data(request, tracked_request)
 
-        span = tracked_request.start_span(operation=get_operation_name(request))
+        span = tracked_request.start_span(
+            operation=get_operation_name(request), should_capture_backtrace=False
+        )
         # Save the span into the request, so we can check
         # if we're matched up when stopping
         request._scout_view_span = span

@@ -96,7 +96,9 @@ class ScoutMiddleware(object):
                 resource.__module__, resource.__class__.__name__, responder.__name__
             )
 
-        span = tracked_request.start_span(operation=operation)
+        span = tracked_request.start_span(
+            operation=operation, should_capture_backtrace=False
+        )
         req.context.scout_resource_span = span
 
     def process_response(self, req, resp, resource, req_succeeded):
