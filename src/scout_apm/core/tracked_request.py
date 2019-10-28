@@ -9,7 +9,8 @@ from scout_apm.core import backtrace, objtrace
 from scout_apm.core.commands import BatchCommand
 from scout_apm.core.context import AgentContext
 from scout_apm.core.n_plus_one_call_set import NPlusOneCallSet
-from scout_apm.core.samplers import Memory, Samplers
+from scout_apm.core.samplers.memory import Memory
+from scout_apm.core.samplers.thread import SamplersThread
 from scout_apm.core.thread_local import ThreadLocalSingleton
 
 logger = logging.getLogger(__name__)
@@ -115,7 +116,7 @@ class TrackedRequest(ThreadLocalSingleton):
             if not self.is_ignored():
                 batch_command = BatchCommand.from_tracked_request(self)
                 AgentContext.socket().send(batch_command)
-            Samplers.ensure_running()
+            SamplersThread.ensure_started()
 
         # This can fail if the Tracked Request was created directly,
         # not through instance()
