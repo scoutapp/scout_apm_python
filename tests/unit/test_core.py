@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 import os
-import sys
 
 from scout_apm.api import Config
 from scout_apm.core import install
@@ -12,7 +11,7 @@ from tests.compat import mock
 
 
 def test_install_fail_windows(caplog):
-    with mock.patch.object(sys, "platform", new="win32"):
+    with mock.patch.object(os, "name", new="nt"):
         installed = install()
 
     assert installed is False
