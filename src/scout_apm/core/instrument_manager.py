@@ -19,7 +19,7 @@ class InstrumentManager(object):
             installable = getattr(installable, klass)
             installable = installable(*args, **kwargs)
 
-            result = getattr(installable, "install")()
+            result = installable.install()
             return result
         except Exception as e:
             logger.info("Exception while installing instrument %s: %r", module_name, e)

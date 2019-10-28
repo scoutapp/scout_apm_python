@@ -72,7 +72,7 @@ def test_instrument_decorator_default_tags(tracked_request):
 
     assert len(tracked_request.active_spans) == 0
     assert len(tracked_request.complete_spans) == 1
-    assert tracked_request.complete_spans[0].tags["x"] == 99
+    assert tracked_request.complete_spans[0].tags == {"x": 99}
 
 
 def test_instrument_non_ascii_params(tracked_request):
@@ -137,6 +137,16 @@ def test_web_transaction_decorator(tracked_request):
     assert tracked_request.complete_spans[0].operation == "Controller/Bar"
 
 
+def test_web_transaction_default_tags(tracked_request):
+    @WebTransaction("Bar", tags={"x": 99})
+    def my_transaction():
+        pass
+
+    my_transaction()
+
+    assert tracked_request.tags["x"] == 99
+
+
 def test_web_transaction_non_ascii_params(tracked_request):
     @WebTransaction("Acheter du café")
     def buy_coffee():
@@ -194,6 +204,16 @@ def test_background_transaction_decorator(tracked_request):
     assert tracked_request.complete_spans[0].operation == "Job/Bar"
 
 
+def test_background_transaction_default_tags(tracked_request):
+    @BackgroundTransaction("Bar", tags={"x": 99})
+    def my_transaction():
+        pass
+
+    my_transaction()
+
+    assert tracked_request.tags["x"] == 99
+
+
 def test_background_transaction_non_ascii_params(tracked_request):
     @BackgroundTransaction("Acheter du café")
     def buy_coffee():
@@ -243,3 +263,11 @@ def test_rename_transaction(tracked_request):
     rename_transaction("Unit Test")
 
     assert tracked_request.tags["transaction.name"] == "Unit Test"
+
+
+def test_rename_transaction_none(tracked_request):
+    assert "transaction.name" not in tracked_request.tags
+
+    rename_transaction(None)
+
+    assert "transaction.name" not in tracked_request.tags
