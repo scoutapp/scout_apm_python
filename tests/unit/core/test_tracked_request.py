@@ -129,13 +129,25 @@ def test_span_captures_backtrace(tracked_request):
     assert "stack" in span.tags
 
 
-def test_span_does_not_capture_backtrace(tracked_request):
-    controller = tracked_request.start_span(operation="Controller/Work")
-    middleware = tracked_request.start_span(operation="Middleware/Work")
+def test_should_capture_backtrace_default_true(tracked_request):
+    span = tracked_request.start_span("Something")
+    # Trigger 'slow' condition
+    span.start_time -= dt.timedelta(seconds=2)
+
     tracked_request.stop_span()
+
+    stack = span.tags["stack"]
+    assert all(set(i.keys()) == {"file", "line", "function"} for i in stack)
+
+
+def test_should_capture_backtrace_false(tracked_request):
+    span = tracked_request.start_span("Something", should_capture_backtrace=False)
+    # Trigger 'slow' condition
+    span.start_time -= dt.timedelta(seconds=2)
+
     tracked_request.stop_span()
-    assert "stack" not in controller.tags
-    assert "stack" not in middleware.tags
+
+    assert "stack" not in span.tags
 
 
 def test_extra_stop_span_is_ignored(tracked_request):
