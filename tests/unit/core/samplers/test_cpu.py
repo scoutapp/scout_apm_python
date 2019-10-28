@@ -10,18 +10,6 @@ from scout_apm.core.samplers.cpu import Cpu
 from tests.compat import mock
 
 
-def test_metric_type():
-    assert Cpu().metric_type() == "CPU"
-
-
-def test_metric_name():
-    assert Cpu().metric_name() == "Utilization"
-
-
-def test_human_name():
-    assert Cpu().human_name() == "Process CPU"
-
-
 def test_run_negative_time_elapsed(caplog):
     cpu = Cpu()
     cpu.last_run = dt.datetime.utcnow() + dt.timedelta(days=100)
@@ -103,7 +91,7 @@ def test_run_undetermined_cpus(caplog):
     assert record_tuples[0] == (
         "scout_apm.core.samplers.cpu",
         logging.DEBUG,
-        "Could not determine CPU count - assume there is one.",
+        "Could not determine CPU count - assuming there is one.",
     )
     _, level, message = record_tuples[1]
     assert level == logging.DEBUG

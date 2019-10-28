@@ -56,7 +56,7 @@ class SamplersThread(threading.Thread):
             for instance in instances:
                 event_value = instance.run()
                 if event_value is not None:
-                    event_type = instance.metric_type() + "/" + instance.metric_name()
+                    event_type = instance.metric_type + "/" + instance.metric_name
                     event = ApplicationEvent(
                         event_value=event_value,
                         event_type=event_type,
