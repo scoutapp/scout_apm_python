@@ -5,7 +5,7 @@ import datetime as dt
 
 from scout_apm.core import objtrace
 from scout_apm.core.tracked_request import TrackedRequest
-from tests.tools import skip_if_objtrace_not_extension, skip_if_objtrace_is_extension
+from tests.tools import skip_if_objtrace_is_extension, skip_if_objtrace_not_extension
 
 
 def test_tracked_request_repr(tracked_request):

@@ -5,8 +5,7 @@ import datetime as dt
 import logging
 from uuid import uuid4
 
-from scout_apm.core import backtrace
-from scout_apm.core import objtrace
+from scout_apm.core import backtrace, objtrace
 from scout_apm.core.commands import BatchCommand
 from scout_apm.core.context import AgentContext
 from scout_apm.core.n_plus_one_call_set import NPlusOneCallSet
