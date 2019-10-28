@@ -23,7 +23,7 @@ class SamplersThread(threading.Thread):
     def ensure_started(cls):
         with cls._instance_lock:
             if cls._instance is None:
-                cls._instance = cls(daemon=True)
+                cls._instance = cls()
                 cls._instance.start()
 
     @classmethod
@@ -43,6 +43,10 @@ class SamplersThread(threading.Thread):
 
             cls._instance = None
             cls._stop_event.clear()
+
+    def __init__(self, *args, **kwargs):
+        super(SamplersThread, self).__init__(*args, **kwargs)
+        self.daemon = True
 
     def run(self):
         logger.debug("Starting Samplers.")
