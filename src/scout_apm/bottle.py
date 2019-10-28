@@ -58,7 +58,10 @@ class ScoutPlugin(object):
                 controller_name = "/home"
             if not controller_name.startswith("/"):
                 controller_name = "/" + controller_name
-            tracked_request.start_span(operation="Controller{}".format(controller_name))
+            tracked_request.start_span(
+                operation="Controller{}".format(controller_name),
+                should_capture_backtrace=False,
+            )
 
             # Determine a remote IP to associate with the request. The
             # value is spoofable by the requester so this is not suitable

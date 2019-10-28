@@ -29,7 +29,9 @@ def includeme(config):
 def instruments(handler, registry):
     def scout_tween(request):
         tracked_request = TrackedRequest.instance()
-        span = tracked_request.start_span(operation="Controller/Pyramid")
+        span = tracked_request.start_span(
+            operation="Controller/Pyramid", should_capture_backtrace=False
+        )
 
         try:
             path = request.path

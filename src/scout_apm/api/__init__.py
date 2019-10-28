@@ -80,7 +80,9 @@ class Transaction(ContextDecorator):
 
         tracked_request = TrackedRequest.instance()
         tracked_request.mark_real_request()
-        span = tracked_request.start_span(operation=operation)
+        span = tracked_request.start_span(
+            operation=operation, should_capture_backtrace=False
+        )
         for key, value in tags.items():
             tracked_request.tag(key, value)
         return span

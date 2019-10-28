@@ -36,7 +36,7 @@ class ScoutReporter(DependencyProvider):
             + "."
             + worker_ctx.entrypoint.method_name
         )
-        tracked_request.start_span(operation=operation)
+        tracked_request.start_span(operation=operation, should_capture_backtrace=False)
 
     def _track_request_data(self, request, tracked_request):
         if not isinstance(request, Request):
