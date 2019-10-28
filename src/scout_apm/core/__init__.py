@@ -2,8 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
-import sys
-from os import getpid
+import os
 
 from kwargs_only import kwargs_only
 
@@ -24,14 +23,16 @@ def install(config=None):
         scout_config.set(**config)
     context = AgentContext.build(config=scout_config)
 
-    if sys.platform == "win32":
-        logger.info("APM Not Launching on PID: %s - Windows is not supported", getpid())
+    if os.name == "nt":
+        logger.info(
+            "APM Not Launching on PID: %s - Windows is not supported", os.getpid()
+        )
         return False
 
     if not context.config.value("monitor"):
         logger.info(
             "APM Not Launching on PID: %s - Configuration 'monitor' is not true",
-            getpid(),
+            os.getpid(),
         )
         return False
 
@@ -39,7 +40,7 @@ def install(config=None):
 
     objtrace.enable()
 
-    logger.debug("APM Launching on PID: %s", getpid())
+    logger.debug("APM Launching on PID: %s", os.getpid())
     launched = CoreAgentManager().launch()
 
     AppMetadata.report()
