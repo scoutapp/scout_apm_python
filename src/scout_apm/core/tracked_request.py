@@ -149,6 +149,7 @@ class Span(object):
         "tags",
         "start_objtrace_counts",
         "end_objtrace_counts",
+        "should_capture_backtrace",
     )
 
     def __init__(
@@ -158,6 +159,7 @@ class Span(object):
         ignore=False,
         ignore_children=False,
         parent=None,
+        should_capture_backtrace=True,
     ):
         self.span_id = "span-" + str(uuid4())
         self.start_time = dt.datetime.utcnow()
@@ -170,6 +172,7 @@ class Span(object):
         self.tags = {}
         self.start_objtrace_counts = objtrace.get_counts()
         self.end_objtrace_counts = (0, 0, 0, 0)
+        self.should_capture_backtrace = should_capture_backtrace
 
     def __repr__(self):
         # Incomplete to avoid TMI
@@ -200,11 +203,7 @@ class Span(object):
     # process of stopping this span.
     def annotate(self):
         self.add_allocation_tags()
-        # Don't capture backtraces for Controller or Middleware
-        if self.operation is not None and (
-            self.operation.startswith(("Controller", "Middleware"))
-            or self.operation == "QueueTime/Request"
-        ):
+        if not self.should_capture_backtrace:
             return
         slow_threshold = 0.5
         if self.duration() > slow_threshold:
