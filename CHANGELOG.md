@@ -1,5 +1,13 @@
 # Changelog
 
+## Pending
+
+### Fixed
+
+- Changed `scout_apm.api.install()` signature to not take `*args, **kwargs` but
+  just `config` (adds dependency on `kwargs-only`)
+  ([PR #304](https://github.com/scoutapp/scout_apm_python/pull/304)).
+
 ## [2.6.1] 2019-10-23
 
 ### Fixed
