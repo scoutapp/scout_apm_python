@@ -50,13 +50,17 @@ class SamplersThread(threading.Thread):
 
         while True:
             for instance in instances:
-                event = ApplicationEvent(
-                    event_type=(instance.metric_type() + "/" + instance.metric_name()),
-                    event_value=instance.run(),
-                    timestamp=dt.datetime.utcnow(),
-                    source="Pid: " + str(os.getpid()),
-                )
-                if event.event_value is not None:
+                event_value = instance.run()
+                if event_value is not None:
+                    event_type = (
+                        instance.metric_type() + "/" + instance.metric_name()
+                    )
+                    event = ApplicationEvent(
+                        event_value=event_value,
+                        event_type=event_type,
+                        timestamp=dt.datetime.utcnow(),
+                        source="Pid: " + str(os.getpid()),
+                    )
                     AgentContext.socket().send(event)
 
             should_stop = self._stop_event.wait(timeout=60)
