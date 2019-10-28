@@ -3,8 +3,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import datetime as dt
 import logging
-import threading
 import os
+import threading
 
 from scout_apm.core.commands import ApplicationEvent
 from scout_apm.core.context import AgentContext
@@ -52,9 +52,7 @@ class SamplersThread(threading.Thread):
             for instance in instances:
                 event_value = instance.run()
                 if event_value is not None:
-                    event_type = (
-                        instance.metric_type() + "/" + instance.metric_name()
-                    )
+                    event_type = instance.metric_type() + "/" + instance.metric_name()
                     event = ApplicationEvent(
                         event_value=event_value,
                         event_type=event_type,

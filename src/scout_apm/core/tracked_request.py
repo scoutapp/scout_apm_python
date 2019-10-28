@@ -9,8 +9,8 @@ from scout_apm.core import backtrace, objtrace
 from scout_apm.core.commands import BatchCommand
 from scout_apm.core.context import AgentContext
 from scout_apm.core.n_plus_one_call_set import NPlusOneCallSet
-from scout_apm.core.samplers.thread import SamplersThread
 from scout_apm.core.samplers.memory import Memory
+from scout_apm.core.samplers.thread import SamplersThread
 from scout_apm.core.thread_local import ThreadLocalSingleton
 
 logger = logging.getLogger(__name__)
