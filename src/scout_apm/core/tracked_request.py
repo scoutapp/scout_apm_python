@@ -9,7 +9,7 @@ from scout_apm.core import backtrace, objtrace
 from scout_apm.core.commands import BatchCommand
 from scout_apm.core.context import AgentContext
 from scout_apm.core.n_plus_one_call_set import NPlusOneCallSet
-from scout_apm.core.samplers.memory import Memory
+from scout_apm.core.samplers.memory import get_rss_in_mb
 from scout_apm.core.samplers.thread import SamplersThread
 from scout_apm.core.thread_local import ThreadLocalSingleton
 
@@ -31,7 +31,7 @@ class TrackedRequest(ThreadLocalSingleton):
         "complete_spans",
         "tags",
         "_is_real_request",
-        "memory_start",
+        "_memory_start",
         "callset",
     )
 
@@ -43,7 +43,7 @@ class TrackedRequest(ThreadLocalSingleton):
         self.complete_spans = []
         self.tags = {}
         self._is_real_request = False
-        self.memory_start = Memory.rss_in_mb()
+        self._memory_start = get_rss_in_mb()
         self.callset = NPlusOneCallSet()
         logger.debug("Starting request: %s", self.request_id)
 
@@ -112,7 +112,7 @@ class TrackedRequest(ThreadLocalSingleton):
         if self.end_time is None:
             self.end_time = dt.datetime.utcnow()
         if self.is_real_request():
-            self.tag("mem_delta", Memory.get_delta(self.memory_start))
+            self.tag("mem_delta", self._get_mem_delta())
             if not self.is_ignored():
                 batch_command = BatchCommand.from_tracked_request(self)
                 AgentContext.socket().send(batch_command)
@@ -124,6 +124,12 @@ class TrackedRequest(ThreadLocalSingleton):
             self.release()
         except Exception:
             pass
+
+    def _get_mem_delta(self):
+        current_mem = get_rss_in_mb()
+        if current_mem > self._memory_start:
+            return current_mem - self._memory_start
+        return 0.0
 
     # A request is ignored if the tag "ignore_transaction" is set to True
     def is_ignored(self):

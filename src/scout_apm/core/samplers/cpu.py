@@ -10,22 +10,17 @@ logger = logging.getLogger(__name__)
 
 
 class Cpu(object):
+    metric_type = "CPU"
+    metric_name = "Utilization"
+    human_name = "Process CPU"
+
     def __init__(self):
         self.last_run = dt.datetime.utcnow()
         self.last_cpu_times = psutil.Process().cpu_times()
         self.num_processors = psutil.cpu_count()
         if self.num_processors is None:
-            logger.debug("Could not determine CPU count - assume there is one.")
+            logger.debug("Could not determine CPU count - assuming there is one.")
             self.num_processors = 1
-
-    def metric_type(self):
-        return "CPU"
-
-    def metric_name(self):
-        return "Utilization"
-
-    def human_name(self):
-        return "Process CPU"
 
     def run(self):
         now = dt.datetime.utcnow()
@@ -37,7 +32,7 @@ class Cpu(object):
             self.save_times(now, cpu_times)
             logger.debug(
                 "%s: Negative time elapsed. now: %s, last_run: %s.",
-                self.human_name(),
+                self.human_name,
                 now,
                 self.last_run,
             )
@@ -55,7 +50,7 @@ class Cpu(object):
                 "%s: Negative process time elapsed. "
                 "utime: %s, stime: %s, total time: %s. "
                 "This is normal to see when starting a forking web server.",
-                self.human_name(),
+                self.human_name,
                 utime_elapsed,
                 stime_elapsed,
                 process_elapsed,
@@ -73,7 +68,7 @@ class Cpu(object):
 
         self.save_times(now, cpu_times)
 
-        logger.debug("%s: %s [%s CPU(s)]", self.human_name(), res, self.num_processors)
+        logger.debug("%s: %s [%s CPU(s)]", self.human_name, res, self.num_processors)
 
         return res
 
