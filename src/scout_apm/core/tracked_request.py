@@ -116,7 +116,7 @@ class TrackedRequest(ThreadLocalSingleton):
             if not self.is_ignored():
                 batch_command = BatchCommand.from_tracked_request(self)
                 AgentContext.socket().send(batch_command)
-            SamplersThread.ensure_running()
+            SamplersThread.ensure_started()
 
         # This can fail if the Tracked Request was created directly,
         # not through instance()
