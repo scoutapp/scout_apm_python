@@ -54,12 +54,12 @@ def test_installable():
 
 
 def test_installable_no_pymongo_module():
-    with pretend_package_unavailable("pymongo.collection"):
+    with pretend_package_unavailable("pymongo"):
         assert not instrument.installable()
 
 
 def test_install_no_pymongo_module():
-    with pretend_package_unavailable("pymongo.collection"):
+    with pretend_package_unavailable("pymongo"):
         assert not instrument.install()
         assert not Instrument.installed
 
