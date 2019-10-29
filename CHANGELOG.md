@@ -9,11 +9,6 @@
   ([PR #304](https://github.com/scoutapp/scout_apm_python/pull/304)).
 - Rewrite background samplers thread to avoid some rare race conditions
   ([PR #307](https://github.com/scoutapp/scout_apm_python/pull/307)).
-- Removed mutable default tags from `instrument()`, `BackgroundTransaction`,
-  `Transaction`, and `WebTransaction`. If you've been having problems with tags
-  being shared between instruments or transactions, these should have been
-  fixed ([PR #316](https://github.com/scoutapp/scout_apm_python/pull/316)).
-
 
 ## [2.6.1] 2019-10-23
 
