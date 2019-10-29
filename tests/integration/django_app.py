@@ -96,6 +96,29 @@ def sql(request):
     return HttpResponse(result)
 
 
+def sql_kwargs(request):
+    with connection.cursor() as cursor:
+        cursor.execute(sql="CREATE TABLE IF NOT EXISTS test(item)")
+        cursor.executemany(
+            sql="INSERT INTO test(item) VALUES(%s)",
+            param_list=[("Hello",), ("World!",)],
+        )
+    return HttpResponse("Okay")
+
+
+def sql_type_errors(request):
+    with connection.cursor() as cursor:
+        try:
+            cursor.execute()
+        except TypeError:
+            pass
+        try:
+            cursor.executemany()
+        except TypeError:
+            pass
+    return HttpResponse("Done")
+
+
 def template(request):
     template = engines["django"].from_string(
         "Hello {% block name %}{{ name }}{% endblock %}!"
@@ -162,6 +185,8 @@ def urlpatterns():
             path("crash/", crash),
             path("cbv/", CbvView.as_view()),
             path("sql/", sql),
+            path("sql-kwargs/", sql_kwargs),
+            path("sql-type-errors/", sql_type_errors),
             path("template/", template),
             path("template-response/", template_response),
             path("admin/", admin.site.urls),
@@ -179,6 +204,8 @@ def urlpatterns():
             url(r"^crash/$", crash),
             url(r"^cbv/$", CbvView.as_view()),
             url(r"^sql/$", sql),
+            url(r"^sql-kwargs/$", sql_kwargs),
+            url(r"^sql-type-errors/$", sql_type_errors),
             url(r"^template/$", template),
             url(r"^template-response/$", template_response),
             url(r"^admin/", admin.site.urls),
