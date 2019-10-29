@@ -5,7 +5,7 @@ from flask import current_app
 from flask.globals import _request_ctx_stack
 
 import scout_apm.core
-from scout_apm.core.config import ScoutConfig
+from scout_apm.core.config import scout_config
 from scout_apm.core.monkey import CallableProxy
 from scout_apm.core.tracked_request import TrackedRequest
 from scout_apm.core.web_requests import werkzeug_track_request_data
@@ -40,7 +40,7 @@ class ScoutApm(object):
                 value = current_app.config[name]
                 clean_name = name.replace("SCOUT_", "").lower()
                 configs[clean_name] = value
-        ScoutConfig.set(**configs)
+        scout_config.set(**configs)
 
     ############################
     #  Request Lifecycle hook  #

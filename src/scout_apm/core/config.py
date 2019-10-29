@@ -295,3 +295,6 @@ CONVERSIONS = {
     "disabled_instruments": convert_to_list,
     "ignore": convert_to_list,
 }
+
+
+scout_config = ScoutConfig()

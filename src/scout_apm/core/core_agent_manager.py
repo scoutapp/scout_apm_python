@@ -11,7 +11,7 @@ import time
 
 import requests
 
-from scout_apm.core.context import AgentContext
+from scout_apm.core.config import scout_config
 
 logger = logging.getLogger(__name__)
 
@@ -21,16 +21,15 @@ class CoreAgentManager(object):
         self.core_agent_bin_path = None
         self.core_agent_bin_version = None
         self.core_agent_dir = "{}/{}".format(
-            AgentContext.instance.config.value("core_agent_dir"),
-            AgentContext.instance.config.value("core_agent_full_name"),
+            scout_config.value("core_agent_dir"),
+            scout_config.value("core_agent_full_name"),
         )
         self.downloader = CoreAgentDownloader(
-            self.core_agent_dir,
-            AgentContext.instance.config.value("core_agent_full_name"),
+            self.core_agent_dir, scout_config.value("core_agent_full_name")
         )
 
     def launch(self):
-        if not AgentContext.instance.config.value("core_agent_launch"):
+        if not scout_config.value("core_agent_launch"):
             logger.debug(
                 "Not attempting to launch Core Agent "
                 "due to 'core_agent_launch' setting."
@@ -38,7 +37,7 @@ class CoreAgentManager(object):
             return False
 
         if not self.verify():
-            if not AgentContext.instance.config.value("core_agent_download"):
+            if not scout_config.value("core_agent_download"):
                 logger.debug(
                     "Not attempting to download Core Agent due "
                     "to 'core_agent_download' setting."
@@ -82,12 +81,12 @@ class CoreAgentManager(object):
         return ["--daemonize", "true"]
 
     def socket_path(self):
-        socket_path = AgentContext.instance.config.value("socket_path")
+        socket_path = scout_config.value("socket_path")
         return ["--socket", socket_path]
 
     def log_level(self):
         # Old deprecated name "log_level"
-        log_level = AgentContext.instance.config.value("log_level")
+        log_level = scout_config.value("log_level")
         if log_level is not None:
             logger.warning(
                 "The config name 'log_level' is deprecated - "
@@ -96,18 +95,18 @@ class CoreAgentManager(object):
                 + "framework settings as SCOUT_LOG_LEVEL."
             )
         else:
-            log_level = AgentContext.instance.config.value("core_agent_log_level")
+            log_level = scout_config.value("core_agent_log_level")
         return ["--log-level", log_level]
 
     def log_file(self):
-        path = AgentContext.instance.config.value("log_file")
+        path = scout_config.value("log_file")
         if path is not None:
             return ["--log-file", path]
         else:
             return []
 
     def config_file(self):
-        path = AgentContext.instance.config.value("config_file")
+        path = scout_config.value("config_file")
         if path is not None:
             return ["--config-file", path]
         else:
@@ -160,9 +159,7 @@ class CoreAgentDownloader(object):
 
     def create_core_agent_dir(self):
         try:
-            os.makedirs(
-                self.destination, AgentContext.instance.config.core_agent_permissions()
-            )
+            os.makedirs(self.destination, scout_config.core_agent_permissions())
         except OSError:
             pass
 
@@ -210,7 +207,7 @@ class CoreAgentDownloader(object):
         )
 
     def root_url(self):
-        return AgentContext.instance.config.value("download_url")
+        return scout_config.value("download_url")
 
 
 class CoreAgentManifest(object):

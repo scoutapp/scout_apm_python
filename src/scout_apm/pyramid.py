@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import scout_apm.core
-from scout_apm.core.config import ScoutConfig
+from scout_apm.core.config import scout_config
 from scout_apm.core.tracked_request import TrackedRequest
 from scout_apm.core.web_requests import (
     create_filtered_path,
@@ -20,7 +20,7 @@ def includeme(config):
             value = pyramid_config[name]
             clean_name = name.replace("SCOUT_", "").lower()
             configs[clean_name] = value
-    ScoutConfig.set(**configs)
+    scout_config.set(**configs)
 
     if scout_apm.core.install():
         config.add_tween("scout_apm.pyramid.instruments")

@@ -6,7 +6,7 @@ from django.conf import settings
 from django.test.signals import setting_changed
 
 import scout_apm.core
-from scout_apm.core.config import ScoutConfig
+from scout_apm.core.config import scout_config
 from scout_apm.django.instruments.sql import install_sql_instrumentation
 from scout_apm.django.instruments.template import install_template_instrumentation
 
@@ -47,9 +47,9 @@ class ScoutApmDjangoConfig(AppConfig):
             value = getattr(settings, setting)
         except AttributeError:
             # It was removed
-            ScoutConfig.unset(scout_name)
+            scout_config.unset(scout_name)
         else:
-            ScoutConfig.set(**{scout_name: value})
+            scout_config.set(**{scout_name: value})
 
     def install_middleware(self):
         """

@@ -7,6 +7,7 @@ import time
 import pytest
 
 from scout_apm.compat import datetime_to_timestamp
+from scout_apm.core.config import scout_config
 from scout_apm.core.context import AgentContext
 from scout_apm.core.web_requests import (
     CUTOFF_EPOCH_S,
@@ -50,11 +51,11 @@ def test_create_filtered_path(path, params, expected):
 def test_create_filtered_path_path(path, params):
     # If config filtered_params is set to "path", expect we always get the path
     # back
-    AgentContext.instance.config.set(uri_reporting="path")
+    scout_config.set(uri_reporting="path")
     try:
         assert create_filtered_path(path, params) == path
     finally:
-        AgentContext.instance.config.reset_all()
+        scout_config.reset_all()
 
 
 @pytest.mark.parametrize(
@@ -62,12 +63,12 @@ def test_create_filtered_path_path(path, params):
     [("/health", True), ("/health/foo", True), ("/users", False), ("/", False)],
 )
 def test_ignore(path, expected):
-    AgentContext.instance.config.set(ignore=["/health"])
+    scout_config.set(ignore=["/health"])
 
     try:
         result = ignore_path(path)
     finally:
-        AgentContext.instance.config.reset_all()
+        scout_config.reset_all()
 
     assert result == expected
 
@@ -84,12 +85,12 @@ def test_ignore(path, expected):
     ],
 )
 def test_ignore_multiple_prefixes(path, expected):
-    AgentContext.instance.config.set(ignore=["/health", "/api"])
+    scout_config.set(ignore=["/health", "/api"])
 
     try:
         result = ignore_path(path)
     finally:
-        AgentContext.instance.config.reset_all()
+        scout_config.reset_all()
 
     assert result == expected
 

@@ -4,8 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from bottle import request
 
 import scout_apm.core
-from scout_apm.core.config import ScoutConfig
-from scout_apm.core.context import AgentContext
+from scout_apm.core.config import scout_config
 from scout_apm.core.tracked_request import TrackedRequest
 from scout_apm.core.web_requests import (
     create_filtered_path,
@@ -21,21 +20,19 @@ class ScoutPlugin(object):
         self.api = 2
 
     def set_config_from_bottle(self, app):
-        scout_config = ScoutConfig()
         bottle_configs = {}
-        for k in scout_config.known_keys():
-            value = app.config.get("scout.{}".format(k))
+        for key in scout_config.known_keys():
+            value = app.config.get("scout.{}".format(key))
             if value is not None and value != "":
-                bottle_configs[k] = value
+                bottle_configs[key] = value
         scout_config.set(**bottle_configs)
-        return scout_config
 
     def setup(self, app):
         self.set_config_from_bottle(app)
         scout_apm.core.install()
 
     def apply(self, callback, context):
-        if not AgentContext.instance.config.value("monitor"):
+        if not scout_config.value("monitor"):
             return callback
 
         def wrapper(*args, **kwargs):

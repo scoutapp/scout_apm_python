@@ -11,7 +11,7 @@ import time
 
 from scout_apm.compat import queue
 from scout_apm.core.commands import Register
-from scout_apm.core.config import ScoutConfig
+from scout_apm.core.config import scout_config
 
 SECOND = 1  # time unit - monkey-patched in tests to make them run faster
 
@@ -42,10 +42,8 @@ class CoreAgentSocket(threading.Thread):
 
     def __init__(self, *args, **kwargs):
         threading.Thread.__init__(self)
-        self.config = kwargs.get("scout_config", ScoutConfig())
-
         # Socket related
-        self.socket_path = self.config.value("socket_path")
+        self.socket_path = scout_config.value("socket_path")
         self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 
         # Threading control related
@@ -198,9 +196,9 @@ class CoreAgentSocket(threading.Thread):
     def _register(self):
         self._send(
             Register(
-                app=self.config.value("name"),
-                key=self.config.value("key"),
-                hostname=self.config.value("hostname"),
+                app=scout_config.value("name"),
+                key=scout_config.value("key"),
+                hostname=scout_config.value("hostname"),
             )
         )
 

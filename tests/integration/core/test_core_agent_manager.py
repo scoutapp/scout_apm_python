@@ -7,7 +7,7 @@ import time
 
 import pytest
 
-from scout_apm.core.config import ScoutConfig
+from scout_apm.core.config import scout_config
 from scout_apm.core.context import AgentContext
 from scout_apm.core.core_agent_manager import CoreAgentManager
 from tests.compat import mock
@@ -19,14 +19,14 @@ def core_agent_manager(core_agent_dir):
     #   Error opening listener on socket: Custom { kind: InvalidInput,
     #   error: StringError("path must be shorter than SUN_LEN") }
     socket_path = "{}/test.sock".format(core_agent_dir)
-    ScoutConfig.set(core_agent_dir=core_agent_dir, socket_path=socket_path)
+    scout_config.set(core_agent_dir=core_agent_dir, socket_path=socket_path)
     AgentContext.build()
     core_agent_manager = CoreAgentManager()
     try:
         yield core_agent_manager
     finally:
         assert not is_running(core_agent_manager)
-        ScoutConfig.reset_all()
+        scout_config.reset_all()
 
 
 def is_running(core_agent_manager):
@@ -52,12 +52,12 @@ def shutdown(core_agent_manager):
 
 
 def test_no_launch(caplog, core_agent_manager):
-    ScoutConfig.set(core_agent_launch=False)
+    scout_config.set(core_agent_launch=False)
 
     try:
         result = core_agent_manager.launch()
     finally:
-        ScoutConfig.set(core_agent_launch=True)
+        scout_config.set(core_agent_launch=True)
 
     assert not result
     assert not is_running(core_agent_manager)
@@ -74,12 +74,12 @@ def test_no_launch(caplog, core_agent_manager):
 
 
 def test_no_verify(caplog, core_agent_manager):
-    ScoutConfig.set(core_agent_download=False)
+    scout_config.set(core_agent_download=False)
 
     try:
         result = core_agent_manager.launch()
     finally:
-        ScoutConfig.set(core_agent_download=True)
+        scout_config.set(core_agent_download=True)
 
     assert not result
     assert not is_running(core_agent_manager)
@@ -141,7 +141,7 @@ def test_launch_error(caplog, core_agent_manager):
 
 
 def test_log_level(caplog, core_agent_manager):
-    ScoutConfig.set(core_agent_log_level="foo")
+    scout_config.set(core_agent_log_level="foo")
 
     result = core_agent_manager.log_level()
 
@@ -150,7 +150,7 @@ def test_log_level(caplog, core_agent_manager):
 
 
 def test_log_level_deprecated(caplog, core_agent_manager):
-    ScoutConfig.set(log_level="foo", core_agent_log_level="bar")
+    scout_config.set(log_level="foo", core_agent_log_level="bar")
 
     result = core_agent_manager.log_level()
 
