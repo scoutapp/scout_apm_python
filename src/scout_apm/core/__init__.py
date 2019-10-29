@@ -8,10 +8,10 @@ from kwargs_only import kwargs_only
 
 from scout_apm.core import objtrace
 from scout_apm.core.config import scout_config
-from scout_apm.core.context import AgentContext
 from scout_apm.core.core_agent_manager import CoreAgentManager
 from scout_apm.core.instrument_manager import InstrumentManager
 from scout_apm.core.metadata import AppMetadata
+from scout_apm.core.socket import CoreAgentSocket
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 def install(config=None):
     if config is not None:
         scout_config.set(**config)
-    AgentContext.build()
+    scout_config.log()
 
     if os.name == "nt":
         logger.info(
@@ -44,6 +44,7 @@ def install(config=None):
 
     AppMetadata.report()
     if launched:
-        AgentContext.socket().stop()
+        # Stop the thread to avoid running threads pre-fork
+        CoreAgentSocket.instance().stop()
 
     return True

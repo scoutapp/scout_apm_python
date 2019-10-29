@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from scout_apm.core.config import scout_config
-from scout_apm.core.context import AgentContext
 from scout_apm.core.instrument_manager import InstrumentManager
 from tests.compat import mock
 
@@ -83,7 +82,6 @@ def test_handles_exception():
 def test_install_all_installs_only_enabled_instruments():
     # Disable all instruments except the last one.
     scout_config.set(disabled_instruments=InstrumentManager.DEFAULT_INSTRUMENTS[:-1])
-    AgentContext.build()
 
     try:
         with mock.patch(

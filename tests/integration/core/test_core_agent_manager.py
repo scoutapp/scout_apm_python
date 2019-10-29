@@ -8,7 +8,6 @@ import time
 import pytest
 
 from scout_apm.core.config import scout_config
-from scout_apm.core.context import AgentContext
 from scout_apm.core.core_agent_manager import CoreAgentManager
 from tests.compat import mock
 
@@ -20,7 +19,6 @@ def core_agent_manager(core_agent_dir):
     #   error: StringError("path must be shorter than SUN_LEN") }
     socket_path = "{}/test.sock".format(core_agent_dir)
     scout_config.set(core_agent_dir=core_agent_dir, socket_path=socket_path)
-    AgentContext.build()
     core_agent_manager = CoreAgentManager()
     try:
         yield core_agent_manager
