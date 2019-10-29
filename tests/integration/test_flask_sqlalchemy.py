@@ -6,8 +6,7 @@ from contextlib import contextmanager
 from flask_sqlalchemy import SQLAlchemy
 
 from scout_apm.flask.sqlalchemy import instrument_sqlalchemy
-
-from .test_flask import app_with_scout
+from tests.integration.test_flask import app_with_scout
 
 
 @contextmanager
