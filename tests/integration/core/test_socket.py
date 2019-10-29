@@ -7,8 +7,7 @@ import pytest
 
 from scout_apm.core.socket import CoreAgentSocket
 from tests.compat import mock
-
-from .test_core_agent_manager import (  # noqa: F401,F811
+from tests.integration.core.test_core_agent_manager import (  # noqa: F401,F811
     core_agent_manager,
     is_running,
     shutdown,
