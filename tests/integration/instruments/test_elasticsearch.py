@@ -13,9 +13,10 @@ from tests.tools import pretend_package_unavailable
 
 # e.g. export ELASTICSEARCH_URL="http://localhost:9200/"
 ELASTICSEARCH_URL = os.environ.get("ELASTICSEARCH_URL")
-if ELASTICSEARCH_URL is None:
-    pytest.skip("Elasticsearch isn't available", allow_module_level=True)
 
+skip_if_elasticsearch_not_running = pytest.mark.skipif(
+    ELASTICSEARCH_URL is None, reason="MongoDB isn't available"
+)
 
 instrument = Instrument()
 
@@ -34,21 +35,25 @@ def es_with_scout():
         instrument.uninstall()
 
 
+@skip_if_elasticsearch_not_running
 def test_search():
     with es_with_scout() as es:
         es.search()
 
 
+@skip_if_elasticsearch_not_running
 def test_search_no_indexes_string():
     with es_with_scout() as es:
         es.search(index="", body={"query": {"term": {"user": "kimchy"}}})
 
 
+@skip_if_elasticsearch_not_running
 def test_search_no_indexes_list():
     with es_with_scout() as es:
         es.search(index=[], body={"query": {"term": {"user": "kimchy"}}})
 
 
+@skip_if_elasticsearch_not_running
 def test_perform_request_missing_url():
     with es_with_scout() as es:
         with pytest.raises(TypeError):
@@ -57,6 +62,7 @@ def test_perform_request_missing_url():
             es.transport.perform_request("GET", params={}, body=None)
 
 
+@skip_if_elasticsearch_not_running
 def test_perform_request_bad_url():
     with es_with_scout() as es:
         with pytest.raises(TypeError):
@@ -65,6 +71,7 @@ def test_perform_request_bad_url():
             es.transport.perform_request("GET", None, params={}, body=None)
 
 
+@skip_if_elasticsearch_not_running
 def test_perform_request_unknown_url():
     with es_with_scout() as es:
         # Transport instrumentation doesn't crash if url is unknown.

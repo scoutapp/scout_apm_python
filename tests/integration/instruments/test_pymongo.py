@@ -13,9 +13,10 @@ from tests.tools import pretend_package_unavailable
 
 # e.g. export MONGODB_URL="mongodb://localhost:27017/"
 MONGODB_URL = os.environ.get("MONGODB_URL")
-if MONGODB_URL is None:
-    pytest.skip("MongoDB isn't available", allow_module_level=True)
 
+skip_if_mongodb_not_running = pytest.mark.skipif(
+    MONGODB_URL is None, reason="MongoDB isn't available"
+)
 
 instrument = Instrument()
 
@@ -34,11 +35,13 @@ def client_with_scout():
         instrument.uninstall()
 
 
+@skip_if_mongodb_not_running
 def test_find_one():
     with client_with_scout() as client:
         client.local.startup_log.find_one()
 
 
+@skip_if_mongodb_not_running
 def test_installed():
     assert not Instrument.installed
     with client_with_scout():
@@ -46,6 +49,7 @@ def test_installed():
     assert not Instrument.installed
 
 
+@skip_if_mongodb_not_running
 def test_installable():
     assert instrument.installable()
     with client_with_scout():

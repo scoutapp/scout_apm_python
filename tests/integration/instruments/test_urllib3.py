@@ -14,9 +14,9 @@ from tests.tools import pretend_package_unavailable
 # e.g. export URLLIB3_URL="http://httpbin.org/"
 # or export URLLIB3_URL="http://localhost:9200/" (re-use Elasticsearch!)
 URLLIB3_URL = os.environ.get("URLLIB3_URL")
-if URLLIB3_URL is None:
-    pytest.skip("HTTP test server isn't available", allow_module_level=True)
-
+skip_if_urllib3_url_unavailable = pytest.mark.skipif(
+    URLLIB3_URL is None, reason="urllib3 URL isn't available"
+)
 
 instrument = Instrument()
 
@@ -34,6 +34,7 @@ def urllib3_with_scout():
         instrument.uninstall()
 
 
+@skip_if_urllib3_url_unavailable
 def test_request():
     with urllib3_with_scout():
         http = urllib3.PoolManager()
@@ -41,6 +42,7 @@ def test_request():
         assert response.status == 200
 
 
+@skip_if_urllib3_url_unavailable
 # I can't trigger a failure to get instrument data through a public API.
 # Somewhat surprisingly, the request still succeeds.
 @mock.patch("urllib3.HTTPConnectionPool._absolute_url", side_effect=RuntimeError)
