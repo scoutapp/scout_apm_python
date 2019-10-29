@@ -8,7 +8,7 @@ from scout_apm.core.context import AgentContext
 
 # Originally derived from:
 # 1. Rails:
-#   https://github.com/rails/rails/blob/0196551e6039ca864d1eee1e01819fcae12c1dc9/railties/lib/rails/generators/rails/app/templates/config/initializers/filter_parameter_logging.rb.tt
+#   https://github.com/rails/rails/blob/0196551e6039ca864d1eee1e01819fcae12c1dc9/railties/lib/rails/generators/rails/app/templates/config/initializers/filter_parameter_logging.rb.tt  # noqa
 # 2. Sentry server side scrubbing:
 #   https://docs.sentry.io/data-management/sensitive-data/#server-side-scrubbing
 FILTER_PARAMETERS = frozenset(

@@ -39,7 +39,7 @@ def is_running(core_agent_manager):
         return True
     if b"Agent Not Running" in probe:
         return False
-    assert False, "cannot tell if the core agent is running"
+    raise AssertionError("cannot tell if the core agent is running")
 
 
 def shutdown(core_agent_manager):

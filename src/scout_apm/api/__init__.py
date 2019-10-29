@@ -42,9 +42,12 @@ def ignore_transaction():
 
 
 class instrument(ContextDecorator):
-    def __init__(self, operation, kind="Custom", tags={}):
+    def __init__(self, operation, kind="Custom", tags=None):
         self.operation = text(kind) + "/" + text(operation)
-        self.tags = tags
+        if tags is None:
+            self.tags = {}
+        else:
+            self.tags = tags
 
     def __enter__(self):
         tracked_request = TrackedRequest.instance()
@@ -70,12 +73,15 @@ class Transaction(ContextDecorator):
     (WebTransaction or BackgroundTransaction)
     """
 
-    def __init__(self, name, tags={}):
+    def __init__(self, name, tags=None):
         self.name = text(name)
-        self.tags = tags
+        if tags is None:
+            self.tags = {}
+        else:
+            self.tags = tags
 
     @classmethod
-    def start(cls, kind, name, tags={}):
+    def start(cls, kind, name, tags=None):
         operation = text(kind) + "/" + text(name)
 
         tracked_request = TrackedRequest.instance()
@@ -83,8 +89,9 @@ class Transaction(ContextDecorator):
         span = tracked_request.start_span(
             operation=operation, should_capture_backtrace=False
         )
-        for key, value in tags.items():
-            tracked_request.tag(key, value)
+        if tags is not None:
+            for key, value in tags.items():
+                tracked_request.tag(key, value)
         return span
 
     @classmethod
@@ -107,20 +114,20 @@ class Transaction(ContextDecorator):
 
 class WebTransaction(Transaction):
     @classmethod
-    def start(cls, name, tags={}):
-        Transaction.start("Controller", text(name), tags)
+    def start(cls, name, tags=None):
+        super(WebTransaction, cls).start("Controller", text(name), tags)
 
     def __enter__(self):
-        Transaction.start("Controller", self.name, self.tags)
+        super(WebTransaction, self).start("Controller", self.name, self.tags)
 
 
 class BackgroundTransaction(Transaction):
     @classmethod
-    def start(cls, name, tags={}):
-        Transaction.start("Job", text(name), tags)
+    def start(cls, name, tags=None):
+        super(BackgroundTransaction, cls).start("Job", text(name), tags)
 
     def __enter__(self):
-        Transaction.start("Job", self.name, self.tags)
+        super(BackgroundTransaction, self).start("Job", self.name, self.tags)
 
 
 def rename_transaction(name):
