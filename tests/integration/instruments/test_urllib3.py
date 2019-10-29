@@ -77,7 +77,7 @@ def test_install_no_urllib3_module():
 
 
 @mock.patch(
-    "scout_apm.instruments.urllib3.monkeypatch_method", side_effect=RuntimeError
+    "scout_apm.instruments.urllib3.wrapt.decorator", side_effect=RuntimeError
 )
 def test_install_failure(monkeypatch_method):
     try:
