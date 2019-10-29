@@ -1,13 +1,12 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import sys
-
 import py
 
 from scout_apm.core.context import AgentContext
 from scout_apm.core.metadata import AppMetadata
 from tests.compat import mock
+from tests.tools import pretend_package_unavailable
 
 
 @mock.patch("scout_apm.core.socket.CoreAgentSocket.send")
@@ -49,12 +48,8 @@ def test_report_app_metadata_error_getting_data(send):
 def test_report_app_metadata_no_pkg_resources(send):
     AgentContext.build()
 
-    pkg_resources = sys.modules["pkg_resources"]
-    sys.modules["pkg_resources"] = None
-    try:
+    with pretend_package_unavailable("pkg_resources"):
         AppMetadata().report()
-    finally:
-        sys.modules["pkg_resources"] = pkg_resources
 
     assert send.call_count == 1
     (command,), kwargs = send.call_args
