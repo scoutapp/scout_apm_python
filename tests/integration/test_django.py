@@ -17,9 +17,9 @@ from webtest import TestApp
 
 from scout_apm.api import Config
 from scout_apm.compat import datetime_to_timestamp
-from tests.compat import mock
 from scout_apm.django.instruments.sql import install_sql_instrumentation
 from scout_apm.django.instruments.template import install_template_instrumentation
+from tests.compat import mock
 from tests.integration import django_app  # noqa  # force import to configure
 from tests.integration.util import (
     parametrize_filtered_params,
