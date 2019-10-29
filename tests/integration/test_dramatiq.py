@@ -1,22 +1,26 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import sys
 from collections import namedtuple
 from contextlib import contextmanager
 
 import pytest
 
-if sys.version_info < (3, 5):  # Minimum version dramatiq should be installable on
-    pytest.skip(
-        "Dramatiq not installable on this Python version", allow_module_level=True
-    )
-else:
+try:
     import dramatiq
+except ImportError:
+    dramatiq = None
+else:
     from dramatiq.brokers.stub import StubBroker
 
     from scout_apm.api import Config
     from scout_apm.dramatiq import ScoutMiddleware
+
+
+skip_if_dramatiq_unavailable = pytest.mark.skipif(
+    dramatiq is None, reason="Dramatiq isn't available"
+)
+pytestmark = [skip_if_dramatiq_unavailable]
 
 
 @contextmanager

@@ -13,9 +13,9 @@ from tests.tools import pretend_package_unavailable
 
 # e.g. export REDIS_URL="redis://localhost:6379/0"
 REDIS_URL = os.environ.get("REDIS_URL")
-if REDIS_URL is None:
-    pytest.skip("Redis isn't available", allow_module_level=True)
-
+skip_if_redis_not_running = pytest.mark.skipif(
+    REDIS_URL is None, reason="Redis isn't available"
+)
 
 instrument = Instrument()
 
@@ -35,11 +35,13 @@ def redis_with_scout():
         pass
 
 
+@skip_if_redis_not_running
 def test_echo():
     with redis_with_scout() as r:
         r.echo("Hello World!")
 
 
+@skip_if_redis_not_running
 def test_pipe_echo():
     with redis_with_scout() as r:
         with r.pipeline() as p:
@@ -47,6 +49,7 @@ def test_pipe_echo():
             p.execute()
 
 
+@skip_if_redis_not_running
 def test_perform_request_missing_url():
     with redis_with_scout() as r:
         with pytest.raises(IndexError):
@@ -56,6 +59,7 @@ def test_perform_request_missing_url():
             r.execute_command()
 
 
+@skip_if_redis_not_running
 def test_perform_request_bad_url():
     with redis_with_scout() as r:
         with pytest.raises(TypeError):
