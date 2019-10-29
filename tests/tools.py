@@ -21,9 +21,7 @@ skip_if_objtrace_is_extension = pytest.mark.skipif(
 def pretend_package_unavailable(name):
     # Scrub it and sub-modules from sys.modules
     modules_without_package = {
-        k: v
-        for k, v in sys.modules.items()
-        if k != name or k.startswith(name + ".")
+        k: v for k, v in sys.modules.items() if k != name or k.startswith(name + ".")
     }
     mock_unimported = mock.patch.dict(sys.modules, modules_without_package, clear=True)
 

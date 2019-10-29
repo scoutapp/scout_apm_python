@@ -48,7 +48,7 @@ def test_report_app_metadata_error_getting_data(send):
 def test_report_app_metadata_no_pkg_resources(send):
     AgentContext.build()
 
-    with pretend_package_unavailable('pkg_resources'):
+    with pretend_package_unavailable("pkg_resources"):
         AppMetadata().report()
 
     assert send.call_count == 1
