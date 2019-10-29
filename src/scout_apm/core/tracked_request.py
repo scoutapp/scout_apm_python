@@ -7,10 +7,10 @@ from uuid import uuid4
 
 from scout_apm.core import backtrace, objtrace
 from scout_apm.core.commands import BatchCommand
-from scout_apm.core.context import AgentContext
 from scout_apm.core.n_plus_one_call_set import NPlusOneCallSet
 from scout_apm.core.samplers.memory import get_rss_in_mb
 from scout_apm.core.samplers.thread import SamplersThread
+from scout_apm.core.socket import CoreAgentSocket
 from scout_apm.core.thread_local import ThreadLocalSingleton
 
 logger = logging.getLogger(__name__)
@@ -115,7 +115,7 @@ class TrackedRequest(ThreadLocalSingleton):
             self.tag("mem_delta", self._get_mem_delta())
             if not self.is_ignored():
                 batch_command = BatchCommand.from_tracked_request(self)
-                AgentContext.socket().send(batch_command)
+                CoreAgentSocket.instance().send(batch_command)
             SamplersThread.ensure_started()
 
         # This can fail if the Tracked Request was created directly,

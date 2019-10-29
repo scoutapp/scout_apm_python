@@ -7,9 +7,9 @@ import os
 import threading
 
 from scout_apm.core.commands import ApplicationEvent
-from scout_apm.core.context import AgentContext
 from scout_apm.core.samplers.cpu import Cpu
 from scout_apm.core.samplers.memory import Memory
+from scout_apm.core.socket import CoreAgentSocket
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ class SamplersThread(threading.Thread):
                         timestamp=dt.datetime.utcnow(),
                         source="Pid: " + str(os.getpid()),
                     )
-                    AgentContext.socket().send(event)
+                    CoreAgentSocket.instance().send(event)
 
             should_stop = self._stop_event.wait(timeout=60)
             if should_stop:

@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import argparse
 import logging
 
-from scout_apm.core import AgentContext, CoreAgentManager
+from scout_apm.core import CoreAgentManager
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +29,5 @@ def main(argv=None):
         else:
             logging.basicConfig(level=logging.INFO)
 
-    AgentContext.build()
     core_agent_manager = CoreAgentManager()
     getattr(core_agent_manager, args.subparser)()

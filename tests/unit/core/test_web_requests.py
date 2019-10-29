@@ -8,7 +8,6 @@ import pytest
 
 from scout_apm.compat import datetime_to_timestamp
 from scout_apm.core.config import scout_config
-from scout_apm.core.context import AgentContext
 from scout_apm.core.web_requests import (
     CUTOFF_EPOCH_S,
     convert_ambiguous_timestamp_to_ns,
@@ -17,13 +16,6 @@ from scout_apm.core.web_requests import (
     track_amazon_request_queue_time,
     track_request_queue_time,
 )
-
-
-@pytest.fixture(autouse=True)
-def force_context():
-    # Since this function accesses the context, it needs to always be built
-    # TODO: remove when moving to a sensible singleton pattern
-    AgentContext.build()
 
 
 @pytest.mark.parametrize(
