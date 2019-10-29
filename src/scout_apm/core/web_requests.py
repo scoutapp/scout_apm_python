@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import time
 
 from scout_apm.compat import datetime_to_timestamp, urlencode
-from scout_apm.core.context import AgentContext
+from scout_apm.core.config import scout_config
 
 # Originally derived from:
 # 1. Rails:
@@ -40,7 +40,7 @@ FILTER_PARAMETERS = frozenset(
 
 
 def create_filtered_path(path, query_params):
-    if AgentContext.instance.config.value("uri_reporting") == "path":
+    if scout_config.value("uri_reporting") == "path":
         return path
     filtered_params = sorted(
         (
@@ -54,7 +54,7 @@ def create_filtered_path(path, query_params):
 
 
 def ignore_path(path):
-    ignored_paths = AgentContext.instance.config.value("ignore")
+    ignored_paths = scout_config.value("ignore")
     for ignored in ignored_paths:
         if path.startswith(ignored):
             return True

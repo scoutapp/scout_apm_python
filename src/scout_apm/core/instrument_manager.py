@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import importlib
 import logging
 
-from scout_apm.core.context import AgentContext
+from scout_apm.core.config import scout_config
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +35,6 @@ class InstrumentManager(object):
             )
 
     def is_disabled(self, module_name):
-        disabled = AgentContext.instance.config.value("disabled_instruments")
+        disabled = scout_config.value("disabled_instruments")
         if module_name in disabled:
             return True

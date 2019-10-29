@@ -10,6 +10,7 @@ from scout_apm.api import (
     instrument,
     rename_transaction,
 )
+from scout_apm.core.config import scout_config
 
 
 def test_instrument_context_manager(tracked_request):
@@ -245,10 +246,12 @@ def test_context(tracked_request):
 
 
 def test_config():
+    sha = "4de21f8ea228a082d4f039c0c991ee41dfb6f9d8"
     try:
-        Config.set(revision_sha="4de21f8ea228a082d4f039c0c991ee41dfb6f9d8")
+        Config.set(revision_sha=sha)
+        assert scout_config.value("revision_sha") == sha
     finally:
-        Config.reset_all()
+        scout_config.reset_all()
 
 
 def test_ignore_transaction(tracked_request):

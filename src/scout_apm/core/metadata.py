@@ -7,6 +7,7 @@ import sys
 from os import getpid
 
 from scout_apm.core.commands import ApplicationEvent
+from scout_apm.core.config import scout_config
 from scout_apm.core.context import AgentContext
 
 logger = logging.getLogger(__name__)
@@ -25,25 +26,24 @@ class AppMetadata(object):
 
     @classmethod
     def data(cls):
-        config = AgentContext.instance.config
         try:
             data = {
                 "language": "python",
                 "version": "{}.{}.{}".format(*sys.version_info[:3]),
                 "server_time": dt.datetime.utcnow().isoformat() + "Z",
-                "framework": config.value("framework"),
-                "framework_version": config.value("framework_version"),
+                "framework": scout_config.value("framework"),
+                "framework_version": scout_config.value("framework_version"),
                 "environment": "",
-                "app_server": config.value("app_server"),
-                "hostname": config.value("hostname"),
+                "app_server": scout_config.value("app_server"),
+                "hostname": scout_config.value("hostname"),
                 "database_engine": "",  # Detected
                 "database_adapter": "",  # Raw
                 "application_name": "",  # Environment.application_name,
                 "libraries": cls.get_python_packages_versions(),
                 "paas": "",
-                "application_root": config.value("application_root"),
-                "scm_subdirectory": config.value("scm_subdirectory"),
-                "git_sha": config.value("revision_sha"),
+                "application_root": scout_config.value("application_root"),
+                "scm_subdirectory": scout_config.value("scm_subdirectory"),
+                "git_sha": scout_config.value("revision_sha"),
             }
         except Exception as e:
             logger.debug("Exception in AppMetadata: %r", e)

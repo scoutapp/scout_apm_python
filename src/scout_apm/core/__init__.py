@@ -7,7 +7,7 @@ import os
 from kwargs_only import kwargs_only
 
 from scout_apm.core import objtrace
-from scout_apm.core.config import ScoutConfig
+from scout_apm.core.config import scout_config
 from scout_apm.core.context import AgentContext
 from scout_apm.core.core_agent_manager import CoreAgentManager
 from scout_apm.core.instrument_manager import InstrumentManager
@@ -18,10 +18,9 @@ logger = logging.getLogger(__name__)
 
 @kwargs_only
 def install(config=None):
-    scout_config = ScoutConfig()
     if config is not None:
         scout_config.set(**config)
-    context = AgentContext.build(config=scout_config)
+    AgentContext.build()
 
     if os.name == "nt":
         logger.info(
@@ -29,7 +28,7 @@ def install(config=None):
         )
         return False
 
-    if not context.config.value("monitor"):
+    if not scout_config.value("monitor"):
         logger.info(
             "APM Not Launching on PID: %s - Configuration 'monitor' is not true",
             os.getpid(),
