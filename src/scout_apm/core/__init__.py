@@ -4,8 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 import os
 
-from kwargs_only import kwargs_only
-
+from scout_apm.compat import kwargs_only
 from scout_apm.core import objtrace
 from scout_apm.core.config import scout_config
 from scout_apm.core.core_agent_manager import CoreAgentManager

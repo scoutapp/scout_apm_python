@@ -51,7 +51,7 @@ setup(
             "core-agent-manager = scout_apm.core.cli.core_agent_manager:main"
         ]
     },
-    install_requires=["kwargs-only>=1.0,<2.0", "psutil>=5,<6", "requests>=2,<3"],
+    install_requires=["psutil>=5,<6", "requests>=2,<3"],
     keywords="apm performance monitoring development",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
