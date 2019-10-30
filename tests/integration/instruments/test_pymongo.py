@@ -25,7 +25,6 @@ instrument = Instrument()
 def client_with_scout():
     """
     Create an instrumented MongoDB connection.
-
     """
     client = pymongo.MongoClient(MONGODB_URL)
     instrument.install()
@@ -65,7 +64,6 @@ def test_installable_no_pymongo_module():
 def test_install_no_pymongo_module():
     with pretend_package_unavailable("pymongo"):
         assert not instrument.install()
-        assert not Instrument.installed
 
 
 @mock.patch(

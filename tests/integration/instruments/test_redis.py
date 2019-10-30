@@ -16,6 +16,7 @@ REDIS_URL = os.environ.get("REDIS_URL")
 skip_if_redis_not_running = pytest.mark.skipif(
     REDIS_URL is None, reason="Redis isn't available"
 )
+pytestmark = [skip_if_redis_not_running]
 
 instrument = Instrument()
 
@@ -35,13 +36,11 @@ def redis_with_scout():
         pass
 
 
-@skip_if_redis_not_running
 def test_echo():
     with redis_with_scout() as r:
         r.echo("Hello World!")
 
 
-@skip_if_redis_not_running
 def test_pipe_echo():
     with redis_with_scout() as r:
         with r.pipeline() as p:
@@ -49,7 +48,6 @@ def test_pipe_echo():
             p.execute()
 
 
-@skip_if_redis_not_running
 def test_perform_request_missing_url():
     with redis_with_scout() as r:
         with pytest.raises(IndexError):
@@ -59,7 +57,6 @@ def test_perform_request_missing_url():
             r.execute_command()
 
 
-@skip_if_redis_not_running
 def test_perform_request_bad_url():
     with redis_with_scout() as r:
         with pytest.raises(TypeError):
@@ -69,14 +66,12 @@ def test_perform_request_bad_url():
 
 
 def test_installed():
-    assert not Instrument.installed
     with redis_with_scout():
         assert Instrument.installed
     assert not Instrument.installed
 
 
 def test_installable():
-    assert instrument.installable()
     with redis_with_scout():
         assert not instrument.installable()
     assert instrument.installable()

@@ -54,14 +54,12 @@ def test_urlopen_exception(_absolute_url):
 
 
 def test_installed():
-    assert not Instrument.installed
     with urllib3_with_scout():
         assert Instrument.installed
     assert not Instrument.installed
 
 
 def test_installable():
-    assert instrument.installable()
     with urllib3_with_scout():
         assert not instrument.installable()
     assert instrument.installable()
