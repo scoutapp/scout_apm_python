@@ -23,16 +23,16 @@ class CoreAgentSocket(threading.Thread):
     _instance_lock = threading.Lock()
 
     @classmethod
-    def instance(cls, *args, **kwargs):
+    def instance(cls):
         with cls._instance_lock:
             # No instance exists yet.
             if cls._instance is None:
-                cls._instance = cls(args, kwargs)
+                cls._instance = cls()
                 return cls._instance
 
             # An instance exists but is no longer running.
             if not cls._instance.running():
-                cls._instance = cls(args, kwargs)
+                cls._instance = cls()
                 return cls._instance
 
             # An instance exists and is running (or in the process of
@@ -41,7 +41,7 @@ class CoreAgentSocket(threading.Thread):
             return cls._instance
 
     def __init__(self, *args, **kwargs):
-        threading.Thread.__init__(self)
+        super(CoreAgentSocket, self).__init__()
         # Socket related
         self.socket_path = scout_config.value("socket_path")
         self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
