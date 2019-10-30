@@ -29,6 +29,8 @@ class AppMetadata(object):
         try:
             data = {
                 "language": "python",
+                "language_version": "{}.{}.{}".format(*sys.version_info[:3]),
+                # Deprecated: (see #327)
                 "version": "{}.{}.{}".format(*sys.version_info[:3]),
                 "server_time": dt.datetime.utcnow().isoformat() + "Z",
                 "framework": scout_config.value("framework"),
