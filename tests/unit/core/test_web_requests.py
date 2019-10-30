@@ -89,7 +89,7 @@ def test_ignore_multiple_prefixes(path, expected):
 
 @pytest.mark.parametrize("with_t", [True, False])
 def test_track_request_queue_time_valid(with_t, tracked_request):
-    queue_start = int(datetime_to_timestamp(dt.datetime.utcnow()) - 2)
+    queue_start = int(datetime_to_timestamp(dt.datetime.utcnow())) - 2
     if with_t:
         header_value = str("t=") + str(queue_start)
     else:
@@ -131,7 +131,7 @@ def test_track_request_queue_time_invalid(header_value, tracked_request):
     ],
 )
 def test_track_amazon_request_queue_time_valid(header_value, tracked_request):
-    start_time = int(datetime_to_timestamp(dt.datetime.utcnow()) - 2)
+    start_time = int(datetime_to_timestamp(dt.datetime.utcnow())) - 2
 
     result = track_amazon_request_queue_time(
         header_value.format(start_time=start_time), tracked_request
