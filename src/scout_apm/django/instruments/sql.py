@@ -4,10 +4,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 
 import django
+import wrapt
 from django.db import connections
 from django.db.backends.signals import connection_created
-
-import wrapt
 
 from scout_apm.core.tracked_request import TrackedRequest
 

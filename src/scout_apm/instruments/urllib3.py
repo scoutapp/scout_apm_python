@@ -47,9 +47,7 @@ class Instrument(object):
                 try:
                     url = text_type(self._absolute_url("/"))
                 except Exception:
-                    logger.exception(
-                        "Could not get URL for HTTPConnectionPool"
-                    )
+                    logger.exception("Could not get URL for HTTPConnectionPool")
                     url = "Unknown"
 
                 tracked_request = TrackedRequest.instance()

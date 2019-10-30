@@ -76,9 +76,7 @@ def test_install_no_urllib3_module():
         assert not Instrument.installed
 
 
-@mock.patch(
-    "scout_apm.instruments.urllib3.wrapt.decorator", side_effect=RuntimeError
-)
+@mock.patch("scout_apm.instruments.urllib3.wrapt.decorator", side_effect=RuntimeError)
 def test_install_failure(monkeypatch_method):
     try:
         assert not instrument.install()  # doesn't crash
