@@ -1,9 +1,12 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import sys
+
 import django
 from django.conf import settings
 
+from scout_apm.compat import string_types
 from scout_apm.core.config import scout_config
 from scout_apm.core.tracked_request import TrackedRequest
 from scout_apm.core.web_requests import (
@@ -34,7 +37,50 @@ def get_operation_name(request):
             + view_func.__name__
         )
 
+    # Seems to be a Tastypie Resource. Need to resort to some stack inspection
+    # to find a better name since its decorators don't wrap very well
+    if view_name == "tastypie.resources.wrapper":
+        tastypie_name = _get_tastypie_operation_name(request, view_func)
+        if tastypie_name is not None:
+            return tastypie_name
+
     return "Controller/" + view_name
+
+
+def _get_tastypie_operation_name(request, view_func):
+    try:
+        from tastypie.resources import Resource
+    except ImportError:
+        return None
+
+    if sys.version_info[0] == 2:  # pragma: no cover
+        try:
+            wrapper = view_func.__closure__[0].cell_contents
+        except (AttributeError, IndexError):
+            return None
+    elif sys.version_info[0] == 3:
+        try:
+            wrapper = view_func.__wrapped__
+        except AttributeError:
+            return None
+
+    if not hasattr(wrapper, "__closure__") or len(wrapper.__closure__) != 2:
+        return None
+
+    instance = wrapper.__closure__[0].cell_contents
+    if not isinstance(instance, Resource):  # pragma: no cover
+        return None
+
+    method_name = wrapper.__closure__[1].cell_contents
+    if not isinstance(method_name, string_types):  # pragma: no cover
+        return None
+
+    if method_name.startswith("dispatch_"):  # pragma: no cover
+        method_name = request.method.lower() + method_name.split("dispatch", 1)[1]
+
+    return "Controller/{}.{}.{}".format(
+        instance.__module__, instance.__class__.__name__, method_name
+    )
 
 
 def track_request_view_data(request, tracked_request):

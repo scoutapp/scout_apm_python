@@ -9,12 +9,26 @@ import pytest
 from scout_apm.core import objtrace
 from tests.compat import mock
 
+skip_if_python_2 = pytest.mark.skipif(
+    sys.version_info[0] == 2, reason="Requires Python 3"
+)
+
 skip_if_objtrace_not_extension = pytest.mark.skipif(
     not objtrace.is_extension, reason="Requires objtrace C extension"
 )
 skip_if_objtrace_is_extension = pytest.mark.skipif(
     not objtrace.is_extension, reason="Requires no objtrace C extension"
 )
+
+
+@contextmanager
+def delete_attributes(obj, *attributes):
+    origs = [getattr(obj, attr) for attr in attributes]
+    for attr in attributes:
+        delattr(obj, attr)
+    yield
+    for attr, orig in zip(attributes, origs):
+        setattr(obj, attr, orig)
 
 
 @contextmanager

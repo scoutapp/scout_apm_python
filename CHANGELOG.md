@@ -7,6 +7,9 @@
 - Python 3.8 testing and PyPI trove classifier - no code changes were required
   so older versions should work too
   ([PR #263](https://github.com/scoutapp/scout_apm_python/pull/263)).
+- Capture better operation names for Django Tastypie resources, e.g.
+  `myapp.api.UserResource.get_list`
+  ([PR #332](https://github.com/scoutapp/scout_apm_python/pull/332)).
 
 ### Fixed
 
