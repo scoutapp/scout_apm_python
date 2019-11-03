@@ -56,8 +56,8 @@ def test_install_no_jinja2_module():
         assert not Instrument.installed
 
 
-@mock.patch("scout_apm.instruments.jinja2.monkeypatch_method", side_effect=RuntimeError)
-def test_install_failure(monkeypatch_method):
+@mock.patch("scout_apm.instruments.jinja2.wrapt.decorator", side_effect=RuntimeError)
+def test_install_failure(mock_decorator):
     try:
         assert not instrument.install()  # doesn't crash
     finally:
