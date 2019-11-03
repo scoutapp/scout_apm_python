@@ -26,6 +26,13 @@ from tests.integration.util import (
     parametrize_queue_time_header_name,
     parametrize_user_ip_headers,
 )
+from tests.tools import delete_attributes, pretend_package_unavailable, skip_if_python_2
+
+try:
+    from django.urls import resolve
+except ImportError:
+    from django.core.urlresolvers import resolve
+
 
 skip_unless_new_style_middleware = pytest.mark.skipif(
     django.VERSION < (1, 10), reason="new-style middleware was added in Django 1.10"
@@ -68,6 +75,17 @@ def app_with_scout(**settings):
             call_command("check")
             app_with_scout.startup_ran = True
         yield app
+
+
+def make_admin_user():
+    from django.contrib.auth.models import User
+
+    password = "password"
+    user = User.objects.create_superuser(
+        id=1, username="admin", email="admin@example.com", password=password
+    )
+    user.testing_password = password
+    return user
 
 
 def test_install_sql_instrumentation_again():
@@ -294,17 +312,13 @@ def test_template_response(tracked_requests):
 )
 def test_admin_view_operation_name(url, expected_op_name, tracked_requests):
     with app_with_scout() as app:
-        from django.contrib.auth.models import User
-
-        User.objects.create_superuser(
-            id=1, username="admin", email="admin@example.com", password="password"
-        )
+        admin_user = make_admin_user()
         test_app = TestApp(app)
         login_response = test_app.get("/admin/login/")
         assert login_response.status_int == 200
         form = login_response.form
-        form["username"] = "admin"
-        form["password"] = "password"
+        form["username"] = admin_user.username
+        form["password"] = admin_user.testing_password
         form.submit()
         response = test_app.get(url)
 
@@ -315,6 +329,76 @@ def test_admin_view_operation_name(url, expected_op_name, tracked_requests):
     tracked_request = tracked_requests[-1]
     span = tracked_request.complete_spans[-2]
     assert span.operation == expected_op_name
+
+
+def skip_if_no_tastypie():
+    if not django_app.tastypie_api:
+        pytest.skip("No Tastypie")
+
+
+@pytest.mark.parametrize(
+    "url, expected_op_name",
+    [
+        [
+            "/tastypie-api/v1/user/1/",
+            "Controller/tests.integration.django_app.UserResource.get_detail",
+        ],
+        [
+            "/tastypie-api/v1/user/",
+            "Controller/tests.integration.django_app.UserResource.get_list",
+        ],
+    ],
+)
+def test_tastypie_api_operation_name(url, expected_op_name, tracked_requests):
+    with app_with_scout() as app:
+        skip_if_no_tastypie()
+        make_admin_user()
+        response = TestApp(app).get(url, {"format": "json"})
+
+    assert response.status_int == 200
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    span = tracked_request.complete_spans[-2]
+    assert span.operation == expected_op_name
+
+
+def test_tastypie_api_operation_name_fail_no_tastypie(tracked_requests):
+    with app_with_scout() as app:
+        skip_if_no_tastypie()
+        with pretend_package_unavailable("tastypie"):
+            response = TestApp(app).get("/tastypie-api/v1/user/", {"format": "json"})
+
+    assert response.status_int == 200
+    span = tracked_requests[0].complete_spans[-2]
+    assert span.operation == "Controller/tastypie.resources.wrapper"
+
+
+@skip_if_python_2
+def test_tastypie_api_operation_name_fail_no_wrapper(tracked_requests):
+    with app_with_scout() as app:
+        skip_if_no_tastypie()
+        url = "/tastypie-api/v1/user/"
+        view_func = resolve(url).func
+        with delete_attributes(view_func, "__wrapped__"):
+            response = TestApp(app).get(url, {"format": "json"})
+
+    assert response.status_int == 200
+    span = tracked_requests[0].complete_spans[-2]
+    assert span.operation == "Controller/tastypie.resources.wrapper"
+
+
+@skip_if_python_2
+def test_tastypie_api_operation_name_fail_no_closure(tracked_requests):
+    with app_with_scout() as app:
+        skip_if_no_tastypie()
+        url = "/tastypie-api/v1/user/"
+        view_func = resolve(url).func
+        with mock.patch.object(view_func, "__wrapped__"):
+            response = TestApp(app).get(url, {"format": "json"})
+
+    assert response.status_int == 200
+    span = tracked_requests[0].complete_spans[-2]
+    assert span.operation == "Controller/tastypie.resources.wrapper"
 
 
 def test_no_monitor(tracked_requests):

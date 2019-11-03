@@ -8,6 +8,7 @@ from functools import wraps
 
 string_type = str if sys.version_info[0] >= 3 else basestring  # noqa: F821
 text_type = str if sys.version_info[0] >= 3 else unicode  # noqa: F821
+string_types = tuple({string_type, text_type})
 
 # Python 2 (and very early 3.x) didn't have ContextDecorator, so define it for ourselves
 if sys.version_info < (3, 2):

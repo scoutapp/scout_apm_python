@@ -124,15 +124,39 @@ def template_response(request):
 
 
 @SimpleLazyObject
+def tastypie_api():
+    """
+    Tastypie API as a lazy object because it needs to import User model which
+    can't be done until after django.setup()
+    """
+    from django.contrib.auth.models import User
+
+    try:
+        from tastypie.api import Api as TastypieApi
+        from tastypie.resources import ModelResource as TastypieModelResource
+    except ImportError:
+        return None
+
+    class UserResource(TastypieModelResource):
+        class Meta:
+            queryset = User.objects.all()
+            allowed_methods = ["get"]
+
+    api = TastypieApi(api_name="v1")
+    api.register(UserResource())
+    return api
+
+
+@SimpleLazyObject
 def urlpatterns():
     """
     URL's as a lazy object because they touch admin.site.urls and that isn't
     ready until django.setup() has been called
     """
-    try:
-        from django.urls import path
+    if django.VERSION >= (2, 0):
+        from django.urls import include, path
 
-        return [
+        patterns = [
             path("", home),
             path("hello/", hello),
             path("crash/", crash),
@@ -142,10 +166,14 @@ def urlpatterns():
             path("template-response/", template_response),
             path("admin/", admin.site.urls),
         ]
-    except ImportError:  # Django < 2.0
-        from django.conf.urls import url
+        if tastypie_api:
+            patterns.append(path("tastypie-api/", include(tastypie_api.urls)))
+        return patterns
 
-        return [
+    else:
+        from django.conf.urls import include, url
+
+        patterns = [
             url(r"^$", home),
             url(r"^hello/$", hello),
             url(r"^crash/$", crash),
@@ -155,3 +183,6 @@ def urlpatterns():
             url(r"^template-response/$", template_response),
             url(r"^admin/", admin.site.urls),
         ]
+        if tastypie_api:
+            patterns.append(url(r"^tastypie-api/", include(tastypie_api.urls)))
+        return patterns
