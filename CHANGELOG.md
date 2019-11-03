@@ -1,6 +1,6 @@
 # Changelog
 
-## Pending
+## [2.7.0] 2019-11-03
 
 ### Added
 
@@ -13,7 +13,7 @@
 
 ### Fixed
 
-- Changed `scout_apm.api.install()` signature to not take `*args, **kwargs` but
+- Change `scout_apm.api.install()` signature to not take `*args, **kwargs` but
   just `config` as a keyword argument
   ([PR #304](https://github.com/scoutapp/scout_apm_python/pull/304)).
 - Rewrite background samplers thread to avoid some rare race conditions
