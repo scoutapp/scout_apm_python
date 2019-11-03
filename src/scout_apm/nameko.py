@@ -19,7 +19,7 @@ class ScoutReporter(DependencyProvider):
         if self._do_nothing:
             return
         tracked_request = TrackedRequest.instance()
-        tracked_request.mark_real_request()
+        tracked_request.is_real_request = True
 
         # Get HTTP details for HTTP handlers
         if isinstance(worker_ctx.entrypoint, HttpRequestHandler):

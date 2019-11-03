@@ -36,7 +36,7 @@ class ScoutMiddleware(object):
 
     def process_request(self, req, resp):
         tracked_request = TrackedRequest.instance()
-        tracked_request.mark_real_request()
+        tracked_request.is_real_request = True
         req.context.scout_tracked_request = tracked_request
 
         path = req.path

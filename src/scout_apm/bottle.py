@@ -37,7 +37,7 @@ class ScoutPlugin(object):
 
         def wrapper(*args, **kwargs):
             tracked_request = TrackedRequest.instance()
-            tracked_request.mark_real_request()
+            tracked_request.is_real_request = True
 
             path = request.path
             # allitems() is an undocumented bottle internal

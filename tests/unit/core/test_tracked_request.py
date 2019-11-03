@@ -23,12 +23,7 @@ def test_tracked_request_instance_is_a_singleton():
 
 
 def test_is_real_request_default_false(tracked_request):
-    assert not tracked_request.is_real_request()
-
-
-def test_is_real_request_marked(tracked_request):
-    tracked_request.mark_real_request()
-    assert tracked_request.is_real_request()
+    assert not tracked_request.is_real_request
 
 
 def test_tag_request(tracked_request):
@@ -161,7 +156,7 @@ def test_finish_does_not_capture_memory(tracked_request):
 
 
 def test_finish_does_captures_memory_on_real_requests(tracked_request):
-    tracked_request.mark_real_request()
+    tracked_request.is_real_request = True
     tracked_request.finish()
 
     assert "mem_delta" in tracked_request.tags

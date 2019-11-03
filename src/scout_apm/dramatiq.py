@@ -24,7 +24,7 @@ class ScoutMiddleware(dramatiq.Middleware):
         if self._do_nothing:
             return
         tracked_request = TrackedRequest.instance()
-        tracked_request.mark_real_request()
+        tracked_request.is_real_request = True
         if exception:
             tracked_request.tag("error", "true")
         tracked_request.stop_span()
