@@ -93,8 +93,8 @@ def test_patch_redis_no_redis_module():
         instrument.patch_redis()  # doesn't crash
 
 
-@mock.patch("scout_apm.instruments.redis.monkeypatch_method", side_effect=RuntimeError)
-def test_patch_redis_install_failure(monkeypatch_method):
+@mock.patch("scout_apm.instruments.redis.wrapt.decorator", side_effect=RuntimeError)
+def test_patch_redis_install_failure(mock_decorator):
     instrument.patch_redis()  # doesn't crash
 
 
@@ -103,8 +103,8 @@ def test_patch_pipeline_no_redis_module():
         instrument.patch_pipeline()  # doesn't crash
 
 
-@mock.patch("scout_apm.instruments.redis.monkeypatch_method", side_effect=RuntimeError)
-def test_patch_pipeline_install_failure(monkeypatch_method):
+@mock.patch("scout_apm.instruments.redis.wrapt.decorator", side_effect=RuntimeError)
+def test_patch_pipeline_install_failure(mock_decorator):
     instrument.patch_pipeline()  # doesn't crash
 
 
