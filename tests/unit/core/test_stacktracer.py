@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import pytest
 
-from scout_apm.core.monkey import unpatch_method
 from scout_apm.core.stacktracer import trace_function, trace_method
 from scout_apm.core.tracked_request import TrackedRequest
 from tests.compat import mock
@@ -44,8 +43,8 @@ def test_trace_function_callable_info(tracked_request):
     assert span.operation == "Test/Function/trace_me"
 
 
-@mock.patch("scout_apm.core.stacktracer.CallableProxy", side_effect=RuntimeError)
-def test_trace_function_exception(CallableProxy, tracked_request):
+@mock.patch("scout_apm.core.stacktracer.wrapt.decorator", side_effect=RuntimeError)
+def test_trace_function_exception(mock_decorator, tracked_request):
     traced = trace_function(trace_me, lambda: ("Test/Function", {"name": "trace_me"}))
     assert traced is trace_me  # patching failed
 
@@ -66,7 +65,7 @@ def test_trace_method(tracked_request):
     try:
         TraceMe().trace_me()
     finally:
-        unpatch_method(TraceMe, "trace_me")
+        TraceMe.trace_me = TraceMe.trace_me.__wrapped__
 
     span = tracked_request.complete_spans[0]
     assert span.operation == "Test/Method/trace_me"
@@ -80,7 +79,7 @@ def test_trace_method_no_name(tracked_request):
     try:
         TraceMe().trace_me()
     finally:
-        unpatch_method(TraceMe, "trace_me")
+        TraceMe.trace_me = TraceMe.trace_me.__wrapped__
 
     span = tracked_request.complete_spans[0]
     assert span.operation == "Test/Method"
