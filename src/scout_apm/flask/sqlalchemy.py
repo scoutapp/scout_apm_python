@@ -1,15 +1,18 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import wrapt
 from flask_sqlalchemy import SQLAlchemy
 
 import scout_apm.sqlalchemy
-from scout_apm.core.monkey import monkeypatch_method
 
 
 def instrument_sqlalchemy(db):
-    @monkeypatch_method(SQLAlchemy)
-    def get_engine(original, self, *args, **kwargs):
-        engine = original(*args, **kwargs)
-        scout_apm.sqlalchemy.instrument_sqlalchemy(engine)
-        return engine
+    SQLAlchemy.get_engine = wrapped_get_engine(SQLAlchemy.get_engine)
+
+
+@wrapt.decorator
+def wrapped_get_engine(wrapped, instance, args, kwargs):
+    engine = wrapped(*args, **kwargs)
+    scout_apm.sqlalchemy.instrument_sqlalchemy(engine)
+    return engine
