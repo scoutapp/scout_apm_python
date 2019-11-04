@@ -258,3 +258,14 @@ async def test_no_monitor(tracked_requests):
     assert response_start["type"] == "http.response.start"
     assert response_start["status"] == 200
     assert tracked_requests == []
+
+
+@async_test
+async def test_unknown_asgi_scope(tracked_requests):
+    with app_with_scout() as app:
+        communicator = ApplicationCommunicator(app, {"type": "lifespan"})
+        await communicator.send_input({"type": "lifespan.startup"})
+        response_start = await communicator.receive_output()
+
+    assert response_start == {'type': 'lifespan.startup.complete'}
+    assert tracked_requests == []
