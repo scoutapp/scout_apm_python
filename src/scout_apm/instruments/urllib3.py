@@ -37,11 +37,12 @@ class Instrument(object):
 
             @wrapt.decorator
             def wrapped_urlopen(wrapped, instance, args, kwargs):
-                if "method" in kwargs:
-                    method = kwargs["method"]
-                elif args:
-                    method = args[0]
-                else:
+                def _extract_method(method, *args, **kwargs):
+                    return method
+
+                try:
+                    method = _extract_method(*args, **kwargs)
+                except TypeError:
                     method = "Unknown"
 
                 try:
