@@ -7,16 +7,16 @@ from scout_apm.core.tracked_request import TrackedRequest
 from scout_apm.core.web_requests import create_filtered_path
 
 
-def wrap_asgi_application(application):
+def wrap_starlette_application(application):
     async def scout_wrapped_application(scope, receive, send):
         if scope["type"] != "http":
             await application(scope, receive, send)
             return
 
         tracked_request = TrackedRequest.instance()
-        tracked_request.mark_real_request()
-        operation = "Controller/" + scope["method"] + "_" + scope["path"]
-        tracked_request.start_span(operation=operation)
+        tracked_request.is_real_request = True
+        operation = "Controller/Unknown"
+        controller_span = tracked_request.start_span(operation=operation)
 
         tracked_request.tag(
             "path",
@@ -29,6 +29,11 @@ def wrap_asgi_application(application):
             tracked_request.tag("error", "true")
             raise exc
         finally:
+            if "endpoint" in scope:
+                endpoint = scope["endpoint"]
+                controller_span.operation = "Controller/{}.{}".format(
+                    endpoint.__module__, endpoint.__qualname__
+                )
             tracked_request.stop_span()
 
     return scout_wrapped_application
