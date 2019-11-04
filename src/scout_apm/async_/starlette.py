@@ -4,7 +4,12 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from starlette.requests import Request
 
 from scout_apm.core.tracked_request import TrackedRequest
-from scout_apm.core.web_requests import create_filtered_path, ignore_path
+from scout_apm.core.web_requests import (
+    create_filtered_path,
+    ignore_path,
+    track_amazon_request_queue_time,
+    track_request_queue_time,
+)
 
 
 class ScoutMiddleware:
@@ -35,6 +40,14 @@ class ScoutMiddleware:
             or request.client.host
         )
         tracked_request.tag("user_ip", user_ip)
+
+        queue_time = request.headers.get(
+            "x-queue-start", default=""
+        ) or request.headers.get("x-request-start", default="")
+        tracked_queue_time = track_request_queue_time(queue_time, tracked_request)
+        if not tracked_queue_time:
+            amazon_queue_time = request.headers.get("x-amzn-trace-id", default="")
+            track_amazon_request_queue_time(amazon_queue_time, tracked_request)
 
         try:
             await self.app(scope, receive, send)

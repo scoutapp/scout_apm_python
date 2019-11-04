@@ -1,6 +1,7 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import datetime as dt
 from contextlib import contextmanager
 from urllib.parse import urlencode
 
@@ -12,8 +13,10 @@ from starlette.responses import PlainTextResponse
 import scout_apm.core
 from scout_apm.api import Config
 from scout_apm.async_.starlette import ScoutMiddleware
+from scout_apm.compat import datetime_to_timestamp
 from tests.integration.util import (
     parametrize_filtered_params,
+    parametrize_queue_time_header_name,
     parametrize_user_ip_headers,
 )
 from tests.tools import async_test
@@ -172,6 +175,44 @@ async def test_user_ip(headers, client_address, expected, tracked_requests):
     assert response_start["status"] == 200
     tracked_request = tracked_requests[0]
     assert tracked_request.tags["user_ip"] == expected
+
+
+@parametrize_queue_time_header_name
+@async_test
+async def test_queue_time(header_name, tracked_requests):
+    # Not testing floats due to Python 2/3 rounding differences
+    queue_start = int(datetime_to_timestamp(dt.datetime.utcnow())) - 2
+    with app_with_scout() as app:
+        communicator = ApplicationCommunicator(
+            app, get_scope(path="/", headers={header_name: str("t=") + str(queue_start)})
+        )
+        await communicator.send_input({"type": "http.request"})
+        response_start = await communicator.receive_output()
+        await communicator.receive_output()
+
+    assert response_start["type"] == "http.response.start"
+    assert response_start["status"] == 200
+    queue_time_ns = tracked_requests[0].tags["scout.queue_time_ns"]
+    # Upper bound assumes we didn't take more than 2s to run this test...
+    assert queue_time_ns >= 2000000000 and queue_time_ns < 4000000000
+
+
+@async_test
+async def test_amazon_queue_time(tracked_requests):
+    queue_start = int(datetime_to_timestamp(dt.datetime.utcnow())) - 2
+    with app_with_scout() as app:
+        communicator = ApplicationCommunicator(
+            app, get_scope(path="/", headers={"X-Amzn-Trace-Id": "Self=1-{}-12456789abcdef012345678".format(queue_start)})
+        )
+        await communicator.send_input({"type": "http.request"})
+        response_start = await communicator.receive_output()
+        await communicator.receive_output()
+
+    assert response_start["type"] == "http.response.start"
+    assert response_start["status"] == 200
+    queue_time_ns = tracked_requests[0].tags["scout.queue_time_ns"]
+    # Upper bound assumes we didn't take more than 2s to run this test...
+    assert queue_time_ns >= 2000000000 and queue_time_ns < 4000000000
 
 
 @async_test
