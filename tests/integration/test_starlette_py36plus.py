@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from contextlib import contextmanager
+from urllib.parse import urlencode
 
 import pytest
 from asgiref.testing import ApplicationCommunicator
@@ -11,6 +12,7 @@ from starlette.responses import PlainTextResponse
 import scout_apm.core
 from scout_apm.api import Config
 from scout_apm.async_.starlette import ScoutMiddleware
+from tests.integration.util import parametrize_filtered_params
 from tests.tools import async_test
 
 
@@ -57,7 +59,7 @@ def app_with_scout(scout_config=None):
 
 
 def get_scope(**kwargs):
-    kwargs.setdefault('headers', [])
+    kwargs.setdefault("headers", [])
     return {
         "type": "http",
         "asgi": {"version": "3.0", "spec_version": "2.1"},
@@ -131,6 +133,22 @@ async def test_hello(tracked_requests):
         span.operation
         == "Controller/tests.integration.test_starlette_py36plus.app_with_scout.<locals>.hello"
     )
+
+
+@parametrize_filtered_params
+@async_test
+async def test_filtered_params(params, expected_path, tracked_requests):
+    with app_with_scout() as app:
+        communicator = ApplicationCommunicator(
+            app, get_scope(path="/", query_string=urlencode(params).encode("utf-8"))
+        )
+        await communicator.send_input({"type": "http.request"})
+        response_start = await communicator.receive_output()
+        await communicator.receive_output()
+
+    assert response_start["type"] == "http.response.start"
+    assert response_start["status"] == 200
+    assert tracked_requests[0].tags["path"] == expected_path
 
 
 @async_test
