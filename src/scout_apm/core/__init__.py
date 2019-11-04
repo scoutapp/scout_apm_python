@@ -9,7 +9,7 @@ from scout_apm.core import objtrace
 from scout_apm.core.config import scout_config
 from scout_apm.core.core_agent_manager import CoreAgentManager
 from scout_apm.core.instrument_manager import InstrumentManager
-from scout_apm.core.metadata import AppMetadata
+from scout_apm.core.metadata import report_app_metadata
 from scout_apm.core.socket import CoreAgentSocket
 
 logger = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ def install(config=None):
     logger.debug("APM Launching on PID: %s", os.getpid())
     launched = CoreAgentManager().launch()
 
-    AppMetadata.report()
+    report_app_metadata()
     if launched:
         # Stop the thread to avoid running threads pre-fork
         CoreAgentSocket.instance().stop()
