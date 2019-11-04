@@ -5,15 +5,14 @@ import os
 from contextlib import contextmanager
 
 import elasticsearch
+import elasticsearch.exceptions
 import pytest
 
 from scout_apm.instruments.elasticsearch import Instrument
 from tests.compat import mock
-from tests.tools import pretend_package_unavailable
 
 # e.g. export ELASTICSEARCH_URL="http://localhost:9200/"
 ELASTICSEARCH_URL = os.environ.get("ELASTICSEARCH_URL")
-
 skip_if_elasticsearch_not_running = pytest.mark.skipif(
     ELASTICSEARCH_URL is None, reason="MongoDB isn't available"
 )
@@ -36,46 +35,111 @@ def es_with_scout():
 
 
 @skip_if_elasticsearch_not_running
-def test_search():
+def test_search(tracked_request):
     with es_with_scout() as es:
         es.search()
 
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "Elasticsearch/Unknown/Search"
+
 
 @skip_if_elasticsearch_not_running
-def test_search_no_indexes_string():
+def test_search_arg_named_index(tracked_request):
+    with es_with_scout() as es, pytest.raises(elasticsearch.exceptions.NotFoundError):
+        es.search("myindex")
+
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "Elasticsearch/Myindex/Search"
+
+
+@skip_if_elasticsearch_not_running
+def test_search_kwarg_named_index(tracked_request):
+    with es_with_scout() as es, pytest.raises(elasticsearch.exceptions.NotFoundError):
+        es.search(index="myindex")
+
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "Elasticsearch/Myindex/Search"
+
+
+@skip_if_elasticsearch_not_running
+def test_search_arg_empty_index(tracked_request):
     with es_with_scout() as es:
-        es.search(index="", body={"query": {"term": {"user": "kimchy"}}})
+        es.search("")
+
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "Elasticsearch/Unknown/Search"
 
 
 @skip_if_elasticsearch_not_running
-def test_search_no_indexes_list():
+def test_search_kwarg_empty_index(tracked_request):
     with es_with_scout() as es:
-        es.search(index=[], body={"query": {"term": {"user": "kimchy"}}})
+        es.search(index="")
+
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "Elasticsearch/Unknown/Search"
 
 
 @skip_if_elasticsearch_not_running
-def test_perform_request_missing_url():
+def test_search_kwarg_empty_index_list(tracked_request):
+    with es_with_scout() as es:
+        es.search(index=[])
+
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "Elasticsearch/Unknown/Search"
+
+
+@skip_if_elasticsearch_not_running
+def test_perform_request_missing_url(tracked_request):
     with es_with_scout() as es:
         with pytest.raises(TypeError):
             # Transport instrumentation doesn't crash if url is missing.
             # This raises a TypeError when calling the original method.
             es.transport.perform_request("GET", params={}, body=None)
 
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "Elasticsearch/Unknown"
+
 
 @skip_if_elasticsearch_not_running
-def test_perform_request_bad_url():
+def test_perform_request_bad_url(tracked_request):
     with es_with_scout() as es:
         with pytest.raises(TypeError):
             # Transport instrumentation doesn't crash if url has the wrong type.
             # This raises a TypeError when calling the original method.
             es.transport.perform_request("GET", None, params={}, body=None)
 
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "Elasticsearch/Unknown"
+
 
 @skip_if_elasticsearch_not_running
-def test_perform_request_unknown_url():
+def test_perform_request_unknown_url(tracked_request):
     with es_with_scout() as es:
         # Transport instrumentation doesn't crash if url is unknown.
         es.transport.perform_request("GET", "/_nodes", params={}, body=None)
+
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "Elasticsearch/Unknown"
+
+
+@skip_if_elasticsearch_not_running
+def test_perform_request_known_url(tracked_request):
+    with es_with_scout() as es:
+        # Transport instrumentation doesn't crash if url is unknown.
+        es.transport.perform_request("GET", "/_count", params={}, body=None)
+
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "Elasticsearch/Count"
 
 
 def test_installed():
@@ -91,31 +155,20 @@ def test_installable():
 
 
 def test_installable_no_elasticsearch_module():
-    with pretend_package_unavailable("elasticsearch"):
+    with mock.patch("scout_apm.instruments.elasticsearch.Elasticsearch", new=None):
         assert not instrument.installable()
 
 
 def test_install_no_elasticsearch_module():
-    with pretend_package_unavailable("elasticsearch"):
+    with mock.patch("scout_apm.instruments.elasticsearch.Elasticsearch", new=None):
         assert not instrument.install()
         assert not Instrument.installed
 
 
-def test_instrument_client_no_elasticsearch_module():
-    with pretend_package_unavailable("elasticsearch"):
-        assert not instrument.instrument_client()
-
-
-@mock.patch(
-    "scout_apm.instruments.elasticsearch.wrapt.decorator", side_effect=RuntimeError
-)
-def test_instrument_client_install_failure(mock_decorator):
-    assert not instrument.instrument_client()
-
-
-def test_instrument_transport_no_elasticsearch_module():
-    with pretend_package_unavailable("elasticsearch"):
-        assert not instrument.instrument_transport()
+def test_instrument_client_install_missing_attribute():
+    with mock.patch("scout_apm.instruments.elasticsearch.Elasticsearch") as mock_elasticsearch:
+        del mock_elasticsearch.bulk
+    instrument.instrument_client()  # no crash
 
 
 @mock.patch(

@@ -7,6 +7,12 @@ import wrapt
 
 from scout_apm.core.tracked_request import TrackedRequest
 
+try:
+    from elasticsearch import Elasticsearch, Transport
+except ImportError:
+    Elasticsearch = None
+    Transport = None
+
 logger = logging.getLogger(__name__)
 
 
@@ -41,10 +47,7 @@ class Instrument(object):
     ]
 
     def installable(self):
-        try:
-            from elasticsearch import Elasticsearch  # noqa: F401
-            from elasticsearch import Transport  # noqa: F401
-        except ImportError:
+        if Elasticsearch is None:
             logger.info("Unable to import for Elasticsearch instruments")
             return False
         if self.installed:
@@ -73,65 +76,19 @@ class Instrument(object):
         self.uninstrument_transport()
 
     def instrument_client(self):
-        try:
-            from elasticsearch import Elasticsearch  # noqa: F401
-        except ImportError:
-            logger.info(
-                "Unable to import for Elasticsearch Client instruments. "
-                "Instrument install failed."
-            )
-            return False
-
-        for method_str in self.__class__.CLIENT_METHODS:
-            try:
-                code_str = """\
-@wrapt.decorator
-def wrapped_{method_str}(wrapped, instance, args, kwargs):
-    tracked_request = TrackedRequest.instance()
-    index = kwargs.get('index', 'Unknown')
-    if isinstance(index, (list, tuple)):
-        index = ','.join(index)
-    index = index.title()
-    name = '/'.join(['Elasticsearch', index, '{camel_name}'])
-    tracked_request.start_span(operation=name, ignore_children=True)
-
-    try:
-        return wrapped(*args, **kwargs)
-    finally:
-        tracked_request.stop_span()
-
-
-Elasticsearch.{method_str} = wrapped_{method_str}(Elasticsearch.{method_str})
-""".format(
-                    method_str=method_str,
-                    camel_name="".join(c.title() for c in method_str.split("_")),
-                )
-
-                exec(code_str)
-                logger.info("Instrumented Elasticsearch Elasticsearch.%s", method_str)
-
-            except Exception as e:
-                logger.warning(
-                    "Unable to instrument for Elasticsearch Elasticsearch.%s: %r",
-                    method_str,
-                    e,
-                )
-                return False
-        return True
+        for name in self.__class__.CLIENT_METHODS:
+            method = getattr(Elasticsearch, name, None)
+            if method is not None:
+                setattr(Elasticsearch, name, wrap_client_method(method))
 
     def uninstrument_client(self):
-        from elasticsearch import Elasticsearch
-
-        for method_str in self.__class__.CLIENT_METHODS:
-            setattr(
-                Elasticsearch,
-                method_str,
-                getattr(Elasticsearch, method_str).__wrapped__,
-            )
+        for name in self.__class__.CLIENT_METHODS:
+            method = getattr(Elasticsearch, name, None)
+            if method is not None:
+                setattr(Elasticsearch, name, method.__wrapped__)
 
     def instrument_transport(self):
         try:
-            from elasticsearch import Transport
 
             def _sanitize_name(name):
                 try:
@@ -200,6 +157,31 @@ Elasticsearch.{method_str} = wrapped_{method_str}(Elasticsearch.{method_str})
         return True
 
     def uninstrument_transport(self):
-        from elasticsearch import Transport
 
         Transport.perform_request = Transport.perform_request.__wrapped__
+
+
+@wrapt.decorator
+def wrap_client_method(wrapped, instance, args, kwargs):
+    def _get_index(index, *args, **kwargs):
+        return index
+
+    try:
+        index = _get_index(*args, **kwargs)
+    except TypeError:
+        index = "Unknown"
+    else:
+        if not index:
+            index = "Unknown"
+        if isinstance(index, (list, tuple)):
+            index = ",".join(index)
+    index = index.title()
+    camel_name = "".join(c.title() for c in wrapped.__name__.split("_"))
+    operation = "Elasticsearch/{}/{}".format(index, camel_name)
+    tracked_request = TrackedRequest.instance()
+    tracked_request.start_span(operation=operation, ignore_children=True)
+
+    try:
+        return wrapped(*args, **kwargs)
+    finally:
+        tracked_request.stop_span()

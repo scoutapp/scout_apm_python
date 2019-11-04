@@ -12,6 +12,8 @@
 
 - Track SQL Alchemy `executemany` calls as multi-queries
   ([PR #340](https://github.com/scoutapp/scout_apm_python/pull/340)).
+- Track Elasticsearch index name when it's not passed as a keyword argument
+  ([PR #348](https://github.com/scoutapp/scout_apm_python/pull/348)).
 
 ## [2.7.0] 2019-11-03
 
