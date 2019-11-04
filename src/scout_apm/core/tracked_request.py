@@ -11,12 +11,11 @@ from scout_apm.core.n_plus_one_call_set import NPlusOneCallSet
 from scout_apm.core.samplers.memory import get_rss_in_mb
 from scout_apm.core.samplers.thread import SamplersThread
 from scout_apm.core.socket import CoreAgentSocket
-from scout_apm.core.thread_local import ThreadLocalSingleton
 
 logger = logging.getLogger(__name__)
 
 
-class TrackedRequest(ThreadLocalSingleton):
+class TrackedRequest(object):
     """
     This is a container which keeps track of all module instances for a single
     request. For convenience they are made available as attributes based on
@@ -34,6 +33,12 @@ class TrackedRequest(ThreadLocalSingleton):
         "_memory_start",
         "callset",
     )
+
+    @classmethod
+    def instance(cls):
+        from scout_apm.core.context import context
+
+        return context.get_tracked_request()
 
     def __init__(self):
         self.request_id = "req-" + str(uuid4())
@@ -112,12 +117,9 @@ class TrackedRequest(ThreadLocalSingleton):
                 CoreAgentSocket.instance().send(batch_command)
             SamplersThread.ensure_started()
 
-        # This can fail if the Tracked Request was created directly,
-        # not through instance()
-        try:
-            self.release()
-        except Exception:
-            pass
+        from scout_apm.core.context import context
+
+        context.clear_tracked_request(self)
 
     def _get_mem_delta(self):
         current_mem = get_rss_in_mb()
