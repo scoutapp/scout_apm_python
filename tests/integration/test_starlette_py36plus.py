@@ -1,10 +1,8 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import functools
 from contextlib import contextmanager
 
-import asgiref.sync
 import pytest
 from asgiref.testing import ApplicationCommunicator
 from starlette.applications import Starlette
@@ -13,6 +11,7 @@ from starlette.responses import PlainTextResponse
 import scout_apm.core
 from scout_apm.api import Config
 from scout_apm.async_.starlette import ScoutMiddleware
+from tests.tools import async_test
 
 
 @contextmanager
@@ -57,25 +56,8 @@ def app_with_scout(scout_config=None):
         Config.reset_all()
 
 
-def async_to_sync(func):
-    """
-    Wrap async_to_sync with another function because Pytest complains about
-    collecting the resulting callable object as a test because it's not a true
-    function:
-
-    PytestCollectionWarning: cannot collect 'test_foo' because it is not a
-    function.
-    """
-    sync_func = asgiref.sync.async_to_sync(func)
-
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        return sync_func(*args, **kwargs)
-
-    return wrapper
-
-
 def get_scope(**kwargs):
+    kwargs.setdefault('headers', [])
     return {
         "type": "http",
         "asgi": {"version": "3.0", "spec_version": "2.1"},
@@ -87,7 +69,7 @@ def get_scope(**kwargs):
     }
 
 
-@async_to_sync
+@async_test
 async def test_home(tracked_requests):
     with app_with_scout() as app:
         communicator = ApplicationCommunicator(app, get_scope(path="/"))
@@ -111,7 +93,7 @@ async def test_home(tracked_requests):
     )
 
 
-@async_to_sync
+@async_test
 async def test_home_ignored(tracked_requests):
     with app_with_scout(scout_config={"ignore": ["/"]}) as app:
         communicator = ApplicationCommunicator(app, get_scope(path="/"))
@@ -127,7 +109,7 @@ async def test_home_ignored(tracked_requests):
     assert tracked_requests == []
 
 
-@async_to_sync
+@async_test
 async def test_hello(tracked_requests):
     with app_with_scout() as app:
         communicator = ApplicationCommunicator(app, get_scope(path="/hello/"))
@@ -151,7 +133,7 @@ async def test_hello(tracked_requests):
     )
 
 
-@async_to_sync
+@async_test
 async def test_server_error(tracked_requests):
     with app_with_scout() as app:
         communicator = ApplicationCommunicator(app, get_scope(path="/crash/"))
