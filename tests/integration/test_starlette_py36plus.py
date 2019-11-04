@@ -111,6 +111,22 @@ async def test_home(tracked_requests):
 
 
 @async_to_sync
+async def test_home_ignored(tracked_requests):
+    with app_with_scout(scout_config={"ignore": ["/"]}) as app:
+        communicator = ApplicationCommunicator(app, get_scope(path="/"))
+        await communicator.send_input({"type": "http.request"})
+        # Read the response.
+        response_start = await communicator.receive_output()
+        response_body = await communicator.receive_output()
+
+    assert response_start["type"] == "http.response.start"
+    assert response_start["status"] == 200
+    assert response_body["type"] == "http.response.body"
+    assert response_body["body"] == b"Welcome home."
+    assert tracked_requests == []
+
+
+@async_to_sync
 async def test_hello(tracked_requests):
     with app_with_scout() as app:
         communicator = ApplicationCommunicator(app, get_scope(path="/hello/"))

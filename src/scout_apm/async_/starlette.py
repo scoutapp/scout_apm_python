@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from urllib.parse import parse_qsl
 
 from scout_apm.core.tracked_request import TrackedRequest
-from scout_apm.core.web_requests import create_filtered_path
+from scout_apm.core.web_requests import create_filtered_path, ignore_path
 
 
 def wrap_starlette_application(application):
@@ -18,10 +18,12 @@ def wrap_starlette_application(application):
         operation = "Controller/Unknown"
         controller_span = tracked_request.start_span(operation=operation)
 
+        path = scope["path"]
         tracked_request.tag(
-            "path",
-            create_filtered_path(scope["path"], parse_qsl(scope["query_string"])),
+            "path", create_filtered_path(path, parse_qsl(scope["query_string"]))
         )
+        if ignore_path(path):
+            tracked_request.tag("ignore_transaction", True)
 
         try:
             await application(scope, receive, send)
