@@ -8,6 +8,7 @@ from urllib.parse import urlencode
 import pytest
 from asgiref.testing import ApplicationCommunicator
 from starlette.applications import Starlette
+from starlette.endpoints import HTTPEndpoint
 from starlette.responses import PlainTextResponse
 
 import scout_apm.core
@@ -42,8 +43,9 @@ def app_with_scout(*, scout_config=None):
         return PlainTextResponse("Welcome home.")
 
     @app.route("/hello/")
-    async def hello(request):
-        return PlainTextResponse("Hello World!")
+    class HelloEndpoint(HTTPEndpoint):
+        async def get(self, request):
+            return PlainTextResponse("Hello World!")
 
     @app.route("/crash/")
     async def crash(request):
@@ -142,7 +144,7 @@ async def test_hello(tracked_requests):
     span = tracked_request.complete_spans[0]
     assert (
         span.operation
-        == "Controller/tests.integration.test_starlette_py36plus.app_with_scout.<locals>.hello"
+        == "Controller/tests.integration.test_starlette_py36plus.app_with_scout.<locals>.HelloEndpoint"
     )
 
 
