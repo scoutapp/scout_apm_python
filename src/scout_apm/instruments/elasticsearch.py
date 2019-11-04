@@ -3,7 +3,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 
-from scout_apm.core.monkey import monkeypatch_method, unpatch_method
+import wrapt
+
 from scout_apm.core.tracked_request import TrackedRequest
 
 logger = logging.getLogger(__name__)
@@ -84,8 +85,8 @@ class Instrument(object):
         for method_str in self.__class__.CLIENT_METHODS:
             try:
                 code_str = """\
-@monkeypatch_method(Elasticsearch)
-def {method_str}(original, self, *args, **kwargs):
+@wrapt.decorator
+def wrapped_{method_str}(wrapped, instance, args, kwargs):
     tracked_request = TrackedRequest.instance()
     index = kwargs.get('index', 'Unknown')
     if isinstance(index, (list, tuple)):
@@ -94,11 +95,13 @@ def {method_str}(original, self, *args, **kwargs):
     name = '/'.join(['Elasticsearch', index, '{camel_name}'])
     tracked_request.start_span(operation=name, ignore_children=True)
 
-
     try:
-        return original(*args, **kwargs)
+        return wrapped(*args, **kwargs)
     finally:
         tracked_request.stop_span()
+
+
+Elasticsearch.{method_str} = wrapped_{method_str}(Elasticsearch.{method_str})
 """.format(
                     method_str=method_str,
                     camel_name="".join(c.title() for c in method_str.split("_")),
@@ -120,7 +123,11 @@ def {method_str}(original, self, *args, **kwargs):
         from elasticsearch import Elasticsearch
 
         for method_str in self.__class__.CLIENT_METHODS:
-            unpatch_method(Elasticsearch, method_str)
+            setattr(
+                Elasticsearch,
+                method_str,
+                getattr(Elasticsearch, method_str).__wrapped__,
+            )
 
     def instrument_transport(self):
         try:
@@ -161,8 +168,8 @@ def {method_str}(original, self, *args, **kwargs):
                 except Exception:
                     return "Unknown"
 
-            @monkeypatch_method(Transport)
-            def perform_request(original, self, *args, **kwargs):
+            @wrapt.decorator
+            def wrapped_perform_request(wrapped, instance, args, kwargs):
                 try:
                     op = _sanitize_name(args[1])
                 except IndexError:
@@ -174,9 +181,13 @@ def {method_str}(original, self, *args, **kwargs):
                 )
 
                 try:
-                    return original(*args, **kwargs)
+                    return wrapped(*args, **kwargs)
                 finally:
                     tracked_request.stop_span()
+
+            Transport.perform_request = wrapped_perform_request(
+                Transport.perform_request
+            )
 
             logger.info("Instrumented Elasticsearch Transport")
 
@@ -191,4 +202,4 @@ def {method_str}(original, self, *args, **kwargs):
     def uninstrument_transport(self):
         from elasticsearch import Transport
 
-        unpatch_method(Transport, "perform_request")
+        Transport.perform_request = Transport.perform_request.__wrapped__

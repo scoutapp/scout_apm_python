@@ -107,9 +107,9 @@ def test_instrument_client_no_elasticsearch_module():
 
 
 @mock.patch(
-    "scout_apm.instruments.elasticsearch.monkeypatch_method", side_effect=RuntimeError
+    "scout_apm.instruments.elasticsearch.wrapt.decorator", side_effect=RuntimeError
 )
-def test_instrument_client_install_failure(monkeypatch_method):
+def test_instrument_client_install_failure(mock_decorator):
     assert not instrument.instrument_client()
 
 
@@ -119,9 +119,9 @@ def test_instrument_transport_no_elasticsearch_module():
 
 
 @mock.patch(
-    "scout_apm.instruments.elasticsearch.monkeypatch_method", side_effect=RuntimeError
+    "scout_apm.instruments.elasticsearch.wrapt.decorator", side_effect=RuntimeError
 )
-def test_instrument_transport_install_failure(monkeypatch_method):
+def test_instrument_transport_install_failure(mock_decorator):
     assert not instrument.instrument_transport()
 
 

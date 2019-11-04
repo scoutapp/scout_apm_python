@@ -4,17 +4,11 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 
 import django
+import wrapt
 from django.db import connections
 from django.db.backends.signals import connection_created
 
-from scout_apm.core.monkey import monkeypatch_method
 from scout_apm.core.tracked_request import TrackedRequest
-
-try:
-    from django.db.backends.base.base import BaseDatabaseWrapper
-except ImportError:
-    # Backwards compatibility for Django <1.8
-    from django.db.backends import BaseDatabaseWrapper
 
 try:
     from django.db.backends.utils import CursorWrapper
@@ -35,17 +29,19 @@ def db_execute_hook(execute, sql, params, many, context):
     else:
         operation = "SQL/Query"
 
-    tracked_request = TrackedRequest.instance()
-    span = tracked_request.start_span(operation=operation)
-    span.tag("db.statement", sql)
+    if sql is not None:
+        tracked_request = TrackedRequest.instance()
+        span = tracked_request.start_span(operation=operation)
+        span.tag("db.statement", sql)
 
     try:
         return execute(sql, params, many, context)
     finally:
-        tracked_request.stop_span()
-        tracked_request.callset.update(sql, 1, span.duration())
-        if tracked_request.callset.should_capture_backtrace(sql):
-            span.capture_backtrace()
+        if sql is not None:
+            tracked_request.stop_span()
+            tracked_request.callset.update(sql, 1, span.duration())
+            if tracked_request.callset.should_capture_backtrace(sql):
+                span.capture_backtrace()
 
 
 def install_db_execute_hook(connection, **kwargs):
@@ -64,36 +60,60 @@ def install_db_execute_hook(connection, **kwargs):
         connection.execute_wrappers.insert(0, db_execute_hook)
 
 
-class _DetailedTracingCursorWrapper(CursorWrapper):
+@wrapt.decorator
+def execute_wrapper(wrapped, instance, args, kwargs):
     """
-    Monkey-patched-in cursor wrapper for Django < 2.0
+    CursorWrapper.execute() wrapper for Django < 2.0
     """
+    try:
+        sql = _extract_sql(*args, **kwargs)
+    except TypeError:
+        sql = None
 
-    def execute(self, sql, params=None):
+    if sql is not None:
+        print("Starting, sql = ", repr(sql))
         tracked_request = TrackedRequest.instance()
         span = tracked_request.start_span(operation="SQL/Query")
         span.tag("db.statement", sql)
 
-        try:
-            return self.cursor.execute(sql, params)
-        finally:
+    try:
+        return wrapped(*args, **kwargs)
+    finally:
+        if sql is not None:
             tracked_request.stop_span()
             tracked_request.callset.update(sql, 1, span.duration())
             if tracked_request.callset.should_capture_backtrace(sql):
                 span.capture_backtrace()
 
-    def executemany(self, sql, param_list):
+
+@wrapt.decorator
+def executemany_wrapper(wrapped, instance, args, kwargs):
+    """
+    CursorWrapper.executemany() wrapper for Django < 2.0
+    """
+    try:
+        sql = _extract_sql(*args, **kwargs)
+    except TypeError:
+        sql = None
+
+    if sql is not None:
+        print("Starting, sql = ", repr(sql))
         tracked_request = TrackedRequest.instance()
         span = tracked_request.start_span(operation="SQL/Many")
         span.tag("db.statement", sql)
 
-        try:
-            return self.cursor.executemany(sql, param_list)
-        finally:
+    try:
+        return wrapped(*args, **kwargs)
+    finally:
+        if sql is not None:
             tracked_request.stop_span()
             tracked_request.callset.update(sql, 1, span.duration())
             if tracked_request.callset.should_capture_backtrace(sql):
                 span.capture_backtrace()
+
+
+def _extract_sql(sql, *args, **kwargs):
+    return sql
 
 
 def install_sql_instrumentation():
@@ -108,9 +128,7 @@ def install_sql_instrumentation():
         logger.debug("Installed DB connection created signal handler")
     else:
 
-        @monkeypatch_method(BaseDatabaseWrapper)
-        def cursor(original, self, *args, **kwargs):
-            result = original(*args, **kwargs)
-            return _DetailedTracingCursorWrapper(result, self)
+        CursorWrapper.execute = execute_wrapper(CursorWrapper.execute)
+        CursorWrapper.executemany = executemany_wrapper(CursorWrapper.executemany)
 
         logger.debug("Monkey patched SQL")

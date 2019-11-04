@@ -5,11 +5,11 @@ import logging
 import os
 
 import pytest
+import wrapt
 from webtest import TestApp
 
 from scout_apm.core import socket as scout_apm_core_socket
 from scout_apm.core.config import SCOUT_PYTHON_VALUES
-from scout_apm.core.monkey import monkeypatch_method, unpatch_method
 from scout_apm.core.tracked_request import TrackedRequest
 from tests.compat import TemporaryDirectory
 
@@ -132,13 +132,15 @@ def tracked_requests():
     """
     requests = []
 
-    @monkeypatch_method(TrackedRequest)
-    def finish(original, self):
-        if self.is_real_request() and not self.is_ignored():
-            requests.append(self)
-        return original()
+    @wrapt.decorator
+    def capture_requests(wrapped, instance, args, kwargs):
+        if instance.is_real_request() and not instance.is_ignored():
+            requests.append(instance)
+        return wrapped(*args, **kwargs)
 
+    orig = TrackedRequest.finish
+    TrackedRequest.finish = capture_requests(orig)
     try:
         yield requests
     finally:
-        unpatch_method(TrackedRequest, "finish")
+        TrackedRequest.finish = orig

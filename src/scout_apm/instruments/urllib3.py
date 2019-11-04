@@ -3,7 +3,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 
-from scout_apm.core.monkey import monkeypatch_method, unpatch_method
+import wrapt
+
+from scout_apm.compat import text_type
 from scout_apm.core.tracked_request import TrackedRequest
 
 logger = logging.getLogger(__name__)
@@ -33,29 +35,32 @@ class Instrument(object):
         try:
             from urllib3 import HTTPConnectionPool
 
-            @monkeypatch_method(HTTPConnectionPool)
-            def urlopen(original, self, *args, **kwargs):
-                method = "Unknown"
-                url = "Unknown"
+            @wrapt.decorator
+            def wrapped_urlopen(wrapped, instance, args, kwargs):
+                def _extract_method(method, *args, **kwargs):
+                    return method
+
                 try:
-                    try:
-                        method = kwargs["method"]
-                    except KeyError:
-                        method = args[0]
-                    url = "{}".format(self._absolute_url("/"))
+                    method = _extract_method(*args, **kwargs)
+                except TypeError:
+                    method = "Unknown"
+
+                try:
+                    url = text_type(self._absolute_url("/"))
                 except Exception:
-                    logger.exception(
-                        "Could not get instrument data for HTTPConnectionPool"
-                    )
+                    logger.exception("Could not get URL for HTTPConnectionPool")
+                    url = "Unknown"
 
                 tracked_request = TrackedRequest.instance()
                 span = tracked_request.start_span(operation="HTTP/{}".format(method))
-                span.tag("url", "{}".format(url))
+                span.tag("url", text_type(url))
 
                 try:
-                    return original(*args, **kwargs)
+                    return wrapped(*args, **kwargs)
                 finally:
                     tracked_request.stop_span()
+
+            HTTPConnectionPool.urlopen = wrapped_urlopen(HTTPConnectionPool.urlopen)
 
             logger.info("Instrumented Urllib3")
 
@@ -75,4 +80,4 @@ class Instrument(object):
 
         from urllib3 import HTTPConnectionPool
 
-        unpatch_method(HTTPConnectionPool, "urlopen")
+        HTTPConnectionPool.urlopen = HTTPConnectionPool.urlopen.__wrapped__

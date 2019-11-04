@@ -66,10 +66,8 @@ def test_install_no_pymongo_module():
         assert not instrument.install()
 
 
-@mock.patch(
-    "scout_apm.instruments.pymongo.monkeypatch_method", side_effect=RuntimeError
-)
-def test_install_failure(monkeypatch_method):
+@mock.patch("scout_apm.instruments.pymongo.wrapt.decorator", side_effect=RuntimeError)
+def test_install_failure(mock_decorator):
     try:
         assert not instrument.install()  # doesn't crash
     finally:

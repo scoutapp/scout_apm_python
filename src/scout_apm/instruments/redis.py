@@ -3,7 +3,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 
-from scout_apm.core.monkey import monkeypatch_method, unpatch_method
+import wrapt
+
 from scout_apm.core.tracked_request import TrackedRequest
 
 logger = logging.getLogger(__name__)
@@ -63,8 +64,8 @@ class Instrument(object):
         try:
             Redis, _Pipeline = import_Redis_and_Pipeline()
 
-            @monkeypatch_method(Redis)
-            def execute_command(original, self, *args, **kwargs):
+            @wrapt.decorator
+            def wrapped_execute_command(wrapped, instance, args, kwargs):
                 try:
                     op = args[0]
                 except (IndexError, TypeError):
@@ -74,9 +75,11 @@ class Instrument(object):
                 tracked_request.start_span(operation="Redis/{}".format(op))
 
                 try:
-                    return original(*args, **kwargs)
+                    return wrapped(*args, **kwargs)
                 finally:
                     tracked_request.stop_span()
+
+            Redis.execute_command = wrapped_execute_command(Redis.execute_command)
 
         except Exception as e:
             logger.warning(
@@ -86,21 +89,23 @@ class Instrument(object):
     def unpatch_redis(self):
         Redis, _Pipeline = import_Redis_and_Pipeline()
 
-        unpatch_method(Redis, "execute_command")
+        Redis.execute_command = Redis.execute_command.__wrapped__
 
     def patch_pipeline(self):
         try:
             _Redis, Pipeline = import_Redis_and_Pipeline()
 
-            @monkeypatch_method(Pipeline)
-            def execute(original, self, *args, **kwargs):
+            @wrapt.decorator
+            def wrapped_execute(wrapped, instance, args, kwargs):
                 tracked_request = TrackedRequest.instance()
                 tracked_request.start_span(operation="Redis/MULTI")
 
                 try:
-                    return original(*args, **kwargs)
+                    return wrapped(*args, **kwargs)
                 finally:
                     tracked_request.stop_span()
+
+            Pipeline.execute = wrapped_execute(Pipeline.execute)
 
         except Exception as e:
             logger.warning("Unable to instrument for Redis BasePipeline.execute: %r", e)
@@ -108,4 +113,4 @@ class Instrument(object):
     def unpatch_pipeline(self):
         _Redis, Pipeline = import_Redis_and_Pipeline()
 
-        unpatch_method(Pipeline, "execute")
+        Pipeline.execute = Pipeline.execute.__wrapped__

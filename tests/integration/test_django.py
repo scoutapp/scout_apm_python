@@ -237,6 +237,44 @@ def test_sql(tracked_requests):
         "Controller/tests.integration.django_app.sql",
         "Middleware",
     ]
+    assert spans[0].tags["db.statement"] == "CREATE TABLE IF NOT EXISTS test(item)"
+    assert spans[1].tags["db.statement"] == "INSERT INTO test(item) VALUES(%s)"
+    assert spans[2].tags["db.statement"] == "SELECT item from test"
+
+
+def test_sql_kwargs(tracked_requests):
+    with app_with_scout() as app:
+        response = TestApp(app).get("/sql-kwargs/")
+
+    assert response.status_int == 200
+    assert len(tracked_requests) == 1
+    spans = tracked_requests[0].complete_spans
+    assert [s.operation for s in spans] == [
+        "SQL/Query",
+        "SQL/Many",
+        "Controller/tests.integration.django_app.sql_kwargs",
+        "Middleware",
+    ]
+    assert spans[0].tags["db.statement"] == "CREATE TABLE IF NOT EXISTS test(item)"
+    assert spans[1].tags["db.statement"] == "INSERT INTO test(item) VALUES(%s)"
+
+
+def test_sql_execute_type_error(tracked_requests):
+    """
+    Check that broken usage of the monkey-patched cursor methods doesn't cause
+    any irregular crash
+    """
+    with app_with_scout() as app:
+        response = TestApp(app).get("/sql-type-errors/")
+
+    assert response.status_int == 200
+    assert len(tracked_requests) == 1
+    spans = tracked_requests[0].complete_spans
+    # Nothing tracked, but it worked fine
+    assert [s.operation for s in spans] == [
+        "Controller/tests.integration.django_app.sql_type_errors",
+        "Middleware",
+    ]
 
 
 # Monkey patch should_capture_backtrace in order to keep the test fast.

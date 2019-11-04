@@ -1,12 +1,12 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import wrapt
 from flask import current_app
 from flask.globals import _request_ctx_stack
 
 import scout_apm.core
 from scout_apm.core.config import scout_config
-from scout_apm.core.monkey import CallableProxy
 from scout_apm.core.tracked_request import TrackedRequest
 from scout_apm.core.web_requests import werkzeug_track_request_data
 
@@ -15,10 +15,7 @@ class ScoutApm(object):
     def __init__(self, app):
         self.app = app
         app.before_first_request(self.before_first_request)
-        # Wrap the Flask.dispatch_request method
-        app.dispatch_request = CallableProxy(
-            app.dispatch_request, self.wrapped_dispatch_request
-        )
+        app.dispatch_request = self.wrapped_dispatch_request(app.dispatch_request)
 
     #############
     #  Startup  #
@@ -46,7 +43,8 @@ class ScoutApm(object):
     #  Request Lifecycle hook  #
     ############################
 
-    def wrapped_dispatch_request(self, wrapped, *args, **kwargs):
+    @wrapt.decorator
+    def wrapped_dispatch_request(self, wrapped, instance, args, kwargs):
         if self._do_nothing:
             return wrapped(*args, **kwargs)
 

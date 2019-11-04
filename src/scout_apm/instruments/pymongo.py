@@ -4,7 +4,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 
 # Used in the exec() call below.
-from scout_apm.core.monkey import monkeypatch_method, unpatch_method  # noqa: F401
+import wrapt  # noqa: F401
+
 from scout_apm.core.tracked_request import TrackedRequest  # noqa: F401
 
 logger = logging.getLogger(__name__)
@@ -77,17 +78,19 @@ class Instrument(object):
         for method_str in self.__class__.PYMONGO_METHODS:
             try:
                 code_str = """
-@monkeypatch_method(Collection)
-def {method_str}(original, self, *args, **kwargs):
+@wrapt.decorator
+def wrapped_{method_str}(wrapped, instance, args, kwargs):
     tracked_request = TrackedRequest.instance()
-    name = '/'.join(['MongoDB', self.name, '{camel_name}'])
+    name = '/'.join(['MongoDB', instance.name, '{camel_name}'])
     span = tracked_request.start_span(operation=name, ignore_children=True)
-    span.tag('name', self.name)
+    span.tag('name', instance.name)
 
     try:
-        return original(*args, **kwargs)
+        return wrapped(*args, **kwargs)
     finally:
         tracked_request.stop_span()
+
+Collection.{method_str} = wrapped_{method_str}(Collection.{method_str})
 """.format(
                     method_str=method_str,
                     camel_name="".join(c.title() for c in method_str.split("_")),
@@ -113,4 +116,4 @@ def {method_str}(original, self, *args, **kwargs):
         from pymongo.collection import Collection
 
         for method_str in self.__class__.PYMONGO_METHODS:
-            unpatch_method(Collection, method_str)
+            setattr(Collection, method_str, getattr(Collection, method_str).__wrapped__)

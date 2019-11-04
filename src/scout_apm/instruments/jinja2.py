@@ -3,7 +3,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 
-from scout_apm.core.monkey import monkeypatch_method, unpatch_method
+import wrapt
+
 from scout_apm.core.tracked_request import TrackedRequest
 
 logger = logging.getLogger(__name__)
@@ -33,16 +34,17 @@ class Instrument(object):
         try:
             from jinja2 import Template
 
-            @monkeypatch_method(Template)
-            def render(original, self, *args, **kwargs):
+            @wrapt.decorator
+            def wrapped_render(wrapped, instance, args, kwargs):
                 tracked_request = TrackedRequest.instance()
                 span = tracked_request.start_span(operation="Template/Render")
-                span.tag("name", self.name)
-
+                span.tag("name", instance.name)
                 try:
-                    return original(*args, **kwargs)
+                    return wrapped(*args, **kwargs)
                 finally:
                     tracked_request.stop_span()
+
+            Template.render = wrapped_render(Template.render)
 
             logger.info("Instrumented Jinja2")
 
@@ -60,4 +62,4 @@ class Instrument(object):
 
         from jinja2 import Template
 
-        unpatch_method(Template, "render")
+        Template.render = Template.render.__wrapped__
