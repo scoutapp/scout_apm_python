@@ -23,7 +23,7 @@ from tests.tools import async_test
 
 
 @contextmanager
-def app_with_scout(scout_config=None):
+def app_with_scout(*, scout_config=None):
     """
     Context manager that configures and installs the Scout plugin for a basic
     Starlette application.
@@ -234,3 +234,16 @@ async def test_server_error(tracked_requests):
         span.operation
         == "Controller/tests.integration.test_starlette_py36plus.app_with_scout.<locals>.crash"
     )
+
+
+@async_test
+async def test_no_monitor(tracked_requests):
+    with app_with_scout(scout_config={"monitor": False}) as app:
+        communicator = ApplicationCommunicator(app, get_scope(path="/"))
+        await communicator.send_input({"type": "http.request"})
+        response_start = await communicator.receive_output()
+        await communicator.receive_output()
+
+    assert response_start["type"] == "http.response.start"
+    assert response_start["status"] == 200
+    assert tracked_requests == []
