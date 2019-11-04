@@ -113,7 +113,15 @@ def sql_type_errors(request):
         except TypeError:
             pass
         try:
+            cursor.execute(sql=None)
+        except ValueError:
+            pass
+        try:
             cursor.executemany()
+        except TypeError:
+            pass
+        try:
+            cursor.executemany(sql=None, param_list=[(1,)])
         except TypeError:
             pass
     return HttpResponse("Done")

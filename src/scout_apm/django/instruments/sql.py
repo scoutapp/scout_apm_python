@@ -29,17 +29,19 @@ def db_execute_hook(execute, sql, params, many, context):
     else:
         operation = "SQL/Query"
 
-    tracked_request = TrackedRequest.instance()
-    span = tracked_request.start_span(operation=operation)
-    span.tag("db.statement", sql)
+    if sql is not None:
+        tracked_request = TrackedRequest.instance()
+        span = tracked_request.start_span(operation=operation)
+        span.tag("db.statement", sql)
 
     try:
         return execute(sql, params, many, context)
     finally:
-        tracked_request.stop_span()
-        tracked_request.callset.update(sql, 1, span.duration())
-        if tracked_request.callset.should_capture_backtrace(sql):
-            span.capture_backtrace()
+        if sql is not None:
+            tracked_request.stop_span()
+            tracked_request.callset.update(sql, 1, span.duration())
+            if tracked_request.callset.should_capture_backtrace(sql):
+                span.capture_backtrace()
 
 
 def install_db_execute_hook(connection, **kwargs):
@@ -63,14 +65,13 @@ def execute_wrapper(wrapped, instance, args, kwargs):
     """
     CursorWrapper.execute() wrapper for Django < 2.0
     """
-    if args:
-        sql = args[0]
-    elif "sql" in kwargs:
-        sql = kwargs["sql"]
-    else:
+    try:
+        sql = _extract_sql(*args, **kwargs)
+    except TypeError:
         sql = None
 
     if sql is not None:
+        print("Starting, sql = ", repr(sql))
         tracked_request = TrackedRequest.instance()
         span = tracked_request.start_span(operation="SQL/Query")
         span.tag("db.statement", sql)
@@ -90,14 +91,13 @@ def executemany_wrapper(wrapped, instance, args, kwargs):
     """
     CursorWrapper.executemany() wrapper for Django < 2.0
     """
-    if args:
-        sql = args[0]
-    elif "sql" in kwargs:
-        sql = kwargs["sql"]
-    else:
+    try:
+        sql = _extract_sql(*args, **kwargs)
+    except TypeError:
         sql = None
 
     if sql is not None:
+        print("Starting, sql = ", repr(sql))
         tracked_request = TrackedRequest.instance()
         span = tracked_request.start_span(operation="SQL/Many")
         span.tag("db.statement", sql)
@@ -110,6 +110,10 @@ def executemany_wrapper(wrapped, instance, args, kwargs):
             tracked_request.callset.update(sql, 1, span.duration())
             if tracked_request.callset.should_capture_backtrace(sql):
                 span.capture_backtrace()
+
+
+def _extract_sql(sql, *args, **kwargs):
+    return sql
 
 
 def install_sql_instrumentation():
