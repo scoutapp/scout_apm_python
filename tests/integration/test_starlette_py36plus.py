@@ -269,5 +269,5 @@ async def test_unknown_asgi_scope(tracked_requests):
         await communicator.send_input({"type": "lifespan.startup"})
         response_start = await communicator.receive_output()
 
-    assert response_start == {'type': 'lifespan.startup.complete'}
+    assert response_start == {"type": "lifespan.startup.complete"}
     assert tracked_requests == []
