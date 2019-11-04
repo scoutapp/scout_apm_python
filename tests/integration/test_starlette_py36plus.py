@@ -12,7 +12,10 @@ from starlette.responses import PlainTextResponse
 import scout_apm.core
 from scout_apm.api import Config
 from scout_apm.async_.starlette import ScoutMiddleware
-from tests.integration.util import parametrize_filtered_params
+from tests.integration.util import (
+    parametrize_filtered_params,
+    parametrize_user_ip_headers,
+)
 from tests.tools import async_test
 
 
@@ -58,8 +61,10 @@ def app_with_scout(scout_config=None):
         Config.reset_all()
 
 
-def get_scope(**kwargs):
-    kwargs.setdefault("headers", [])
+def get_scope(headers=None, **kwargs):
+    if headers is None:
+        headers = {}
+    headers = [[k.lower().encode('latin-1'), v.encode('latin-1')] for k, v in headers.items()]
     return {
         "type": "http",
         "asgi": {"version": "3.0", "spec_version": "2.1"},
@@ -67,6 +72,7 @@ def get_scope(**kwargs):
         "method": "GET",
         "query_string": b"",
         "server": ("testserver", 80),
+        "headers": headers,
         **kwargs,
     }
 
@@ -149,6 +155,23 @@ async def test_filtered_params(params, expected_path, tracked_requests):
     assert response_start["type"] == "http.response.start"
     assert response_start["status"] == 200
     assert tracked_requests[0].tags["path"] == expected_path
+
+
+@parametrize_user_ip_headers
+@async_test
+async def test_user_ip(headers, client_address, expected, tracked_requests):
+    with app_with_scout() as app:
+        communicator = ApplicationCommunicator(
+            app, get_scope(path="/", headers=headers, client=(client_address, None))
+        )
+        await communicator.send_input({"type": "http.request"})
+        response_start = await communicator.receive_output()
+        await communicator.receive_output()
+
+    assert response_start["type"] == "http.response.start"
+    assert response_start["status"] == 200
+    tracked_request = tracked_requests[0]
+    assert tracked_request.tags["user_ip"] == expected
 
 
 @async_test

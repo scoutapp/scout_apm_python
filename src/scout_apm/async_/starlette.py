@@ -29,6 +29,13 @@ class ScoutMiddleware:
         if ignore_path(request.url.path):
             tracked_request.tag("ignore_transaction", True)
 
+        user_ip = (
+            request.headers.get("x-forwarded-for", default="").split(",")[0]
+            or request.headers.get("client-ip", default="").split(",")[0]
+            or request.client.host
+        )
+        tracked_request.tag("user_ip", user_ip)
+
         try:
             await self.app(scope, receive, send)
         except Exception as exc:
