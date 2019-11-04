@@ -98,16 +98,13 @@ def test_patch_redis_no_redis_module():
 def test_patch_redis_install_failure(mock_redis, caplog):
     del mock_redis.execute_command
     instrument.patch_redis()  # doesn't crash
-    assert caplog.record_tuples == [
-        (
-            "scout_apm.instruments.redis",
-            logging.WARNING,
-            (
-                "Unable to instrument for Redis Redis.execute_command: "
-                + "AttributeError('execute_command')"
-            ),
-        )
-    ]
+    assert len(caplog.record_tuples) == 1
+    logger, level, message = caplog.record_tuples[0]
+    assert logger == "scout_apm.instruments.redis"
+    assert level == logging.WARNING
+    assert message.startswith(
+        "Unable to instrument for Redis Redis.execute_command: AttributeError"
+    )
 
 
 def test_patch_pipeline_no_redis_module():
@@ -119,16 +116,14 @@ def test_patch_pipeline_no_redis_module():
 def test_patch_pipeline_install_failure(mock_pipeline, caplog):
     del mock_pipeline.execute
     instrument.patch_pipeline()  # doesn't crash
-    assert caplog.record_tuples == [
-        (
-            "scout_apm.instruments.redis",
-            30,
-            (
-                "Unable to instrument for Redis BasePipeline.execute: "
-                + "AttributeError('execute')"
-            ),
-        )
-    ]
+
+    assert len(caplog.record_tuples) == 1
+    logger, level, message = caplog.record_tuples[0]
+    assert logger == "scout_apm.instruments.redis"
+    assert level == logging.WARNING
+    assert message.startswith(
+        "Unable to instrument for Redis BasePipeline.execute: AttributeError"
+    )
 
 
 def test_install_is_idempotent():
