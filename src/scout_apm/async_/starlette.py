@@ -7,10 +7,13 @@ from scout_apm.core.tracked_request import TrackedRequest
 from scout_apm.core.web_requests import create_filtered_path, ignore_path
 
 
-def wrap_starlette_application(application):
-    async def scout_wrapped_application(scope, receive, send):
+class ScoutMiddleware:
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
         if scope["type"] != "http":
-            await application(scope, receive, send)
+            await self.app(scope, receive, send)
             return
 
         tracked_request = TrackedRequest.instance()
@@ -26,7 +29,7 @@ def wrap_starlette_application(application):
             tracked_request.tag("ignore_transaction", True)
 
         try:
-            await application(scope, receive, send)
+            await self.app(scope, receive, send)
         except Exception as exc:
             tracked_request.tag("error", "true")
             raise exc
@@ -37,5 +40,3 @@ def wrap_starlette_application(application):
                     endpoint.__module__, endpoint.__qualname__
                 )
             tracked_request.stop_span()
-
-    return scout_wrapped_application

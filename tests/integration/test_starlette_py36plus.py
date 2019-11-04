@@ -12,7 +12,7 @@ from starlette.responses import PlainTextResponse
 
 import scout_apm.core
 from scout_apm.api import Config
-from scout_apm.async_.starlette import wrap_starlette_application
+from scout_apm.async_.starlette import ScoutMiddleware
 
 
 @contextmanager
@@ -48,10 +48,11 @@ def app_with_scout(scout_config=None):
         raise exc
 
     scout_apm.core.install()
-    wrapped_app = wrap_starlette_application(app)
+    # must be added last to be the outermost middleware
+    app.add_middleware(ScoutMiddleware)
 
     try:
-        yield wrapped_app
+        yield app
     finally:
         Config.reset_all()
 
