@@ -166,7 +166,9 @@ def test_install_no_elasticsearch_module():
 
 
 def test_instrument_client_install_missing_attribute():
-    with mock.patch("scout_apm.instruments.elasticsearch.Elasticsearch") as mock_elasticsearch:
+    with mock.patch(
+        "scout_apm.instruments.elasticsearch.Elasticsearch"
+    ) as mock_elasticsearch:
         del mock_elasticsearch.bulk
     instrument.instrument_client()  # no crash
 
