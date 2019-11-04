@@ -1,6 +1,7 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import logging
 import os
 from contextlib import contextmanager
 
@@ -78,12 +79,12 @@ def test_installable():
 
 
 def test_installable_no_redis_module():
-    with pretend_package_unavailable("redis"):
+    with mock.patch("scout_apm.instruments.redis.redis", new=None):
         assert not instrument.installable()
 
 
 def test_install_no_redis_module():
-    with pretend_package_unavailable("redis"):
+    with mock.patch("scout_apm.instruments.redis.redis", new=None):
         assert not instrument.install()
         assert not Instrument.installed
 
@@ -93,9 +94,20 @@ def test_patch_redis_no_redis_module():
         instrument.patch_redis()  # doesn't crash
 
 
-@mock.patch("scout_apm.instruments.redis.wrapt.decorator", side_effect=RuntimeError)
-def test_patch_redis_install_failure(mock_decorator):
+@mock.patch("scout_apm.instruments.redis.Redis")
+def test_patch_redis_install_failure(mock_redis, caplog):
+    del mock_redis.execute_command
     instrument.patch_redis()  # doesn't crash
+    assert caplog.record_tuples == [
+        (
+            "scout_apm.instruments.redis",
+            logging.WARNING,
+            (
+                "Unable to instrument for Redis Redis.execute_command: "
+                + "AttributeError('execute_command')"
+            ),
+        )
+    ]
 
 
 def test_patch_pipeline_no_redis_module():
@@ -103,9 +115,20 @@ def test_patch_pipeline_no_redis_module():
         instrument.patch_pipeline()  # doesn't crash
 
 
-@mock.patch("scout_apm.instruments.redis.wrapt.decorator", side_effect=RuntimeError)
-def test_patch_pipeline_install_failure(mock_decorator):
+@mock.patch("scout_apm.instruments.redis.Pipeline")
+def test_patch_pipeline_install_failure(mock_pipeline, caplog):
+    del mock_pipeline.execute
     instrument.patch_pipeline()  # doesn't crash
+    assert caplog.record_tuples == [
+        (
+            "scout_apm.instruments.redis",
+            30,
+            (
+                "Unable to instrument for Redis BasePipeline.execute: "
+                + "AttributeError('execute')"
+            ),
+        )
+    ]
 
 
 def test_install_is_idempotent():
