@@ -61,7 +61,7 @@ class ScoutApm(object):
         operation = "Controller/" + name
 
         tracked_request = TrackedRequest.instance()
-        tracked_request.mark_real_request()
+        tracked_request.is_real_request = True
         span = tracked_request.start_span(
             operation=operation, should_capture_backtrace=False
         )

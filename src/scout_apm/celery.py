@@ -17,7 +17,7 @@ def before_publish_callback(headers=None, properties=None, **kwargs):
 
 def prerun_callback(task=None, **kwargs):
     tracked_request = TrackedRequest.instance()
-    tracked_request.mark_real_request()
+    tracked_request.is_real_request = True
 
     start = getattr(task.request, "scout_task_start", None)
     if start is not None:

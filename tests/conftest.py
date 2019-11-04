@@ -134,7 +134,7 @@ def tracked_requests():
 
     @wrapt.decorator
     def capture_requests(wrapped, instance, args, kwargs):
-        if instance.is_real_request() and not instance.is_ignored():
+        if instance.is_real_request and not instance.is_ignored():
             requests.append(instance)
         return wrapped(*args, **kwargs)
 

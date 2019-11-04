@@ -69,7 +69,7 @@ def instruments(handler, registry):
                     # Routing further down the call chain. So time it starting
                     # above, but only name it if it gets a name
                     if request.matched_route is not None:
-                        tracked_request.mark_real_request()
+                        tracked_request.is_real_request = True
                         span.operation = "Controller/" + request.matched_route.name
             except Exception:
                 tracked_request.tag("error", "true")

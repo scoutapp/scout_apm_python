@@ -30,7 +30,7 @@ class TrackedRequest(ThreadLocalSingleton):
         "active_spans",
         "complete_spans",
         "tags",
-        "_is_real_request",
+        "is_real_request",
         "_memory_start",
         "callset",
     )
@@ -42,7 +42,7 @@ class TrackedRequest(ThreadLocalSingleton):
         self.active_spans = []
         self.complete_spans = []
         self.tags = {}
-        self._is_real_request = False
+        self.is_real_request = False
         self._memory_start = get_rss_in_mb()
         self.callset = NPlusOneCallSet()
         logger.debug("Starting request: %s", self.request_id)
@@ -52,12 +52,6 @@ class TrackedRequest(ThreadLocalSingleton):
         return "<TrackedRequest(request_id={}, tags={})>".format(
             repr(self.request_id), repr(self.tags)
         )
-
-    def mark_real_request(self):
-        self._is_real_request = True
-
-    def is_real_request(self):
-        return self._is_real_request
 
     def tag(self, key, value):
         if key in self.tags:
@@ -111,7 +105,7 @@ class TrackedRequest(ThreadLocalSingleton):
         logger.debug("Stopping request: %s", self.request_id)
         if self.end_time is None:
             self.end_time = dt.datetime.utcnow()
-        if self.is_real_request():
+        if self.is_real_request:
             self.tag("mem_delta", self._get_mem_delta())
             if not self.is_ignored():
                 batch_command = BatchCommand.from_tracked_request(self)

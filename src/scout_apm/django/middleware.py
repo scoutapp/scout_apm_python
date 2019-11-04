@@ -190,7 +190,7 @@ class ViewTimingMiddleware(object):
         if not scout_config.value("monitor"):
             return
         tracked_request = TrackedRequest.instance()
-        tracked_request.mark_real_request()
+        tracked_request.is_real_request = True
 
         track_request_view_data(request, tracked_request)
 
@@ -252,7 +252,7 @@ class OldStyleViewMiddleware(object):
             # don't do anything
             return
 
-        tracked_request.mark_real_request()
+        tracked_request.is_real_request = True
 
         track_request_view_data(request, tracked_request)
 
