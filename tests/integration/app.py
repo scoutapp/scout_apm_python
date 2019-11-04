@@ -16,11 +16,15 @@ Configure it with the SCOUT_MONITOR, SCOUT_KEY, and SCOUT_NAME env variables.
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import logging
+
 import scout_apm.api
 from tests.integration import test_bottle, test_django, test_flask, test_pyramid
 
+logger = logging.getLogger(__name__)
+
 # Launch Scout APM agent
-print("Installing Scout APM")
+logger.info("Installing Scout APM")
 scout_apm.api.install()
 
 # Create instrumented sub-apps
@@ -113,5 +117,5 @@ def app(environ, start_response):
 if __name__ == "__main__":
     from wsgiref.simple_server import make_server
 
-    print("Serving on http://0.0.0.0:8080")
+    logger.info("Serving on http://0.0.0.0:8080")
     make_server("", 8080, app).serve_forever()

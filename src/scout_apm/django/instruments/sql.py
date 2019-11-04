@@ -71,7 +71,6 @@ def execute_wrapper(wrapped, instance, args, kwargs):
         sql = None
 
     if sql is not None:
-        print("Starting, sql = ", repr(sql))
         tracked_request = TrackedRequest.instance()
         span = tracked_request.start_span(operation="SQL/Query")
         span.tag("db.statement", sql)
@@ -97,7 +96,6 @@ def executemany_wrapper(wrapped, instance, args, kwargs):
         sql = None
 
     if sql is not None:
-        print("Starting, sql = ", repr(sql))
         tracked_request = TrackedRequest.instance()
         span = tracked_request.start_span(operation="SQL/Many")
         span.tag("db.statement", sql)
