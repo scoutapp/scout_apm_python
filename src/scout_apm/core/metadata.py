@@ -11,12 +11,14 @@ from scout_apm.core.socket import CoreAgentSocket
 
 
 def report_app_metadata():
-    CoreAgentSocket.instance().send(ApplicationEvent(
-        event_type="scout.metadata",
-        event_value=get_metadata(),
-        source="Pid: " + str(getpid()),
-        timestamp=dt.datetime.utcnow(),
-    ))
+    CoreAgentSocket.instance().send(
+        ApplicationEvent(
+            event_type="scout.metadata",
+            event_value=get_metadata(),
+            source="Pid: " + str(getpid()),
+            timestamp=dt.datetime.utcnow(),
+        )
+    )
 
 
 def get_metadata():
@@ -39,7 +41,7 @@ def get_metadata():
         "git_sha": scout_config.value("revision_sha"),
     }
     # Deprecated - see #327:
-    data['version'] = data['language_version']
+    data["version"] = data["language_version"]
     return data
 
 
