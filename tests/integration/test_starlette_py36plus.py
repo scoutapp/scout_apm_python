@@ -102,9 +102,9 @@ async def test_home(tracked_requests):
     assert len(tracked_request.complete_spans) == 1
     assert tracked_request.tags["path"] == "/"
     span = tracked_request.complete_spans[0]
-    assert (
-        span.operation
-        == "Controller/tests.integration.test_starlette_py36plus.app_with_scout.<locals>.home"
+    assert span.operation == (
+        "Controller/tests.integration.test_starlette_py36plus."
+        + "app_with_scout.<locals>.home"
     )
 
 
@@ -142,9 +142,9 @@ async def test_hello(tracked_requests):
     assert len(tracked_request.complete_spans) == 1
     assert tracked_request.tags["path"] == "/hello/"
     span = tracked_request.complete_spans[0]
-    assert (
-        span.operation
-        == "Controller/tests.integration.test_starlette_py36plus.app_with_scout.<locals>.HelloEndpoint"
+    assert span.operation == (
+        "Controller/tests.integration.test_starlette_py36plus."
+        + "app_with_scout.<locals>.HelloEndpoint"
     )
 
 
@@ -243,9 +243,9 @@ async def test_server_error(tracked_requests):
     assert tracked_request.tags["path"] == "/crash/"
     assert tracked_request.tags["error"] == "true"
     span = tracked_request.complete_spans[0]
-    assert (
-        span.operation
-        == "Controller/tests.integration.test_starlette_py36plus.app_with_scout.<locals>.crash"
+    assert span.operation == (
+        "Controller/tests.integration.test_starlette_py36plus."
+        + "app_with_scout.<locals>.crash"
     )
 
 
