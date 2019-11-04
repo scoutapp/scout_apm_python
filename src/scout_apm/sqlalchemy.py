@@ -7,8 +7,12 @@ from scout_apm.core.tracked_request import TrackedRequest
 
 
 def before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+    if executemany:
+        operation = "SQL/Many"
+    else:
+        operation = "SQL/Query"
     tracked_request = TrackedRequest.instance()
-    span = tracked_request.start_span(operation="SQL/Query")
+    span = tracked_request.start_span(operation=operation)
     span.tag("db.statement", statement)
 
 
