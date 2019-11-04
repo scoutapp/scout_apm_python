@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import datetime as dt
-import sys
 from contextlib import contextmanager
 
 from nameko.containers import get_container_cls
@@ -100,14 +99,17 @@ def test_filtered_params(params, expected_path, tracked_requests):
 
 
 @parametrize_user_ip_headers
-def test_user_ip(headers, extra_environ, expected, tracked_requests):
-    if sys.version_info[0] == 2:
-        # Required for WebTest lint
-        headers = {str(k): str(v) for k, v in headers.items()}
-        extra_environ = {str(k): str(v) for k, v in extra_environ.items()}
-
+def test_user_ip(headers, client_address, expected, tracked_requests):
     with app_with_scout() as app:
-        TestApp(app).get("/", headers=headers, extra_environ=extra_environ)
+        TestApp(app).get(
+            "/",
+            headers=headers,
+            extra_environ=(
+                {str("REMOTE_ADDR"): client_address}
+                if client_address is not None
+                else {}
+            ),
+        )
 
     tracked_request = tracked_requests[0]
     assert tracked_request.tags["user_ip"] == expected

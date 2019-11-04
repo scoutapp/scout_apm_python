@@ -22,21 +22,22 @@ parametrize_queue_time_header_name = pytest.mark.parametrize(
 )
 
 parametrize_user_ip_headers = pytest.mark.parametrize(
-    "headers, extra_environ, expected",
+    "headers, client_address, expected",
+    # str() calls needed for Python webtest sanity check
     [
-        ({}, {}, None),
-        ({}, {"REMOTE_ADDR": "1.1.1.1"}, "1.1.1.1"),
-        ({"x-forwarded-for": "1.1.1.1"}, {}, "1.1.1.1"),
-        ({"x-forwarded-for": "1.1.1.1,2.2.2.2"}, {}, "1.1.1.1"),
-        ({"x-forwarded-for": "1.1.1.1"}, {"REMOTE_ADDR": "2.2.2.2"}, "1.1.1.1"),
+        ({}, None, None),
+        ({}, str("1.1.1.1"), "1.1.1.1"),
+        ({str("x-forwarded-for"): str("1.1.1.1")}, None, "1.1.1.1"),
+        ({str("x-forwarded-for"): str("1.1.1.1,2.2.2.2")}, None, "1.1.1.1"),
+        ({str("x-forwarded-for"): str("1.1.1.1")}, str("2.2.2.2"), "1.1.1.1"),
         (
-            {"x-forwarded-for": "1.1.1.1", "client-ip": "2.2.2.2"},
-            {"REMOTE_ADDR": "3.3.3.3"},
+            {str("x-forwarded-for"): str("1.1.1.1"), str("client-ip"): str("2.2.2.2")},
+            str("3.3.3.3"),
             "1.1.1.1",
         ),
-        ({"client-ip": "1.1.1.1"}, {}, "1.1.1.1"),
-        ({"client-ip": "1.1.1.1,2.2.2.2"}, {}, "1.1.1.1"),
-        ({"client-ip": "1.1.1.1"}, {"REMOTE_ADDR": "2.2.2.2"}, "1.1.1.1"),
-        ({"client-ip": "1.1.1.1"}, {"REMOTE_ADDR": "2.2.2.2"}, "1.1.1.1"),
+        ({str("client-ip"): str("1.1.1.1")}, None, "1.1.1.1"),
+        ({str("client-ip"): str("1.1.1.1,2.2.2.2")}, None, "1.1.1.1"),
+        ({str("client-ip"): str("1.1.1.1")}, str("2.2.2.2"), "1.1.1.1"),
+        ({str("client-ip"): str("1.1.1.1")}, str("2.2.2.2"), "1.1.1.1"),
     ],
 )
