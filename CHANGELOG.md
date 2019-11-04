@@ -1,5 +1,13 @@
 # Changelog
 
+## Pending
+
+### Added
+
+- Moved all decorators to the [`wrapt`
+  library](https://wrapt.readthedocs.io/en/latest/) which is more transparent
+  ([PR #324](https://github.com/scoutapp/scout_apm_python/pull/324)).
+
 ## [2.7.0] 2019-11-03
 
 ### Added
