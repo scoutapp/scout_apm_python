@@ -67,7 +67,9 @@ def app_with_scout(*, scout_config=None):
 def get_scope(headers=None, **kwargs):
     if headers is None:
         headers = {}
-    headers = [[k.lower().encode('latin-1'), v.encode('latin-1')] for k, v in headers.items()]
+    headers = [
+        [k.lower().encode("latin-1"), v.encode("latin-1")] for k, v in headers.items()
+    ]
     return {
         "type": "http",
         "asgi": {"version": "3.0", "spec_version": "2.1"},
@@ -184,7 +186,8 @@ async def test_queue_time(header_name, tracked_requests):
     queue_start = int(datetime_to_timestamp(dt.datetime.utcnow())) - 2
     with app_with_scout() as app:
         communicator = ApplicationCommunicator(
-            app, get_scope(path="/", headers={header_name: str("t=") + str(queue_start)})
+            app,
+            get_scope(path="/", headers={header_name: str("t=") + str(queue_start)}),
         )
         await communicator.send_input({"type": "http.request"})
         response_start = await communicator.receive_output()
@@ -202,7 +205,15 @@ async def test_amazon_queue_time(tracked_requests):
     queue_start = int(datetime_to_timestamp(dt.datetime.utcnow())) - 2
     with app_with_scout() as app:
         communicator = ApplicationCommunicator(
-            app, get_scope(path="/", headers={"X-Amzn-Trace-Id": "Self=1-{}-12456789abcdef012345678".format(queue_start)})
+            app,
+            get_scope(
+                path="/",
+                headers={
+                    "X-Amzn-Trace-Id": "Self=1-{}-12456789abcdef012345678".format(
+                        queue_start
+                    )
+                },
+            ),
         )
         await communicator.send_input({"type": "http.request"})
         response_start = await communicator.receive_output()
