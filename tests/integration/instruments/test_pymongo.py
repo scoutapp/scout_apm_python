@@ -65,9 +65,7 @@ def test_install_no_pymongo_module():
 
 
 def test_install_missing_attribute():
-    with mock.patch(
-        "scout_apm.instruments.pymongo.Collection"
-    ) as mock_collection:
+    with mock.patch("scout_apm.instruments.pymongo.Collection") as mock_collection:
         del mock_collection.aggregate
     try:
         instrument.install()  # no crash
