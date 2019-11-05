@@ -104,10 +104,8 @@ def install_background_instrumentation():
             )
         )
         try:
-            val = await wrapped(*args, **kwargs)
-            print("😂", val)
+            return await wrapped(*args, **kwargs)
         finally:
             tracked_request.stop_span()
-            print("😂", tracked_request.complete_spans)
 
     BackgroundTask.__call__ = wrapped_background_call(BackgroundTask.__call__)
