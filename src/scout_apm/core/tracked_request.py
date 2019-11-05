@@ -67,7 +67,13 @@ class TrackedRequest(object):
             )
         self.tags[key] = value
 
-    def start_span(self, operation, ignore=False, ignore_children=False, should_capture_backtrace=True):
+    def start_span(
+        self,
+        operation,
+        ignore=False,
+        ignore_children=False,
+        should_capture_backtrace=True,
+    ):
         parent = self.current_span()
         if parent is not None:
             parent_id = parent.span_id
