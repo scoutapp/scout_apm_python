@@ -148,6 +148,20 @@ async def test_hello(tracked_requests):
     )
 
 
+@async_test
+async def test_not_found(tracked_requests):
+    with app_with_scout() as app:
+        communicator = ApplicationCommunicator(app, get_scope(path="/not-found/"))
+        await communicator.send_input({"type": "http.request"})
+        # Read the response.
+        response_start = await communicator.receive_output()
+        await communicator.receive_output()
+
+    assert response_start["type"] == "http.response.start"
+    assert response_start["status"] == 404
+    assert tracked_requests == []
+
+
 @parametrize_filtered_params
 @async_test
 async def test_filtered_params(params, expected_path, tracked_requests):

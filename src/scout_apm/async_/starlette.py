@@ -24,10 +24,8 @@ class ScoutMiddleware:
 
         request = Request(scope)
         tracked_request = TrackedRequest.instance()
-        tracked_request.is_real_request = True
         # Can't name controller until post-routing - see final clause
-        operation = "Controller/Unknown"
-        controller_span = tracked_request.start_span(operation=operation)
+        controller_span = tracked_request.start_span(operation="Controller/Unknown")
 
         tracked_request.tag(
             "path",
@@ -62,4 +60,5 @@ class ScoutMiddleware:
                 controller_span.operation = "Controller/{}.{}".format(
                     endpoint.__module__, endpoint.__qualname__
                 )
+                tracked_request.is_real_request = True
             tracked_request.stop_span()
