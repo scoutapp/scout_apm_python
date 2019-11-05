@@ -8,6 +8,7 @@ from urllib.parse import urlencode
 import pytest
 from asgiref.testing import ApplicationCommunicator
 from starlette.applications import Starlette
+from starlette.background import BackgroundTasks
 from starlette.endpoints import HTTPEndpoint
 from starlette.responses import PlainTextResponse
 
@@ -36,6 +37,11 @@ def app_with_scout(*, scout_config=None):
 
     app = Starlette()
 
+    @app.exception_handler(500)
+    async def error(request, exc):
+        # Always raise exceptions
+        raise exc
+
     @app.route("/")
     async def home(request):
         return PlainTextResponse("Welcome home.")
@@ -49,10 +55,19 @@ def app_with_scout(*, scout_config=None):
     async def crash(request):
         raise ValueError("BØØM!")  # non-ASCII
 
-    @app.exception_handler(500)
-    async def error(request, exc):
-        # Always raise exceptions
-        raise exc
+    @app.route("/background-jobs/")
+    async def background_jobs(request):
+        def sync_noop():
+            pass
+
+        async def async_noop():
+            pass
+
+        tasks = BackgroundTasks()
+        tasks.add_task(sync_noop)
+        tasks.add_task(async_noop)
+
+        return PlainTextResponse("Triggering background jobs", background=tasks)
 
     # As per http://docs.scoutapm.com/#starlette
     Config.set(**scout_config)
@@ -283,3 +298,34 @@ async def test_unknown_asgi_scope(tracked_requests):
 
     assert response_start == {"type": "lifespan.startup.complete"}
     assert tracked_requests == []
+
+
+@async_test
+async def test_background_jobs(tracked_requests):
+    with app_with_scout() as app:
+        communicator = ApplicationCommunicator(app, get_scope(path="/background-jobs/"))
+        await communicator.send_input({"type": "http.request"})
+        response_start = await communicator.receive_output()
+        response_body = await communicator.receive_output()
+        await communicator.wait()
+
+    assert response_start["type"] == "http.response.start"
+    assert response_start["status"] == 200
+    assert response_body["body"] == b"Triggering background jobs"
+    assert len(tracked_requests) == 3
+
+    sync_tracked_request = tracked_requests[1]
+    assert len(sync_tracked_request.complete_spans) == 1
+    sync_span = sync_tracked_request.complete_spans[0]
+    assert sync_span.operation == (
+        "Job/tests.integration.test_starlette_py36plus."
+        + "app_with_scout.<locals>.background_jobs.<locals>.sync_noop"
+    )
+
+    async_tracked_request = tracked_requests[2]
+    assert len(async_tracked_request.complete_spans) == 1
+    async_span = async_tracked_request.complete_spans[0]
+    assert async_span.operation == (
+        "Job/tests.integration.test_starlette_py36plus."
+        + "app_with_scout.<locals>.background_jobs.<locals>.async_noop"
+    )
