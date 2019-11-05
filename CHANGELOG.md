@@ -20,6 +20,8 @@
   ([PR #348](https://github.com/scoutapp/scout_apm_python/pull/348)).
 - Increase core agent socket timeout to reduce reconnections
   ([PR #247](https://github.com/scoutapp/scout_apm_python/pull/247)).
+- Fix the `RemovedInDjango20Warning` for `django.core.urlresolvers` on Django
+  1.11 ([PR #359](https://github.com/scoutapp/scout_apm_python/pull/359)).
 
 ## [2.7.0] 2019-11-03
 

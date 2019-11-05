@@ -16,7 +16,7 @@ from scout_apm.core.web_requests import (
     track_request_queue_time,
 )
 
-if django.VERSION >= (2, 0):
+if django.VERSION >= (1, 11):
     from django.urls import get_urlconf
 else:
     from django.core.urlresolvers import get_urlconf
