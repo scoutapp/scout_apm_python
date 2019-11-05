@@ -11,7 +11,6 @@ from starlette.applications import Starlette
 from starlette.endpoints import HTTPEndpoint
 from starlette.responses import PlainTextResponse
 
-import scout_apm.core
 from scout_apm.api import Config
 from scout_apm.async_.starlette import ScoutMiddleware
 from scout_apm.compat import datetime_to_timestamp
@@ -34,7 +33,6 @@ def app_with_scout(*, scout_config=None):
 
     scout_config["core_agent_launch"] = False
     scout_config.setdefault("monitor", True)
-    Config.set(**scout_config)
 
     app = Starlette()
 
@@ -56,8 +54,8 @@ def app_with_scout(*, scout_config=None):
         # Always raise exceptions
         raise exc
 
-    scout_apm.core.install()
-    # must be added last to be the outermost middleware
+    # As per http://docs.scoutapm.com/#starlette
+    Config.set(**scout_config)
     app.add_middleware(ScoutMiddleware)
 
     try:

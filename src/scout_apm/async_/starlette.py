@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from starlette.requests import Request
 
-from scout_apm.core.config import scout_config
+import scout_apm.core
 from scout_apm.core.tracked_request import TrackedRequest
 from scout_apm.core.web_requests import (
     create_filtered_path,
@@ -16,9 +16,11 @@ from scout_apm.core.web_requests import (
 class ScoutMiddleware:
     def __init__(self, app):
         self.app = app
+        installed = scout_apm.core.install()
+        self._do_nothing = not installed
 
     async def __call__(self, scope, receive, send):
-        if scope["type"] != "http" or not scout_config.value("monitor"):
+        if self._do_nothing or scope["type"] != "http":
             await self.app(scope, receive, send)
             return
 
