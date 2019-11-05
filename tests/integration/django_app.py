@@ -1,9 +1,8 @@
 # coding: utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from functools import wraps
-
 import django
+import wrapt
 from django.conf import settings
 from django.template.response import TemplateResponse
 
@@ -135,14 +134,11 @@ def template(request):
     return HttpResponse(template.render(context))
 
 
-def exclaimify_template_response_name(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        response = func(*args, **kwargs)
-        response.context_data["name"] = response.context_data["name"] + "!!"
-        return response
-
-    return wrapper
+@wrapt.decorator
+def exclaimify_template_response_name(wrapped, instance, args, kwargs):
+    response = wrapped(*args, **kwargs)
+    response.context_data["name"] = response.context_data["name"] + "!!"
+    return response
 
 
 @exclaimify_template_response_name
