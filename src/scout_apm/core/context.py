@@ -1,14 +1,17 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import threading
-
 from scout_apm.core.tracked_request import TrackedRequest
 
+try:
+    from asgiref.local import Local
+except ImportError:
+    from threading import local as Local
 
-class ThreadLocalContext(object):
+
+class LocalContext(object):
     def __init__(self):
-        self._context = threading.local()
+        self._context = Local()
 
     def get_tracked_request(self):
         if not hasattr(self._context, "tracked_request"):
@@ -20,4 +23,4 @@ class ThreadLocalContext(object):
             del self._context.tracked_request
 
 
-context = ThreadLocalContext()
+context = LocalContext()

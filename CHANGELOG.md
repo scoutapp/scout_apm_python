@@ -4,9 +4,13 @@
 
 ### Added
 
-- Moved all decorators to the [`wrapt`
+- Move all decorators to the [`wrapt`
   library](https://wrapt.readthedocs.io/en/latest/) which is more transparent
   ([PR #324](https://github.com/scoutapp/scout_apm_python/pull/324)).
+- Move context tracking to be async-compatble with `asgiref`'s `Local`
+  ([PR #349](https://github.com/scoutapp/scout_apm_python/pull/349)).
+- Add Starlette integration for Python 3.6+
+  ([PR #349](https://github.com/scoutapp/scout_apm_python/pull/349)).
 
 ### Fixed
 
