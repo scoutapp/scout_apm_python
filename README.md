@@ -23,6 +23,7 @@ Scout APM has integrations for the following frameworks:
 * Flask 0.10+
 * Nameko 2.0+
 * Pyramid 1.8+
+* Starlette 0.12+
 
 For other frameworks, you can use the agent's instrumentation API. See the [Python help docs](https://docs.scoutapm.com/#python-agent) for more information.
 
