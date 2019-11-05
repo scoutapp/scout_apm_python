@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import datetime as dt
+import sys
 
 from scout_apm.core import objtrace
 from scout_apm.core.tracked_request import TrackedRequest
@@ -44,7 +45,10 @@ def test_span_repr(tracked_request):
     tracked_request.stop_span()
 
     assert repr_.startswith("<Span(")
-    assert "operation='myoperation'" in repr_
+    if sys.version_info[0] == 2:
+        assert "operation=u'myoperation'" in repr_
+    else:
+        assert "operation='myoperation'" in repr_
 
 
 def test_tag_span(tracked_request):
