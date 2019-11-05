@@ -70,10 +70,10 @@ class Instrument(object):
             logger.info("Elasticsearch instruments are not installed. Skipping.")
             return False
 
-        self.__class__.installed = False
-
         self.uninstrument_client()
         self.uninstrument_transport()
+
+        self.__class__.installed = False
 
     def instrument_client(self):
         for name in self.__class__.CLIENT_METHODS:
