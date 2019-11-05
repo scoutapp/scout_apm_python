@@ -91,9 +91,9 @@ class Instrument(object):
 def wrap_collection_method(wrapped, instance, args, kwargs):
     tracked_request = TrackedRequest.instance()
     camel_name = "".join(c.title() for c in wrapped.__name__.split("_"))
-    operation = 'MongoDB/{}.{}'.format(instance.name, camel_name)
+    operation = "MongoDB/{}.{}".format(instance.name, camel_name)
     span = tracked_request.start_span(operation=operation, ignore_children=True)
-    span.tag('name', instance.name)
+    span.tag("name", instance.name)
 
     try:
         return wrapped(*args, **kwargs)
