@@ -8,12 +8,11 @@ from urllib.parse import urlencode
 import pytest
 from asgiref.testing import ApplicationCommunicator
 from starlette.applications import Starlette
+from starlette.authentication import AuthCredentials, AuthenticationBackend, SimpleUser
 from starlette.background import BackgroundTasks
 from starlette.endpoints import HTTPEndpoint
-from starlette.responses import PlainTextResponse
-
-from starlette.authentication import AuthenticationBackend, SimpleUser, AuthCredentials
 from starlette.middleware.authentication import AuthenticationMiddleware
+from starlette.responses import PlainTextResponse
 
 from scout_apm.api import Config
 from scout_apm.async_.starlette import ScoutMiddleware
