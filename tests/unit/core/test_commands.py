@@ -257,7 +257,7 @@ def test_batch_command_from_tracked_request_with_tag():
 @skip_if_objtrace_not_extension
 def test_batch_command_from_tracked_request_with_span():
     tracked_request = TrackedRequest()
-    tracked_request.start_span()
+    tracked_request.start_span("myoperation")
     tracked_request.stop_span()
     make_tracked_request_instance_deterministic(tracked_request)
 
@@ -270,7 +270,7 @@ def test_batch_command_from_tracked_request_with_span():
     }
     assert message_commands[1] == {
         "StartSpan": {
-            "operation": None,
+            "operation": "myoperation",
             "parent_id": None,
             "request_id": REQUEST_ID,
             "span_id": SPAN_ID,
@@ -321,7 +321,7 @@ def test_batch_command_from_tracked_request_with_span():
 @skip_if_objtrace_not_extension
 def test_batch_command_from_tracked_request_with_span_no_objtrace():
     tracked_request = TrackedRequest()
-    tracked_request.start_span()
+    tracked_request.start_span(operation="myoperation")
     tracked_request.stop_span()
     make_tracked_request_instance_deterministic(tracked_request)
 
@@ -334,7 +334,7 @@ def test_batch_command_from_tracked_request_with_span_no_objtrace():
     }
     assert message_commands[1] == {
         "StartSpan": {
-            "operation": None,
+            "operation": "myoperation",
             "parent_id": None,
             "request_id": REQUEST_ID,
             "span_id": SPAN_ID,

@@ -39,15 +39,16 @@ def test_tag_request_overwrite(tracked_request):
 
 
 def test_span_repr(tracked_request):
-    span = tracked_request.start_span()
-    try:
-        assert repr(span).startswith("<Span(")
-    finally:
-        tracked_request.stop_span()
+    span = tracked_request.start_span(operation="myoperation")
+    repr_ = repr(span)
+    tracked_request.stop_span()
+
+    assert repr_.startswith("<Span(")
+    assert "operation='myoperation'" in repr_
 
 
 def test_tag_span(tracked_request):
-    span = tracked_request.start_span()
+    span = tracked_request.start_span(operation="myoperation")
     span.tag("foo", "bar")
     tracked_request.stop_span()
 
@@ -55,7 +56,7 @@ def test_tag_span(tracked_request):
 
 
 def test_tag_span_overwrite(tracked_request):
-    span = tracked_request.start_span()
+    span = tracked_request.start_span(operation="myoperation")
     span.tag("foo", "bar")
     span.tag("foo", "baz")
     tracked_request.stop_span()
@@ -64,8 +65,8 @@ def test_tag_span_overwrite(tracked_request):
 
 
 def test_start_span_wires_parents(tracked_request):
-    span1 = tracked_request.start_span()
-    span2 = tracked_request.start_span()
+    span1 = tracked_request.start_span(operation="myoperation")
+    span2 = tracked_request.start_span(operation="myoperation2")
     assert span1.parent is None
     assert span2.parent == span1.span_id
 
@@ -73,7 +74,7 @@ def test_start_span_wires_parents(tracked_request):
 @skip_if_objtrace_not_extension
 def test_tags_allocations_for_spans(tracked_request):
     objtrace.enable()
-    span = tracked_request.start_span()
+    span = tracked_request.start_span(operation="myoperation")
     tracked_request.stop_span()
     assert span.tags["allocations"] > 0
 
@@ -81,17 +82,17 @@ def test_tags_allocations_for_spans(tracked_request):
 @skip_if_objtrace_is_extension
 def test_tags_allocations_for_spans_no_objtrace_extension(tracked_request):
     objtrace.enable()
-    span = tracked_request.start_span()
+    span = tracked_request.start_span(operation="myoperation")
     tracked_request.stop_span()
     assert "allocations" not in span.tags
 
 
 def test_start_span_does_not_ignore_children(tracked_request):
     tracked_request.start_span(operation="parent")
-    child1 = tracked_request.start_span()
+    child1 = tracked_request.start_span(operation="myoperation")
     assert not child1.ignore
     assert not child1.ignore_children
-    child2 = tracked_request.start_span()
+    child2 = tracked_request.start_span(operation="myoperation")
     assert not child2.ignore
     assert not child2.ignore_children
     tracked_request.stop_span()
@@ -103,10 +104,10 @@ def test_start_span_does_not_ignore_children(tracked_request):
 
 def test_start_span_ignores_children(tracked_request):
     tracked_request.start_span(operation="parent", ignore_children=True)
-    child1 = tracked_request.start_span()
+    child1 = tracked_request.start_span(operation="child1")
     assert child1.ignore
     assert child1.ignore_children
-    child2 = tracked_request.start_span()
+    child2 = tracked_request.start_span(operation="child2")
     assert child2.ignore
     assert child2.ignore_children
     tracked_request.stop_span()
@@ -125,7 +126,7 @@ def test_span_captures_backtrace(tracked_request):
 
 
 def test_should_capture_backtrace_default_true(tracked_request):
-    span = tracked_request.start_span("Something")
+    span = tracked_request.start_span(operation="Something")
     # Trigger 'slow' condition
     span.start_time -= dt.timedelta(seconds=2)
 
