@@ -67,21 +67,30 @@ class TrackedRequest(object):
             )
         self.tags[key] = value
 
-    def start_span(self, *args, **kwargs):
-        maybe_parent = self.current_span()
-
-        if maybe_parent is not None:
-            parent_id = maybe_parent.span_id
-            if maybe_parent.ignore_children:
-                kwargs["ignore"] = True
-                kwargs["ignore_children"] = True
+    def start_span(
+        self,
+        operation,
+        ignore=False,
+        ignore_children=False,
+        should_capture_backtrace=True,
+    ):
+        parent = self.current_span()
+        if parent is not None:
+            parent_id = parent.span_id
+            if parent.ignore_children:
+                ignore = True
+                ignore_children = True
         else:
             parent_id = None
 
-        kwargs["parent"] = parent_id
-        kwargs["request_id"] = self.request_id
-
-        new_span = Span(**kwargs)
+        new_span = Span(
+            request_id=self.request_id,
+            operation=operation,
+            ignore=ignore,
+            ignore_children=ignore_children,
+            parent=parent_id,
+            should_capture_backtrace=should_capture_backtrace,
+        )
         self.active_spans.append(new_span)
         return new_span
 
@@ -100,7 +109,7 @@ class TrackedRequest(object):
             self.finish()
 
     def current_span(self):
-        if len(self.active_spans) > 0:
+        if self.active_spans:
             return self.active_spans[-1]
         else:
             return None
