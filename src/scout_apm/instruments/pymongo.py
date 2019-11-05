@@ -3,10 +3,14 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 
-# Used in the exec() call below.
-import wrapt  # noqa: F401
+import wrapt
 
-from scout_apm.core.tracked_request import TrackedRequest  # noqa: F401
+from scout_apm.core.tracked_request import TrackedRequest
+
+try:
+    from pymongo.collection import Collection
+except ImportError:
+    Collection = None
 
 logger = logging.getLogger(__name__)
 
@@ -49,9 +53,7 @@ class Instrument(object):
     ]
 
     def installable(self):
-        try:
-            from pymongo.collection import Collection  # noqa: F401
-        except ImportError:
+        if Collection is None:
             logger.info("Unable to import for PyMongo instruments")
             return False
         if self.installed:
@@ -66,44 +68,10 @@ class Instrument(object):
 
         self.__class__.installed = True
 
-        try:
-            from pymongo.collection import Collection  # noqa: F401
-        # There is no way the import can fail if self.installable() succeeded.
-        except ImportError:  # pragma: no cover
-            logger.info(
-                "Unable to import for PyMongo instruments. Instrument install failed."
-            )
-            return False
-
-        for method_str in self.__class__.PYMONGO_METHODS:
-            try:
-                code_str = """
-@wrapt.decorator
-def wrapped_{method_str}(wrapped, instance, args, kwargs):
-    tracked_request = TrackedRequest.instance()
-    name = '/'.join(['MongoDB', instance.name, '{camel_name}'])
-    span = tracked_request.start_span(operation=name, ignore_children=True)
-    span.tag('name', instance.name)
-
-    try:
-        return wrapped(*args, **kwargs)
-    finally:
-        tracked_request.stop_span()
-
-Collection.{method_str} = wrapped_{method_str}(Collection.{method_str})
-""".format(
-                    method_str=method_str,
-                    camel_name="".join(c.title() for c in method_str.split("_")),
-                )
-
-                exec(code_str)
-                logger.info("Instrumented PyMongo Collection.%s", method_str)
-
-            except Exception as e:
-                logger.warning(
-                    "Unable to instrument for PyMongo Collection.%s: %r", method_str, e
-                )
-                return False
+        for name in self.__class__.PYMONGO_METHODS:
+            method = getattr(Collection, name, None)
+            if method is not None:
+                setattr(Collection, name, wrap_collection_method(method))
         return True
 
     def uninstall(self):
@@ -111,9 +79,23 @@ Collection.{method_str} = wrapped_{method_str}(Collection.{method_str})
             logger.info("PyMongo instruments are not installed. Skipping.")
             return False
 
+        for name in self.__class__.PYMONGO_METHODS:
+            method = getattr(Collection, name, None)
+            if method is not None:
+                setattr(Collection, name, method.__wrapped__)
+
         self.__class__.installed = False
 
-        from pymongo.collection import Collection
 
-        for method_str in self.__class__.PYMONGO_METHODS:
-            setattr(Collection, method_str, getattr(Collection, method_str).__wrapped__)
+@wrapt.decorator
+def wrap_collection_method(wrapped, instance, args, kwargs):
+    tracked_request = TrackedRequest.instance()
+    camel_name = "".join(c.title() for c in wrapped.__name__.split("_"))
+    operation = 'MongoDB/{}.{}'.format(instance.name, camel_name)
+    span = tracked_request.start_span(operation=operation, ignore_children=True)
+    span.tag('name', instance.name)
+
+    try:
+        return wrapped(*args, **kwargs)
+    finally:
+        tracked_request.stop_span()

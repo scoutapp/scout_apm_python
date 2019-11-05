@@ -170,7 +170,10 @@ def test_instrument_client_install_missing_attribute():
         "scout_apm.instruments.elasticsearch.Elasticsearch"
     ) as mock_elasticsearch:
         del mock_elasticsearch.bulk
-    instrument.instrument_client()  # no crash
+    try:
+        instrument.instrument_client()  # no crash
+    finally:
+        instrument.uninstrument_client()
 
 
 @mock.patch(

@@ -9,11 +9,9 @@ import pytest
 
 from scout_apm.instruments.pymongo import Instrument
 from tests.compat import mock
-from tests.tools import pretend_package_unavailable
 
 # e.g. export MONGODB_URL="mongodb://localhost:27017/"
 MONGODB_URL = os.environ.get("MONGODB_URL")
-
 skip_if_mongodb_not_running = pytest.mark.skipif(
     MONGODB_URL is None, reason="MongoDB isn't available"
 )
@@ -57,22 +55,24 @@ def test_installable():
 
 
 def test_installable_no_pymongo_module():
-    with pretend_package_unavailable("pymongo"):
+    with mock.patch("scout_apm.instruments.pymongo.Collection", new=None):
         assert not instrument.installable()
 
 
 def test_install_no_pymongo_module():
-    with pretend_package_unavailable("pymongo"):
+    with mock.patch("scout_apm.instruments.pymongo.Collection", new=None):
         assert not instrument.install()
 
 
-@mock.patch("scout_apm.instruments.pymongo.wrapt.decorator", side_effect=RuntimeError)
-def test_install_failure(mock_decorator):
+def test_install_missing_attribute():
+    with mock.patch(
+        "scout_apm.instruments.elasticsearch.Collection"
+    ) as mock_collection:
+        del mock_collection.aggregate
     try:
-        assert not instrument.install()  # doesn't crash
+        instrument.install()  # no crash
     finally:
-        # Currently installed = True even if installing failed.
-        Instrument.installed = False
+        instrument.uninstall()
 
 
 def test_install_is_idempotent():
