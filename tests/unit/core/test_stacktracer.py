@@ -14,7 +14,7 @@ def trace_me(*args, **kwargs):
 
 
 def test_trace_method(tracked_request):
-    @trace_method(TraceMe)  # noqa: F811
+    @trace_method(TraceMe)
     def trace_me(self, *args, **kwargs):
         return ("Test/Method", {"name": "trace_me"})
 
@@ -28,7 +28,7 @@ def test_trace_method(tracked_request):
 
 
 def test_trace_method_no_name(tracked_request):
-    @trace_method(TraceMe)  # noqa: F811
+    @trace_method(TraceMe)
     def trace_me(self, *args, **kwargs):
         return ("Test/Method", {"name": None})
 
