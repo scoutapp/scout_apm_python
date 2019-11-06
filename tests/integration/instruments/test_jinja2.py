@@ -56,9 +56,7 @@ def test_install_no_jinja2_module():
 
 
 def test_install_failure_no_render_attribute():
-    with mock.patch(
-        "scout_apm.instruments.jinja2.Template"
-    ) as mock_template:
+    with mock.patch("scout_apm.instruments.jinja2.Template") as mock_template:
         del mock_template.render
 
         try:

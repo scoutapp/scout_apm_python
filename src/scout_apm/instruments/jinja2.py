@@ -37,7 +37,9 @@ class Instrument(object):
         try:
             Template.render = wrapped_render(Template.render)
         except Exception as exc:
-            logger.warning("Unable to instrument for Jinja2 Template.render: %r", exc, exc_info=exc)
+            logger.warning(
+                "Unable to instrument for Jinja2 Template.render: %r", exc, exc_info=exc
+            )
             return False
         logger.info("Instrumented Jinja2")
         return True
