@@ -6,6 +6,10 @@ from huey.signals import SIGNAL_CANCELED
 
 from scout_apm.core.tracked_request import TrackedRequest
 
+# Because neither hooks nor signals are called in *all* cases, we need to use
+# both in order to capture every case. See source:
+# https://github.com/coleifer/huey/blob/e6710bd6a9f581ebc728e24f5923d26eb0047750/huey/api.py#L331  # noqa
+
 
 def attach_scout(huey):
     huey.pre_execute()(scout_on_pre_execute)
