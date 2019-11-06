@@ -7,6 +7,11 @@ import wrapt
 
 from scout_apm.core.tracked_request import TrackedRequest
 
+try:
+    from jinja2 import Template
+except ImportError:
+    Template = None
+
 logger = logging.getLogger(__name__)
 
 
@@ -14,9 +19,7 @@ class Instrument(object):
     installed = False
 
     def installable(self):
-        try:
-            from jinja2 import Template  # noqa: F401
-        except ImportError:
+        if Template is None:
             logger.info("Unable to import for Jinja2 instruments")
             return False
         if self.installed:
@@ -32,25 +35,13 @@ class Instrument(object):
         self.__class__.installed = True
 
         try:
-            from jinja2 import Template
-
-            @wrapt.decorator
-            def wrapped_render(wrapped, instance, args, kwargs):
-                tracked_request = TrackedRequest.instance()
-                span = tracked_request.start_span(operation="Template/Render")
-                span.tag("name", instance.name)
-                try:
-                    return wrapped(*args, **kwargs)
-                finally:
-                    tracked_request.stop_span()
-
             Template.render = wrapped_render(Template.render)
-
-            logger.info("Instrumented Jinja2")
-
-        except Exception as e:
-            logger.warning("Unable to instrument for Jinja2 Template.render: %r", e)
+        except Exception as exc:
+            logger.warning(
+                "Unable to instrument for Jinja2 Template.render: %r", exc, exc_info=exc
+            )
             return False
+        logger.info("Instrumented Jinja2")
         return True
 
     def uninstall(self):
@@ -60,6 +51,15 @@ class Instrument(object):
 
         self.__class__.installed = False
 
-        from jinja2 import Template
-
         Template.render = Template.render.__wrapped__
+
+
+@wrapt.decorator
+def wrapped_render(wrapped, instance, args, kwargs):
+    tracked_request = TrackedRequest.instance()
+    span = tracked_request.start_span(operation="Template/Render")
+    span.tag("name", instance.name)
+    try:
+        return wrapped(*args, **kwargs)
+    finally:
+        tracked_request.stop_span()
