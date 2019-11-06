@@ -22,6 +22,8 @@
   ([PR #247](https://github.com/scoutapp/scout_apm_python/pull/247)).
 - Fix the `RemovedInDjango20Warning` for `django.core.urlresolvers` on Django
   1.11 ([PR #359](https://github.com/scoutapp/scout_apm_python/pull/359)).
+- Correctly disable Bottle if the agent fails to launch
+  ([PR #364](https://github.com/scoutapp/scout_apm_python/pull/364)).
 
 ## [2.7.0] 2019-11-03
 
