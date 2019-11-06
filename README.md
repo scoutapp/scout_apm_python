@@ -21,6 +21,7 @@ Scout APM has integrations for the following frameworks:
 * Dramatiq 1.0+
 * Falcon 2.0+
 * Flask 0.10+
+* Huey 2.0+
 * Nameko 2.0+
 * Pyramid 1.8+
 * Starlette 0.12+

@@ -11,6 +11,8 @@
   ([PR #349](https://github.com/scoutapp/scout_apm_python/pull/349)).
 - Add Starlette integration for Python 3.6+
   ([PR #349](https://github.com/scoutapp/scout_apm_python/pull/349)).
+- Add Huey integration
+  ([PR #367](https://github.com/scoutapp/scout_apm_python/pull/367)).
 
 ### Fixed
 
