@@ -20,7 +20,7 @@ from scout_apm.compat import datetime_to_timestamp
 from scout_apm.django.instruments.sql import install_sql_instrumentation
 from scout_apm.django.instruments.template import install_template_instrumentation
 from tests.compat import mock
-from tests.integration import django_app  # noqa  # force import to configure
+from tests.integration import django_app
 from tests.integration.util import (
     parametrize_filtered_params,
     parametrize_queue_time_header_name,
