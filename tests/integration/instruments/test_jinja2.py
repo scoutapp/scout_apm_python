@@ -7,7 +7,6 @@ import jinja2
 
 from scout_apm.instruments.jinja2 import Instrument
 from tests.compat import mock
-from tests.tools import pretend_package_unavailable
 
 instrument = Instrument()
 
@@ -46,23 +45,27 @@ def test_installable():
 
 
 def test_installable_no_jinja2_module():
-    with pretend_package_unavailable("jinja2"):
+    with mock.patch("scout_apm.instruments.jinja2.Template", new=None):
         assert not instrument.installable()
 
 
 def test_install_no_jinja2_module():
-    with pretend_package_unavailable("jinja2"):
+    with mock.patch("scout_apm.instruments.jinja2.Template", new=None):
         assert not instrument.install()
         assert not Instrument.installed
 
 
-@mock.patch("scout_apm.instruments.jinja2.wrapt.decorator", side_effect=RuntimeError)
-def test_install_failure(mock_decorator):
-    try:
-        assert not instrument.install()  # doesn't crash
-    finally:
-        # Currently installed = True even if installing failed.
-        Instrument.installed = False
+def test_install_failure_():
+    with mock.patch(
+        "scout_apm.instruments.jinja2.Template"
+    ) as mock_template:
+        del mock_template.render
+
+        try:
+            assert not instrument.install()  # doesn't crash
+        finally:
+            # Currently installed = True even if installing failed.
+            Instrument.installed = False
 
 
 def test_install_is_idempotent():
