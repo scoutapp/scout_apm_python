@@ -30,10 +30,11 @@ class ScoutPlugin(object):
 
     def setup(self, app):
         self.set_config_from_bottle(app)
-        scout_apm.core.install()
+        installed = scout_apm.core.install()
+        self._do_nothing = not installed
 
     def apply(self, callback, context):
-        if not scout_config.value("monitor"):
+        if self._do_nothing:
             return callback
         return wrap_callback(callback)
 
