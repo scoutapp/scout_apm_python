@@ -55,7 +55,7 @@ def test_install_no_jinja2_module():
         assert not Instrument.installed
 
 
-def test_install_failure_():
+def test_install_failure_no_render_attribute():
     with mock.patch(
         "scout_apm.instruments.jinja2.Template"
     ) as mock_template:

@@ -9,7 +9,6 @@ import urllib3
 
 from scout_apm.instruments.urllib3 import Instrument
 from tests.compat import mock
-from tests.tools import pretend_package_unavailable
 
 # e.g. export URLLIB3_URL="http://httpbin.org/"
 # or export URLLIB3_URL="http://localhost:9200/" (re-use Elasticsearch!)
@@ -66,23 +65,26 @@ def test_installable():
 
 
 def test_installable_no_urllib3_module():
-    with pretend_package_unavailable("urllib3"):
+    with mock.patch("scout_apm.instruments.urllib3.HTTPConnectionPool", new=None):
         assert not instrument.installable()
 
 
 def test_install_no_urllib3_module():
-    with pretend_package_unavailable("urllib3"):
+    with mock.patch("scout_apm.instruments.urllib3.HTTPConnectionPool", new=None):
         assert not instrument.install()
         assert not Instrument.installed
 
 
-@mock.patch("scout_apm.instruments.urllib3.wrapt.decorator", side_effect=RuntimeError)
-def test_install_failure(mock_decorator):
-    try:
-        assert not instrument.install()  # doesn't crash
-    finally:
-        # Currently installed = True even if installing failed.
-        Instrument.installed = False
+def test_install_failure_no_urlopen_attribute():
+    with mock.patch(
+        "scout_apm.instruments.urllib3.HTTPConnectionPool"
+    ) as mock_http_connection_pool:
+        del mock_http_connection_pool.urlopen
+        try:
+            assert not instrument.install()  # doesn't crash
+        finally:
+            # Currently installed = True even if installing failed.
+            Instrument.installed = False
 
 
 def test_install_is_idempotent():
