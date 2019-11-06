@@ -8,8 +8,10 @@ from urllib.parse import urlencode
 import pytest
 from asgiref.testing import ApplicationCommunicator
 from starlette.applications import Starlette
+from starlette.authentication import AuthCredentials, AuthenticationBackend, SimpleUser
 from starlette.background import BackgroundTasks
 from starlette.endpoints import HTTPEndpoint
+from starlette.middleware.authentication import AuthenticationMiddleware
 from starlette.responses import PlainTextResponse
 
 from scout_apm.api import Config
@@ -24,7 +26,7 @@ from tests.tools import async_test
 
 
 @contextmanager
-def app_with_scout(*, scout_config=None):
+def app_with_scout(*, app=None, scout_config=None):
     """
     Context manager that configures and installs the Scout plugin for a basic
     Starlette application.
@@ -35,7 +37,8 @@ def app_with_scout(*, scout_config=None):
     scout_config["core_agent_launch"] = False
     scout_config.setdefault("monitor", True)
 
-    app = Starlette()
+    if app is None:
+        app = Starlette()
 
     @app.exception_handler(500)
     async def error(request, exc):
@@ -329,3 +332,49 @@ async def test_background_jobs(tracked_requests):
         "Job/tests.integration.test_starlette_py36plus."
         + "app_with_scout.<locals>.background_jobs.<locals>.async_noop"
     )
+
+
+@async_test
+async def test_username(tracked_requests):
+    base_app = Starlette()
+
+    class DummyBackend(AuthenticationBackend):
+        async def authenticate(self, request):
+            return AuthCredentials(), SimpleUser("dummy")
+
+    base_app.add_middleware(AuthenticationMiddleware, backend=DummyBackend())
+
+    with app_with_scout(app=base_app) as app:
+        communicator = ApplicationCommunicator(app, get_scope(path="/"))
+        await communicator.send_input({"type": "http.request"})
+        response_start = await communicator.receive_output()
+        await communicator.receive_output()
+
+    assert response_start["type"] == "http.response.start"
+    assert response_start["status"] == 200
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert tracked_request.tags["username"] == "dummy"
+
+
+@async_test
+async def test_username_bad_user(tracked_requests):
+    base_app = Starlette()
+
+    class BadUserBackend(AuthenticationBackend):
+        async def authenticate(self, request):
+            return AuthCredentials(), object()
+
+    base_app.add_middleware(AuthenticationMiddleware, backend=BadUserBackend())
+
+    with app_with_scout(app=base_app) as app:
+        communicator = ApplicationCommunicator(app, get_scope(path="/"))
+        await communicator.send_input({"type": "http.request"})
+        response_start = await communicator.receive_output()
+        await communicator.receive_output()
+
+    assert response_start["type"] == "http.response.start"
+    assert response_start["status"] == 200
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert "username" not in tracked_request.tags

@@ -55,7 +55,7 @@ class ScoutMiddleware:
             amazon_queue_time = request.headers.get("x-amzn-trace-id", default="")
             track_amazon_request_queue_time(amazon_queue_time, tracked_request)
 
-        def rename_controller_span_from_endpoint():
+        def grab_extra_data():
             if "endpoint" in scope:
                 # Rename top span
                 endpoint = scope["endpoint"]
@@ -64,13 +64,23 @@ class ScoutMiddleware:
                 )
                 tracked_request.is_real_request = True
 
+            # From AuthenticationMiddleware - bypass request.user because it
+            # throws AssertionError if 'user' is not in Scope, and we need a
+            # try/except already
+            try:
+                username = scope["user"].display_name
+            except (KeyError, AttributeError):
+                pass
+            else:
+                tracked_request.tag("username", username)
+
         async def wrapped_send(data):
             # Finish HTTP span when body finishes sending, not later (e.g.
             # after background tasks)
             if data.get("type", None) == "http.response.body" and not data.get(
                 "more_body", False
             ):
-                rename_controller_span_from_endpoint()
+                grab_extra_data()
                 tracked_request.stop_span()
             return await send(data)
 
@@ -81,7 +91,7 @@ class ScoutMiddleware:
             raise exc
         finally:
             if tracked_request.end_time is None:
-                rename_controller_span_from_endpoint()
+                grab_extra_data()
                 tracked_request.stop_span()
 
 
