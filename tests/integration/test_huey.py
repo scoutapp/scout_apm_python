@@ -124,3 +124,12 @@ def test_locked(tracked_requests):
 
     assert excinfo.value.metadata["error"].startswith("TaskLockedException")
     assert tracked_requests == []
+
+
+def test_no_monitor(tracked_requests):
+    with app_with_scout(scout_config={"monitor": False}) as app:
+        result = app.hello()
+        value = result(blocking=True, timeout=1)
+
+    assert value == "Hello World!"
+    assert tracked_requests == []

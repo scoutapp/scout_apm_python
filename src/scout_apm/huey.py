@@ -4,6 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from huey.exceptions import RetryTask, TaskLockedException
 from huey.signals import SIGNAL_CANCELED
 
+import scout_apm.core
 from scout_apm.core.tracked_request import TrackedRequest
 
 # Because neither hooks nor signals are called in *all* cases, we need to use
@@ -12,9 +13,11 @@ from scout_apm.core.tracked_request import TrackedRequest
 
 
 def attach_scout(huey):
-    huey.pre_execute()(scout_on_pre_execute)
-    huey.post_execute()(scout_on_post_execute)
-    huey.signal(SIGNAL_CANCELED)(scout_on_cancelled)
+    installed = scout_apm.core.install()
+    if installed:
+        huey.pre_execute()(scout_on_pre_execute)
+        huey.post_execute()(scout_on_post_execute)
+        huey.signal(SIGNAL_CANCELED)(scout_on_cancelled)
 
 
 def scout_on_pre_execute(task):
