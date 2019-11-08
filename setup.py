@@ -56,7 +56,7 @@ setup(
         ]
     },
     install_requires=[
-        'asgiref>=3,<4 ; python_version >= "3.5"',
+        'asgiref ; python_version >= "3.5"',
         "psutil>=5,<6",
         "requests>=2,<3",
         "wrapt>=1.10,<2.0",
