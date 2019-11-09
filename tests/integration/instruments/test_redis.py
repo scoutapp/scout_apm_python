@@ -11,8 +11,9 @@ from scout_apm.instruments.redis import ensure_installed
 from tests.compat import mock
 
 
-@pytest.fixture
+@pytest.fixture(scope='module')
 def redis_conn():
+    ensure_installed()
     # e.g. export REDIS_URL="redis://localhost:6379/0"
     if "REDIS_URL" not in os.environ:
         raise pytest.skip("Redis isn't available")
@@ -96,8 +97,6 @@ def test_ensure_installed_fail_no_pipeline_execute(caplog):
 
 
 def test_echo(redis_conn, tracked_request):
-    ensure_installed()
-
     redis_conn.echo("Hello World!")
 
     assert len(tracked_request.complete_spans) == 1
@@ -105,8 +104,6 @@ def test_echo(redis_conn, tracked_request):
 
 
 def test_pipeline_echo(redis_conn, tracked_request):
-    ensure_installed()
-
     with redis_conn.pipeline() as p:
         p.echo("Hello World!")
         p.execute()
