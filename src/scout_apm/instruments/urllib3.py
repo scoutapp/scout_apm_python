@@ -10,7 +10,7 @@ from scout_apm.core.tracked_request import TrackedRequest
 
 try:
     from urllib3 import HTTPConnectionPool
-except ImportError:
+except ImportError:  # pragma: no cover
     HTTPConnectionPool = None
 
 logger = logging.getLogger(__name__)
