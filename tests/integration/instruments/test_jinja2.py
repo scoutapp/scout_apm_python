@@ -13,8 +13,7 @@ from tests.compat import mock
 @pytest.fixture
 def ensure_installed():
     # Should always successfully install in our test environment
-    result = install()
-    assert result is True
+    install()
     yield
 
 

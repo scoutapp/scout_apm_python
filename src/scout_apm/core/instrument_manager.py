@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 class InstrumentManager(object):
     INSTRUMENT_NAMESPACE = "scout_apm.instruments"
-    DEFAULT_INSTRUMENTS = ["pymongo", "redis", "elasticsearch"]
+    DEFAULT_INSTRUMENTS = ["pymongo", "elasticsearch"]
 
     def install(self, module_name, klass="Instrument", *args, **kwargs):
         try:
