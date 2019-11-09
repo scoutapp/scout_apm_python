@@ -9,7 +9,7 @@ from scout_apm.core.tracked_request import TrackedRequest
 
 try:
     import redis
-except ImportError:
+except ImportError:  # pragma: no cover
     redis = None
 else:
     if redis.VERSION[0] >= 3:
