@@ -15,35 +15,28 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-attempted = False
+have_patched_pool_urlopen = False
 
 
-def install():
-    global attempted
+def ensure_installed():
+    global have_patched_pool_urlopen
 
-    if attempted:
-        logger.warning(
-            "Urllib3 instrumentation has already been attempted to be installed."
-        )
-        return False
-
-    attempted = True
+    logger.info("Ensuring urllib3 instrumentation is installed.")
 
     if HTTPConnectionPool is None:
         logger.info("Unable to import urllib3.HTTPConnectionPool")
         return False
-
-    try:
-        HTTPConnectionPool.urlopen = wrapped_urlopen(HTTPConnectionPool.urlopen)
-    except Exception as exc:
-        logger.warning(
-            "Unable to instrument for Urllib3 HTTPConnectionPool.urlopen: %r",
-            exc,
-            exc_info=exc,
-        )
-        return False
-
-    return True
+    elif not have_patched_pool_urlopen:
+        try:
+            HTTPConnectionPool.urlopen = wrapped_urlopen(HTTPConnectionPool.urlopen)
+        except Exception as exc:
+            logger.warning(
+                "Unable to instrument for Urllib3 HTTPConnectionPool.urlopen: %r",
+                exc,
+                exc_info=exc,
+            )
+        else:
+            have_patched_pool_urlopen = True
 
 
 @wrapt.decorator
