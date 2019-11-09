@@ -34,7 +34,7 @@ def install(config=None):
         )
         return False
 
-    instruments.install_all()
+    instruments.ensure_all_installed()
     objtrace.enable()
 
     logger.debug("APM Launching on PID: %s", os.getpid())
