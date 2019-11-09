@@ -35,7 +35,9 @@ def test_ensure_installed_twice(caplog):
 
 
 def test_ensure_installed_fail_no_client(caplog):
-    mock_no_client = mock.patch("scout_apm.instruments.elasticsearch.Elasticsearch", new=None)
+    mock_no_client = mock.patch(
+        "scout_apm.instruments.elasticsearch.Elasticsearch", new=None
+    )
     with mock_no_client:
         ensure_installed()
 
@@ -45,7 +47,11 @@ def test_ensure_installed_fail_no_client(caplog):
             logging.INFO,
             "Ensuring elasticsearch instrumentation is installed.",
         ),
-        ("scout_apm.instruments.elasticsearch", logging.INFO, "Unable to import elasticsearch.Elasticsearch"),
+        (
+            "scout_apm.instruments.elasticsearch",
+            logging.INFO,
+            "Unable to import elasticsearch.Elasticsearch",
+        ),
     ]
 
 
@@ -171,7 +177,9 @@ def test_perform_request_bad_url(elasticsearch_client, tracked_request):
     with pytest.raises(TypeError):
         # Transport instrumentation doesn't crash if url has the wrong type.
         # This raises a TypeError when calling the original method.
-        elasticsearch_client.transport.perform_request("GET", None, params={}, body=None)
+        elasticsearch_client.transport.perform_request(
+            "GET", None, params={}, body=None
+        )
 
     assert len(tracked_request.complete_spans) == 1
     span = tracked_request.complete_spans[0]
@@ -180,7 +188,9 @@ def test_perform_request_bad_url(elasticsearch_client, tracked_request):
 
 def test_perform_request_unknown_url(elasticsearch_client, tracked_request):
     # Transport instrumentation doesn't crash if url is unknown.
-    elasticsearch_client.transport.perform_request("GET", "/_nodes", params={}, body=None)
+    elasticsearch_client.transport.perform_request(
+        "GET", "/_nodes", params={}, body=None
+    )
 
     assert len(tracked_request.complete_spans) == 1
     span = tracked_request.complete_spans[0]
@@ -189,7 +199,9 @@ def test_perform_request_unknown_url(elasticsearch_client, tracked_request):
 
 def test_perform_request_known_url(elasticsearch_client, tracked_request):
     # Transport instrumentation doesn't crash if url is unknown.
-    elasticsearch_client.transport.perform_request("GET", "/_count", params={}, body=None)
+    elasticsearch_client.transport.perform_request(
+        "GET", "/_count", params={}, body=None
+    )
 
     assert len(tracked_request.complete_spans) == 1
     span = tracked_request.complete_spans[0]

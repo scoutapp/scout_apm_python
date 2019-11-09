@@ -8,7 +8,6 @@ import jinja2
 from scout_apm.instruments.jinja2 import ensure_installed
 from tests.compat import mock
 
-
 mock_not_attempted = mock.patch(
     "scout_apm.instruments.jinja2.have_patched_template_render", new=False
 )

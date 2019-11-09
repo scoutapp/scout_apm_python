@@ -51,9 +51,7 @@ def ensure_installed():
                 Pipeline.execute = wrapped_execute(Pipeline.execute)
             except Exception as exc:
                 logger.warning(
-                    "Unable to instrument redis.Pipeline.execute: %r",
-                    exc,
-                    exc_info=exc,
+                    "Unable to instrument redis.Pipeline.execute: %r", exc, exc_info=exc
                 )
             else:
                 have_patched_pipeline_execute = True

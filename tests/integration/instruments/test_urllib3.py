@@ -11,7 +11,9 @@ from scout_apm.instruments.urllib3 import ensure_installed
 from tests.compat import mock
 from tests.tools import delete_attributes
 
-mock_not_attempted = mock.patch("scout_apm.instruments.urllib3.have_patched_pool_urlopen", new=False)
+mock_not_attempted = mock.patch(
+    "scout_apm.instruments.urllib3.have_patched_pool_urlopen", new=False
+)
 
 
 def test_ensure_installed_twice(caplog):
@@ -44,7 +46,7 @@ def test_install_fail_no_httpconnectionpool(caplog):
             "scout_apm.instruments.urllib3",
             logging.INFO,
             "Unable to import urllib3.HTTPConnectionPool",
-        )
+        ),
     ]
 
 
@@ -92,7 +94,7 @@ def test_request_type_error(tracked_request):
     ensure_installed()
     with pytest.raises(TypeError):
         http = urllib3.PoolManager()
-        connection = http.connection_from_host('example.com', scheme='https')
+        connection = http.connection_from_host("example.com", scheme="https")
         connection.urlopen()
 
     assert len(tracked_request.complete_spans) == 1

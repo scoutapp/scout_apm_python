@@ -11,7 +11,7 @@ from scout_apm.instruments.redis import ensure_installed
 from tests.compat import mock
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def redis_conn():
     ensure_installed()
     # e.g. export REDIS_URL="redis://localhost:6379/0"

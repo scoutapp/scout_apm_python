@@ -3,8 +3,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 
-from scout_apm.instruments import ensure_all_installed
 from scout_apm.core.config import scout_config
+from scout_apm.instruments import ensure_all_installed
 
 
 def test_install_all():
