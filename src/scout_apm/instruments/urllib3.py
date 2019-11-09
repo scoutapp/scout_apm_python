@@ -15,15 +15,19 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-installed = False
+attempted = False
 
 
 def install():
-    global installed
+    global attempted
 
-    if installed:
-        logger.warning("Urllib3 Instruments are already installed.")
-        return True
+    if attempted:
+        logger.warning(
+            "Urllib3 instrumentation has already been attempted to be installed."
+        )
+        return False
+
+    attempted = True
 
     if HTTPConnectionPool is None:
         logger.info("Unable to import urllib3.HTTPConnectionPool")
@@ -39,7 +43,6 @@ def install():
         )
         return False
 
-    installed = True
     return True
 
 

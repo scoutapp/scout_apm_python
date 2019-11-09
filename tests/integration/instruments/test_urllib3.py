@@ -13,19 +13,32 @@ from tests.compat import mock
 
 @pytest.fixture
 def ensure_installed():
+    # Should always successfully install in our test environment
     install()
     yield
 
 
-def test_install_success():
-    # Should always successfully install in our test environment
+mock_not_attempted = mock.patch("scout_apm.instruments.urllib3.attempted", new=False)
+
+
+def test_install_fail_already_attempted(ensure_installed, caplog):
     result = install()
 
-    assert result is True
+    assert result is False
+    assert caplog.record_tuples == [
+        (
+            "scout_apm.instruments.urllib3",
+            logging.WARNING,
+            "Urllib3 instrumentation has already been attempted to be installed.",
+        )
+    ]
 
 
 def test_install_fail_no_httpconnectionpool(caplog):
-    with mock.patch("scout_apm.instruments.urllib3.HTTPConnectionPool", new=None):
+    mock_no_pool = mock.patch(
+        "scout_apm.instruments.urllib3.HTTPConnectionPool", new=None
+    )
+    with mock_not_attempted, mock_no_pool:
         result = install()
 
     assert result is False
@@ -39,11 +52,8 @@ def test_install_fail_no_httpconnectionpool(caplog):
 
 
 def test_install_fail_no_urlopen_attribute(caplog):
-    mock_not_installed = mock.patch(
-        "scout_apm.instruments.urllib3.installed", new=False
-    )
     mock_pool = mock.patch("scout_apm.instruments.urllib3.HTTPConnectionPool")
-    with mock_not_installed, mock_pool as mocked_pool:
+    with mock_not_attempted, mock_pool as mocked_pool:
         # Remove urlopen attribute
         del mocked_pool.urlopen
 
