@@ -4,70 +4,72 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 
 import jinja2
-import pytest
 
-from scout_apm.instruments.jinja2 import install
+from scout_apm.instruments.jinja2 import ensure_installed
 from tests.compat import mock
 
 
-@pytest.fixture
-def ensure_installed():
-    # Should always successfully install in our test environment
-    install()
-    yield
+mock_not_attempted = mock.patch(
+    "scout_apm.instruments.jinja2.have_patched_template_render", new=False
+)
 
 
-mock_not_attempted = mock.patch("scout_apm.instruments.jinja2.attempted", new=False)
+def test_ensure_installed_twice(caplog):
+    ensure_installed()
+    ensure_installed()
 
-
-def test_install_fail_already_attempted(ensure_installed, caplog):
-    result = install()
-
-    assert result is False
-    assert caplog.record_tuples == [
+    assert caplog.record_tuples == 2 * [
         (
             "scout_apm.instruments.jinja2",
-            logging.WARNING,
-            "Jinja2 instrumentation has already been attempted to be installed.",
+            logging.INFO,
+            "Ensuring Jinja2 instrumentation is installed.",
         )
     ]
 
 
-def test_install_fail_no_jinja2_template(caplog):
-    with mock_not_attempted, mock.patch(
-        "scout_apm.instruments.jinja2.Template", new=None
-    ):
-        result = install()
+def test_ensure_installed_fail_no_template(caplog):
+    mock_no_template = mock.patch("scout_apm.instruments.jinja2.Template", new=None)
+    with mock_not_attempted, mock_no_template:
+        ensure_installed()
 
-    assert result is False
     assert caplog.record_tuples == [
         (
             "scout_apm.instruments.jinja2",
             logging.INFO,
-            "Unable to import Jinja2's Template",
-        )
+            "Ensuring Jinja2 instrumentation is installed.",
+        ),
+        (
+            "scout_apm.instruments.jinja2",
+            logging.INFO,
+            "Unable to import jinja2.Template",
+        ),
     ]
 
 
-def test_install_fail_no_render_attribute(caplog):
+def test_ensure_installed_fail_no_render_attribute(caplog):
     mock_template = mock.patch("scout_apm.instruments.jinja2.Template")
     with mock_not_attempted, mock_template as mocked_template:
-        # Remove render attrbiute
+        # Remove render attribute
         del mocked_template.render
 
-        result = install()
+        ensure_installed()
 
-    assert result is False
-    assert len(caplog.record_tuples) == 1
-    logger, level, message = caplog.record_tuples[0]
+    assert len(caplog.record_tuples) == 2
+    assert caplog.record_tuples[0] == (
+        "scout_apm.instruments.jinja2",
+        logging.INFO,
+        "Ensuring Jinja2 instrumentation is installed.",
+    )
+    logger, level, message = caplog.record_tuples[1]
     assert logger == "scout_apm.instruments.jinja2"
     assert level == logging.WARNING
     assert message.startswith(
-        "Unable to instrument for Jinja2 Template.render: AttributeError"
+        "Unable to instrument jinja2.Template.render: AttributeError"
     )
 
 
-def test_render(ensure_installed, tracked_request):
+def test_render(tracked_request):
+    ensure_installed()
     template = jinja2.Template("Hello {{ name }}!")
 
     result = template.render(name="World")
@@ -79,7 +81,8 @@ def test_render(ensure_installed, tracked_request):
     assert span.tags["name"] is None
 
 
-def test_render_template_name(ensure_installed, tracked_request):
+def test_render_template_name(tracked_request):
+    ensure_installed()
     template = jinja2.Template("Hello {{ name }}!")
     template.name = "mytemplate.html"
 

@@ -15,33 +15,25 @@ except ImportError:  # pragma: no cover
 logger = logging.getLogger(__name__)
 
 
-attempted = False
+have_patched_template_render = False
 
 
-def install():
-    global attempted
+def ensure_installed():
+    global have_patched_template_render
 
-    if attempted:
-        logger.warning(
-            "Jinja2 instrumentation has already been attempted to be installed."
-        )
-        return False
-
-    attempted = True
+    logger.info("Ensuring Jinja2 instrumentation is installed.")
 
     if Template is None:
-        logger.info("Unable to import Jinja2's Template")
-        return False
-
-    try:
-        Template.render = wrapped_render(Template.render)
-    except Exception as exc:
-        logger.warning(
-            "Unable to instrument for Jinja2 Template.render: %r", exc, exc_info=exc
-        )
-        return False
-    logger.info("Instrumented Jinja2")
-    return True
+        logger.info("Unable to import jinja2.Template")
+    elif not have_patched_template_render:
+        try:
+            Template.render = wrapped_render(Template.render)
+        except Exception as exc:
+            logger.warning(
+                "Unable to instrument jinja2.Template.render: %r", exc, exc_info=exc
+            )
+        else:
+            have_patched_template_render = True
 
 
 @wrapt.decorator

@@ -3,19 +3,19 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 
-from scout_apm import instruments
+from scout_apm.instruments import ensure_all_installed
 from scout_apm.core.config import scout_config
 
 
 def test_install_all():
-    instruments.install_all()  # no crash
+    ensure_all_installed()  # no crash
 
 
-def test_install_all_one_disabled(caplog):
+def test_ensure_all_installed_one_disabled(caplog):
     scout_config.set(disabled_instruments=["jinja2"])
 
     try:
-        instruments.install_all()
+        ensure_all_installed()
     finally:
         scout_config.reset_all()
 

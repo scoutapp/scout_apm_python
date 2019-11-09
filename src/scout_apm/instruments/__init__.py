@@ -17,7 +17,7 @@ instrument_names = [
 ]
 
 
-def install_all():
+def ensure_all_installed():
     disabled_instruments = scout_config.value("disabled_instruments")
     for instrument_name in instrument_names:
         if instrument_name in disabled_instruments:
@@ -25,4 +25,4 @@ def install_all():
             continue
 
         module = importlib.import_module("{}.{}".format(__name__, instrument_name))
-        module.install()
+        module.ensure_installed()
