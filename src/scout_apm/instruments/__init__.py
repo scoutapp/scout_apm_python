@@ -13,7 +13,7 @@ instrument_names = [
     "jinja2",
     # "pymongo",
     # "redis",
-    # "urllib3",
+    "urllib3",
 ]
 
 

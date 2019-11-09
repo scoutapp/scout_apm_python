@@ -15,47 +15,32 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+installed = False
 
-class Instrument(object):
-    installed = False
 
-    def installable(self):
-        if HTTPConnectionPool is None:
-            logger.info("Unable to import for Urllib3 instruments")
-            return False
-        if self.installed:
-            logger.warning("Urllib3 Instruments are already installed.")
-            return False
+def install():
+    global installed
+
+    if installed:
+        logger.warning("Urllib3 Instruments are already installed.")
         return True
 
-    def install(self):
-        if not self.installable():
-            logger.info("Urllib3 instruments are not installable. Skipping.")
-            return False
+    if HTTPConnectionPool is None:
+        logger.info("Unable to import urllib3.HTTPConnectionPool")
+        return False
 
-        self.__class__.installed = True
+    try:
+        HTTPConnectionPool.urlopen = wrapped_urlopen(HTTPConnectionPool.urlopen)
+    except Exception as exc:
+        logger.warning(
+            "Unable to instrument for Urllib3 HTTPConnectionPool.urlopen: %r",
+            exc,
+            exc_info=exc,
+        )
+        return False
 
-        try:
-            HTTPConnectionPool.urlopen = wrapped_urlopen(HTTPConnectionPool.urlopen)
-        except Exception as exc:
-            logger.warning(
-                "Unable to instrument for Urllib3 HTTPConnectionPool.urlopen: %r",
-                exc,
-                exc_info=exc,
-            )
-            return False
-
-        logger.info("Instrumented Urllib3")
-        return True
-
-    def uninstall(self):
-        if not self.installed:
-            logger.info("Urllib3 instruments are not installed. Skipping.")
-            return False
-
-        self.__class__.installed = False
-
-        HTTPConnectionPool.urlopen = HTTPConnectionPool.urlopen.__wrapped__
+    installed = True
+    return True
 
 
 @wrapt.decorator

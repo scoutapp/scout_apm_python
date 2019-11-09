@@ -4,7 +4,6 @@ env:
     - ELASTICSEARCH_URL="http://localhost:9200/"
     - MONGODB_URL="mongodb://localhost:27017/"
     - REDIS_URL="redis://localhost:6379/0"
-    - URLLIB3_URL="http://localhost:9200/"
 services:
   - docker
   - elasticsearch
