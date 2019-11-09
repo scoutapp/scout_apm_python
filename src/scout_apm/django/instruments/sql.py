@@ -39,6 +39,7 @@ def ensure_sql_instrumented():
 
         logger.debug("Monkey patched SQL")
 
+
 def db_execute_hook(execute, sql, params, many, context):
     """
     Database instrumentation hook for Django 2.0+
