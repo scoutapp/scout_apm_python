@@ -4,6 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 import os
 
+from scout_apm import instruments
 from scout_apm.compat import kwargs_only
 from scout_apm.core import objtrace
 from scout_apm.core.config import scout_config
@@ -34,6 +35,7 @@ def install(config=None):
         )
         return False
 
+    instruments.install_all()
     InstrumentManager().install_all()
 
     objtrace.enable()

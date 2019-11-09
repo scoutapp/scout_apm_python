@@ -1,79 +1,78 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from contextlib import contextmanager
+import logging
 
 import jinja2
+import pytest
 
-from scout_apm.instruments.jinja2 import Instrument
+from scout_apm.instruments.jinja2 import install
 from tests.compat import mock
 
-instrument = Instrument()
+
+@pytest.fixture
+def ensure_installed():
+    install()
+    yield
 
 
-@contextmanager
-def jinja2_with_scout():
-    """
-    Instrument Jinja2.
+def test_install_success():
+    # Should always successfully install in our test environment
+    result = install()
 
-    """
-    instrument.install()
-    try:
-        yield
-    finally:
-        instrument.uninstall()
+    assert result is True
 
 
-def test_render():
-    with jinja2_with_scout():
-        template = jinja2.Template("Hello {{ name }}!")
-        assert template.render(name="World") == "Hello World!"
-
-
-def test_installed():
-    assert not Instrument.installed
-    with jinja2_with_scout():
-        assert Instrument.installed
-    assert not Instrument.installed
-
-
-def test_installable():
-    assert instrument.installable()
-    with jinja2_with_scout():
-        assert not instrument.installable()
-    assert instrument.installable()
-
-
-def test_installable_no_jinja2_module():
+def test_install_fail_no_jinja2_template(caplog):
     with mock.patch("scout_apm.instruments.jinja2.Template", new=None):
-        assert not instrument.installable()
+        result = install()
+
+    assert result is False
+    assert caplog.record_tuples == [
+        (
+            "scout_apm.instruments.jinja2",
+            logging.INFO,
+            "Unable to import Jinja2's Template",
+        )
+    ]
 
 
-def test_install_no_jinja2_module():
-    with mock.patch("scout_apm.instruments.jinja2.Template", new=None):
-        assert not instrument.install()
-        assert not Instrument.installed
+def test_install_fail_no_render_attribute(caplog):
+    mock_not_installed = mock.patch("scout_apm.instruments.jinja2.installed", new=False)
+    mock_template = mock.patch("scout_apm.instruments.jinja2.Template")
+    with mock_not_installed, mock_template as mocked_template:
+        # Remove render attrbiute
+        del mocked_template.render
+
+        result = install()
+
+    assert result is False
+    assert len(caplog.record_tuples) == 1
+    logger, level, message = caplog.record_tuples[0]
+    assert logger == "scout_apm.instruments.jinja2"
+    assert level == logging.WARNING
+    assert message.startswith("Unable to instrument for Jinja2 Template.render: AttributeError")
 
 
-def test_install_failure_no_render_attribute():
-    with mock.patch("scout_apm.instruments.jinja2.Template") as mock_template:
-        del mock_template.render
+def test_render(tracked_request):
+    install()
+    template = jinja2.Template("Hello {{ name }}!")
 
-        try:
-            assert not instrument.install()  # doesn't crash
-        finally:
-            # Currently installed = True even if installing failed.
-            Instrument.installed = False
+    result = template.render(name="World")
 
-
-def test_install_is_idempotent():
-    with jinja2_with_scout():
-        assert Instrument.installed
-        instrument.install()  # does nothing, doesn't crash
-        assert Instrument.installed
+    assert result == "Hello World!"
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "Template/Render"
+    assert span.tags["name"] is None
 
 
-def test_uninstall_is_idempotent():
-    assert not Instrument.installed
-    instrument.uninstall()  # does nothing, doesn't crash
-    assert not Instrument.installed
+def test_render_template_name(tracked_request):
+    install()
+    template = jinja2.Template("Hello {{ name }}!")
+    template.name = "mytemplate.html"
+
+    result = template.render(name="World")
+
+    assert result == "Hello World!"
+    assert tracked_request.complete_spans[0].tags["name"] == "mytemplate.html"
