@@ -18,6 +18,26 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+sql_instrumented = False
+
+
+def ensure_sql_instrumented():
+    global sql_instrumented
+    if sql_instrumented:
+        return
+    sql_instrumented = True
+
+    if django.VERSION >= (2, 0):
+        for connection in connections.all():
+            install_db_execute_hook(connection=connection)
+        connection_created.connect(install_db_execute_hook)
+        logger.debug("Installed DB connection created signal handler")
+    else:
+
+        CursorWrapper.execute = execute_wrapper(CursorWrapper.execute)
+        CursorWrapper.executemany = executemany_wrapper(CursorWrapper.executemany)
+
+        logger.debug("Monkey patched SQL")
 
 def db_execute_hook(execute, sql, params, many, context):
     """
@@ -112,21 +132,3 @@ def executemany_wrapper(wrapped, instance, args, kwargs):
 
 def _extract_sql(sql, *args, **kwargs):
     return sql
-
-
-def install_sql_instrumentation():
-    if getattr(install_sql_instrumentation, "installed", False):
-        return
-    install_sql_instrumentation.installed = True
-
-    if django.VERSION >= (2, 0):
-        for connection in connections.all():
-            install_db_execute_hook(connection=connection)
-        connection_created.connect(install_db_execute_hook)
-        logger.debug("Installed DB connection created signal handler")
-    else:
-
-        CursorWrapper.execute = execute_wrapper(CursorWrapper.execute)
-        CursorWrapper.executemany = executemany_wrapper(CursorWrapper.executemany)
-
-        logger.debug("Monkey patched SQL")

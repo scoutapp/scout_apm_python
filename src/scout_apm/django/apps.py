@@ -7,8 +7,8 @@ from django.test.signals import setting_changed
 
 import scout_apm.core
 from scout_apm.core.config import scout_config
-from scout_apm.django.instruments.sql import install_sql_instrumentation
-from scout_apm.django.instruments.template import install_template_instrumentation
+from scout_apm.django.instruments.sql import ensure_sql_instrumented
+from scout_apm.django.instruments.template import ensure_templates_instrumented
 
 
 class ScoutApmDjangoConfig(AppConfig):
@@ -28,8 +28,8 @@ class ScoutApmDjangoConfig(AppConfig):
         self.install_middleware()
 
         # Setup Instruments
-        install_sql_instrumentation()
-        install_template_instrumentation()
+        ensure_sql_instrumented()
+        ensure_templates_instrumented()
 
     def update_scout_config_from_django_settings(self, **kwargs):
         for name in dir(settings):

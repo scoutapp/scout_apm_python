@@ -7,7 +7,7 @@ from scout_apm.core.config import scout_config
 from scout_apm.instruments import ensure_all_installed
 
 
-def test_install_all():
+def test_ensure_all_installed():
     ensure_all_installed()  # no crash
 
 
