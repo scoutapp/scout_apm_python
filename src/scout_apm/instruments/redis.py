@@ -22,41 +22,41 @@ else:
 logger = logging.getLogger(__name__)
 
 
-attempted = False
+have_patched_redis_execute_command = False
+have_patched_pipeline_execute = False
 
 
-def install():
-    global attempted
+def ensure_installed():
+    global have_patched_redis_execute_command, have_patched_pipeline_execute
 
-    if attempted:
-        logger.warning(
-            "Redis instrumentation has already been attempted to be installed."
-        )
-        return False
-
-    attempted = True
+    logger.info("Ensuring redis instrumentation is installed.")
 
     if redis is None:
-        logger.info("Unable to import Redis")
-        return False
+        logger.info("Unable to import redis")
+    else:
+        if not have_patched_redis_execute_command:
+            try:
+                Redis.execute_command = wrapped_execute_command(Redis.execute_command)
+            except Exception as exc:
+                logger.warning(
+                    "Unable to instrument redis.Redis.execute_command: %r",
+                    exc,
+                    exc_info=exc,
+                )
+            else:
+                have_patched_redis_execute_command = True
 
-    try:
-        Redis.execute_command = wrapped_execute_command(Redis.execute_command)
-    except Exception as exc:
-        logger.warning(
-            "Unable to instrument for Redis Redis.execute_command: %r",
-            exc,
-            exc_info=exc,
-        )
-
-    try:
-        Pipeline.execute = wrapped_execute(Pipeline.execute)
-    except Exception as exc:
-        logger.warning(
-            "Unable to instrument for Redis Pipeline.execute: %r",
-            exc,
-            exc_info=exc,
-        )
+        if not have_patched_pipeline_execute:
+            try:
+                Pipeline.execute = wrapped_execute(Pipeline.execute)
+            except Exception as exc:
+                logger.warning(
+                    "Unable to instrument redis.Pipeline.execute: %r",
+                    exc,
+                    exc_info=exc,
+                )
+            else:
+                have_patched_pipeline_execute = True
 
     return True
 
