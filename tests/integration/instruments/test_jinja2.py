@@ -35,7 +35,9 @@ def test_install_fail_already_attempted(ensure_installed, caplog):
 
 
 def test_install_fail_no_jinja2_template(caplog):
-    with mock_not_attempted, mock.patch("scout_apm.instruments.jinja2.Template", new=None):
+    with mock_not_attempted, mock.patch(
+        "scout_apm.instruments.jinja2.Template", new=None
+    ):
         result = install()
 
     assert result is False
@@ -61,7 +63,9 @@ def test_install_fail_no_render_attribute(caplog):
     logger, level, message = caplog.record_tuples[0]
     assert logger == "scout_apm.instruments.jinja2"
     assert level == logging.WARNING
-    assert message.startswith("Unable to instrument for Jinja2 Template.render: AttributeError")
+    assert message.startswith(
+        "Unable to instrument for Jinja2 Template.render: AttributeError"
+    )
 
 
 def test_render(ensure_installed, tracked_request):

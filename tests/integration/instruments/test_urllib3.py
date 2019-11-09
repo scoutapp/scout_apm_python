@@ -3,8 +3,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 
-import pytest
 import httpretty
+import pytest
 import urllib3
 
 from scout_apm.instruments.urllib3 import install
