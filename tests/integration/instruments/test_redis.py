@@ -10,17 +10,13 @@ import redis
 from scout_apm.instruments.redis import ensure_installed
 from tests.compat import mock
 
-# e.g. export REDIS_URL="redis://localhost:6379/0"
-REDIS_URL = os.environ.get("REDIS_URL")
-skip_if_redis_not_running = pytest.mark.skipif(
-    REDIS_URL is None, reason="Redis isn't available"
-)
-pytestmark = []
-
 
 @pytest.fixture
 def redis_conn():
-    yield redis.Redis.from_url(REDIS_URL)
+    # e.g. export REDIS_URL="redis://localhost:6379/0"
+    if "REDIS_URL" not in os.environ:
+        raise pytest.skip("Redis isn't available")
+    yield redis.Redis.from_url(os.environ["REDIS_URL"])
 
 
 def test_ensure_installed_twice(caplog):
@@ -99,7 +95,6 @@ def test_ensure_installed_fail_no_pipeline_execute(caplog):
     )
 
 
-@skip_if_redis_not_running
 def test_echo(redis_conn, tracked_request):
     ensure_installed()
 
@@ -109,7 +104,6 @@ def test_echo(redis_conn, tracked_request):
     assert tracked_request.complete_spans[0].operation == "Redis/ECHO"
 
 
-@skip_if_redis_not_running
 def test_pipeline_echo(redis_conn, tracked_request):
     ensure_installed()
 
@@ -121,7 +115,6 @@ def test_pipeline_echo(redis_conn, tracked_request):
     assert tracked_request.complete_spans[0].operation == "Redis/MULTI"
 
 
-@skip_if_redis_not_running
 def test_execute_command_missing_argument(redis_conn, tracked_request):
     # Redis instrumentation doesn't crash if op is missing.
     # This raises a TypeError (Python 3) or IndexError (Python 2)
@@ -133,7 +126,6 @@ def test_execute_command_missing_argument(redis_conn, tracked_request):
     assert tracked_request.complete_spans[0].operation == "Redis/Unknown"
 
 
-@skip_if_redis_not_running
 def test_perform_request_bad_url(redis_conn, tracked_request):
     with pytest.raises(TypeError):
         # Redis instrumentation doesn't crash if op has the wrong type.
