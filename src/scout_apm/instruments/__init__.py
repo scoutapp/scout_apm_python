@@ -8,13 +8,7 @@ from scout_apm.core.config import scout_config
 
 logger = logging.getLogger(__name__)
 
-instrument_names = [
-    "elasticsearch",
-    "jinja2",
-    # "pymongo",
-    "redis",
-    "urllib3",
-]
+instrument_names = ["elasticsearch", "jinja2", "pymongo", "redis", "urllib3"]
 
 
 def ensure_all_installed():

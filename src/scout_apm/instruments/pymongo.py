@@ -14,77 +14,65 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+have_patched_collection = False
 
-class Instrument(object):
-    installed = False
 
-    PYMONGO_METHODS = [
-        "aggregate",
-        "bulk_write",
-        "count",
-        "create_index",
-        "create_indexes",
-        "delete_many",
-        "delete_one",
-        "distinct",
-        "drop",
-        "drop_index",
-        "drop_indexes",
-        "ensure_index",
-        "find_and_modify",
-        "find_one",
-        "find_one_and_delete",
-        "find_one_and_replace",
-        "find_one_and_update",
-        "group",
-        "inline_map_reduce",
-        "insert",
-        "insert_many",
-        "insert_one",
-        "map_reduce",
-        "reindex",
-        "remove",
-        "rename",
-        "replace_one",
-        "save",
-        "update",
-        "update_many",
-        "update_one",
-    ]
+def ensure_installed():
+    global have_patched_collection
 
-    def installable(self):
-        if Collection is None:
-            logger.info("Unable to import for PyMongo instruments")
-            return False
-        if self.installed:
-            logger.warning("PyMongo Instruments are already installed.")
-            return False
-        return True
+    logger.info("Ensuring pymongo instrumentation is installed.")
 
-    def install(self):
-        if not self.installable():
-            logger.info("PyMongo instruments are not installable. Skipping.")
-            return False
+    if Collection is None:
+        logger.info("Unable to import pymongo.Collection")
+    elif not have_patched_collection:
+        for name in CLIENT_METHODS:
+            try:
+                setattr(
+                    Collection, name, wrap_collection_method(getattr(Collection, name))
+                )
+            except Exception as exc:
+                logger.warning(
+                    "Unable to instrument pymongo.Collection.%s: %r",
+                    name,
+                    exc,
+                    exc_info=exc,
+                )
+        have_patched_collection = True
 
-        self.__class__.installed = True
 
-        for name in self.__class__.PYMONGO_METHODS:
-            method = getattr(Collection, name, None)
-            if method is not None:
-                setattr(Collection, name, wrap_collection_method(method))
-        return True
-
-    def uninstall(self):
-        if not self.installed:
-            logger.info("PyMongo instruments are not installed. Skipping.")
-            return False
-
-        for name in self.__class__.PYMONGO_METHODS:
-            method = getattr(Collection, name, None)
-            if method is not None:
-                setattr(Collection, name, method.__wrapped__)
-
-        self.__class__.installed = False
+CLIENT_METHODS = [
+    "aggregate",
+    "bulk_write",
+    "count",
+    "create_index",
+    "create_indexes",
+    "delete_many",
+    "delete_one",
+    "distinct",
+    "drop",
+    "drop_index",
+    "drop_indexes",
+    "ensure_index",
+    "find_and_modify",
+    "find_one",
+    "find_one_and_delete",
+    "find_one_and_replace",
+    "find_one_and_update",
+    "group",
+    "inline_map_reduce",
+    "insert",
+    "insert_many",
+    "insert_one",
+    "map_reduce",
+    "reindex",
+    "remove",
+    "rename",
+    "replace_one",
+    "save",
+    "update",
+    "update_many",
+    "update_one",
+]
 
 
 @wrapt.decorator

@@ -1,86 +1,91 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import logging
 import os
-from contextlib import contextmanager
 
 import pymongo
 import pytest
 
-from scout_apm.instruments.pymongo import Instrument
+from scout_apm.instruments.pymongo import ensure_installed
 from tests.compat import mock
 
-# e.g. export MONGODB_URL="mongodb://localhost:27017/"
-MONGODB_URL = os.environ.get("MONGODB_URL")
-skip_if_mongodb_not_running = pytest.mark.skipif(
-    MONGODB_URL is None, reason="MongoDB isn't available"
-)
 
-instrument = Instrument()
-
-
-@contextmanager
-def client_with_scout():
-    """
-    Create an instrumented MongoDB connection.
-    """
-    client = pymongo.MongoClient(MONGODB_URL)
-    instrument.install()
-    try:
-        yield client
-    finally:
-        instrument.uninstall()
+@pytest.fixture(scope="module")
+def pymongo_client():
+    # e.g. export MONGODB_URL="mongodb://localhost:27017"
+    ensure_installed()
+    if "MONGODB_URL" not in os.environ:
+        raise pytest.skip("MongoDB isn't available")
+    yield pymongo.MongoClient(os.environ["MONGODB_URL"])
 
 
-@skip_if_mongodb_not_running
-def test_find_one():
-    with client_with_scout() as client:
-        client.local.startup_log.find_one()
+def test_ensure_installed_twice(caplog):
+    ensure_installed()
+    ensure_installed()
+
+    assert caplog.record_tuples == 2 * [
+        (
+            "scout_apm.instruments.pymongo",
+            logging.INFO,
+            "Ensuring pymongo instrumentation is installed.",
+        )
+    ]
 
 
-@skip_if_mongodb_not_running
-def test_installed():
-    assert not Instrument.installed
-    with client_with_scout():
-        assert Instrument.installed
-    assert not Instrument.installed
+def test_ensure_installed_fail_no_collection(caplog):
+    mock_no_collection = mock.patch(
+        "scout_apm.instruments.pymongo.Collection", new=None
+    )
+    with mock_no_collection:
+        ensure_installed()
+
+    assert caplog.record_tuples == [
+        (
+            "scout_apm.instruments.pymongo",
+            logging.INFO,
+            "Ensuring pymongo instrumentation is installed.",
+        ),
+        (
+            "scout_apm.instruments.pymongo",
+            logging.INFO,
+            "Unable to import pymongo.Collection",
+        ),
+    ]
 
 
-@skip_if_mongodb_not_running
-def test_installable():
-    assert instrument.installable()
-    with client_with_scout():
-        assert not instrument.installable()
-    assert instrument.installable()
+def test_ensure_installed_fail_no_collection_aggregate(caplog):
+    mock_not_patched = mock.patch(
+        "scout_apm.instruments.pymongo.have_patched_collection", new=False
+    )
+    mock_collection = mock.patch("scout_apm.instruments.pymongo.Collection")
+    with mock_not_patched, mock_collection as mocked_collection:
+        del mocked_collection.aggregate
+
+        ensure_installed()
+
+    assert len(caplog.record_tuples) == 2
+    assert caplog.record_tuples[0] == (
+        "scout_apm.instruments.pymongo",
+        logging.INFO,
+        "Ensuring pymongo instrumentation is installed.",
+    )
+    logger, level, message = caplog.record_tuples[1]
+    assert logger == "scout_apm.instruments.pymongo"
+    assert level == logging.WARNING
+    assert message.startswith(
+        "Unable to instrument pymongo.Collection.aggregate: AttributeError"
+    )
 
 
-def test_installable_no_pymongo_module():
-    with mock.patch("scout_apm.instruments.pymongo.Collection", new=None):
-        assert not instrument.installable()
+def test_find_one(pymongo_client, tracked_request):
+    pymongo_client.local.startup_log.find_one()
 
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "MongoDB/startup_log/FindOne"
+    assert span.tags["name"] == "startup_log"
 
-def test_install_no_pymongo_module():
-    with mock.patch("scout_apm.instruments.pymongo.Collection", new=None):
-        assert not instrument.install()
-
-
-def test_install_missing_attribute():
-    with mock.patch("scout_apm.instruments.pymongo.Collection") as mock_collection:
-        del mock_collection.aggregate
-    try:
-        instrument.install()  # no crash
-    finally:
-        instrument.uninstall()
-
-
-def test_install_is_idempotent():
-    with client_with_scout():
-        assert Instrument.installed
-        instrument.install()  # does nothing, doesn't crash
-        assert Instrument.installed
-
-
-def test_uninstall_is_idempotent():
-    assert not Instrument.installed
-    instrument.uninstall()  # does nothing, doesn't crash
-    assert not Instrument.installed
+    # Error cases:
+    # * a collection with empty name : pymongo_client.local[""].find_one()
+    # * some kind of error mongo side like db doens't exist: pymongo_client["nonexistent"]["nonexistent"].find_one()
