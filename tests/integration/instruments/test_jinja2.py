@@ -12,19 +12,30 @@ from tests.compat import mock
 
 @pytest.fixture
 def ensure_installed():
-    install()
+    # Should always successfully install in our test environment
+    result = install()
+    assert result is True
     yield
 
 
-def test_install_success():
-    # Should always successfully install in our test environment
+mock_not_attempted = mock.patch("scout_apm.instruments.jinja2.attempted", new=False)
+
+
+def test_install_fail_already_attempted(ensure_installed, caplog):
     result = install()
 
-    assert result is True
+    assert result is False
+    assert caplog.record_tuples == [
+        (
+            "scout_apm.instruments.jinja2",
+            logging.WARNING,
+            "Jinja2 instrumentation has already been attempted to be installed.",
+        )
+    ]
 
 
 def test_install_fail_no_jinja2_template(caplog):
-    with mock.patch("scout_apm.instruments.jinja2.Template", new=None):
+    with mock_not_attempted, mock.patch("scout_apm.instruments.jinja2.Template", new=None):
         result = install()
 
     assert result is False
@@ -38,9 +49,8 @@ def test_install_fail_no_jinja2_template(caplog):
 
 
 def test_install_fail_no_render_attribute(caplog):
-    mock_not_installed = mock.patch("scout_apm.instruments.jinja2.installed", new=False)
     mock_template = mock.patch("scout_apm.instruments.jinja2.Template")
-    with mock_not_installed, mock_template as mocked_template:
+    with mock_not_attempted, mock_template as mocked_template:
         # Remove render attrbiute
         del mocked_template.render
 
@@ -54,8 +64,7 @@ def test_install_fail_no_render_attribute(caplog):
     assert message.startswith("Unable to instrument for Jinja2 Template.render: AttributeError")
 
 
-def test_render(tracked_request):
-    install()
+def test_render(ensure_installed, tracked_request):
     template = jinja2.Template("Hello {{ name }}!")
 
     result = template.render(name="World")
@@ -67,8 +76,7 @@ def test_render(tracked_request):
     assert span.tags["name"] is None
 
 
-def test_render_template_name(tracked_request):
-    install()
+def test_render_template_name(ensure_installed, tracked_request):
     template = jinja2.Template("Hello {{ name }}!")
     template.name = "mytemplate.html"
 

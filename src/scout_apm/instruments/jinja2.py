@@ -15,18 +15,22 @@ except ImportError:  # pragma: no cover
 logger = logging.getLogger(__name__)
 
 
-installed = False
+attempted = False
 
 
 def install():
-    global installed
+    global attempted
+
+    if attempted:
+        logger.warning(
+            "Jinja2 instrumentation has already been attempted to be installed."
+        )
+        return False
+
+    attempted = True
 
     if Template is None:
         logger.info("Unable to import Jinja2's Template")
-        return False
-
-    if installed:
-        logger.warning("Jinja2 instrumentation is already installed.")
         return False
 
     try:
@@ -37,7 +41,6 @@ def install():
         )
         return False
     logger.info("Instrumented Jinja2")
-    installed = True
     return True
 
 
