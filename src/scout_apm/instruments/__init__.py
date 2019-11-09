@@ -9,7 +9,7 @@ from scout_apm.core.config import scout_config
 logger = logging.getLogger(__name__)
 
 instrument_names = [
-    # "elasticsearch",
+    "elasticsearch",
     "jinja2",
     # "pymongo",
     "redis",
