@@ -86,6 +86,21 @@ def test_find_one(pymongo_client, tracked_request):
     assert span.operation == "MongoDB/startup_log.FindOne"
     assert span.tags["name"] == "startup_log"
 
-    # Error cases:
-    # * a collection with empty name : pymongo_client.local[""].find_one()
-    # * some kind of error mongo side like db doens't exist: pymongo_client["nonexistent"]["nonexistent"].find_one()
+
+def test_find_one_empty_collection_name(pymongo_client, tracked_request):
+    collection_name = ""
+    pymongo_client.local[collection_name].find_one()
+
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "MongoDB/.FindOne"
+    assert span.tags["name"] == ""
+
+
+def test_find_one_non_existent_database_and_collection(pymongo_client, tracked_request):
+    pymongo_client["nonexistent"]["nonexistent"].find_one()
+
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "MongoDB/nonexistent.FindOne"
+    assert span.tags["name"] == "nonexistent"
