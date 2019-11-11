@@ -83,7 +83,7 @@ def test_find_one(pymongo_client, tracked_request):
 
     assert len(tracked_request.complete_spans) == 1
     span = tracked_request.complete_spans[0]
-    assert span.operation == "MongoDB/startup_log/FindOne"
+    assert span.operation == "MongoDB/startup_log.FindOne"
     assert span.tags["name"] == "startup_log"
 
     # Error cases:
