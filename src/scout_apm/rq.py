@@ -42,6 +42,7 @@ class JobMixin(object):
 
         tracked_request = TrackedRequest.instance()
         tracked_request.is_real_request = True
+        tracked_request.tag("task_id", self.get_id())
         tracked_request.tag("queue", self.origin)
         queue_time = (dt.datetime.utcnow() - self.enqueued_at).total_seconds()
         tracked_request.tag("queue_time", queue_time)
