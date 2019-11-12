@@ -4,10 +4,12 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from collections import namedtuple
 from contextlib import contextmanager
 
+import pytest
 from fakeredis import FakeStrictRedis
 from rq import Queue
 
 from scout_apm.api import Config
+from scout_apm import rq
 
 
 def hello():
@@ -29,11 +31,17 @@ def app_with_scout(scout_config=None):
     scout_config.setdefault("monitor", True)
     scout_config["core_agent_launch"] = False
 
-    queue = Queue(is_async=False, connection=FakeStrictRedis())
+    # Reset global state
+    rq.install_attempted = False
+    rq.installed = None
 
     # Setup according to https://docs.scoutapm.com/#rq
+    # Using job_class argument to Queue
+    queue = Queue(
+        name="myqueue",
+        is_async=False, connection=FakeStrictRedis(), job_class="scout_apm.rq.Job"
+    )
     Config.set(**scout_config)
-    ...
 
     App = namedtuple("App", ["queue"])
     try:
@@ -50,6 +58,37 @@ def test_hello(tracked_requests):
     assert job.result == "Hello World!"
     assert len(tracked_requests) == 1
     tracked_request = tracked_requests[0]
-    assert len(tracked_request.complete_spans) == 1
-    span = tracked_request.complete_spans[0]
-    assert span.operation == "Job/tests.integration.test_rq.hello"
+    assert tracked_request.tags["queue"] == "myqueue"
+    assert 0.0 < tracked_request.tags["queue_time"] < 60.0
+    assert len(tracked_request.complete_spans) == 2
+    assert tracked_request.complete_spans[0].operation == "Redis/PERSIST"
+    assert (
+        tracked_request.complete_spans[1].operation
+        == "Job/tests.integration.test_rq.hello"
+    )
+
+
+def test_fail(tracked_requests):
+    with app_with_scout() as app, pytest.raises(ValueError):
+        app.queue.enqueue(fail)
+
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert tracked_request.tags["queue"] == "myqueue"
+    assert 0.0 < tracked_request.tags["queue_time"] < 60.0
+    assert tracked_request.tags["error"] == "true"
+    assert len(tracked_request.complete_spans) == 2
+    assert tracked_request.complete_spans[0].operation == "Redis/PERSIST"
+    assert (
+        tracked_request.complete_spans[1].operation
+        == "Job/tests.integration.test_rq.fail"
+    )
+
+
+def test_no_monitor(tracked_requests):
+    with app_with_scout(scout_config={"monitor": False}) as app:
+        job = app.queue.enqueue(hello)
+
+    assert job.is_finished
+    assert job.result == "Hello World!"
+    assert tracked_requests == []
