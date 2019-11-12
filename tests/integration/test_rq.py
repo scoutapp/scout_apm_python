@@ -39,7 +39,9 @@ def app_with_scout(scout_config=None):
     # Using job_class argument to Queue
     queue = Queue(
         name="myqueue",
-        is_async=False, connection=FakeStrictRedis(), job_class="scout_apm.rq.Job"
+        is_async=False,
+        connection=FakeStrictRedis(),
+        job_class="scout_apm.rq.Job",
     )
     Config.set(**scout_config)
 
