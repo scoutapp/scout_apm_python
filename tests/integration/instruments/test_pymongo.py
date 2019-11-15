@@ -6,6 +6,7 @@ import os
 
 import pymongo
 import pytest
+from pymongo.errors import InvalidName
 
 from scout_apm.instruments.pymongo import ensure_installed
 from tests.compat import mock
@@ -89,7 +90,8 @@ def test_find_one(pymongo_client, tracked_request):
 
 def test_find_one_empty_collection_name(pymongo_client, tracked_request):
     collection_name = ""
-    pymongo_client.local[collection_name].find_one()
+    with pytest.raises(InvalidName):
+        pymongo_client.local[collection_name].find_one()
 
     assert len(tracked_request.complete_spans) == 1
     span = tracked_request.complete_spans[0]
