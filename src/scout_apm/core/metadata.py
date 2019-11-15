@@ -51,9 +51,7 @@ def get_python_packages_versions():
     except ImportError:
         return []
 
-    return list(
-        sorted(
-            (distribution.project_name, distribution.version)
-            for distribution in pkg_resources.working_set
-        )
+    return sorted(
+        (distribution.project_name, distribution.version)
+        for distribution in pkg_resources.working_set
     )
