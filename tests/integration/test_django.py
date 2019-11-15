@@ -7,6 +7,7 @@ from contextlib import contextmanager
 
 import django
 import pytest
+import wrapt
 from django.apps import apps
 from django.conf import settings
 from django.core.management import call_command
@@ -387,11 +388,44 @@ def test_admin_view_operation_name(url, expected_op_name, tracked_requests):
     assert span.operation == expected_op_name
 
 
-def skip_if_no_tastypie():
+@pytest.mark.parametrize(
+    "url, expected_op_name",
+    [
+        [
+            "/drf-router/users/",
+            "Controller/tests.integration.django_app.UserViewSet.list",
+        ],
+        [
+            "/drf-router/users/1/",
+            "Controller/tests.integration.django_app.UserViewSet.retrieve",
+        ],
+    ],
+)
+def test_django_rest_framework_api_operation_name(
+    url, expected_op_name, tracked_requests
+):
+    with app_with_scout() as app:
+        make_admin_user()
+        response = TestApp(app).get(url)
+
+    assert response.status_int == 200
+    assert len(tracked_requests) == 1
+    spans = tracked_requests[0].complete_spans
+    assert [s.operation for s in spans] == [
+        "SQL/Query",
+        expected_op_name,
+        "Middleware",
+    ]
+
+
+@wrapt.decorator
+def skip_if_no_tastypie(wrapped, instance, args, kwargs):
     if not django_app.tastypie_api:
         pytest.skip("No Tastypie")
+    return wrapped(*args, **kwargs)
 
 
+@skip_if_no_tastypie
 @pytest.mark.parametrize(
     "url, expected_op_name",
     [
@@ -418,6 +452,7 @@ def test_tastypie_api_operation_name(url, expected_op_name, tracked_requests):
     assert span.operation == expected_op_name
 
 
+@skip_if_no_tastypie
 def test_tastypie_api_operation_name_fail_no_tastypie(tracked_requests):
     with app_with_scout() as app:
         skip_if_no_tastypie()
@@ -429,6 +464,7 @@ def test_tastypie_api_operation_name_fail_no_tastypie(tracked_requests):
     assert span.operation == "Controller/tastypie.resources.wrapper"
 
 
+@skip_if_no_tastypie
 @skip_if_python_2
 def test_tastypie_api_operation_name_fail_no_wrapper(tracked_requests):
     with app_with_scout() as app:
@@ -443,6 +479,7 @@ def test_tastypie_api_operation_name_fail_no_wrapper(tracked_requests):
     assert span.operation == "Controller/tastypie.resources.wrapper"
 
 
+@skip_if_no_tastypie
 @skip_if_python_2
 def test_tastypie_api_operation_name_fail_no_closure(tracked_requests):
     with app_with_scout() as app:

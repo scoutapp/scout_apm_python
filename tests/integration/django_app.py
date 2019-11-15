@@ -155,6 +155,30 @@ def template_response(request):
 
 
 @SimpleLazyObject
+def drf_router():
+    """
+    DRF Router as a lazy object because it needs to import User model which
+    can't be done until after django.setup()
+    """
+    from django.contrib.auth.models import User
+    from rest_framework import routers
+    from rest_framework import serializers
+    from rest_framework import viewsets
+
+    class UserSerializer(serializers.Serializer):
+        id = serializers.IntegerField(label='ID', read_only=True)
+        username = serializers.CharField(max_length=200)
+
+    class UserViewSet(viewsets.ModelViewSet):
+        queryset = User.objects.all()
+        serializer_class = UserSerializer
+
+    router = routers.SimpleRouter()
+    router.register(r'users', UserViewSet)
+    return router
+
+
+@SimpleLazyObject
 def tastypie_api():
     """
     Tastypie API as a lazy object because it needs to import User model which
@@ -199,6 +223,7 @@ def urlpatterns():
             path("template/", template),
             path("template-response/", template_response),
             path("admin/", admin.site.urls),
+            path("drf-router/", include(drf_router.urls)),
         ]
         if tastypie_api:
             patterns.append(path("tastypie-api/", include(tastypie_api.urls)))
@@ -219,6 +244,7 @@ def urlpatterns():
             url(r"^template/$", template),
             url(r"^template-response/$", template_response),
             url(r"^admin/", admin.site.urls),
+            path(r"^drf-router/", include(drf_router.urls)),
         ]
         if tastypie_api:
             patterns.append(url(r"^tastypie-api/", include(tastypie_api.urls)))
