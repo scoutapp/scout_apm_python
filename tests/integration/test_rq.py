@@ -4,11 +4,11 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from collections import namedtuple
 from contextlib import contextmanager
 
-import pytest
 from fakeredis import FakeStrictRedis
 from rq import Queue
 
-from scout_apm import compat, rq
+import scout_apm.rq
+from scout_apm import compat
 from scout_apm.api import Config
 
 
@@ -32,22 +32,18 @@ def app_with_scout(scout_config=None):
     scout_config["core_agent_launch"] = False
 
     # Reset global state
-    rq.install_attempted = False
-    rq.installed = None
+    scout_apm.rq.install_attempted = False
+    scout_apm.rq.installed = None
 
     # Setup according to https://docs.scoutapm.com/#rq
     # Using job_class argument to Queue
-    queue = Queue(
-        name="myqueue",
-        is_async=False,
-        connection=FakeStrictRedis(),
-        job_class="scout_apm.rq.Job",
-    )
     Config.set(**scout_config)
+    queue = Queue(name="myqueue", connection=FakeStrictRedis())
+    worker = scout_apm.rq.SimpleWorker([queue], connection=queue.connection)
 
-    App = namedtuple("App", ["queue"])
+    App = namedtuple("App", ["queue", "worker"])
     try:
-        yield App(queue=queue)
+        yield App(queue=queue, worker=worker)
     finally:
         Config.reset_all()
 
@@ -55,6 +51,7 @@ def app_with_scout(scout_config=None):
 def test_hello(tracked_requests):
     with app_with_scout() as app:
         job = app.queue.enqueue(hello)
+        app.worker.work(burst=True)
 
     assert job.is_finished
     assert job.result == "Hello World!"
@@ -73,10 +70,10 @@ def test_hello(tracked_requests):
 
 
 def test_fail(tracked_requests):
-    with app_with_scout() as app, pytest.raises(ValueError):
+    with app_with_scout() as app:
         app.queue.enqueue(fail)
+        app.worker.work(burst=True)
 
-    assert len(tracked_requests) == 1
     tracked_request = tracked_requests[0]
     task_id = tracked_request.tags["task_id"]
     assert isinstance(task_id, compat.string_type) and len(task_id) == 36
@@ -94,6 +91,7 @@ def test_fail(tracked_requests):
 def test_no_monitor(tracked_requests):
     with app_with_scout(scout_config={"monitor": False}) as app:
         job = app.queue.enqueue(hello)
+        app.worker.work(burst=True)
 
     assert job.is_finished
     assert job.result == "Hello World!"
