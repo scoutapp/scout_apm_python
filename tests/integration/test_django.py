@@ -17,8 +17,8 @@ from webtest import TestApp
 
 from scout_apm.api import Config
 from scout_apm.compat import datetime_to_timestamp
-from scout_apm.django.instruments.sql import install_sql_instrumentation
-from scout_apm.django.instruments.template import install_template_instrumentation
+from scout_apm.django.instruments.sql import ensure_sql_instrumented
+from scout_apm.django.instruments.template import ensure_templates_instrumented
 from tests.compat import mock
 from tests.integration import django_app
 from tests.integration.util import (
@@ -88,18 +88,18 @@ def make_admin_user():
     return user
 
 
-def test_install_sql_instrumentation_again():
+def test_ensure_sql_instrumented_again():
     """
     Check second call doesn't crash (should be a no-op)
     """
-    install_sql_instrumentation()
+    ensure_sql_instrumented()
 
 
-def test_install_template_instrumentation_again():
+def test_ensure_templates_instrumented_again():
     """
     Check second call doesn't crash (should be a no-op)
     """
-    install_template_instrumentation()
+    ensure_templates_instrumented()
 
 
 def test_on_setting_changed_application_root():

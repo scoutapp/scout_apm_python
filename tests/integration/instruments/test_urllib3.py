@@ -1,100 +1,122 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import os
-from contextlib import contextmanager
+import logging
 
+import httpretty
 import pytest
 import urllib3
 
-from scout_apm.instruments.urllib3 import Instrument
+from scout_apm.instruments.urllib3 import ensure_installed
 from tests.compat import mock
+from tests.tools import delete_attributes
 
-# e.g. export URLLIB3_URL="http://httpbin.org/"
-# or export URLLIB3_URL="http://localhost:9200/" (re-use Elasticsearch!)
-URLLIB3_URL = os.environ.get("URLLIB3_URL")
-skip_if_urllib3_url_unavailable = pytest.mark.skipif(
-    URLLIB3_URL is None, reason="urllib3 URL isn't available"
+mock_not_attempted = mock.patch(
+    "scout_apm.instruments.urllib3.have_patched_pool_urlopen", new=False
 )
 
-instrument = Instrument()
+
+def test_ensure_installed_twice(caplog):
+    ensure_installed()
+    ensure_installed()
+
+    assert caplog.record_tuples == 2 * [
+        (
+            "scout_apm.instruments.urllib3",
+            logging.INFO,
+            "Ensuring urllib3 instrumentation is installed.",
+        )
+    ]
 
 
-@contextmanager
-def urllib3_with_scout():
-    """
-    Create an instrumented urllib3 HTTP connection pool.
+def test_install_fail_no_httpconnectionpool(caplog):
+    mock_no_pool = mock.patch(
+        "scout_apm.instruments.urllib3.HTTPConnectionPool", new=None
+    )
+    with mock_not_attempted, mock_no_pool:
+        ensure_installed()
 
-    """
-    instrument.install()
-    try:
-        yield
-    finally:
-        instrument.uninstall()
+    assert caplog.record_tuples == [
+        (
+            "scout_apm.instruments.urllib3",
+            logging.INFO,
+            "Ensuring urllib3 instrumentation is installed.",
+        ),
+        (
+            "scout_apm.instruments.urllib3",
+            logging.INFO,
+            "Unable to import urllib3.HTTPConnectionPool",
+        ),
+    ]
 
 
-@skip_if_urllib3_url_unavailable
-def test_request():
-    with urllib3_with_scout():
+def test_install_fail_no_urlopen_attribute(caplog):
+    mock_pool = mock.patch("scout_apm.instruments.urllib3.HTTPConnectionPool")
+    with mock_not_attempted, mock_pool as mocked_pool:
+        # Remove urlopen attribute
+        del mocked_pool.urlopen
+
+        ensure_installed()
+
+    assert len(caplog.record_tuples) == 2
+    assert caplog.record_tuples[0] == (
+        "scout_apm.instruments.urllib3",
+        logging.INFO,
+        "Ensuring urllib3 instrumentation is installed.",
+    )
+    logger, level, message = caplog.record_tuples[1]
+    assert logger == "scout_apm.instruments.urllib3"
+    assert level == logging.WARNING
+    assert message.startswith(
+        "Unable to instrument for Urllib3 HTTPConnectionPool.urlopen: AttributeError"
+    )
+
+
+def test_request(tracked_request):
+    ensure_installed()
+    with httpretty.enabled(allow_net_connect=False):
+        httpretty.register_uri(
+            httpretty.GET, "https://example.com/", body="Hello World!"
+        )
+
         http = urllib3.PoolManager()
-        response = http.request("GET", URLLIB3_URL)
-        assert response.status == 200
+        response = http.request("GET", "https://example.com")
+
+    assert response.status == 200
+    assert response.data == b"Hello World!"
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "HTTP/GET"
+    assert span.tags["url"] == "https://example.com:443/"
 
 
-@skip_if_urllib3_url_unavailable
-# I can't trigger a failure to get instrument data through a public API.
-# Somewhat surprisingly, the request still succeeds.
-@mock.patch("urllib3.HTTPConnectionPool._absolute_url", side_effect=RuntimeError)
-def test_urlopen_exception(_absolute_url):
-    with urllib3_with_scout():
+def test_request_type_error(tracked_request):
+    ensure_installed()
+    with pytest.raises(TypeError):
         http = urllib3.PoolManager()
-        response = http.request("GET", URLLIB3_URL)
-        assert response.status == 200
+        connection = http.connection_from_host("example.com", scheme="https")
+        connection.urlopen()
+
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "HTTP/Unknown"
+    assert span.tags["url"] == "https://example.com:443/"
 
 
-def test_installed():
-    with urllib3_with_scout():
-        assert Instrument.installed
-    assert not Instrument.installed
+def test_request_no_absolute_url(caplog, tracked_request):
+    ensure_installed()
+    delete_absolute_url = delete_attributes(urllib3.HTTPConnectionPool, "_absolute_url")
+    with httpretty.enabled(allow_net_connect=False), delete_absolute_url:
+        httpretty.register_uri(
+            httpretty.GET, "https://example.com/", body="Hello World!"
+        )
 
+        http = urllib3.PoolManager()
+        response = http.request("GET", "https://example.com")
 
-def test_installable():
-    with urllib3_with_scout():
-        assert not instrument.installable()
-    assert instrument.installable()
-
-
-def test_installable_no_urllib3_module():
-    with mock.patch("scout_apm.instruments.urllib3.HTTPConnectionPool", new=None):
-        assert not instrument.installable()
-
-
-def test_install_no_urllib3_module():
-    with mock.patch("scout_apm.instruments.urllib3.HTTPConnectionPool", new=None):
-        assert not instrument.install()
-        assert not Instrument.installed
-
-
-def test_install_failure_no_urlopen_attribute():
-    with mock.patch(
-        "scout_apm.instruments.urllib3.HTTPConnectionPool"
-    ) as mock_http_connection_pool:
-        del mock_http_connection_pool.urlopen
-        try:
-            assert not instrument.install()  # doesn't crash
-        finally:
-            # Currently installed = True even if installing failed.
-            Instrument.installed = False
-
-
-def test_install_is_idempotent():
-    with urllib3_with_scout():
-        assert Instrument.installed
-        instrument.install()  # does nothing, doesn't crash
-        assert Instrument.installed
-
-
-def test_uninstall_is_idempotent():
-    assert not Instrument.installed
-    instrument.uninstall()  # does nothing, doesn't crash
-    assert not Instrument.installed
+    assert response.status == 200
+    assert response.data == b"Hello World!"
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "HTTP/GET"
+    assert span.tags["url"] == "Unknown"

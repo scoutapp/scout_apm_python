@@ -10,31 +10,23 @@ from scout_apm.core.tracked_request import TrackedRequest
 
 try:
     from urllib3 import HTTPConnectionPool
-except ImportError:
+except ImportError:  # pragma: no cover
     HTTPConnectionPool = None
 
 logger = logging.getLogger(__name__)
 
+have_patched_pool_urlopen = False
 
-class Instrument(object):
-    installed = False
 
-    def installable(self):
-        if HTTPConnectionPool is None:
-            logger.info("Unable to import for Urllib3 instruments")
-            return False
-        if self.installed:
-            logger.warning("Urllib3 Instruments are already installed.")
-            return False
-        return True
+def ensure_installed():
+    global have_patched_pool_urlopen
 
-    def install(self):
-        if not self.installable():
-            logger.info("Urllib3 instruments are not installable. Skipping.")
-            return False
+    logger.info("Ensuring urllib3 instrumentation is installed.")
 
-        self.__class__.installed = True
-
+    if HTTPConnectionPool is None:
+        logger.info("Unable to import urllib3.HTTPConnectionPool")
+        return False
+    elif not have_patched_pool_urlopen:
         try:
             HTTPConnectionPool.urlopen = wrapped_urlopen(HTTPConnectionPool.urlopen)
         except Exception as exc:
@@ -43,19 +35,8 @@ class Instrument(object):
                 exc,
                 exc_info=exc,
             )
-            return False
-
-        logger.info("Instrumented Urllib3")
-        return True
-
-    def uninstall(self):
-        if not self.installed:
-            logger.info("Urllib3 instruments are not installed. Skipping.")
-            return False
-
-        self.__class__.installed = False
-
-        HTTPConnectionPool.urlopen = HTTPConnectionPool.urlopen.__wrapped__
+        else:
+            have_patched_pool_urlopen = True
 
 
 @wrapt.decorator

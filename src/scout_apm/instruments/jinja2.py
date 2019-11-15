@@ -9,49 +9,31 @@ from scout_apm.core.tracked_request import TrackedRequest
 
 try:
     from jinja2 import Template
-except ImportError:
+except ImportError:  # pragma: no cover
     Template = None
 
 logger = logging.getLogger(__name__)
 
 
-class Instrument(object):
-    installed = False
+have_patched_template_render = False
 
-    def installable(self):
-        if Template is None:
-            logger.info("Unable to import for Jinja2 instruments")
-            return False
-        if self.installed:
-            logger.warning("Jinja2 Instruments are already installed.")
-            return False
-        return True
 
-    def install(self):
-        if not self.installable():
-            logger.info("Jinja2 instruments are not installable. Skipping.")
-            return False
+def ensure_installed():
+    global have_patched_template_render
 
-        self.__class__.installed = True
+    logger.info("Ensuring Jinja2 instrumentation is installed.")
 
+    if Template is None:
+        logger.info("Unable to import jinja2.Template")
+    elif not have_patched_template_render:
         try:
             Template.render = wrapped_render(Template.render)
         except Exception as exc:
             logger.warning(
-                "Unable to instrument for Jinja2 Template.render: %r", exc, exc_info=exc
+                "Unable to instrument jinja2.Template.render: %r", exc, exc_info=exc
             )
-            return False
-        logger.info("Instrumented Jinja2")
-        return True
-
-    def uninstall(self):
-        if not self.installed:
-            logger.info("Jinja2 instruments are not installed. Skipping.")
-            return False
-
-        self.__class__.installed = False
-
-        Template.render = Template.render.__wrapped__
+        else:
+            have_patched_template_render = True
 
 
 @wrapt.decorator

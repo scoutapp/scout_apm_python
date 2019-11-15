@@ -4,11 +4,11 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 import os
 
+from scout_apm import instruments
 from scout_apm.compat import kwargs_only
 from scout_apm.core import objtrace
 from scout_apm.core.config import scout_config
 from scout_apm.core.core_agent_manager import CoreAgentManager
-from scout_apm.core.instrument_manager import InstrumentManager
 from scout_apm.core.metadata import report_app_metadata
 from scout_apm.core.socket import CoreAgentSocket
 
@@ -34,8 +34,7 @@ def install(config=None):
         )
         return False
 
-    InstrumentManager().install_all()
-
+    instruments.ensure_all_installed()
     objtrace.enable()
 
     logger.debug("APM Launching on PID: %s", os.getpid())

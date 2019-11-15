@@ -9,156 +9,74 @@ from scout_apm.core.tracked_request import TrackedRequest
 
 try:
     from elasticsearch import Elasticsearch, Transport
-except ImportError:
+except ImportError:  # pragma: no cover
     Elasticsearch = None
     Transport = None
 
 logger = logging.getLogger(__name__)
 
 
-class Instrument(object):
-    installed = False
+def ensure_installed():
+    logger.info("Ensuring elasticsearch instrumentation is installed.")
 
-    CLIENT_METHODS = [
-        "bulk",
-        "count",
-        "create",
-        "delete",
-        "delete_by_query",
-        "exists",
-        "exists_source",
-        "explain",
-        "field_caps",
-        "get",
-        "get_source",
-        "index",
-        "mget",
-        "msearch",
-        "msearch_template",
-        "mtermvectors",
-        "reindex",
-        "reindex_rethrottle",
-        "search",
-        "search_shards",
-        "search_template",
-        "termvectors",
-        "update",
-        "update_by_query",
-    ]
+    if Elasticsearch is None:
+        logger.info("Unable to import elasticsearch.Elasticsearch")
+    else:
+        ensure_client_instrumented()
+        ensure_transport_instrumented()
 
-    def installable(self):
-        if Elasticsearch is None:
-            logger.info("Unable to import for Elasticsearch instruments")
-            return False
-        if self.installed:
-            logger.warning("Elasticsearch Instruments are already installed.")
-            return False
-        return True
 
-    def install(self):
-        if not self.installable():
-            logger.info("Elasticsearch instruments are not installable. Skipping.")
-            return False
+CLIENT_METHODS = [
+    "bulk",
+    "count",
+    "create",
+    "delete",
+    "delete_by_query",
+    "exists",
+    "exists_source",
+    "explain",
+    "field_caps",
+    "get",
+    "get_source",
+    "index",
+    "mget",
+    "msearch",
+    "msearch_template",
+    "mtermvectors",
+    "reindex",
+    "reindex_rethrottle",
+    "search",
+    "search_shards",
+    "search_template",
+    "termvectors",
+    "update",
+    "update_by_query",
+]
 
-        self.__class__.installed = True
 
-        self.instrument_client()
-        self.instrument_transport()
+have_patched_client = False
 
-    def uninstall(self):
-        if not self.installed:
-            logger.info("Elasticsearch instruments are not installed. Skipping.")
-            return False
 
-        self.uninstrument_client()
-        self.uninstrument_transport()
+def ensure_client_instrumented():
+    global have_patched_client
 
-        self.__class__.installed = False
-
-    def instrument_client(self):
-        for name in self.__class__.CLIENT_METHODS:
-            method = getattr(Elasticsearch, name, None)
-            if method is not None:
-                setattr(Elasticsearch, name, wrap_client_method(method))
-
-    def uninstrument_client(self):
-        for name in self.__class__.CLIENT_METHODS:
-            method = getattr(Elasticsearch, name, None)
-            if method is not None:
-                setattr(Elasticsearch, name, method.__wrapped__)
-
-    def instrument_transport(self):
-        try:
-
-            def _sanitize_name(name):
-                try:
-                    op = name.split("/")[-1]
-                    op = op[1:]  # chop leading '_' from op
-                    allowed_names = [
-                        "bench",
-                        "bulk",
-                        "count",
-                        "exists",
-                        "explain",
-                        "field_stats",
-                        "health",
-                        "mget",
-                        "mlt",
-                        "mpercolate",
-                        "msearch",
-                        "mtermvectors",
-                        "percolate",
-                        "query",
-                        "scroll",
-                        "search_shards",
-                        "source",
-                        "suggest",
-                        "template",
-                        "termvectors",
-                        "update",
-                        "search",
-                    ]
-
-                    if op in allowed_names:
-                        return op.title()
-                    return "Unknown"
-                except Exception:
-                    return "Unknown"
-
-            @wrapt.decorator
-            def wrapped_perform_request(wrapped, instance, args, kwargs):
-                try:
-                    op = _sanitize_name(args[1])
-                except IndexError:
-                    op = "Unknown"
-
-                tracked_request = TrackedRequest.instance()
-                tracked_request.start_span(
-                    operation="Elasticsearch/{}".format(op), ignore_children=True
+    if not have_patched_client:
+        for name in CLIENT_METHODS:
+            try:
+                setattr(
+                    Elasticsearch,
+                    name,
+                    wrap_client_method(getattr(Elasticsearch, name)),
+                )
+            except Exception as exc:
+                logger.warning(
+                    "Unable to instrument elasticsearch.Elasticsearch.%s: %r",
+                    name,
+                    exc,
+                    exc_info=exc,
                 )
 
-                try:
-                    return wrapped(*args, **kwargs)
-                finally:
-                    tracked_request.stop_span()
-
-            Transport.perform_request = wrapped_perform_request(
-                Transport.perform_request
-            )
-
-            logger.info("Instrumented Elasticsearch Transport")
-
-        except Exception as e:
-            logger.warning(
-                "Unable to instrument for Elasticsearch Transport.perform_request: %r",
-                e,
-            )
-            return False
-        return True
-
-    def uninstrument_transport(self):
-
-        Transport.perform_request = Transport.perform_request.__wrapped__
+        have_patched_client = True
 
 
 @wrapt.decorator
@@ -180,6 +98,80 @@ def wrap_client_method(wrapped, instance, args, kwargs):
     operation = "Elasticsearch/{}/{}".format(index, camel_name)
     tracked_request = TrackedRequest.instance()
     tracked_request.start_span(operation=operation, ignore_children=True)
+
+    try:
+        return wrapped(*args, **kwargs)
+    finally:
+        tracked_request.stop_span()
+
+
+have_patched_transport = False
+
+
+def ensure_transport_instrumented():
+    global have_patched_transport
+
+    if not have_patched_transport:
+        try:
+            Transport.perform_request = wrapped_perform_request(
+                Transport.perform_request
+            )
+        except Exception as exc:
+            logger.warning(
+                "Unable to instrument elasticsearch.Transport.perform_request: %r",
+                exc,
+                exc_info=exc,
+            )
+
+    have_patched_transport = True
+
+
+def _sanitize_name(name):
+    try:
+        op = name.split("/")[-1]
+        op = op[1:]  # chop leading '_' from op
+        known_names = (
+            "bench",
+            "bulk",
+            "count",
+            "exists",
+            "explain",
+            "field_stats",
+            "health",
+            "mget",
+            "mlt",
+            "mpercolate",
+            "msearch",
+            "mtermvectors",
+            "percolate",
+            "query",
+            "scroll",
+            "search_shards",
+            "source",
+            "suggest",
+            "template",
+            "termvectors",
+            "update",
+            "search",
+        )
+        if op in known_names:
+            return op.title()
+        return "Unknown"
+    except Exception:
+        return "Unknown"
+
+
+@wrapt.decorator
+def wrapped_perform_request(wrapped, instance, args, kwargs):
+    try:
+        op = _sanitize_name(args[1])
+    except IndexError:
+        op = "Unknown"
+
+    tracked_request = TrackedRequest.instance()
+    tracked_request.start_span(
+        operation="Elasticsearch/{}".format(op), ignore_children=True
+    )
 
     try:
         return wrapped(*args, **kwargs)

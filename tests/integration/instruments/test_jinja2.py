@@ -1,79 +1,91 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from contextlib import contextmanager
+import logging
 
 import jinja2
 
-from scout_apm.instruments.jinja2 import Instrument
+from scout_apm.instruments.jinja2 import ensure_installed
 from tests.compat import mock
 
-instrument = Instrument()
+mock_not_attempted = mock.patch(
+    "scout_apm.instruments.jinja2.have_patched_template_render", new=False
+)
 
 
-@contextmanager
-def jinja2_with_scout():
-    """
-    Instrument Jinja2.
+def test_ensure_installed_twice(caplog):
+    ensure_installed()
+    ensure_installed()
 
-    """
-    instrument.install()
-    try:
-        yield
-    finally:
-        instrument.uninstall()
-
-
-def test_render():
-    with jinja2_with_scout():
-        template = jinja2.Template("Hello {{ name }}!")
-        assert template.render(name="World") == "Hello World!"
+    assert caplog.record_tuples == 2 * [
+        (
+            "scout_apm.instruments.jinja2",
+            logging.INFO,
+            "Ensuring Jinja2 instrumentation is installed.",
+        )
+    ]
 
 
-def test_installed():
-    assert not Instrument.installed
-    with jinja2_with_scout():
-        assert Instrument.installed
-    assert not Instrument.installed
+def test_ensure_installed_fail_no_template(caplog):
+    mock_no_template = mock.patch("scout_apm.instruments.jinja2.Template", new=None)
+    with mock_not_attempted, mock_no_template:
+        ensure_installed()
+
+    assert caplog.record_tuples == [
+        (
+            "scout_apm.instruments.jinja2",
+            logging.INFO,
+            "Ensuring Jinja2 instrumentation is installed.",
+        ),
+        (
+            "scout_apm.instruments.jinja2",
+            logging.INFO,
+            "Unable to import jinja2.Template",
+        ),
+    ]
 
 
-def test_installable():
-    assert instrument.installable()
-    with jinja2_with_scout():
-        assert not instrument.installable()
-    assert instrument.installable()
+def test_ensure_installed_fail_no_render_attribute(caplog):
+    mock_template = mock.patch("scout_apm.instruments.jinja2.Template")
+    with mock_not_attempted, mock_template as mocked_template:
+        # Remove render attribute
+        del mocked_template.render
+
+        ensure_installed()
+
+    assert len(caplog.record_tuples) == 2
+    assert caplog.record_tuples[0] == (
+        "scout_apm.instruments.jinja2",
+        logging.INFO,
+        "Ensuring Jinja2 instrumentation is installed.",
+    )
+    logger, level, message = caplog.record_tuples[1]
+    assert logger == "scout_apm.instruments.jinja2"
+    assert level == logging.WARNING
+    assert message.startswith(
+        "Unable to instrument jinja2.Template.render: AttributeError"
+    )
 
 
-def test_installable_no_jinja2_module():
-    with mock.patch("scout_apm.instruments.jinja2.Template", new=None):
-        assert not instrument.installable()
+def test_render(tracked_request):
+    ensure_installed()
+    template = jinja2.Template("Hello {{ name }}!")
+
+    result = template.render(name="World")
+
+    assert result == "Hello World!"
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "Template/Render"
+    assert span.tags["name"] is None
 
 
-def test_install_no_jinja2_module():
-    with mock.patch("scout_apm.instruments.jinja2.Template", new=None):
-        assert not instrument.install()
-        assert not Instrument.installed
+def test_render_template_name(tracked_request):
+    ensure_installed()
+    template = jinja2.Template("Hello {{ name }}!")
+    template.name = "mytemplate.html"
 
+    result = template.render(name="World")
 
-def test_install_failure_no_render_attribute():
-    with mock.patch("scout_apm.instruments.jinja2.Template") as mock_template:
-        del mock_template.render
-
-        try:
-            assert not instrument.install()  # doesn't crash
-        finally:
-            # Currently installed = True even if installing failed.
-            Instrument.installed = False
-
-
-def test_install_is_idempotent():
-    with jinja2_with_scout():
-        assert Instrument.installed
-        instrument.install()  # does nothing, doesn't crash
-        assert Instrument.installed
-
-
-def test_uninstall_is_idempotent():
-    assert not Instrument.installed
-    instrument.uninstall()  # does nothing, doesn't crash
-    assert not Instrument.installed
+    assert result == "Hello World!"
+    assert tracked_request.complete_spans[0].tags["name"] == "mytemplate.html"
