@@ -6,7 +6,6 @@ import os
 
 import pymongo
 import pytest
-from pymongo.errors import InvalidName
 
 from scout_apm.instruments.pymongo import ensure_installed
 from tests.compat import mock
