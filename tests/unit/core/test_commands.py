@@ -341,33 +341,35 @@ def test_batch_command_from_tracked_request_with_span_no_objtrace():
             "timestamp": START_TIME_STR,
         }
     }
-    assert message_commands[2] == {
-        "TagSpan": {
-            "timestamp": START_TIME_STR,
-            "request_id": REQUEST_ID,
-            "span_id": SPAN_ID,
-            "tag": "allocations",
-            "value": 0,
-        }
-    }
-    assert message_commands[3] == {
-        "TagSpan": {
-            "timestamp": START_TIME_STR,
-            "request_id": REQUEST_ID,
-            "span_id": SPAN_ID,
-            "tag": "start_allocations",
-            "value": 0,
-        }
-    }
-    assert message_commands[4] == {
-        "TagSpan": {
-            "timestamp": START_TIME_STR,
-            "request_id": REQUEST_ID,
-            "span_id": SPAN_ID,
-            "tag": "stop_allocations",
-            "value": 0,
-        }
-    }
+    assert sorted(message_commands[2:5], key=lambda c: c["TagSpan"]["tag"]) == [
+        {
+            "TagSpan": {
+                "timestamp": START_TIME_STR,
+                "request_id": REQUEST_ID,
+                "span_id": SPAN_ID,
+                "tag": "allocations",
+                "value": 0,
+            }
+        },
+        {
+            "TagSpan": {
+                "timestamp": START_TIME_STR,
+                "request_id": REQUEST_ID,
+                "span_id": SPAN_ID,
+                "tag": "start_allocations",
+                "value": 0,
+            }
+        },
+        {
+            "TagSpan": {
+                "timestamp": START_TIME_STR,
+                "request_id": REQUEST_ID,
+                "span_id": SPAN_ID,
+                "tag": "stop_allocations",
+                "value": 0,
+            }
+        },
+    ]
     assert message_commands[5] == {
         "StopSpan": {
             "request_id": REQUEST_ID,
