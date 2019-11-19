@@ -5,7 +5,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 # implementation.
 
 try:
-    from scout_apm.core._objtrace import enable, disable, get_counts
+    from scout_apm.core._objtrace import enable, disable, get_counts, reset_counts
 except ImportError:  # pragma: no cover
 
     def enable():

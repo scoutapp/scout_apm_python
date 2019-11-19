@@ -18,7 +18,7 @@ skip_if_objtrace_not_extension = pytest.mark.skipif(
     not objtrace.is_extension, reason="Requires objtrace C extension"
 )
 skip_if_objtrace_is_extension = pytest.mark.skipif(
-    not objtrace.is_extension, reason="Requires no objtrace C extension"
+    objtrace.is_extension, reason="Requires no objtrace C extension"
 )
 
 

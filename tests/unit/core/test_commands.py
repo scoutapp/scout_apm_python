@@ -328,7 +328,7 @@ def test_batch_command_from_tracked_request_with_span_no_objtrace():
     command = commands.BatchCommand.from_tracked_request(tracked_request)
 
     message_commands = command.message()["BatchCommand"]["commands"]
-    assert len(message_commands) == 4
+    assert len(message_commands) == 7
     assert message_commands[0] == {
         "StartRequest": {"request_id": REQUEST_ID, "timestamp": START_TIME_STR}
     }
@@ -342,12 +342,39 @@ def test_batch_command_from_tracked_request_with_span_no_objtrace():
         }
     }
     assert message_commands[2] == {
+        "TagSpan": {
+            "timestamp": START_TIME_STR,
+            "request_id": REQUEST_ID,
+            "span_id": SPAN_ID,
+            "tag": "allocations",
+            "value": 0,
+        }
+    }
+    assert message_commands[3] == {
+        "TagSpan": {
+            "timestamp": START_TIME_STR,
+            "request_id": REQUEST_ID,
+            "span_id": SPAN_ID,
+            "tag": "start_allocations",
+            "value": 0,
+        }
+    }
+    assert message_commands[4] == {
+        "TagSpan": {
+            "timestamp": START_TIME_STR,
+            "request_id": REQUEST_ID,
+            "span_id": SPAN_ID,
+            "tag": "stop_allocations",
+            "value": 0,
+        }
+    }
+    assert message_commands[5] == {
         "StopSpan": {
             "request_id": REQUEST_ID,
             "span_id": SPAN_ID,
             "timestamp": END_TIME_STR,
         }
     }
-    assert message_commands[3] == {
+    assert message_commands[6] == {
         "FinishRequest": {"request_id": REQUEST_ID, "timestamp": END_TIME_STR}
     }
