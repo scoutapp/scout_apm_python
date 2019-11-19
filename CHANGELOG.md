@@ -1,6 +1,6 @@
 # Changelog
 
-## Pending
+## [2.8.1] 2019-11-19
 
 ### Fixed
 
