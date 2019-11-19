@@ -73,7 +73,7 @@ def test_instrument_decorator_default_tags(tracked_request):
 
     assert len(tracked_request.active_spans) == 0
     assert len(tracked_request.complete_spans) == 1
-    assert tracked_request.complete_spans[0].tags == {"x": 99}
+    assert tracked_request.complete_spans[0].tags["x"] == 99
 
 
 def test_instrument_non_ascii_params(tracked_request):

@@ -128,7 +128,7 @@ objtrace_reset_counts(PyObject *module)
 }
 
 PyDoc_STRVAR(module_doc,
-"scout_apm.core.objtrace module.");
+"scout_apm.core._objtrace module.");
 
 static PyMethodDef module_methods[] = {
     {"enable",
@@ -148,7 +148,7 @@ static PyMethodDef module_methods[] = {
 
 static struct PyModuleDef module_def = {
     PyModuleDef_HEAD_INIT,
-    "scout_apm.core.objtrace",
+    "scout_apm.core._objtrace",
     module_doc,
     0, /* non-negative size to be able to unload the module */
     module_methods,
@@ -159,7 +159,7 @@ static struct PyModuleDef module_def = {
 };
 
 PyMODINIT_FUNC
-PyInit_objtrace(void)
+PyInit__objtrace(void)
 {
     PyObject *m, *version;
 

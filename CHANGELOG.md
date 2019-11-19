@@ -1,5 +1,12 @@
 # Changelog
 
+## Pending
+
+### Fixed
+
+- Fixed memory allocation tracking, which has been broken since a refactor in
+  version 2.7.0.
+
 ## [2.8.0] 2019-11-08
 
 ### Added

@@ -54,16 +54,20 @@ def test_get_counts_allocations():
 
 @skip_if_objtrace_not_extension
 @pytest.mark.skipif(
-    sys.version_info < (3, 5), reason="Mulitple allocations on Python 3.5+ only"
+    sys.version_info < (3, 5), reason="Multiple allocations on Python 3.5+ only"
 )
 def test_get_counts_multiple_allocations():
     objtrace.enable()
-    bytes("123")
+    bytes(123)
     counts = objtrace.get_counts()
     assert counts[1] > 0
 
 
 @skip_if_objtrace_not_extension
+@pytest.mark.skipif(
+    sys.version_info < (3, 5),
+    reason="For some reason can only force a realloc on Python 3.5+",
+)
 def test_get_counts_reallocations():
     items = []
     objtrace.enable()
