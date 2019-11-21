@@ -418,14 +418,15 @@ def test_django_rest_framework_api_operation_name(
     ]
 
 
-@wrapt.decorator
 def skip_if_no_tastypie(wrapped, instance, args, kwargs):
+    # This would make more senses as a test decorator, but can't be one because
+    # it requires the Django application to be constructed first, under
+    # app_with_scout()
     if not django_app.tastypie_api:
         pytest.skip("No Tastypie")
     return wrapped(*args, **kwargs)
 
 
-@skip_if_no_tastypie
 @pytest.mark.parametrize(
     "url, expected_op_name",
     [
@@ -452,7 +453,6 @@ def test_tastypie_api_operation_name(url, expected_op_name, tracked_requests):
     assert span.operation == expected_op_name
 
 
-@skip_if_no_tastypie
 def test_tastypie_api_operation_name_fail_no_tastypie(tracked_requests):
     with app_with_scout() as app:
         skip_if_no_tastypie()
@@ -464,7 +464,6 @@ def test_tastypie_api_operation_name_fail_no_tastypie(tracked_requests):
     assert span.operation == "Controller/tastypie.resources.wrapper"
 
 
-@skip_if_no_tastypie
 @skip_if_python_2
 def test_tastypie_api_operation_name_fail_no_wrapper(tracked_requests):
     with app_with_scout() as app:
