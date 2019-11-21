@@ -213,6 +213,21 @@ def test_server_error(tracked_requests):
     assert operations == expected_operations
 
 
+def test_return_error(tracked_requests):
+    with app_with_scout() as app:
+        response = TestApp(app).get("/return-error/", expect_errors=True)
+
+    assert response.status_int == 503
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert tracked_request.tags["error"] == "true"
+    spans = tracked_requests[0].complete_spans
+    assert [s.operation for s in spans] == [
+        "Controller/tests.integration.django_app.return_error",
+        "Middleware",
+    ]
+
+
 def test_cbv(tracked_requests):
     with app_with_scout() as app:
         response = TestApp(app).get("/cbv/")
