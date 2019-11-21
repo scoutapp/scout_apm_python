@@ -7,7 +7,6 @@ from contextlib import contextmanager
 
 import django
 import pytest
-import wrapt
 from django.apps import apps
 from django.conf import settings
 from django.core.management import call_command
@@ -419,12 +418,11 @@ def test_django_rest_framework_api_operation_name(
 
 
 def skip_if_no_tastypie():
-    # This would make more senses as a test decorator, but can't be one because
+    # This would make more sense as a test decorator, but can't be one because
     # it requires the Django application to be constructed first, under
     # app_with_scout()
     if not django_app.tastypie_api:
         pytest.skip("No Tastypie")
-    return wrapped(*args, **kwargs)
 
 
 @pytest.mark.parametrize(
