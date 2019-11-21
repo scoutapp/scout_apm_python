@@ -60,7 +60,7 @@ def _get_django_rest_framework_name(request, view_func, view_name):
         return None
 
     kls = getattr(view_func, "cls", None)
-    if not issubclass(kls, APIView):
+    if isinstance(kls, type) and not issubclass(kls, APIView):
         return None
 
     actions = getattr(view_func, "actions", None)
