@@ -37,7 +37,9 @@ def get_operation_name(request):
             + view_func.__name__
         )
 
-    django_rest_framework_name = _get_django_rest_framework_name(request, view_func, view_name)
+    django_rest_framework_name = _get_django_rest_framework_name(
+        request, view_func, view_name
+    )
     if django_rest_framework_name is not None:
         return django_rest_framework_name
 

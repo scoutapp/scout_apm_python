@@ -166,7 +166,7 @@ def drf_router():
     from rest_framework import viewsets
 
     class UserSerializer(serializers.Serializer):
-        id = serializers.IntegerField(label='ID', read_only=True)
+        id = serializers.IntegerField(label="ID", read_only=True)
         username = serializers.CharField(max_length=200)
 
     class UserViewSet(viewsets.ModelViewSet):
@@ -174,7 +174,7 @@ def drf_router():
         serializer_class = UserSerializer
 
     router = routers.SimpleRouter()
-    router.register(r'users', UserViewSet)
+    router.register(r"users", UserViewSet)
     return router
 
 
