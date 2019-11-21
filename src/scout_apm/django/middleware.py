@@ -242,7 +242,7 @@ class OldStyleMiddlewareTimingMiddleware(object):
         # i.e. that custom instrumentation within the application is not
         # causing errors
         tracked_request = getattr(request, "_scout_tracked_request", None)
-        if response.status_code == 500:
+        if 500 <= response.status_code <= 599:
             tracked_request.tag("error", "true")
         if tracked_request is not None:
             tracked_request.stop_span()
