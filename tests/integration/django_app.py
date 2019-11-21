@@ -244,7 +244,7 @@ def urlpatterns():
             url(r"^template/$", template),
             url(r"^template-response/$", template_response),
             url(r"^admin/", admin.site.urls),
-            path(r"^drf-router/", include(drf_router.urls)),
+            url(r"^drf-router/", include(drf_router.urls)),
         ]
         if tastypie_api:
             patterns.append(url(r"^tastypie-api/", include(tastypie_api.urls)))
