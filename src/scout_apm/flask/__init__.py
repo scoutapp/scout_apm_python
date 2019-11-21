@@ -4,8 +4,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import wrapt
 from flask import current_app
 from flask.globals import _request_ctx_stack
+from werkzeug.wrappers import Response
 
 import scout_apm.core
+from scout_apm.compat import string_types
 from scout_apm.core.config import scout_config
 from scout_apm.core.tracked_request import TrackedRequest
 from scout_apm.core.web_requests import werkzeug_track_request_data
@@ -70,9 +72,38 @@ class ScoutApm(object):
         werkzeug_track_request_data(request, tracked_request)
 
         try:
-            return wrapped(*args, **kwargs)
+            result = wrapped(*args, **kwargs)
         except Exception as exc:
             tracked_request.tag("error", "true")
             raise exc
+        else:
+            # Handle the cases that Flask.make_response does
+            status_code = 200
+            if isinstance(result, Response):
+                status_code = result.status_code
+            elif isinstance(result, tuple):
+                len_result = len(result)
+                if len_result == 3:
+                    # _body, status, _headers = result
+                    # TODO
+                    pass
+                elif len(result) == 2:
+                    _body, status = result
+                else:
+                    # Flask doesn't support other formats, so we know it will
+                    # turn this into an error
+                    status = "200 OK"
+
+                if isinstance(status, int):
+                    status_code = status
+                elif isinstance(status, string_types):
+                    # TODO
+                    pass
+            else:
+                status_code = 200
+
+            if 500 <= status_code <= 599:
+                tracked_request.tag("error", "true")
+            return result
         finally:
             tracked_request.stop_span()
