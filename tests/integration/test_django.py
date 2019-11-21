@@ -418,7 +418,7 @@ def test_django_rest_framework_api_operation_name(
     ]
 
 
-def skip_if_no_tastypie(wrapped, instance, args, kwargs):
+def skip_if_no_tastypie():
     # This would make more senses as a test decorator, but can't be one because
     # it requires the Django application to be constructed first, under
     # app_with_scout()
