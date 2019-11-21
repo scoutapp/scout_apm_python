@@ -1,5 +1,12 @@
 # Changelog
 
+## Pending
+
+### Added
+
+- Add RQ integration
+  ([PR #375](https://github.com/scoutapp/scout_apm_python/pull/375)).
+
 ## [2.8.1] 2019-11-19
 
 ### Fixed
