@@ -40,6 +40,9 @@ def app_with_scout(config=None):
     def crash(request):
         raise ValueError("BØØM!")  # non-ASCII
 
+    def return_error(request):
+        return Response("Something went wrong", status=503)
+
     with Configurator() as configurator:
         configurator.add_route("home", "/")
         configurator.add_view(home, route_name="home", request_method="GET")
@@ -47,6 +50,8 @@ def app_with_scout(config=None):
         configurator.add_view(hello, route_name="hello")
         configurator.add_route("crash", "/crash/")
         configurator.add_view(crash, route_name="crash")
+        configurator.add_route("return_error", "/return-error/")
+        configurator.add_view(return_error, route_name="return_error")
 
         # Setup according to https://docs.scoutapm.com/#pyramid
         configurator.add_settings(**config)
@@ -178,6 +183,21 @@ def test_server_error(tracked_requests):
     assert len(tracked_request.complete_spans) == 1
     span = tracked_request.complete_spans[0]
     assert span.operation == "Controller/crash"
+
+
+def test_return_error(tracked_requests):
+    with app_with_scout() as app:
+        response = TestApp(app).get("/return-error/", expect_errors=True)
+
+    assert response.status_int == 503
+    assert response.text == "Something went wrong"
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert tracked_request.tags["path"] == "/return-error/"
+    assert tracked_request.tags["error"] == "true"
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "Controller/return_error"
 
 
 def test_no_monitor(tracked_requests):

@@ -66,8 +66,8 @@ def instruments(handler, registry):
                 try:
                     response = handler(request)
                 finally:
-                    # Routing further down the call chain. So time it starting
-                    # above, but only name it if it gets a name
+                    # Routing lives further down the call chain. So time it
+                    # starting above, but only set the name if it gets a name
                     if request.matched_route is not None:
                         tracked_request.is_real_request = True
                         span.operation = "Controller/" + request.matched_route.name
@@ -75,6 +75,8 @@ def instruments(handler, registry):
                 tracked_request.tag("error", "true")
                 raise
 
+            if 500 <= response.status_code <= 599:
+                tracked_request.tag("error", "true")
         finally:
             tracked_request.stop_span()
 
