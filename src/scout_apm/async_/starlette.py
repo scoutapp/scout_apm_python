@@ -75,11 +75,12 @@ class ScoutMiddleware:
                 tracked_request.tag("username", username)
 
         async def wrapped_send(data):
-            # Finish HTTP span when body finishes sending, not later (e.g.
-            # after background tasks)
-            if data.get("type", None) == "http.response.body" and not data.get(
-                "more_body", False
-            ):
+            type_ = data.get("type", None)
+            if type_ == "http.response.start" and 500 <= data.get("status", 200) <= 599:
+                tracked_request.tag("error", "true")
+            elif type_ == "http.response.body" and not data.get("more_body", False):
+                # Finish HTTP span when body finishes sending, not later (e.g.
+                # after background tasks)
                 grab_extra_data()
                 tracked_request.stop_span()
             return await send(data)
