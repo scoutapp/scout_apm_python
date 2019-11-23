@@ -37,6 +37,12 @@ def get_operation_name(request):
             + view_func.__name__
         )
 
+    django_rest_framework_name = _get_django_rest_framework_name(
+        request, view_func, view_name
+    )
+    if django_rest_framework_name is not None:
+        return django_rest_framework_name
+
     # Seems to be a Tastypie Resource. Need to resort to some stack inspection
     # to find a better name since its decorators don't wrap very well
     if view_name == "tastypie.resources.wrapper":
@@ -45,6 +51,28 @@ def get_operation_name(request):
             return tastypie_name
 
     return "Controller/" + view_name
+
+
+def _get_django_rest_framework_name(request, view_func, view_name):
+    try:
+        from rest_framework.viewsets import ViewSetMixin
+    except ImportError:
+        return None
+
+    kls = getattr(view_func, "cls", None)
+    if isinstance(kls, type) and not issubclass(kls, ViewSetMixin):
+        return None
+
+    # Get 'actions' set in ViewSetMixin.as_view
+    actions = getattr(view_func, "actions", None)
+    if not actions or not isinstance(actions, dict):
+        return None
+
+    method_lower = request.method.lower()
+    if method_lower not in actions:
+        return None
+
+    return "Controller/{}.{}".format(view_name, actions[method_lower])
 
 
 def _get_tastypie_operation_name(request, view_func):

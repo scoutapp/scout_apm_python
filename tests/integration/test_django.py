@@ -387,7 +387,40 @@ def test_admin_view_operation_name(url, expected_op_name, tracked_requests):
     assert span.operation == expected_op_name
 
 
+@pytest.mark.parametrize(
+    "url, expected_op_name",
+    [
+        [
+            "/drf-router/users/",
+            "Controller/tests.integration.django_app.UserViewSet.list",
+        ],
+        [
+            "/drf-router/users/1/",
+            "Controller/tests.integration.django_app.UserViewSet.retrieve",
+        ],
+    ],
+)
+def test_django_rest_framework_api_operation_name(
+    url, expected_op_name, tracked_requests
+):
+    with app_with_scout() as app:
+        make_admin_user()
+        response = TestApp(app).get(url)
+
+    assert response.status_int == 200
+    assert len(tracked_requests) == 1
+    spans = tracked_requests[0].complete_spans
+    assert [s.operation for s in spans] == [
+        "SQL/Query",
+        expected_op_name,
+        "Middleware",
+    ]
+
+
 def skip_if_no_tastypie():
+    # This would make more sense as a test decorator, but can't be one because
+    # it requires the Django application to be constructed first, under
+    # app_with_scout()
     if not django_app.tastypie_api:
         pytest.skip("No Tastypie")
 

@@ -7,6 +7,11 @@
 - Add RQ integration
   ([PR #375](https://github.com/scoutapp/scout_apm_python/pull/375)).
 
+### Fixed
+
+- Track better names for Django REST Framework `ViewSet`s
+  ([PR #380](https://github.com/scoutapp/scout_apm_python/pull/380)).
+
 ## [2.8.1] 2019-11-19
 
 ### Fixed
