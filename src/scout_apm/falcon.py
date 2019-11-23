@@ -109,7 +109,7 @@ class ScoutMiddleware(object):
 
         # Falcon only stores the response status line, we have to parse it
         try:
-            status_code = int(resp.status.split(' ', maxsplit=1)[0])
+            status_code = int(resp.status.split(" ")[0])
         except ValueError:
             # Bad status line - force it to be tagged as an error because
             # client will experience it as one

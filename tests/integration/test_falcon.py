@@ -69,14 +69,14 @@ def app_with_scout(config=None, middleware=None, set_api=True):
 
     class ReturnErrorResource(object):
         def on_get(self, req, resp):
-            resp.status = '503 Something went wrong'
+            resp.status = "503 Something went wrong"
             resp.body = "Something went wrong"
 
     app.add_route("/return-error", ReturnErrorResource())
 
     class BadStatusResource(object):
         def on_get(self, req, resp):
-            resp.status = 'bad'
+            resp.status = "bad"
 
     app.add_route("/bad-status", BadStatusResource())
 
