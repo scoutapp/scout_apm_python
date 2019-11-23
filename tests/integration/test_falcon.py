@@ -67,6 +67,19 @@ def app_with_scout(config=None, middleware=None, set_api=True):
 
     app.add_route("/error", ErrorResource())
 
+    class ReturnErrorResource(object):
+        def on_get(self, req, resp):
+            resp.status = '503 Something went wrong'
+            resp.body = "Something went wrong"
+
+    app.add_route("/return-error", ReturnErrorResource())
+
+    class BadStatusResource(object):
+        def on_get(self, req, resp):
+            resp.status = 'bad'
+
+    app.add_route("/bad-status", BadStatusResource())
+
     try:
         yield app
     finally:
@@ -344,4 +357,41 @@ def test_error(tracked_requests):
     assert (
         span.operation
         == "Controller/tests.integration.test_falcon.ErrorResource.on_get"
+    )
+
+
+def test_return_error(tracked_requests):
+    with app_with_scout() as app:
+        response = TestApp(app).get("/return-error", expect_errors=True)
+
+    assert response.status_int == 503
+    assert response.text == "Something went wrong"
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert tracked_request.tags["path"] == "/return-error"
+    assert tracked_request.tags["error"] == "true"
+    assert tracked_request.active_spans == []
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert (
+        span.operation
+        == "Controller/tests.integration.test_falcon.ReturnErrorResource.on_get"
+    )
+
+
+def test_bad_status(tracked_requests):
+    with app_with_scout() as app, pytest.raises(AssertionError) as excinfo:
+        TestApp(app).get("/bad-status", expect_errors=True)
+
+    assert isinstance(excinfo.value, AssertionError)
+    assert "should be a three-digit integer" in str(excinfo.value)
+    tracked_request = tracked_requests[0]
+    assert tracked_request.tags["path"] == "/bad-status"
+    assert tracked_request.tags["error"] == "true"
+    assert tracked_request.active_spans == []
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert (
+        span.operation
+        == "Controller/tests.integration.test_falcon.BadStatusResource.on_get"
     )
