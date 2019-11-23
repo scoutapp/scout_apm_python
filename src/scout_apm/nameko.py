@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from nameko.extensions import DependencyProvider
 from nameko.web.handlers import HttpRequestHandler
-from werkzeug.wrappers import Request
+from werkzeug.wrappers import Request, Response
 
 import scout_apm.core
 from scout_apm.core.tracked_request import TrackedRequest
@@ -28,7 +28,8 @@ class ScoutReporter(DependencyProvider):
             except IndexError:
                 pass
             else:
-                self._track_request_data(request, tracked_request)
+                if isinstance(request, Request):
+                    werkzeug_track_request_data(request, tracked_request)
 
         operation = (
             "Controller/"
@@ -38,16 +39,31 @@ class ScoutReporter(DependencyProvider):
         )
         tracked_request.start_span(operation=operation, should_capture_backtrace=False)
 
-    def _track_request_data(self, request, tracked_request):
-        if not isinstance(request, Request):
-            return
-
-        werkzeug_track_request_data(request, tracked_request)
-
     def worker_result(self, worker_ctx, result=None, exc_info=None):
         if self._do_nothing:
             return
         tracked_request = TrackedRequest.instance()
+
         if exc_info:
             tracked_request.tag("error", "true")
+        elif isinstance(worker_ctx.entrypoint, HttpRequestHandler):
+            # Handle the cases that HttpRequestHandler.response_from_result
+            # does
+            if isinstance(result, Response):
+                status_code = result.status_code
+            elif isinstance(result, tuple):
+                if len(result) == 3:
+                    status_code, _headers, _payload = result
+                elif len(result) == 2:
+                    status_code, _payload = result
+                else:
+                    # Nameko doesn't support other formats, so we know it will
+                    # turn this into an error
+                    status_code = 500
+            else:
+                status_code = 200
+
+            if 500 <= status_code <= 599:
+                tracked_request.tag("error", "true")
+
         tracked_request.stop_span()

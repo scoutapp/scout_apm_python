@@ -4,9 +4,11 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import datetime as dt
 from contextlib import contextmanager
 
+import pytest
 from nameko.containers import get_container_cls
 from nameko.web.handlers import http
 from webtest import TestApp
+from werkzeug.wrappers import Response
 
 from scout_apm.api import Config
 from scout_apm.compat import datetime_to_timestamp
@@ -43,6 +45,22 @@ def app_with_scout(nameko_config=None, scout_config=None):
         def crash(self, request):
             raise ValueError("BØØM!")  # non-ASCII
 
+        @http("GET", "/return-error-response/")
+        def return_error_response(self, request):
+            return Response(status=503, response="Something went wrong")
+
+        @http("GET", "/return-error-2tuple/")
+        def return_error_2tuple(self, request):
+            return (503, "Something went wrong")
+
+        @http("GET", "/return-error-3tuple/")
+        def return_error_3tuple(self, request):
+            return (503, {}, "Something went wrong")
+
+        @http("GET", "/return-error-badtuple/")
+        def return_error_badtuple(self, request):
+            return ("Nameko doesn't support one tuples",)
+
     if nameko_config is None:
         nameko_config = {}
     # Container setup copied from Nameko's container_factory pytest fixture,
@@ -58,7 +76,7 @@ def app_with_scout(nameko_config=None, scout_config=None):
 
         # N.B. We're sidestepping the Nameko testing conventions
         # (https://docs.nameko.io/en/stable/testing.html) to make our tests more
-        # uniform between frameworks
+        # uniform between frameworks. See pytest.ini.
 
         yield app
     finally:
@@ -162,6 +180,43 @@ def test_server_error(tracked_requests):
     assert len(tracked_request.complete_spans) == 1
     span = tracked_request.complete_spans[0]
     assert span.operation == "Controller/myservice.crash"
+
+
+@pytest.mark.parametrize(
+    "url, transaction_name",
+    [
+        ["/return-error-response/", "return_error_response"],
+        ["/return-error-2tuple/", "return_error_2tuple"],
+        ["/return-error-3tuple/", "return_error_3tuple"],
+    ],
+)
+def test_return_error(url, transaction_name, tracked_requests):
+    with app_with_scout() as app:
+        response = TestApp(app).get(url, expect_errors=True)
+
+    assert response.status_int == 503
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert tracked_request.tags["error"] == "true"
+    assert tracked_request.tags["path"] == url
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "Controller/myservice.{}".format(transaction_name)
+
+
+def test_return_error_bad_tuple(tracked_requests):
+    # Check that we don't cause the crash on a bad tuple shape
+    with app_with_scout() as app:
+        response = TestApp(app).get("/return-error-badtuple/", expect_errors=True)
+
+    assert response.status_int == 500
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert tracked_request.tags["error"] == "true"
+    assert tracked_request.tags["path"] == "/return-error-badtuple/"
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "Controller/myservice.return_error_badtuple"
 
 
 def test_no_monitor(tracked_requests):
