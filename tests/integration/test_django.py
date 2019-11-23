@@ -476,7 +476,6 @@ def test_tastypie_api_operation_name_fail_no_wrapper(tracked_requests):
     assert span.operation == "Controller/tastypie.resources.wrapper"
 
 
-@skip_if_no_tastypie
 @skip_if_python_2
 def test_tastypie_api_operation_name_fail_no_closure(tracked_requests):
     with app_with_scout() as app:
