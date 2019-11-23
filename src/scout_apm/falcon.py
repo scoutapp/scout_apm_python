@@ -107,7 +107,15 @@ class ScoutMiddleware(object):
             # Somehow we didn't start a request
             return
 
-        if not req_succeeded:
+        # Falcon only stores the response status line, we have to parse it
+        try:
+            status_code = int(resp.status.split(" ")[0])
+        except ValueError:
+            # Bad status line - force it to be tagged as an error because
+            # client will experience it as one
+            status_code = 500
+
+        if not req_succeeded or 500 <= status_code <= 599:
             tracked_request.tag("error", "true")
 
         span = getattr(req.context, "scout_resource_span", None)
