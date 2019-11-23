@@ -58,6 +58,10 @@ def app_with_scout(*, app=None, scout_config=None):
     async def crash(request):
         raise ValueError("BØØM!")  # non-ASCII
 
+    @app.route("/return-error/")
+    async def return_error(request):
+        return PlainTextResponse("Something went wrong", status_code=503)
+
     @app.route("/background-jobs/")
     async def background_jobs(request):
         def sync_noop():
@@ -277,6 +281,22 @@ async def test_server_error(tracked_requests):
         "Controller/tests.integration.test_starlette_py36plus."
         + "app_with_scout.<locals>.crash"
     )
+
+
+@async_test
+async def test_return_error(tracked_requests):
+    with app_with_scout() as app:
+        communicator = ApplicationCommunicator(app, get_scope(path="/return-error/"))
+        await communicator.send_input({"type": "http.request"})
+        response_start = await communicator.receive_output()
+        await communicator.receive_output()
+
+    assert response_start["type"] == "http.response.start"
+    assert response_start["status"] == 503
+    tracked_request = tracked_requests[0]
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.tags["path"] == "/return-error/"
+    assert tracked_request.tags["error"] == "true"
 
 
 @async_test
