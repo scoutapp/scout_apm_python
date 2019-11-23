@@ -55,24 +55,24 @@ def get_operation_name(request):
 
 def _get_django_rest_framework_name(request, view_func, view_name):
     try:
-        from rest_framework.views import APIView
+        from rest_framework.viewsets import ViewSetMixin
     except ImportError:
         return None
 
     kls = getattr(view_func, "cls", None)
-    if isinstance(kls, type) and not issubclass(kls, APIView):
+    if isinstance(kls, type) and not issubclass(kls, ViewSetMixin):
         return None
 
+    # Get 'actions' set in ViewSetMixin.as_view
     actions = getattr(view_func, "actions", None)
     if not actions or not isinstance(actions, dict):
-        # Not a ViewSet
         return None
 
-    low_method = request.method.lower()
-    if low_method not in actions:
+    method_lower = request.method.lower()
+    if method_lower not in actions:
         return None
 
-    return "Controller/{}.{}".format(view_name, actions[low_method])
+    return "Controller/{}.{}".format(view_name, actions[method_lower])
 
 
 def _get_tastypie_operation_name(request, view_func):
