@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import wrapt
-from bottle import request
+from bottle import request, response
 
 import scout_apm.core
 from scout_apm.core.config import scout_config
@@ -82,9 +82,13 @@ def wrap_callback(wrapped, instance, args, kwargs):
         track_amazon_request_queue_time(amazon_queue_time, tracked_request)
 
     try:
-        return wrapped(*args, **kwargs)
+        value = wrapped(*args, **kwargs)
     except Exception:
         tracked_request.tag("error", "true")
         raise
+    else:
+        if 500 <= response.status_code <= 599:
+            tracked_request.tag("error", "true")
+        return value
     finally:
         tracked_request.stop_span()

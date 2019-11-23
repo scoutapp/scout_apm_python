@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import datetime as dt
 from contextlib import contextmanager
 
-from bottle import Bottle
+from bottle import Bottle, response
 from webtest import TestApp
 
 from scout_apm.api import Config
@@ -44,6 +44,11 @@ def app_with_scout(config=None, catchall=False):
     @app.route("/crash/")
     def crash():
         raise ValueError("BØØM!")  # non-ASCII
+
+    @app.route("/return-error/")
+    def return_error():
+        response.status = 503
+        return "Something went wrong"
 
     @app.route("/named/", name="named_route")
     def named():
@@ -179,6 +184,19 @@ def test_server_error(tracked_requests):
     assert len(tracked_request.complete_spans) == 1
     span = tracked_requests[0].complete_spans[0]
     assert span.operation == "Controller/crash/"
+
+
+def test_return_error(tracked_requests):
+    with app_with_scout() as app:
+        response = TestApp(app).get("/return-error/", expect_errors=True)
+
+    assert response.status_int == 503
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert tracked_request.tags["error"] == "true"
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_requests[0].complete_spans[0]
+    assert span.operation == "Controller/return-error/"
 
 
 def test_named(tracked_requests):
