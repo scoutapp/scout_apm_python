@@ -79,6 +79,10 @@ def crash(request):
     raise ValueError("BØØM!")  # non-ASCII
 
 
+def return_error(request):
+    return HttpResponse("Something went wrong", status=503)
+
+
 class CbvView(View):
     def get(self, request):
         return HttpResponse("Hello getter")
@@ -187,6 +191,7 @@ def urlpatterns():
             path("", home),
             path("hello/", hello),
             path("crash/", crash),
+            path("return-error/", return_error),
             path("cbv/", CbvView.as_view()),
             path("sql/", sql),
             path("sql-kwargs/", sql_kwargs),
@@ -206,6 +211,7 @@ def urlpatterns():
             url(r"^$", home),
             url(r"^hello/$", hello),
             url(r"^crash/$", crash),
+            url(r"^return-error/$", return_error),
             url(r"^cbv/$", CbvView.as_view()),
             url(r"^sql/$", sql),
             url(r"^sql-kwargs/$", sql_kwargs),
