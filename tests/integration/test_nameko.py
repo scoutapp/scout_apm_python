@@ -11,7 +11,7 @@ from webtest import TestApp
 from werkzeug.wrappers import Response
 
 from scout_apm.api import Config
-from scout_apm.compat import datetime_to_timestamp, utc
+from scout_apm.compat import datetime_to_timestamp
 from scout_apm.nameko import ScoutReporter
 from tests.integration.util import (
     parametrize_filtered_params,
@@ -136,7 +136,7 @@ def test_user_ip(headers, client_address, expected, tracked_requests):
 @parametrize_queue_time_header_name
 def test_queue_time(header_name, tracked_requests):
     # Not testing floats due to Python 2/3 rounding differences
-    queue_start = int(datetime_to_timestamp(dt.datetime.now(tz=utc))) - 2
+    queue_start = int(datetime_to_timestamp(dt.datetime.utcnow())) - 2
     with app_with_scout() as app:
         response = TestApp(app).get(
             "/", headers={header_name: str("t=") + str(queue_start)}
@@ -150,7 +150,7 @@ def test_queue_time(header_name, tracked_requests):
 
 
 def test_amazon_queue_time(tracked_requests):
-    queue_start = int(datetime_to_timestamp(dt.datetime.now(tz=utc))) - 2
+    queue_start = int(datetime_to_timestamp(dt.datetime.utcnow())) - 2
     with app_with_scout() as app:
         response = TestApp(app).get(
             "/",

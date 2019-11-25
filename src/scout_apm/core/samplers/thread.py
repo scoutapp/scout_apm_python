@@ -6,7 +6,6 @@ import logging
 import os
 import threading
 
-from scout_apm.compat import utc
 from scout_apm.core.commands import ApplicationEvent
 from scout_apm.core.samplers.cpu import Cpu
 from scout_apm.core.samplers.memory import Memory
@@ -61,7 +60,7 @@ class SamplersThread(threading.Thread):
                     event = ApplicationEvent(
                         event_value=event_value,
                         event_type=event_type,
-                        timestamp=dt.datetime.now(tz=utc),
+                        timestamp=dt.datetime.utcnow(),
                         source="Pid: " + str(os.getpid()),
                     )
                     CoreAgentSocket.instance().send(event)

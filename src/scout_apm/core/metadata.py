@@ -5,7 +5,6 @@ import datetime as dt
 import sys
 from os import getpid
 
-from scout_apm.compat import utc
 from scout_apm.core.commands import ApplicationEvent
 from scout_apm.core.config import scout_config
 from scout_apm.core.socket import CoreAgentSocket
@@ -17,7 +16,7 @@ def report_app_metadata():
             event_type="scout.metadata",
             event_value=get_metadata(),
             source="Pid: " + str(getpid()),
-            timestamp=dt.datetime.now(tz=utc),
+            timestamp=dt.datetime.utcnow(),
         )
     )
 
@@ -26,7 +25,7 @@ def get_metadata():
     data = {
         "language": "python",
         "language_version": "{}.{}.{}".format(*sys.version_info[:3]),
-        "server_time": dt.datetime.now(tz=utc).isoformat() + "Z",
+        "server_time": dt.datetime.utcnow().isoformat() + "Z",
         "framework": scout_config.value("framework"),
         "framework_version": scout_config.value("framework_version"),
         "environment": "",
