@@ -4,10 +4,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import wrapt
 from flask import current_app
 from flask.globals import _request_ctx_stack
-from werkzeug.wrappers import Response
 
 import scout_apm.core
-from scout_apm.compat import string_types
 from scout_apm.core.config import scout_config
 from scout_apm.core.tracked_request import TrackedRequest
 from scout_apm.core.web_requests import werkzeug_track_request_data
@@ -16,48 +14,27 @@ from scout_apm.core.web_requests import werkzeug_track_request_data
 class ScoutApm(object):
     def __init__(self, app):
         self.app = app
-        app.before_first_request(self.before_first_request)
-        app.dispatch_request = self.wrapped_dispatch_request(app.dispatch_request)
-
-    #############
-    #  Startup  #
-    #############
-
-    def before_first_request(self):
-        self.extract_flask_settings()
-        installed = scout_apm.core.install()
-        self._do_nothing = not installed
-
-    def extract_flask_settings(self):
-        """
-        Copies SCOUT_* settings in the app into Scout's config lookup
-        """
-        configs = {}
-        configs["application_root"] = self.app.instance_path
-        for name in current_app.config:
-            if name.startswith("SCOUT_"):
-                value = current_app.config[name]
-                clean_name = name.replace("SCOUT_", "").lower()
-                configs[clean_name] = value
-        scout_config.set(**configs)
-
-    ############################
-    #  Request Lifecycle hook  #
-    ############################
+        self._attempted_install = False
+        app.full_dispatch_request = self.wrapped_full_dispatch_request(app.full_dispatch_request)
 
     @wrapt.decorator
-    def wrapped_dispatch_request(self, wrapped, instance, args, kwargs):
+    def wrapped_full_dispatch_request(self, wrapped, instance, args, kwargs):
+        if not self._attempted_install:
+            self.extract_flask_settings()
+            installed = scout_apm.core.install()
+            self._do_nothing = not installed
+            self._attempted_install = True
+
         if self._do_nothing:
             return wrapped(*args, **kwargs)
 
         request = _request_ctx_stack.top.request
-
-        # Copied logic from Flask
+        # Pass on routing exceptions (normally 404's)
         if request.routing_exception is not None:
             return wrapped(*args, **kwargs)
 
         rule = request.url_rule
-        view_func = self.app.view_functions[rule.endpoint]
+        view_func = instance.view_functions[rule.endpoint]
 
         name = view_func.__module__ + "." + view_func.__name__
         operation = "Controller/" + name
@@ -72,38 +49,26 @@ class ScoutApm(object):
         werkzeug_track_request_data(request, tracked_request)
 
         try:
-            result = wrapped(*args, **kwargs)
+            response = wrapped(*args, **kwargs)
         except Exception as exc:
             tracked_request.tag("error", "true")
             raise exc
         else:
-            # Handle the cases that Flask.make_response does
-            status_code = 200
-            if isinstance(result, Response):
-                status_code = result.status_code
-            elif isinstance(result, tuple):
-                len_result = len(result)
-                if len_result == 3:
-                    # _body, status, _headers = result
-                    # TODO
-                    pass
-                elif len(result) == 2:
-                    _body, status = result
-                else:
-                    # Flask doesn't support other formats, so we know it will
-                    # turn this into an error
-                    status = "200 OK"
-
-                if isinstance(status, int):
-                    status_code = status
-                elif isinstance(status, string_types):
-                    # TODO
-                    pass
-            else:
-                status_code = 200
-
-            if 500 <= status_code <= 599:
+            if 500 <= response.status_code <= 599:
                 tracked_request.tag("error", "true")
-            return result
+            return response
         finally:
             tracked_request.stop_span()
+
+    def extract_flask_settings(self):
+        """
+        Copies SCOUT_* settings in the app into Scout's config lookup
+        """
+        configs = {}
+        configs["application_root"] = self.app.instance_path
+        for name in current_app.config:
+            if name.startswith("SCOUT_"):
+                value = current_app.config[name]
+                clean_name = name.replace("SCOUT_", "").lower()
+                configs[clean_name] = value
+        scout_config.set(**configs)

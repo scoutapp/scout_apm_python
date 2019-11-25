@@ -5,9 +5,7 @@ import datetime as dt
 from contextlib import contextmanager
 
 import flask
-import pytest
 from webtest import TestApp
-from werkzeug.wrappers import Response
 
 from scout_apm.api import Config
 from scout_apm.compat import datetime_to_timestamp
@@ -50,12 +48,8 @@ def app_with_scout(config=None):
     def crash():
         raise ValueError("BØØM!")  # non-ASCII
 
-    @app.route("/return-error-response/")
-    def return_error_response():
-        return Response(status=503, response="Something went wrong")
-
-    @app.route("/return-error-2tuple/")
-    def return_error_2tuple():
+    @app.route("/return-error/")
+    def return_error():
         return "Something went wrong", 503
 
     # Setup according to https://docs.scoutapm.com/#flask
@@ -205,30 +199,19 @@ def test_server_error(tracked_requests):
     assert span.tags["name"] == "tests.integration.test_flask.crash"
 
 
-@pytest.mark.parametrize(
-    "url, transaction_name",
-    [
-        ["/return-error-response/", "return_error_response"],
-        ["/return-error-2tuple/", "return_error_2tuple"],
-    ],
-)
-def test_return_error(url, transaction_name, tracked_requests):
+def test_return_error(tracked_requests):
     with app_with_scout() as app:
-        response = TestApp(app).get(url, expect_errors=True)
+        response = TestApp(app).get("/return-error/", expect_errors=True)
 
     assert response.status_int == 503
     assert len(tracked_requests) == 1
     tracked_request = tracked_requests[0]
-    assert tracked_request.tags["path"] == url
+    assert tracked_request.tags["path"] == "/return-error/"
     assert tracked_request.tags["error"] == "true"
     assert len(tracked_request.complete_spans) == 1
     span = tracked_request.complete_spans[0]
-    assert span.operation == "Controller/tests.integration.test_flask.{}".format(
-        transaction_name
-    )
-    assert span.tags["name"] == "tests.integration.test_flask.{}".format(
-        transaction_name
-    )
+    assert span.operation == "Controller/tests.integration.test_flask.return_error"
+    assert span.tags["name"] == "tests.integration.test_flask.return_error"
 
 
 def test_automatic_options(tracked_requests):
@@ -238,6 +221,25 @@ def test_automatic_options(tracked_requests):
     assert response.status_int == 200
     assert response.text == ""
     assert len(tracked_requests) == 1
+    spans = tracked_requests[0].complete_spans
+    assert [s.operation for s in spans] == [
+        "Controller/tests.integration.test_flask.home"
+    ]
+
+
+def test_preprocessor_function_responses_tracked(tracked_requests):
+    with app_with_scout() as app:
+        @app.before_request
+        def teapot():
+            return "I'm a teapot", 418
+
+        response = TestApp(app).get("/", expect_errors=True)
+
+    assert response.status_int == 418
+    assert response.text == "I'm a teapot"
+    assert len(tracked_requests) == 1
+    # We only pull the name from routing information. Perhaps there should be
+    # a way of detecting preprocessor naming.
     spans = tracked_requests[0].complete_spans
     assert [s.operation for s in spans] == [
         "Controller/tests.integration.test_flask.home"
