@@ -5,7 +5,7 @@ import datetime as dt
 
 import pytest
 
-from scout_apm.compat import ContextDecorator, datetime_to_timestamp, text
+from scout_apm.compat import ContextDecorator, datetime_to_timestamp, text, utc
 
 
 def test_context_decorator():
@@ -33,10 +33,10 @@ def test_context_decorator():
 @pytest.mark.parametrize(
     "given, expected",
     [
-        (dt.datetime(1970, 1, 1), 0),
-        (dt.datetime(1970, 1, 1, 1), 3600.0),
-        (dt.datetime(1970, 1, 1, 0, 30), 1800.0),
-        (dt.datetime(2019, 7, 2, 9, 23, 41), 1562059421.0),
+        (dt.datetime(1970, 1, 1, tzinfo=utc), 0),
+        (dt.datetime(1970, 1, 1, 1, tzinfo=utc), 3600.0),
+        (dt.datetime(1970, 1, 1, 0, 30, tzinfo=utc), 1800.0),
+        (dt.datetime(2019, 7, 2, 9, 23, 41, tzinfo=utc), 1562059421.0),
     ],
 )
 def test_datetime_to_timestamp(given, expected):

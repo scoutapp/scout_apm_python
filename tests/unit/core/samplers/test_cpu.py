@@ -6,13 +6,14 @@ import logging
 
 from psutil._common import pcputimes
 
+from scout_apm.compat import utc
 from scout_apm.core.samplers.cpu import Cpu
 from tests.compat import mock
 
 
 def test_run_negative_time_elapsed(caplog):
     cpu = Cpu()
-    cpu.last_run = dt.datetime.utcnow() + dt.timedelta(days=100)
+    cpu.last_run = dt.datetime.now(tz=utc) + dt.timedelta(days=100)
 
     result = cpu.run()
 

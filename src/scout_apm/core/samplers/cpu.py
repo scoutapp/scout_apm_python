@@ -6,6 +6,8 @@ import logging
 
 import psutil
 
+from scout_apm.compat import utc
+
 logger = logging.getLogger(__name__)
 
 
@@ -15,7 +17,7 @@ class Cpu(object):
     human_name = "Process CPU"
 
     def __init__(self):
-        self.last_run = dt.datetime.utcnow()
+        self.last_run = dt.datetime.now(tz=utc)
         self.last_cpu_times = psutil.Process().cpu_times()
         self.num_processors = psutil.cpu_count()
         if self.num_processors is None:
@@ -23,7 +25,7 @@ class Cpu(object):
             self.num_processors = 1
 
     def run(self):
-        now = dt.datetime.utcnow()
+        now = dt.datetime.now(tz=utc)
         process = psutil.Process()  # get a handle on the current process
         cpu_times = process.cpu_times()
 
