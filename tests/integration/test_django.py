@@ -15,8 +15,8 @@ from django.http import HttpResponse
 from django.test.utils import override_settings
 from webtest import TestApp
 
-from scout_apm.api import Config
 from scout_apm.compat import datetime_to_timestamp
+from scout_apm.core.config import scout_config
 from scout_apm.django.instruments.sql import ensure_sql_instrumented
 from scout_apm.django.instruments.template import ensure_templates_instrumented
 from tests.compat import mock
@@ -104,14 +104,14 @@ def test_ensure_templates_instrumented_again():
 
 def test_on_setting_changed_application_root():
     with app_with_scout(BASE_DIR="/tmp/foobar"):
-        assert Config().value("application_root") == "/tmp/foobar"
-    assert Config().value("application_root") == ""
+        assert scout_config.value("application_root") == "/tmp/foobar"
+    assert scout_config.value("application_root") == ""
 
 
 def test_on_setting_changed_monitor():
     with app_with_scout(SCOUT_MONITOR=True):
-        assert Config().value("monitor") is True
-    assert Config().value("monitor") is False
+        assert scout_config.value("monitor") is True
+    assert scout_config.value("monitor") is False
 
 
 def test_home(tracked_requests):
