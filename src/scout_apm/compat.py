@@ -34,34 +34,15 @@ except ImportError:
     # Python 2.x
     import Queue as queue
 
-
-if sys.version_info[0] >= 3:
-    utc = dt.timezone.utc
-else:
-
-    class UTC(dt.tzinfo):
-        _offset = dt.timedelta(0)
-
-        def utcoffset(self, dt):
-            return self._offset
-
-        def dst(self, dt):
-            return self._offset
-
-        def tzname(self, dt):
-            return "UTC"
-
-    utc = UTC()
-
-# datetime_to_timestamp converts a UTC datetime to a unix timestamp
+# datetime_to_timestamp converts a naive UTC datetime to a unix timestamp
 if sys.version_info >= (3, 3):
 
     def datetime_to_timestamp(datetime_obj):
-        return datetime_obj.timestamp()
+        return datetime_obj.replace(tzinfo=dt.timezone.utc).timestamp()
 
 
 else:
-    _EPOCH = dt.datetime(1970, 1, 1, tzinfo=utc)
+    _EPOCH = dt.datetime(1970, 1, 1)
 
     def datetime_to_timestamp(datetime_obj):
         return (datetime_obj - _EPOCH).total_seconds()

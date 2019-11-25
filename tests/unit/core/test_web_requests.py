@@ -6,7 +6,7 @@ import time
 
 import pytest
 
-from scout_apm.compat import datetime_to_timestamp, utc
+from scout_apm.compat import datetime_to_timestamp
 from scout_apm.core.config import scout_config
 from scout_apm.core.web_requests import (
     CUTOFF_EPOCH_S,
@@ -89,7 +89,7 @@ def test_ignore_multiple_prefixes(path, expected):
 
 @pytest.mark.parametrize("with_t", [True, False])
 def test_track_request_queue_time_valid(with_t, tracked_request):
-    queue_start = int(datetime_to_timestamp(dt.datetime.now(tz=utc))) - 2
+    queue_start = int(datetime_to_timestamp(dt.datetime.utcnow())) - 2
     if with_t:
         header_value = str("t=") + str(queue_start)
     else:
@@ -109,12 +109,8 @@ def test_track_request_queue_time_valid(with_t, tracked_request):
         str(""),
         str("t=X"),  # first character not a digit
         str("t=0.3f"),  # raises ValueError on float() conversion
-        str(
-            datetime_to_timestamp(dt.datetime.now(tz=utc)) + 3600.0
-        ),  # one hour in future
-        str(
-            datetime_to_timestamp(dt.datetime(2009, 1, 1, tzinfo=utc))
-        ),  # before ambig cutoff
+        str(datetime_to_timestamp(dt.datetime.utcnow()) + 3600.0),  # one hour in future
+        str(datetime_to_timestamp(dt.datetime(2009, 1, 1))),  # before ambig cutoff
     ],
 )
 def test_track_request_queue_time_invalid(header_value, tracked_request):
@@ -135,7 +131,7 @@ def test_track_request_queue_time_invalid(header_value, tracked_request):
     ],
 )
 def test_track_amazon_request_queue_time_valid(header_value, tracked_request):
-    start_time = int(datetime_to_timestamp(dt.datetime.now(tz=utc))) - 2
+    start_time = int(datetime_to_timestamp(dt.datetime.utcnow())) - 2
 
     result = track_amazon_request_queue_time(
         header_value.format(start_time=start_time), tracked_request

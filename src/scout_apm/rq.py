@@ -9,7 +9,6 @@ from rq import Worker as RqWorker
 from rq.job import Job
 
 import scout_apm.core
-from scout_apm.compat import utc
 from scout_apm.core.tracked_request import TrackedRequest
 
 install_attempted = False
@@ -62,9 +61,7 @@ def wrap_perform(wrapped, instance, args, kwargs):
     tracked_request.is_real_request = True
     tracked_request.tag("task_id", instance.get_id())
     tracked_request.tag("queue", instance.origin)
-    # rq stores UTC datetime as naive, we always use timezone aware datetimes
-    enqueued_at_utc = instance.enqueued_at.replace(tzinfo=utc)
-    queue_time = (dt.datetime.now(tz=utc) - enqueued_at_utc).total_seconds()
+    queue_time = (dt.datetime.utcnow() - instance.enqueued_at).total_seconds()
     tracked_request.tag("queue_time", queue_time)
     tracked_request.start_span(operation="Job/{}".format(instance.func_name))
     try:

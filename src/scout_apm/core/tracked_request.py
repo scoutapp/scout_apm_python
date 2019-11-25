@@ -5,7 +5,6 @@ import datetime as dt
 import logging
 from uuid import uuid4
 
-from scout_apm.compat import utc
 from scout_apm.core import backtrace, objtrace
 from scout_apm.core.commands import BatchCommand
 from scout_apm.core.n_plus_one_call_set import NPlusOneCallSet
@@ -43,7 +42,7 @@ class TrackedRequest(object):
 
     def __init__(self):
         self.request_id = "req-" + str(uuid4())
-        self.start_time = dt.datetime.now(tz=utc)
+        self.start_time = dt.datetime.utcnow()
         self.end_time = None
         self.active_spans = []
         self.complete_spans = []
@@ -119,7 +118,7 @@ class TrackedRequest(object):
     def finish(self):
         logger.debug("Stopping request: %s", self.request_id)
         if self.end_time is None:
-            self.end_time = dt.datetime.now(tz=utc)
+            self.end_time = dt.datetime.utcnow()
         if self.is_real_request:
             self.tag("mem_delta", self._get_mem_delta())
             if not self.is_ignored():
@@ -168,7 +167,7 @@ class Span(object):
         should_capture_backtrace=True,
     ):
         self.span_id = "span-" + str(uuid4())
-        self.start_time = dt.datetime.now(tz=utc)
+        self.start_time = dt.datetime.utcnow()
         self.end_time = None
         self.request_id = request_id
         self.operation = operation
@@ -187,7 +186,7 @@ class Span(object):
         )
 
     def stop(self):
-        self.end_time = dt.datetime.now(tz=utc)
+        self.end_time = dt.datetime.utcnow()
         self.end_objtrace_counts = objtrace.get_counts()
 
     def tag(self, key, value):
@@ -203,7 +202,7 @@ class Span(object):
             return (self.end_time - self.start_time).total_seconds()
         else:
             # Current, running duration
-            return (dt.datetime.now(tz=utc) - self.start_time).total_seconds()
+            return (dt.datetime.utcnow() - self.start_time).total_seconds()
 
     # Add any interesting annotations to the span. Assumes that we are in the
     # process of stopping this span.
