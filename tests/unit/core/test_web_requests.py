@@ -109,8 +109,12 @@ def test_track_request_queue_time_valid(with_t, tracked_request):
         str(""),
         str("t=X"),  # first character not a digit
         str("t=0.3f"),  # raises ValueError on float() conversion
-        str(datetime_to_timestamp(dt.datetime.now(tz=utc)) + 3600.0),  # one hour in future
-        str(datetime_to_timestamp(dt.datetime(2009, 1, 1, tzinfo=utc))),  # before ambig cutoff
+        str(
+            datetime_to_timestamp(dt.datetime.now(tz=utc)) + 3600.0
+        ),  # one hour in future
+        str(
+            datetime_to_timestamp(dt.datetime(2009, 1, 1, tzinfo=utc))
+        ),  # before ambig cutoff
     ],
 )
 def test_track_request_queue_time_invalid(header_value, tracked_request):

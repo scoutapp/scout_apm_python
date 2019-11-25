@@ -38,6 +38,7 @@ except ImportError:
 if sys.version_info[0] >= 3:
     utc = dt.timezone.utc
 else:
+
     class UTC(dt.tzinfo):
         _offset = dt.timedelta(0)
 
