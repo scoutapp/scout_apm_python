@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import wrapt
 from flask import current_app
-from flask.globals import _request_ctx_stack
+from flask.globals import request
 
 import scout_apm.core
 from scout_apm.core.config import scout_config
@@ -18,6 +18,7 @@ class ScoutApm(object):
         app.full_dispatch_request = self.wrapped_full_dispatch_request(
             app.full_dispatch_request
         )
+        app.preprocess_request = self.wrapped_preprocess_request(app.preprocess_request)
 
     @wrapt.decorator
     def wrapped_full_dispatch_request(self, wrapped, instance, args, kwargs):
@@ -30,7 +31,6 @@ class ScoutApm(object):
         if self._do_nothing:
             return wrapped(*args, **kwargs)
 
-        request = _request_ctx_stack.top.request
         # Pass on routing exceptions (normally 404's)
         if request.routing_exception is not None:
             return wrapped(*args, **kwargs)
@@ -46,6 +46,7 @@ class ScoutApm(object):
         span = tracked_request.start_span(
             operation=operation, should_capture_backtrace=False
         )
+        request._scout_view_span = span
         span.tag("name", name)
 
         werkzeug_track_request_data(request, tracked_request)
@@ -61,6 +62,21 @@ class ScoutApm(object):
             return response
         finally:
             tracked_request.stop_span()
+
+    @wrapt.decorator
+    def wrapped_preprocess_request(self, wrapped, instance, args, kwargs):
+        if self._do_nothing:
+            return wrapped(*args, **kwargs)
+
+        response = wrapped(*args, **kwargs)
+        if response is not None:
+            span = getattr(request, "_scout_view_span", None)
+            if span:
+                # Can't tell *which* preprocessor function returned this
+                # response, sadly
+                span.operation = "Controller/preprocess_request"
+
+        return response
 
     def extract_flask_settings(self):
         """

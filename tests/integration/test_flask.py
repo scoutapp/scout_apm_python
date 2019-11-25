@@ -227,7 +227,7 @@ def test_automatic_options(tracked_requests):
     ]
 
 
-def test_preprocessor_function_responses_tracked(tracked_requests):
+def test_preprocessor_response(tracked_requests):
     with app_with_scout() as app:
 
         @app.before_request
@@ -239,8 +239,24 @@ def test_preprocessor_function_responses_tracked(tracked_requests):
     assert response.status_int == 418
     assert response.text == "I'm a teapot"
     assert len(tracked_requests) == 1
-    # We only pull the name from routing information. Perhaps there should be
-    # a way of detecting preprocessor naming.
+    spans = tracked_requests[0].complete_spans
+    assert [s.operation for s in spans] == ["Controller/preprocess_request"]
+
+
+def test_preprocessor_response_hostile(tracked_requests):
+    with app_with_scout() as app:
+
+        @app.before_request
+        def teapot():
+            # Remove the span so that our preprocess_request code can't rename
+            # it
+            del flask.request._scout_view_span
+
+        response = TestApp(app).get("/", expect_errors=True)
+
+    assert response.status_int == 200
+    assert response.text == "Welcome home."
+    assert len(tracked_requests) == 1
     spans = tracked_requests[0].complete_spans
     assert [s.operation for s in spans] == [
         "Controller/tests.integration.test_flask.home"
