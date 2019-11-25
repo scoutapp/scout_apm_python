@@ -15,9 +15,13 @@ from scout_apm.core.tracked_request import TrackedRequest
 def attach_scout(huey):
     installed = scout_apm.core.install()
     if installed:
-        huey.pre_execute()(scout_on_pre_execute)
-        huey.post_execute()(scout_on_post_execute)
-        huey.signal(SIGNAL_CANCELED)(scout_on_cancelled)
+        attach_scout_handlers(huey)
+
+
+def attach_scout_handlers(huey):
+    huey.pre_execute()(scout_on_pre_execute)
+    huey.post_execute()(scout_on_post_execute)
+    huey.signal(SIGNAL_CANCELED)(scout_on_cancelled)
 
 
 def scout_on_pre_execute(task):
