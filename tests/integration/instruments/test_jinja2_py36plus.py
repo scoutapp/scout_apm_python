@@ -11,7 +11,7 @@ from tests.integration.instruments.test_jinja2 import mock_not_attempted
 from tests.tools import async_test
 
 
-def test_ensure_installed_fail_no_render_attribute(caplog):
+def test_ensure_installed_fail_no_render_async_attribute(caplog):
     mock_template = mock.patch("scout_apm.instruments.jinja2.Template")
     with mock_not_attempted(), mock_template as mocked_template:
         del mocked_template.render_async

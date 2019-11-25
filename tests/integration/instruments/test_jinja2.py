@@ -16,7 +16,7 @@ def mock_not_attempted():
         "scout_apm.instruments.jinja2.have_patched_template_render", new=False
     )
     not_render_async = mock.patch(
-        "scout_apm.instruments.jinja2.have_patched_template_render", new=False
+        "scout_apm.instruments.jinja2.have_patched_template_render_async", new=False
     )
     with not_render, not_render_async:
         yield
