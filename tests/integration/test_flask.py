@@ -229,6 +229,7 @@ def test_automatic_options(tracked_requests):
 
 def test_preprocessor_function_responses_tracked(tracked_requests):
     with app_with_scout() as app:
+
         @app.before_request
         def teapot():
             return "I'm a teapot", 418

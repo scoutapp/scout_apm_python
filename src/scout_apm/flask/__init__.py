@@ -15,7 +15,9 @@ class ScoutApm(object):
     def __init__(self, app):
         self.app = app
         self._attempted_install = False
-        app.full_dispatch_request = self.wrapped_full_dispatch_request(app.full_dispatch_request)
+        app.full_dispatch_request = self.wrapped_full_dispatch_request(
+            app.full_dispatch_request
+        )
 
     @wrapt.decorator
     def wrapped_full_dispatch_request(self, wrapped, instance, args, kwargs):
