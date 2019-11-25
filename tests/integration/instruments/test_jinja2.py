@@ -2,15 +2,24 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
+from contextlib import contextmanager
 
 import jinja2
 
 from scout_apm.instruments.jinja2 import ensure_installed
 from tests.compat import mock
 
-mock_not_attempted = mock.patch(
-    "scout_apm.instruments.jinja2.have_patched_template_render", new=False
-)
+
+@contextmanager
+def mock_not_attempted():
+    not_render = mock.patch(
+        "scout_apm.instruments.jinja2.have_patched_template_render", new=False
+    )
+    not_render_async = mock.patch(
+        "scout_apm.instruments.jinja2.have_patched_template_render", new=False
+    )
+    with not_render, not_render_async:
+        yield
 
 
 def test_ensure_installed_twice(caplog):
@@ -28,7 +37,7 @@ def test_ensure_installed_twice(caplog):
 
 def test_ensure_installed_fail_no_template(caplog):
     mock_no_template = mock.patch("scout_apm.instruments.jinja2.Template", new=None)
-    with mock_not_attempted, mock_no_template:
+    with mock_not_attempted(), mock_no_template:
         ensure_installed()
 
     assert caplog.record_tuples == [
@@ -47,7 +56,7 @@ def test_ensure_installed_fail_no_template(caplog):
 
 def test_ensure_installed_fail_no_render_attribute(caplog):
     mock_template = mock.patch("scout_apm.instruments.jinja2.Template")
-    with mock_not_attempted, mock_template as mocked_template:
+    with mock_not_attempted(), mock_template as mocked_template:
         # Remove render attribute
         del mocked_template.render
 
