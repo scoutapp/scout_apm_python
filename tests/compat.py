@@ -22,5 +22,4 @@ except ImportError:  # Python < 3.2
         finally:
             rmtree(tempdir)
 
-
 __all__ = ["mock", "TemporaryDirectory"]

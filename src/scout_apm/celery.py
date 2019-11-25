@@ -6,13 +6,13 @@ import datetime as dt
 from celery.signals import before_task_publish, task_postrun, task_prerun
 
 import scout_apm.core
-from scout_apm.compat import datetime_to_timestamp
+from scout_apm.compat import datetime_to_timestamp, utc
 from scout_apm.core.tracked_request import TrackedRequest
 
 
 def before_publish_callback(headers=None, properties=None, **kwargs):
     if "scout_task_start" not in headers:
-        headers["scout_task_start"] = datetime_to_timestamp(dt.datetime.utcnow())
+        headers["scout_task_start"] = datetime_to_timestamp(dt.datetime.now(tz=utc))
 
 
 def prerun_callback(task=None, **kwargs):
@@ -21,7 +21,7 @@ def prerun_callback(task=None, **kwargs):
 
     start = getattr(task.request, "scout_task_start", None)
     if start is not None:
-        now = datetime_to_timestamp(dt.datetime.utcnow())
+        now = datetime_to_timestamp(dt.datetime.now(tz=utc))
         try:
             queue_time = now - start
         except TypeError:

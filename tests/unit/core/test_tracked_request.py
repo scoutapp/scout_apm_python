@@ -4,6 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import datetime as dt
 import sys
 
+from scout_apm.compat import utc
 from scout_apm.core import objtrace
 from scout_apm.core.tracked_request import TrackedRequest
 from tests.tools import skip_if_objtrace_is_extension, skip_if_objtrace_not_extension
@@ -124,7 +125,7 @@ def test_start_span_ignores_children(tracked_request):
 def test_span_captures_backtrace(tracked_request):
     span = tracked_request.start_span(operation="Sql/Work")
     # Pretend it was started 1 second ago
-    span.start_time = dt.datetime.utcnow() - dt.timedelta(seconds=1)
+    span.start_time = dt.datetime.now(tz=utc) - dt.timedelta(seconds=1)
     tracked_request.stop_span()
     assert "stack" in span.tags
 
