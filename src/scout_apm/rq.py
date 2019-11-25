@@ -11,16 +11,6 @@ from rq.job import Job
 import scout_apm.core
 from scout_apm.core.tracked_request import TrackedRequest
 
-# Custom worker class
-# rq worker --worker-class scout_apm.rq.Job
-# Or instantiate queues with `job_class='scout_apm.rq.Job'` or job_class=Job
-# or custom Job subclass
-# or add JobMixin to your own Job class
-# Config via environment variables or custom Job class with Config.set() call
-# in the same file
-# django-rq should allow using Django config since django.setup() should run as
-# part of the management command - need to test that
-
 install_attempted = False
 installed = None
 
