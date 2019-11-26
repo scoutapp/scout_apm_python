@@ -13,6 +13,7 @@ from webtest import TestApp
 from scout_apm.core import socket as scout_apm_core_socket
 from scout_apm.core.config import SCOUT_PYTHON_VALUES, scout_config
 from scout_apm.core.core_agent_manager import CoreAgentManager
+from scout_apm.core.socket import CoreAgentSocketThread
 from scout_apm.core.tracked_request import TrackedRequest
 from tests.compat import TemporaryDirectory
 
@@ -155,6 +156,12 @@ def short_timeouts():
         yield
     finally:
         scout_apm_core_socket.SECOND = 1
+
+
+@pytest.fixture(autouse=True)
+def auto_stop_core_agent_socket():
+    yield
+    CoreAgentSocketThread.ensure_stopped()
 
 
 @pytest.fixture
