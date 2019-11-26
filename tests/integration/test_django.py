@@ -920,3 +920,22 @@ def test_old_style_view_middleware_deleted(tracked_requests):
 
     assert response.status_int == 200
     assert len(tracked_requests) == 0
+
+
+def test_huey_basic_task(tracked_requests):
+    with app_with_scout():
+        from huey.contrib.djhuey import task
+        @task()
+        def hello():
+            return "Hello World!"
+
+        result = hello()
+        value = result(blocking=True, timeout=1)
+
+    assert value == "Hello World!"
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert "task_id" in tracked_request.tags
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "Job/tests.integration.test_django.hello"
