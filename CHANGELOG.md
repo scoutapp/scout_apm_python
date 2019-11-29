@@ -22,6 +22,8 @@
 - Always capture SQL tracebacks for `executemany` queries going over the
   built-in count threshold
   ([PR #409](https://github.com/scoutapp/scout_apm_python/pull/409)).
+- Don't capture internal traceback function's frame in tracebacks
+  ([PR #410](https://github.com/scoutapp/scout_apm_python/pull/410)).
 
 ## [2.8.1] 2019-11-19
 
