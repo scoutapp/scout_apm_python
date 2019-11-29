@@ -240,26 +240,9 @@ def test_preprocessor_response(tracked_requests):
     assert response.text == "I'm a teapot"
     assert len(tracked_requests) == 1
     spans = tracked_requests[0].complete_spans
-    assert [s.operation for s in spans] == ["Controller/preprocess_request"]
-
-
-def test_preprocessor_response_hostile(tracked_requests):
-    with app_with_scout() as app:
-
-        @app.before_request
-        def teapot():
-            # Remove the span so that our preprocess_request code can't rename
-            # it
-            del flask.request._scout_view_span
-
-        response = TestApp(app).get("/", expect_errors=True)
-
-    assert response.status_int == 200
-    assert response.text == "Welcome home."
-    assert len(tracked_requests) == 1
-    spans = tracked_requests[0].complete_spans
     assert [s.operation for s in spans] == [
-        "Controller/tests.integration.test_flask.home"
+        "PreprocessRequest",
+        "Controller/tests.integration.test_flask.home",
     ]
 
 

@@ -43,6 +43,7 @@ class ScoutApm(object):
 
         tracked_request = TrackedRequest.instance()
         tracked_request.is_real_request = True
+        request._scout_tracked_request = tracked_request
         span = tracked_request.start_span(
             operation=operation, should_capture_backtrace=False
         )
@@ -65,18 +66,24 @@ class ScoutApm(object):
 
     @wrapt.decorator
     def wrapped_preprocess_request(self, wrapped, instance, args, kwargs):
-        if self._do_nothing:
+        tracked_request = getattr(request, "_scout_tracked_request", None)
+        if tracked_request is None:
             return wrapped(*args, **kwargs)
 
-        response = wrapped(*args, **kwargs)
-        if response is not None:
-            span = getattr(request, "_scout_view_span", None)
-            if span:
-                # Can't tell *which* preprocessor function returned this
-                # response, sadly
-                span.operation = "Controller/preprocess_request"
+        # Unlike middleware in other frameworks, using request preprocessors is
+        # less common in Flask, so only add a span if there is any in use
+        have_before_request_funcs = (
+            None in instance.before_request_funcs
+            or request.blueprint in instance.before_request_funcs
+        )
+        if not have_before_request_funcs:
+            return wrapped(*args, **kwargs)
 
-        return response
+        tracked_request.start_span("PreprocessRequest", should_capture_backtrace=False)
+        try:
+            return wrapped(*args, **kwargs)
+        finally:
+            tracked_request.stop_span()
 
     def extract_flask_settings(self):
         """
