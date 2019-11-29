@@ -8,7 +8,8 @@ from contextlib import contextmanager
 import pytest
 
 from scout_apm.core import objtrace
-from tests.compat import mock
+from scout_apm.core.n_plus_one_tracker import NPlusOneTracker
+from tests.compat import mock, nullcontext
 
 skip_if_python_2 = pytest.mark.skipif(
     sys.version_info[0] == 2, reason="Requires Python 3"
@@ -45,6 +46,26 @@ def pretend_package_unavailable(name):
     mock_unfindable = mock.patch.object(sys, "path", [])
 
     with mock_unimported, mock_unfindable:
+        yield
+
+
+@contextmanager
+def n_plus_one_thresholds(count=None, duration=None):
+    """
+    Reduce the thresholds on NPlusOneTracker to force capture without having to
+    run a lot of slow queries
+    """
+    if count is None:
+        mock_count = nullcontext
+    else:
+        mock_count = mock.patch.object(
+            NPlusOneTracker, "COUNT_THRESHOLD", new=count
+        )
+    if duration is None:
+        mock_duration = nullcontext
+    else:
+        mock_duration = mock.patch.object(NPlusOneTracker, "DURATION_THRESHOLD", new=duration)
+    with mock_count, mock_duration:
         yield
 
 

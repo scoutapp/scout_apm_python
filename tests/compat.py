@@ -1,6 +1,8 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import sys
+
 try:
     from unittest import mock
 except ImportError:
@@ -23,4 +25,14 @@ except ImportError:  # Python < 3.2
             rmtree(tempdir)
 
 
-__all__ = ["mock", "TemporaryDirectory"]
+if sys.version_info >= (3, 7):
+    from contextlib import nullcontext
+else:
+    from contextlib import contextmanager
+
+    @contextmanager
+    def nullcontext(obj):
+        yield obj
+
+
+__all__ = ["mock", "nullcontext", "TemporaryDirectory"]
