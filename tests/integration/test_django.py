@@ -17,6 +17,7 @@ from webtest import TestApp
 
 from scout_apm.compat import datetime_to_timestamp
 from scout_apm.core.config import scout_config
+from scout_apm.django.instruments.huey import ensure_huey_instrumented
 from scout_apm.django.instruments.sql import ensure_sql_instrumented
 from scout_apm.django.instruments.template import ensure_templates_instrumented
 from tests.compat import mock
@@ -88,18 +89,15 @@ def make_admin_user():
     return user
 
 
-def test_ensure_sql_instrumented_again():
+@pytest.mark.parametrize(
+    "func",
+    [ensure_huey_instrumented, ensure_sql_instrumented, ensure_templates_instrumented],
+)
+def test_instruments_idempotent(func):
     """
     Check second call doesn't crash (should be a no-op)
     """
-    ensure_sql_instrumented()
-
-
-def test_ensure_templates_instrumented_again():
-    """
-    Check second call doesn't crash (should be a no-op)
-    """
-    ensure_templates_instrumented()
+    func()
 
 
 def test_on_setting_changed_application_root():
