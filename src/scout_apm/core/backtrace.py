@@ -1,31 +1,22 @@
 # coding=utf-8
-"""
-Module for helper functions to capture tracebacks
-"""
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import sys
 import traceback
 
+if sys.version_info >= (3, 5):
 
-def capture():
-    stack = traceback.extract_stack()
-    formatted_stack = []
-    for frame in stack:
-        # Python 2.7 and 3.4 returned tuples
-        if type(frame) is tuple:
-            filename = frame[0]
-            line = frame[1]
-            function = frame[3]
-        # 3.5+ returned objects
-        else:
-            filename = frame.filename
-            line = frame.lineno
-            function = frame.name
+    def capture():
+        return [
+            {"file": frame.filename, "line": frame.lineno, "function": frame.name}
+            for frame in reversed(traceback.extract_stack()[:-1])
+        ]
 
-        formatted_stack.append({"file": filename, "line": line, "function": function})
 
-    # Python puts the closest stack frames at the end of the traceback. But we
-    # want them up front
-    formatted_stack.reverse()
+else:
 
-    return formatted_stack
+    def capture():
+        return [
+            {"file": frame[0], "line": frame[1], "function": frame[3]}
+            for frame in reversed(traceback.extract_stack()[:-1])
+        ]
