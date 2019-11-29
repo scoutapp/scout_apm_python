@@ -5,7 +5,7 @@ from collections import defaultdict
 
 
 class NPlusOneTrackedItem(object):
-    __slots__ = ('count', 'duration', 'captured')
+    __slots__ = ("count", "duration", "captured")
 
     def __init__(self):
         self.count = 0
@@ -20,7 +20,7 @@ class NPlusOneTracker(object):
     # Minimum time in seconds before we start performing any work.
     DURATION_THRESHOLD = 0.150
 
-    __slots__ = ('_map',)
+    __slots__ = ("_map",)
 
     def __init__(self):
         self._map = defaultdict(NPlusOneTrackedItem)
@@ -31,7 +31,11 @@ class NPlusOneTracker(object):
         item.count += count
 
         should_capture = False
-        if not item.captured and item.count >= self.COUNT_THRESHOLD and item.duration >= self.DURATION_THRESHOLD:
+        if (
+            not item.captured
+            and item.count >= self.COUNT_THRESHOLD
+            and item.duration >= self.DURATION_THRESHOLD
+        ):
             item.captured = True
             should_capture = True
 

@@ -38,7 +38,9 @@ def test_add_two_calls_second_captured():
         count=NPlusOneTracker.COUNT_THRESHOLD - 1,
     )
     assert not should_capture_backtrace1
-    should_capture_backtrace2 = tracker.should_capture_backtrace("SELECT 1", duration=0.01, count=1)
+    should_capture_backtrace2 = tracker.should_capture_backtrace(
+        "SELECT 1", duration=0.01, count=1
+    )
     assert should_capture_backtrace2
 
 

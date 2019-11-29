@@ -136,9 +136,7 @@ def executemany_wrapper(wrapped, instance, args, kwargs):
         if sql is not None:
             tracked_request.stop_span()
             if tracked_request.n_plus_one_tracker.should_capture_backtrace(
-                sql=sql,
-                duration=span.duration(),
-                count=len(param_list),
+                sql=sql, duration=span.duration(), count=len(param_list),
             ):
                 span.capture_backtrace()
 

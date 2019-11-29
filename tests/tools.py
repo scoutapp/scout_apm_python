@@ -58,13 +58,13 @@ def n_plus_one_thresholds(count=None, duration=None):
     if count is None:
         mock_count = nullcontext
     else:
-        mock_count = mock.patch.object(
-            NPlusOneTracker, "COUNT_THRESHOLD", new=count
-        )
+        mock_count = mock.patch.object(NPlusOneTracker, "COUNT_THRESHOLD", new=count)
     if duration is None:
         mock_duration = nullcontext
     else:
-        mock_duration = mock.patch.object(NPlusOneTracker, "DURATION_THRESHOLD", new=duration)
+        mock_duration = mock.patch.object(
+            NPlusOneTracker, "DURATION_THRESHOLD", new=duration
+        )
     with mock_count, mock_duration:
         yield
 

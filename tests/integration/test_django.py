@@ -27,7 +27,12 @@ from tests.integration.util import (
     parametrize_queue_time_header_name,
     parametrize_user_ip_headers,
 )
-from tests.tools import delete_attributes, n_plus_one_thresholds, pretend_package_unavailable, skip_if_python_2
+from tests.tools import (
+    delete_attributes,
+    n_plus_one_thresholds,
+    pretend_package_unavailable,
+    skip_if_python_2,
+)
 
 try:
     from django.urls import resolve
