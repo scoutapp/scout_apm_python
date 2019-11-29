@@ -11,8 +11,10 @@ from starlette.applications import Starlette
 from starlette.authentication import AuthCredentials, AuthenticationBackend, SimpleUser
 from starlette.background import BackgroundTasks
 from starlette.endpoints import HTTPEndpoint
+from starlette.middleware import Middleware
 from starlette.middleware.authentication import AuthenticationMiddleware
 from starlette.responses import PlainTextResponse
+from starlette.routing import Route
 
 from scout_apm.api import Config
 from scout_apm.async_.starlette import ScoutMiddleware
@@ -26,7 +28,7 @@ from tests.tools import async_test
 
 
 @contextmanager
-def app_with_scout(*, app=None, scout_config=None):
+def app_with_scout(*, middleware=None, scout_config=None):
     """
     Context manager that configures and installs the Scout plugin for a basic
     Starlette application.
@@ -37,32 +39,19 @@ def app_with_scout(*, app=None, scout_config=None):
     scout_config["core_agent_launch"] = False
     scout_config.setdefault("monitor", True)
 
-    if app is None:
-        app = Starlette()
-
-    @app.exception_handler(500)
-    async def error(request, exc):
-        # Always raise exceptions
-        raise exc
-
-    @app.route("/")
     async def home(request):
         return PlainTextResponse("Welcome home.")
 
-    @app.route("/hello/")
     class HelloEndpoint(HTTPEndpoint):
         async def get(self, request):
             return PlainTextResponse("Hello World!")
 
-    @app.route("/crash/")
     async def crash(request):
         raise ValueError("BØØM!")  # non-ASCII
 
-    @app.route("/return-error/")
     async def return_error(request):
         return PlainTextResponse("Something went wrong", status_code=503)
 
-    @app.route("/background-jobs/")
     async def background_jobs(request):
         def sync_noop():
             pass
@@ -76,9 +65,26 @@ def app_with_scout(*, app=None, scout_config=None):
 
         return PlainTextResponse("Triggering background jobs", background=tasks)
 
+    routes = [
+        Route("/", endpoint=home),
+        Route("/hello/", endpoint=HelloEndpoint),
+        Route("/crash/", endpoint=crash),
+        Route("/return-error/", endpoint=return_error),
+        Route("/background-jobs/", endpoint=background_jobs),
+    ]
+
+    async def raise_error_handler(request, exc):
+        # Always raise exceptions
+        raise exc
+
+    if middleware is None:
+        middleware = []
+
     # As per http://docs.scoutapm.com/#starlette
     Config.set(**scout_config)
-    app.add_middleware(ScoutMiddleware)
+    middleware.insert(0, Middleware(ScoutMiddleware))
+
+    app = Starlette(routes=routes, middleware=middleware, exception_handlers={500: raise_error_handler})
 
     try:
         yield app
@@ -356,15 +362,14 @@ async def test_background_jobs(tracked_requests):
 
 @async_test
 async def test_username(tracked_requests):
-    base_app = Starlette()
 
     class DummyBackend(AuthenticationBackend):
         async def authenticate(self, request):
             return AuthCredentials(), SimpleUser("dummy")
 
-    base_app.add_middleware(AuthenticationMiddleware, backend=DummyBackend())
+    middleware = [Middleware(AuthenticationMiddleware, backend=DummyBackend())]
 
-    with app_with_scout(app=base_app) as app:
+    with app_with_scout(middleware=middleware) as app:
         communicator = ApplicationCommunicator(app, get_scope(path="/"))
         await communicator.send_input({"type": "http.request"})
         response_start = await communicator.receive_output()
@@ -379,15 +384,14 @@ async def test_username(tracked_requests):
 
 @async_test
 async def test_username_bad_user(tracked_requests):
-    base_app = Starlette()
 
     class BadUserBackend(AuthenticationBackend):
         async def authenticate(self, request):
             return AuthCredentials(), object()
 
-    base_app.add_middleware(AuthenticationMiddleware, backend=BadUserBackend())
+    middleware = [Middleware(AuthenticationMiddleware, backend=BadUserBackend())]
 
-    with app_with_scout(app=base_app) as app:
+    with app_with_scout(middleware=middleware) as app:
         communicator = ApplicationCommunicator(app, get_scope(path="/"))
         await communicator.send_input({"type": "http.request"})
         response_start = await communicator.receive_output()
