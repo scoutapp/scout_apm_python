@@ -7,6 +7,7 @@ from django.test.signals import setting_changed
 
 import scout_apm.core
 from scout_apm.core.config import scout_config
+from scout_apm.django.instruments.huey import ensure_huey_instrumented
 from scout_apm.django.instruments.sql import ensure_sql_instrumented
 from scout_apm.django.instruments.template import ensure_templates_instrumented
 
@@ -28,6 +29,7 @@ class ScoutApmDjangoConfig(AppConfig):
         self.install_middleware()
 
         # Setup Instruments
+        ensure_huey_instrumented()
         ensure_sql_instrumented()
         ensure_templates_instrumented()
 

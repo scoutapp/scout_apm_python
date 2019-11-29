@@ -12,6 +12,8 @@
   ([PR #390](https://github.com/scoutapp/scout_apm_python/pull/390)).
 - Track Jinja2 asynchronous template rendering
   ([PR #398](https://github.com/scoutapp/scout_apm_python/pull/398)).
+- Add Django-Huey integration
+  ([PR #401](https://github.com/scoutapp/scout_apm_python/pull/401)).
 
 ### Fixed
 
