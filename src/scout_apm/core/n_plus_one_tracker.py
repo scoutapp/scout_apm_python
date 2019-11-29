@@ -27,16 +27,16 @@ class NPlusOneTracker(object):
 
     def should_capture_backtrace(self, sql, duration, count=1):
         item = self._map[sql]
+        if item.captured:
+            return False
+
         item.duration += duration
         item.count += count
 
-        should_capture = False
         if (
-            not item.captured
+            item.duration >= self.DURATION_THRESHOLD
             and item.count >= self.COUNT_THRESHOLD
-            and item.duration >= self.DURATION_THRESHOLD
         ):
             item.captured = True
-            should_capture = True
-
-        return should_capture
+            return True
+        return False
