@@ -60,9 +60,9 @@ def db_execute_hook(execute, sql, params, many, context):
     finally:
         if sql is not None:
             tracked_request.stop_span()
-            callset_item = tracked_request.callset[sql]
-            callset_item.add(span.duration())
-            if callset_item.should_capture_backtrace():
+            if tracked_request.n_plus_one_tracker.should_capture_backtrace(
+                sql, span.duration()
+            ):
                 span.capture_backtrace()
 
 
@@ -102,9 +102,9 @@ def execute_wrapper(wrapped, instance, args, kwargs):
     finally:
         if sql is not None:
             tracked_request.stop_span()
-            callset_item = tracked_request.callset[sql]
-            callset_item.update(span.duration())
-            if callset_item.should_capture_backtrace():
+            if tracked_request.n_plus_one_tracker.should_capture_backtrace(
+                sql, span.duration()
+            ):
                 span.capture_backtrace()
 
 
@@ -128,9 +128,7 @@ def executemany_wrapper(wrapped, instance, args, kwargs):
     finally:
         if sql is not None:
             tracked_request.stop_span()
-            callset_item = tracked_request.callset[sql]
-            callset_item.update(span.duration())
-            if callset_item.should_capture_backtrace():
+            if tracked_request.n_plus_one_tracker.should_capture_backtrace(sql, span.duration()):
                 span.capture_backtrace()
 
 

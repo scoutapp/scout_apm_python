@@ -7,7 +7,7 @@ from uuid import uuid4
 
 from scout_apm.core import backtrace, objtrace
 from scout_apm.core.commands import BatchCommand
-from scout_apm.core.n_plus_one_call_set import NPlusOneCallSet
+from scout_apm.core.n_plus_one_tracker import NPlusOneTracker
 from scout_apm.core.samplers.memory import get_rss_in_mb
 from scout_apm.core.samplers.thread import SamplersThread
 from scout_apm.core.socket import CoreAgentSocket
@@ -31,7 +31,7 @@ class TrackedRequest(object):
         "tags",
         "is_real_request",
         "_memory_start",
-        "callset",
+        "n_plus_one_tracker",
     )
 
     @classmethod
@@ -49,7 +49,7 @@ class TrackedRequest(object):
         self.tags = {}
         self.is_real_request = False
         self._memory_start = get_rss_in_mb()
-        self.callset = NPlusOneCallSet()
+        self.n_plus_one_tracker = NPlusOneTracker()
         logger.debug("Starting request: %s", self.request_id)
 
     def __repr__(self):
