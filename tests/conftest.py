@@ -3,16 +3,16 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 import os
-import sys
 import subprocess
+import sys
 
 import pytest
 import wrapt
 from webtest import TestApp
 
 from scout_apm.core import socket as scout_apm_core_socket
-from scout_apm.core.core_agent_manager import CoreAgentManager
 from scout_apm.core.config import SCOUT_PYTHON_VALUES, scout_config
+from scout_apm.core.core_agent_manager import CoreAgentManager
 from scout_apm.core.tracked_request import TrackedRequest
 from tests.compat import TemporaryDirectory
 
