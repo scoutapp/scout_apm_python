@@ -925,6 +925,7 @@ def test_old_style_view_middleware_deleted(tracked_requests):
 def test_huey_basic_task(tracked_requests):
     with app_with_scout():
         from huey.contrib.djhuey import task
+
         @task()
         def hello():
             return "Hello World!"

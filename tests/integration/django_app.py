@@ -35,14 +35,11 @@ config = {
         "django.contrib.contenttypes",
         "django.contrib.messages",
         "django.contrib.sessions",
-        "huey.contrib.djhuey"
+        "huey.contrib.djhuey",
         "scout_apm.django",
     ],
     # https://huey.readthedocs.io/en/latest/django.html
-    "HUEY": {
-        "backend_class": "huey.MemoryHuey",
-        "immediate": True,
-    }
+    "HUEY": {"backend_class": "huey.MemoryHuey", "immediate": True},
 }
 
 if django.VERSION > (1, 10):
