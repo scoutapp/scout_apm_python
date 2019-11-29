@@ -1,21 +1,16 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+from collections import defaultdict
 
-class NPlusOneCallSet(object):
+
+class NPlusOneCallSet(defaultdict):
     def __init__(self):
-        self.items = {}
+        # Force no arguments
+        super(NPlusOneCallSet, self).__init__()
 
-    def update(self, sql_string, call_count, call_duration):
-        self.find_for(sql_string).update(call_count, call_duration)
-
-    def should_capture_backtrace(self, sql_string):
-        return self.find_for(sql_string).should_capture_backtrace()
-
-    def find_for(self, sql_string):
-        if sql_string not in self.items:
-            self.items[sql_string] = NPlusOneCallSetItem(sql_string)
-        return self.items[sql_string]
+    def __missing__(self, key):
+        return NPlusOneCallSetItem(key)
 
 
 class NPlusOneCallSetItem(object):
@@ -23,7 +18,7 @@ class NPlusOneCallSetItem(object):
     CALL_COUNT_THRESHOLD = 5
 
     # Minimum time in seconds before we start performing any work.
-    DURATION_THRESHOLD = 150 / 1000.0
+    DURATION_THRESHOLD = 0.150
 
     def __init__(self, sql_string):
         self.sql_string = sql_string
@@ -31,7 +26,7 @@ class NPlusOneCallSetItem(object):
         self.call_count = 0
         self.call_duration = 0.0  # In Seconds
 
-    def update(self, call_count, call_duration):
+    def add(self, call_duration, call_count=1):
         if self.captured:
             # No need to do any work if we've already captured a backtrace.
             return

@@ -20,8 +20,9 @@ def after_cursor_execute(conn, cursor, statement, parameters, context, executema
     tracked_request = TrackedRequest.instance()
     span = tracked_request.current_span()
     if span is not None:
-        tracked_request.callset.update(statement, 1, span.duration())
-        if tracked_request.callset.should_capture_backtrace(statement):
+        callset_item = tracked_request.callset[statement]
+        callset_item.update(span.duration())
+        if callset_item.should_capture_backtrace():
             span.capture_backtrace()
     tracked_request.stop_span()
 
