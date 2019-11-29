@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import wrapt
 from flask import current_app
-from flask.globals import _request_ctx_stack
+from flask.globals import request
 
 import scout_apm.core
 from scout_apm.core.config import scout_config
@@ -18,6 +18,7 @@ class ScoutApm(object):
         app.full_dispatch_request = self.wrapped_full_dispatch_request(
             app.full_dispatch_request
         )
+        app.preprocess_request = self.wrapped_preprocess_request(app.preprocess_request)
 
     @wrapt.decorator
     def wrapped_full_dispatch_request(self, wrapped, instance, args, kwargs):
@@ -30,7 +31,6 @@ class ScoutApm(object):
         if self._do_nothing:
             return wrapped(*args, **kwargs)
 
-        request = _request_ctx_stack.top.request
         # Pass on routing exceptions (normally 404's)
         if request.routing_exception is not None:
             return wrapped(*args, **kwargs)
@@ -43,9 +43,11 @@ class ScoutApm(object):
 
         tracked_request = TrackedRequest.instance()
         tracked_request.is_real_request = True
+        request._scout_tracked_request = tracked_request
         span = tracked_request.start_span(
             operation=operation, should_capture_backtrace=False
         )
+        request._scout_view_span = span
         span.tag("name", name)
 
         werkzeug_track_request_data(request, tracked_request)
@@ -59,6 +61,27 @@ class ScoutApm(object):
             if 500 <= response.status_code <= 599:
                 tracked_request.tag("error", "true")
             return response
+        finally:
+            tracked_request.stop_span()
+
+    @wrapt.decorator
+    def wrapped_preprocess_request(self, wrapped, instance, args, kwargs):
+        tracked_request = getattr(request, "_scout_tracked_request", None)
+        if tracked_request is None:
+            return wrapped(*args, **kwargs)
+
+        # Unlike middleware in other frameworks, using request preprocessors is
+        # less common in Flask, so only add a span if there is any in use
+        have_before_request_funcs = (
+            None in instance.before_request_funcs
+            or request.blueprint in instance.before_request_funcs
+        )
+        if not have_before_request_funcs:
+            return wrapped(*args, **kwargs)
+
+        tracked_request.start_span("PreprocessRequest", should_capture_backtrace=False)
+        try:
+            return wrapped(*args, **kwargs)
         finally:
             tracked_request.stop_span()
 
