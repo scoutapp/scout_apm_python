@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from sqlalchemy import create_engine
 
 from scout_apm.sqlalchemy import instrument_sqlalchemy
-from tests.compat import mock
+from tests.tools import n_plus_one_thresholds
 
 
 @contextmanager
@@ -49,15 +49,29 @@ def test_many_query(tracked_request):
     assert spans[1].tags["db.statement"] == "INSERT INTO t(i) VALUES (?)"
 
 
-# Monkey patch should_capture_backtrace in order to keep the test fast.
-@mock.patch(
-    "scout_apm.core.n_plus_one_call_set.NPlusOneCallSetItem.should_capture_backtrace"
-)
-def test_hello_capture_backtrace(should_capture_backtrace):
-    should_capture_backtrace.return_value = True
-    with conn_with_scout() as conn:
+def test_execute_capture_backtrace(tracked_request):
+    with n_plus_one_thresholds(count=1, duration=0.0), conn_with_scout() as conn:
         result = conn.execute("SELECT 'Hello World!'")
-        assert list(result) == [("Hello World!",)]
+
+    assert list(result) == [("Hello World!",)]
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "SQL/Query"
+    assert span.tags["db.statement"] == "SELECT 'Hello World!'"
+    assert "stack" in span.tags
+
+
+def test_executemany_capture_backtrace(tracked_request):
+    tracked_request.start_span(operation="parent")
+    with n_plus_one_thresholds(count=2, duration=0.0), conn_with_scout() as conn:
+        conn.execute("CREATE TABLE t(i integer)")
+        conn.execute("INSERT INTO t(i) VALUES (?)", [1], [2])
+
+    assert len(tracked_request.complete_spans) == 2
+    span = tracked_request.complete_spans[1]
+    assert span.operation == "SQL/Many"
+    assert span.tags["db.statement"] == "INSERT INTO t(i) VALUES (?)"
+    assert "stack" in span.tags
 
 
 def test_instrument_engine_is_idempotent():

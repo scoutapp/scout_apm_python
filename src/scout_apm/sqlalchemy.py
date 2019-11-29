@@ -20,10 +20,13 @@ def after_cursor_execute(conn, cursor, statement, parameters, context, executema
     tracked_request = TrackedRequest.instance()
     span = tracked_request.current_span()
     if span is not None:
-        tracked_request.callset.update(statement, 1, span.duration())
-        if tracked_request.callset.should_capture_backtrace(statement):
+        if tracked_request.n_plus_one_tracker.should_capture_backtrace(
+            sql=statement,
+            duration=span.duration(),
+            count=(1 if not executemany else len(parameters)),
+        ):
             span.capture_backtrace()
-    tracked_request.stop_span()
+        tracked_request.stop_span()
 
 
 def instrument_sqlalchemy(engine):

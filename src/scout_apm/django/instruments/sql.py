@@ -60,8 +60,11 @@ def db_execute_hook(execute, sql, params, many, context):
     finally:
         if sql is not None:
             tracked_request.stop_span()
-            tracked_request.callset.update(sql, 1, span.duration())
-            if tracked_request.callset.should_capture_backtrace(sql):
+            if tracked_request.n_plus_one_tracker.should_capture_backtrace(
+                sql=sql,
+                duration=span.duration(),
+                count=(1 if not many else len(params)),
+            ):
                 span.capture_backtrace()
 
 
@@ -101,9 +104,14 @@ def execute_wrapper(wrapped, instance, args, kwargs):
     finally:
         if sql is not None:
             tracked_request.stop_span()
-            tracked_request.callset.update(sql, 1, span.duration())
-            if tracked_request.callset.should_capture_backtrace(sql):
+            if tracked_request.n_plus_one_tracker.should_capture_backtrace(
+                sql, span.duration()
+            ):
                 span.capture_backtrace()
+
+
+def _extract_sql(sql, *args, **kwargs):
+    return sql
 
 
 @wrapt.decorator
@@ -112,9 +120,10 @@ def executemany_wrapper(wrapped, instance, args, kwargs):
     CursorWrapper.executemany() wrapper for Django < 2.0
     """
     try:
-        sql = _extract_sql(*args, **kwargs)
+        sql, param_list = _extract_sql_param_list(*args, **kwargs)
     except TypeError:
         sql = None
+        param_list = None
 
     if sql is not None:
         tracked_request = TrackedRequest.instance()
@@ -126,10 +135,11 @@ def executemany_wrapper(wrapped, instance, args, kwargs):
     finally:
         if sql is not None:
             tracked_request.stop_span()
-            tracked_request.callset.update(sql, 1, span.duration())
-            if tracked_request.callset.should_capture_backtrace(sql):
+            if tracked_request.n_plus_one_tracker.should_capture_backtrace(
+                sql=sql, duration=span.duration(), count=len(param_list),
+            ):
                 span.capture_backtrace()
 
 
-def _extract_sql(sql, *args, **kwargs):
-    return sql
+def _extract_sql_param_list(sql, param_list, *args, **kwargs):
+    return sql, param_list

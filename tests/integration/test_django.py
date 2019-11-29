@@ -27,7 +27,12 @@ from tests.integration.util import (
     parametrize_queue_time_header_name,
     parametrize_user_ip_headers,
 )
-from tests.tools import delete_attributes, pretend_package_unavailable, skip_if_python_2
+from tests.tools import (
+    delete_attributes,
+    n_plus_one_thresholds,
+    pretend_package_unavailable,
+    skip_if_python_2,
+)
 
 try:
     from django.urls import resolve
@@ -293,13 +298,8 @@ def test_sql_execute_type_error(tracked_requests):
     ]
 
 
-# Monkey patch should_capture_backtrace in order to keep the test fast.
-@mock.patch(
-    "scout_apm.core.n_plus_one_call_set.NPlusOneCallSetItem.should_capture_backtrace"
-)
-def test_sql_capture_backtrace(should_capture_backtrace, tracked_requests):
-    should_capture_backtrace.return_value = True
-    with app_with_scout() as app:
+def test_sql_capture_backtrace(tracked_requests):
+    with n_plus_one_thresholds(count=1, duration=0.0), app_with_scout() as app:
         response = TestApp(app).get("/sql/")
 
     assert response.status_int == 200
@@ -312,6 +312,29 @@ def test_sql_capture_backtrace(should_capture_backtrace, tracked_requests):
         "Controller/tests.integration.django_app.sql",
         "Middleware",
     ]
+    assert "stack" in spans[0].tags
+    assert "stack" in spans[1].tags
+    assert "stack" in spans[2].tags
+
+
+def test_sql_capture_backtrace_many(tracked_requests):
+    # Set count threshold at 2 so only executemany statement is captured
+    with n_plus_one_thresholds(count=2, duration=0.0), app_with_scout() as app:
+        response = TestApp(app).get("/sql/")
+
+    assert response.status_int == 200
+    assert len(tracked_requests) == 1
+    spans = tracked_requests[0].complete_spans
+    assert [s.operation for s in spans] == [
+        "SQL/Query",
+        "SQL/Many",
+        "SQL/Query",
+        "Controller/tests.integration.django_app.sql",
+        "Middleware",
+    ]
+    assert "stack" not in spans[0].tags
+    assert "stack" in spans[1].tags
+    assert "stack" not in spans[2].tags
 
 
 def test_template(tracked_requests):
