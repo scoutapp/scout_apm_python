@@ -84,7 +84,11 @@ def app_with_scout(*, middleware=None, scout_config=None):
     Config.set(**scout_config)
     middleware.insert(0, Middleware(ScoutMiddleware))
 
-    app = Starlette(routes=routes, middleware=middleware, exception_handlers={500: raise_error_handler})
+    app = Starlette(
+        routes=routes,
+        middleware=middleware,
+        exception_handlers={500: raise_error_handler},
+    )
 
     try:
         yield app
@@ -362,7 +366,6 @@ async def test_background_jobs(tracked_requests):
 
 @async_test
 async def test_username(tracked_requests):
-
     class DummyBackend(AuthenticationBackend):
         async def authenticate(self, request):
             return AuthCredentials(), SimpleUser("dummy")
@@ -384,7 +387,6 @@ async def test_username(tracked_requests):
 
 @async_test
 async def test_username_bad_user(tracked_requests):
-
     class BadUserBackend(AuthenticationBackend):
         async def authenticate(self, request):
             return AuthCredentials(), object()
