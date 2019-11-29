@@ -1,6 +1,6 @@
 # Changelog
 
-## Pending
+## [2.9.0] 2019-11-29
 
 ### Added
 
