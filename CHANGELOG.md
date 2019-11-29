@@ -19,6 +19,9 @@
 
 - Track better names for Django REST Framework `ViewSet`s
   ([PR #380](https://github.com/scoutapp/scout_apm_python/pull/380)).
+- Always capture SQL tracebacks for `executemany` queries going over the
+  built-in count threshold
+  ([PR #409](https://github.com/scoutapp/scout_apm_python/pull/409)).
 
 ## [2.8.1] 2019-11-19
 
