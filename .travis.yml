@@ -49,7 +49,7 @@ jobs:
         - twine check dist/* wheelhouse/*
         - ls -al dist wheelhouse
         - if [ "${TRAVIS_TAG:-}" != "" ]; then
-            twine upload --non-interactive --skip-existing dist/* wheelhouse/*;
+            twine upload --skip-existing dist/* wheelhouse/*;
           fi
 
 notifications:
