@@ -18,23 +18,20 @@ from tests.integration.util import (
 )
 from tests.tools import asgi_http_scope, async_test
 
-try:
-    import channels
-except ImportError:
-    channels = None
-
-
-skip_unless_channels = pytest.mark.skipif(
-    channels is None, reason="Channels is required."
-)
-
 
 @contextmanager
 def app_with_scout(**settings):
     """
     Set up the Django app and then add a Channels ASGI application on top.
     """
+    try:
+        import channels  # noqa
+    except ImportError:
+        pytest.skip("No Channels")
+
     with django_app_with_scout(**settings):
+
+        from channels.auth import AuthMiddlewareStack
         from channels.http import AsgiHandler
         from channels.generic.http import AsyncHttpConsumer
         from channels.routing import URLRouter
@@ -63,7 +60,6 @@ def app_with_scout(**settings):
         yield application
 
 
-@skip_unless_channels
 @async_test
 async def test_normal_django_view(tracked_requests):
     with app_with_scout() as app:
@@ -88,7 +84,6 @@ async def test_normal_django_view(tracked_requests):
     ]
 
 
-@skip_unless_channels
 @async_test
 async def test_async_http_consumer(tracked_requests):
     with app_with_scout() as app:
@@ -115,7 +110,6 @@ async def test_async_http_consumer(tracked_requests):
     )
 
 
-@skip_unless_channels
 @async_test
 async def test_async_http_consumer_large_body(tracked_requests):
     with app_with_scout() as app:
@@ -126,7 +120,7 @@ async def test_async_http_consumer_large_body(tracked_requests):
         await communicator.send_input({"type": "http.request"})
         # Read the response.
         response_start = await communicator.receive_output()
-        response_body = await communicator.receive_output()
+        await communicator.receive_output()
 
     assert response_start["type"] == "http.response.start"
     assert response_start["status"] == 200
@@ -152,7 +146,6 @@ async def test_filtered_params(params, expected_path, tracked_requests):
     assert tracked_requests[0].tags["path"] == "/channels-basic" + expected_path
 
 
-@skip_unless_channels
 @async_test
 async def test_ignore(tracked_requests):
     with app_with_scout(SCOUT_IGNORE="/channels-basic/") as app:
