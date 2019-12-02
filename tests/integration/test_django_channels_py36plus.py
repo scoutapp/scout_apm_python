@@ -115,6 +115,24 @@ async def test_async_http_consumer(tracked_requests):
     )
 
 
+@skip_unless_channels
+@async_test
+async def test_async_http_consumer_large_body(tracked_requests):
+    with app_with_scout() as app:
+        communicator = ApplicationCommunicator(
+            app, asgi_http_scope(path="/channels-basic/")
+        )
+        await communicator.send_input({"type": "http.request", "more_body": True})
+        await communicator.send_input({"type": "http.request"})
+        # Read the response.
+        response_start = await communicator.receive_output()
+        response_body = await communicator.receive_output()
+
+    assert response_start["type"] == "http.response.start"
+    assert response_start["status"] == 200
+    assert len(tracked_requests) == 1
+
+
 @parametrize_filtered_params
 @async_test
 async def test_filtered_params(params, expected_path, tracked_requests):

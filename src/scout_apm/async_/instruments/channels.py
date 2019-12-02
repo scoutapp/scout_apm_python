@@ -20,7 +20,7 @@ async def wrapped_http_request(wrapped, instance, args, kwargs):
 
     if message.get("more_body"):
         # handle() won't be called yet
-        return await wrapped(instance, *args, **kwargs)
+        return await wrapped(*args, **kwargs)
 
     tracked_request = TrackedRequest.instance()
     tracked_request.is_real_request = True
