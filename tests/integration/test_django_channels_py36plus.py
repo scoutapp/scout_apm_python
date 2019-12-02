@@ -12,10 +12,8 @@ from asgiref.testing import ApplicationCommunicator
 from scout_apm.compat import datetime_to_timestamp
 from scout_apm.django.instruments.channels import ensure_instrumented
 from tests.compat import mock
-from tests.integration.test_django import (
-    app_with_scout as django_app_with_scout,
-    make_admin_user,
-)
+from tests.integration.test_django import app_with_scout as django_app_with_scout
+from tests.integration.test_django import make_admin_user
 from tests.integration.util import (
     parametrize_filtered_params,
     parametrize_queue_time_header_name,
@@ -176,7 +174,9 @@ async def test_http_consumer_ignore(tracked_requests):
 
 @parametrize_user_ip_headers
 @async_test
-async def test_http_consumer_user_ip(headers, client_address, expected, tracked_requests):
+async def test_http_consumer_user_ip(
+    headers, client_address, expected, tracked_requests
+):
     with app_with_scout() as app:
         communicator = ApplicationCommunicator(
             app,
@@ -259,10 +259,7 @@ async def test_http_consumer_username_exception(tracked_requests):
         mock_user = mock.Mock()
         mock_user.get_username.side_effect = ValueError
 
-        scope = asgi_http_scope(
-            path="/channels-basic/",
-            user=mock_user,
-        )
+        scope = asgi_http_scope(path="/channels-basic/", user=mock_user,)
         communicator = ApplicationCommunicator(app, scope)
         await communicator.send_input({"type": "http.request"})
         response_start = await communicator.receive_output()

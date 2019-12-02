@@ -101,8 +101,7 @@ def make_admin_user():
 
 
 @pytest.mark.parametrize(
-    "module",
-    [huey, sql, template],
+    "module", [huey, sql, template],
 )
 def test_instruments_idempotent(module):
     """

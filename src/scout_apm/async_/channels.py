@@ -1,13 +1,9 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import wrapt
 from urllib.parse import parse_qsl
 
-try:
-    from channels.generic.http import AsyncHttpConsumer
-except ImportError:  # pragma: no cover
-    AsyncHttpConsumer = None
+import wrapt
 
 from scout_apm.core.tracked_request import TrackedRequest
 from scout_apm.core.web_requests import (
@@ -17,6 +13,11 @@ from scout_apm.core.web_requests import (
     track_request_queue_time,
 )
 
+try:
+    from channels.generic.http import AsyncHttpConsumer
+except ImportError:  # pragma: no cover
+    AsyncHttpConsumer = None
+
 
 def instrument_channels():
     try:
@@ -24,7 +25,9 @@ def instrument_channels():
     except ImportError:  # pragma: no cover
         pass
     else:
-        AsyncHttpConsumer.http_request = wrapped_http_request(AsyncHttpConsumer.http_request)
+        AsyncHttpConsumer.http_request = wrapped_http_request(
+            AsyncHttpConsumer.http_request
+        )
 
 
 @wrapt.decorator
