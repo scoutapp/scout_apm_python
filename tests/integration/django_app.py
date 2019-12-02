@@ -6,6 +6,11 @@ import wrapt
 from django.conf import settings
 from django.template.response import TemplateResponse
 
+try:
+    import channels
+except ImportError:
+    channels = None
+
 config = {
     "ALLOWED_HOSTS": ["*"],
     "DATABASES": {
@@ -41,6 +46,9 @@ config = {
     # https://huey.readthedocs.io/en/latest/django.html
     "HUEY": {"backend_class": "huey.MemoryHuey", "immediate": True},
 }
+
+if channels is not None:
+    config['INSTALLED_APPS'] += ['channels']
 
 if django.VERSION > (1, 10):
     config["MIDDLEWARE"] = [
