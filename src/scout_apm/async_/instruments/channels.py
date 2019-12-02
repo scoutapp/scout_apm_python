@@ -54,6 +54,13 @@ async def wrapped_http_request(wrapped, instance, args, kwargs):
             amazon_queue_time.decode("latin1"), tracked_request
         )
 
+    user = scope.get("user", None)
+    if user is not None:
+        try:
+            tracked_request.tag("username", user.get_username())
+        except Exception:
+            pass
+
     tracked_request.start_span(
         operation="Controller/{}.{}".format(
             instance.__module__, instance.__class__.__qualname__

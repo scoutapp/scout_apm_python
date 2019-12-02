@@ -10,7 +10,11 @@ import pytest
 from asgiref.testing import ApplicationCommunicator
 
 from scout_apm.compat import datetime_to_timestamp
-from tests.integration.test_django import app_with_scout as django_app_with_scout
+from tests.compat import mock
+from tests.integration.test_django import (
+    app_with_scout as django_app_with_scout,
+    make_admin_user,
+)
 from tests.integration.util import (
     parametrize_filtered_params,
     parametrize_queue_time_header_name,
@@ -47,17 +51,17 @@ def app_with_scout(**settings):
         if django.VERSION >= (2, 0):
             from django.urls import path
 
-            application = URLRouter(
+            router = URLRouter(
                 [path("channels-basic/", BasicHttpConsumer), path("", AsgiHandler)]
             )
         else:
             from django.conf.urls import url
 
-            application = URLRouter(
+            router = URLRouter(
                 [url(r"^channels-basic/$", BasicHttpConsumer), url(r"^$", AsgiHandler)]
             )
 
-        yield application
+        yield AuthMiddlewareStack(router)
 
 
 @async_test
@@ -200,3 +204,61 @@ async def test_queue_time(header_name, tracked_requests):
     queue_time_ns = tracked_requests[0].tags["scout.queue_time_ns"]
     # Upper bound assumes we didn't take more than 2s to run this test...
     assert queue_time_ns >= 2000000000 and queue_time_ns < 4000000000
+
+
+def create_logged_in_session(user):
+    from django.contrib.auth import login
+    from django.contrib.sessions.backends.db import SessionStore
+
+    session = SessionStore()
+    session.create()
+    # django.contrib.auth.login needs a request, so fake one
+    fake_request = mock.Mock(session=session)
+    login(fake_request, user)
+    session.save()
+    return session
+
+
+@async_test
+async def test_username(tracked_requests):
+    with app_with_scout() as app:
+        from django.conf.global_settings import SESSION_COOKIE_NAME
+
+        admin_user = make_admin_user()
+        session = create_logged_in_session(admin_user)
+        scope = asgi_http_scope(
+            path="/channels-basic/",
+            headers={
+                "cookie": "{}={}".format(SESSION_COOKIE_NAME, session.session_key)
+            },
+        )
+        communicator = ApplicationCommunicator(app, scope)
+        await communicator.send_input({"type": "http.request"})
+        response_start = await communicator.receive_output()
+        await communicator.receive_output()
+
+    assert response_start["type"] == "http.response.start"
+    assert response_start["status"] == 200
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert tracked_request.tags["username"] == admin_user.username
+
+
+@async_test
+async def test_username_exception(tracked_requests):
+    with app_with_scout() as app:
+        mock_user = mock.Mock()
+        mock_user.get_username.side_effect = ValueError
+
+        scope = asgi_http_scope(
+            path="/channels-basic/",
+            user=mock_user,
+        )
+        communicator = ApplicationCommunicator(app, scope)
+        await communicator.send_input({"type": "http.request"})
+        response_start = await communicator.receive_output()
+        await communicator.receive_output()
+
+    assert response_start["type"] == "http.response.start"
+    assert response_start["status"] == 200
+    assert "username" not in tracked_requests[0].tags
