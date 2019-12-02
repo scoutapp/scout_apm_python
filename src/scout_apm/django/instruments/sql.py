@@ -18,14 +18,14 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-sql_instrumented = False
+instrumented = False
 
 
-def ensure_sql_instrumented():
-    global sql_instrumented
-    if sql_instrumented:
+def ensure_instrumented():
+    global instrumented
+    if instrumented:
         return
-    sql_instrumented = True
+    instrumented = True
 
     if django.VERSION >= (2, 0):
         for connection in connections.all():

@@ -18,9 +18,7 @@ from webtest import TestApp
 
 from scout_apm.compat import datetime_to_timestamp
 from scout_apm.core.config import scout_config
-from scout_apm.django.instruments.huey import ensure_huey_instrumented
-from scout_apm.django.instruments.sql import ensure_sql_instrumented
-from scout_apm.django.instruments.template import ensure_templates_instrumented
+from scout_apm.django.instruments import huey, sql, template
 from tests.compat import mock
 from tests.integration import django_app
 from tests.integration.util import (
@@ -103,14 +101,15 @@ def make_admin_user():
 
 
 @pytest.mark.parametrize(
-    "func",
-    [ensure_huey_instrumented, ensure_sql_instrumented, ensure_templates_instrumented],
+    "module",
+    [huey, sql, template],
 )
-def test_instruments_idempotent(func):
+def test_instruments_idempotent(module):
     """
     Check second call doesn't crash (should be a no-op)
     """
-    func()
+    with app_with_scout():
+        module.ensure_instrumented()
 
 
 def test_on_setting_changed_application_root():

@@ -7,14 +7,14 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
-huey_instrumented = False
+instrumented = False
 
 
-def ensure_huey_instrumented():
-    global huey_instrumented
-    if huey_instrumented:
+def ensure_instrumented():
+    global instrumented
+    if instrumented:
         return
-    huey_instrumented = True
+    instrumented = True
 
     # Avoid importing if not installed
     if "huey.contrib.djhuey" not in settings.INSTALLED_APPS:  # pragma: no cover

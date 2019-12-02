@@ -10,6 +10,7 @@ import pytest
 from asgiref.testing import ApplicationCommunicator
 
 from scout_apm.compat import datetime_to_timestamp
+from scout_apm.django.instruments.channels import ensure_instrumented
 from tests.compat import mock
 from tests.integration.test_django import (
     app_with_scout as django_app_with_scout,
@@ -62,6 +63,14 @@ def app_with_scout(**settings):
             )
 
         yield AuthMiddlewareStack(router)
+
+
+def test_instruments_idempotent():
+    """
+    Check second call doesn't crash (should be a no-op)
+    """
+    with app_with_scout():
+        ensure_instrumented()
 
 
 @async_test

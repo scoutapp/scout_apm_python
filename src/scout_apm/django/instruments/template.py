@@ -10,14 +10,14 @@ from scout_apm.core.stacktracer import trace_method
 
 logger = logging.getLogger(__name__)
 
-templates_instrumented = False
+instrumented = False
 
 
-def ensure_templates_instrumented():
-    global templates_instrumented
-    if templates_instrumented:
+def ensure_instrumented():
+    global instrumented
+    if instrumented:
         return
-    templates_instrumented = True
+    instrumented = True
 
     @trace_method(Template)
     def __init__(self, *args, **kwargs):

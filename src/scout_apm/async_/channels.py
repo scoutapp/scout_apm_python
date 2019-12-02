@@ -4,6 +4,11 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import wrapt
 from urllib.parse import parse_qsl
 
+try:
+    from channels.generic.http import AsyncHttpConsumer
+except ImportError:  # pragma: no cover
+    AsyncHttpConsumer = None
+
 from scout_apm.core.tracked_request import TrackedRequest
 from scout_apm.core.web_requests import (
     create_filtered_path,
@@ -11,6 +16,15 @@ from scout_apm.core.web_requests import (
     track_amazon_request_queue_time,
     track_request_queue_time,
 )
+
+
+def instrument_channels():
+    try:
+        from channels.generic.http import AsyncHttpConsumer
+    except ImportError:  # pragma: no cover
+        pass
+    else:
+        AsyncHttpConsumer.http_request = wrapped_http_request(AsyncHttpConsumer.http_request)
 
 
 @wrapt.decorator
