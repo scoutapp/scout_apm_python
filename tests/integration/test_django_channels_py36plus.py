@@ -1,6 +1,7 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import datetime as dt
 from contextlib import contextmanager
 from urllib.parse import urlencode
 
@@ -8,8 +9,13 @@ import django
 import pytest
 from asgiref.testing import ApplicationCommunicator
 
+from scout_apm.compat import datetime_to_timestamp
 from tests.integration.test_django import app_with_scout as django_app_with_scout
-from tests.integration.util import parametrize_filtered_params, parametrize_user_ip_headers
+from tests.integration.util import (
+    parametrize_filtered_params,
+    parametrize_queue_time_header_name,
+    parametrize_user_ip_headers,
+)
 from tests.tools import asgi_http_scope, async_test
 
 try:
@@ -61,9 +67,7 @@ def app_with_scout(**settings):
 @async_test
 async def test_normal_django_view(tracked_requests):
     with app_with_scout() as app:
-        communicator = ApplicationCommunicator(
-            app, asgi_http_scope(path="/")
-        )
+        communicator = ApplicationCommunicator(app, asgi_http_scope(path="/"))
         await communicator.send_input({"type": "http.request"})
         # Read the response.
         response_start = await communicator.receive_output()
@@ -117,7 +121,9 @@ async def test_filtered_params(params, expected_path, tracked_requests):
     with app_with_scout() as app:
         communicator = ApplicationCommunicator(
             app,
-            asgi_http_scope(path="/channels-basic/", query_string=urlencode(params).encode("utf-8")),
+            asgi_http_scope(
+                path="/channels-basic/", query_string=urlencode(params).encode("utf-8")
+            ),
         )
         await communicator.send_input({"type": "http.request"})
         response_start = await communicator.receive_output()
@@ -159,3 +165,27 @@ async def test_user_ip(headers, client_address, expected, tracked_requests):
     assert response_start["type"] == "http.response.start"
     assert response_start["status"] == 200
     assert tracked_requests[0].tags["user_ip"] == expected
+
+
+@parametrize_queue_time_header_name
+@async_test
+async def test_queue_time(header_name, tracked_requests):
+    # Not testing floats due to Python 2/3 rounding differences
+    queue_start = int(datetime_to_timestamp(dt.datetime.utcnow())) - 2
+    with app_with_scout() as app:
+        communicator = ApplicationCommunicator(
+            app,
+            asgi_http_scope(
+                path="/channels-basic/",
+                headers={header_name: str("t=") + str(queue_start)},
+            ),
+        )
+        await communicator.send_input({"type": "http.request"})
+        response_start = await communicator.receive_output()
+        await communicator.receive_output()
+
+    assert response_start["type"] == "http.response.start"
+    assert response_start["status"] == 200
+    queue_time_ns = tracked_requests[0].tags["scout.queue_time_ns"]
+    # Upper bound assumes we didn't take more than 2s to run this test...
+    assert queue_time_ns >= 2000000000 and queue_time_ns < 4000000000
