@@ -2,12 +2,14 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from contextlib import contextmanager
+from urllib.parse import urlencode
 
 import django
 import pytest
 from asgiref.testing import ApplicationCommunicator
 
 from tests.integration.test_django import app_with_scout as django_app_with_scout
+from tests.integration.util import parametrize_filtered_params
 from tests.tools import asgi_http_scope, async_test
 
 try:
@@ -101,9 +103,42 @@ async def test_async_http_consumer(tracked_requests):
     assert len(tracked_requests) == 1
     tracked_request = tracked_requests[0]
     assert len(tracked_request.complete_spans) == 1
-    assert tracked_request.tags["path"] == "/"
+    assert tracked_request.tags["path"] == "/channels-basic/"
     span = tracked_request.complete_spans[0]
     assert span.operation == (
         "Controller/tests.integration.test_django_channels_py36plus."
-        + "asgi_application.<locals>.BasicHttpConsumer"
+        + "app_with_scout.<locals>.BasicHttpConsumer"
     )
+
+
+@parametrize_filtered_params
+@async_test
+async def test_filtered_params(params, expected_path, tracked_requests):
+    with app_with_scout() as app:
+        communicator = ApplicationCommunicator(
+            app,
+            asgi_http_scope(path="/channels-basic/", query_string=urlencode(params).encode("utf-8")),
+        )
+        await communicator.send_input({"type": "http.request"})
+        response_start = await communicator.receive_output()
+        await communicator.receive_output()
+
+    assert response_start["type"] == "http.response.start"
+    assert response_start["status"] == 200
+    assert tracked_requests[0].tags["path"] == "/channels-basic" + expected_path
+
+
+@skip_unless_channels
+@async_test
+async def test_async_http_consumer_ignore(tracked_requests):
+    with app_with_scout(SCOUT_IGNORE="/channels-basic/") as app:
+        communicator = ApplicationCommunicator(
+            app, asgi_http_scope(path="/channels-basic/")
+        )
+        await communicator.send_input({"type": "http.request"})
+        response_start = await communicator.receive_output()
+        await communicator.receive_output()
+
+    assert response_start["type"] == "http.response.start"
+    assert response_start["status"] == 200
+    assert tracked_requests == []
