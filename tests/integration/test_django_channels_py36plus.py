@@ -74,7 +74,7 @@ def test_instruments_idempotent():
 
 
 @async_test
-async def test_normal_django_view(tracked_requests):
+async def test_vanilla_view_asgi_handler(tracked_requests):
     with app_with_scout() as app:
         communicator = ApplicationCommunicator(app, asgi_http_scope(path="/"))
         await communicator.send_input({"type": "http.request"})
@@ -98,7 +98,7 @@ async def test_normal_django_view(tracked_requests):
 
 
 @async_test
-async def test_async_http_consumer(tracked_requests):
+async def test_http_consumer(tracked_requests):
     with app_with_scout() as app:
         communicator = ApplicationCommunicator(
             app, asgi_http_scope(path="/channels-basic/")
@@ -124,7 +124,7 @@ async def test_async_http_consumer(tracked_requests):
 
 
 @async_test
-async def test_async_http_consumer_large_body(tracked_requests):
+async def test_http_consumer_large_body(tracked_requests):
     with app_with_scout() as app:
         communicator = ApplicationCommunicator(
             app, asgi_http_scope(path="/channels-basic/")
@@ -142,7 +142,7 @@ async def test_async_http_consumer_large_body(tracked_requests):
 
 @parametrize_filtered_params
 @async_test
-async def test_filtered_params(params, expected_path, tracked_requests):
+async def test_http_consumer_filtered_params(params, expected_path, tracked_requests):
     with app_with_scout() as app:
         communicator = ApplicationCommunicator(
             app,
@@ -160,7 +160,7 @@ async def test_filtered_params(params, expected_path, tracked_requests):
 
 
 @async_test
-async def test_ignore(tracked_requests):
+async def test_http_consumer_ignore(tracked_requests):
     with app_with_scout(SCOUT_IGNORE="/channels-basic/") as app:
         communicator = ApplicationCommunicator(
             app, asgi_http_scope(path="/channels-basic/")
@@ -176,7 +176,7 @@ async def test_ignore(tracked_requests):
 
 @parametrize_user_ip_headers
 @async_test
-async def test_user_ip(headers, client_address, expected, tracked_requests):
+async def test_http_consumer_user_ip(headers, client_address, expected, tracked_requests):
     with app_with_scout() as app:
         communicator = ApplicationCommunicator(
             app,
@@ -193,7 +193,7 @@ async def test_user_ip(headers, client_address, expected, tracked_requests):
 
 @parametrize_queue_time_header_name
 @async_test
-async def test_queue_time(header_name, tracked_requests):
+async def test_http_consumer_queue_time(header_name, tracked_requests):
     # Not testing floats due to Python 2/3 rounding differences
     queue_start = int(datetime_to_timestamp(dt.datetime.utcnow())) - 2
     with app_with_scout() as app:
@@ -229,7 +229,7 @@ def create_logged_in_session(user):
 
 
 @async_test
-async def test_username(tracked_requests):
+async def test_http_consumer_username(tracked_requests):
     with app_with_scout() as app:
         from django.conf.global_settings import SESSION_COOKIE_NAME
 
@@ -254,7 +254,7 @@ async def test_username(tracked_requests):
 
 
 @async_test
-async def test_username_exception(tracked_requests):
+async def test_http_consumer_username_exception(tracked_requests):
     with app_with_scout() as app:
         mock_user = mock.Mock()
         mock_user.get_username.side_effect = ValueError
