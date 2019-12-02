@@ -9,7 +9,7 @@ import pytest
 from asgiref.testing import ApplicationCommunicator
 
 from tests.integration.test_django import app_with_scout as django_app_with_scout
-from tests.integration.util import parametrize_filtered_params
+from tests.integration.util import parametrize_filtered_params, parametrize_user_ip_headers
 from tests.tools import asgi_http_scope, async_test
 
 try:
@@ -130,7 +130,7 @@ async def test_filtered_params(params, expected_path, tracked_requests):
 
 @skip_unless_channels
 @async_test
-async def test_async_http_consumer_ignore(tracked_requests):
+async def test_ignore(tracked_requests):
     with app_with_scout(SCOUT_IGNORE="/channels-basic/") as app:
         communicator = ApplicationCommunicator(
             app, asgi_http_scope(path="/channels-basic/")
@@ -142,3 +142,20 @@ async def test_async_http_consumer_ignore(tracked_requests):
     assert response_start["type"] == "http.response.start"
     assert response_start["status"] == 200
     assert tracked_requests == []
+
+
+@parametrize_user_ip_headers
+@async_test
+async def test_user_ip(headers, client_address, expected, tracked_requests):
+    with app_with_scout() as app:
+        communicator = ApplicationCommunicator(
+            app,
+            asgi_http_scope(path="/", headers=headers, client=(client_address, None)),
+        )
+        await communicator.send_input({"type": "http.request"})
+        response_start = await communicator.receive_output()
+        await communicator.receive_output()
+
+    assert response_start["type"] == "http.response.start"
+    assert response_start["status"] == 200
+    assert tracked_requests[0].tags["user_ip"] == expected

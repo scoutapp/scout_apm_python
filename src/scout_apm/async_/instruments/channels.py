@@ -26,6 +26,17 @@ async def wrapped_http_request(wrapped, instance, args, kwargs):
     if ignore_path(path):
         tracked_request.tag("ignore_transaction", True)
 
+    # We only care about the last values of headers so don't care that we use
+    # a plain dict rather than a multi-value dict
+    headers = {k.lower(): v for k, v in scope.get("headers", ())}
+
+    user_ip = (
+        headers.get(b"x-forwarded-for", b"").decode('latin1').split(",")[0]
+        or headers.get(b"client-ip", b"").decode('latin1').split(",")[0]
+        or scope.get("client", ("",))[0]
+    )
+    tracked_request.tag("user_ip", user_ip)
+
     tracked_request.start_span(
         operation="Controller/{}.{}".format(
             instance.__module__, instance.__class__.__qualname__
