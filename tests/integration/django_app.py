@@ -1,6 +1,8 @@
 # coding: utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import os
+
 import django
 import wrapt
 from django.conf import settings
@@ -11,10 +13,13 @@ try:
 except ImportError:
     channels = None
 
+DATABASE_PATH = os.path.join(os.path.dirname(__file__), "django_app.sqlite3")
+
+
 config = {
     "ALLOWED_HOSTS": ["*"],
     "DATABASES": {
-        "default": {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"}
+        "default": {"ENGINE": "django.db.backends.sqlite3", "NAME": DATABASE_PATH}
     },
     "DEBUG_PROPAGATE_EXCEPTIONS": True,
     "ROOT_URLCONF": __name__,
@@ -48,7 +53,7 @@ config = {
 }
 
 if channels is not None:
-    config['INSTALLED_APPS'] += ['channels']
+    config["INSTALLED_APPS"] += ["channels"]
 
 if django.VERSION > (1, 10):
     config["MIDDLEWARE"] = [

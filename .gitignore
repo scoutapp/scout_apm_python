@@ -17,3 +17,4 @@ src/*.egg-info/
 /.pytest_cache
 .tox/
 .coverage
+/tests/integration/django_app.sqlite3

@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import datetime as dt
+import os
 import sys
 from contextlib import contextmanager
 
@@ -71,6 +72,13 @@ def app_with_scout(**settings):
     """
     settings.setdefault("SCOUT_MONITOR", True)
     settings["SCOUT_CORE_AGENT_LAUNCH"] = False
+
+    if not getattr(app_with_scout, "startup_ran", False):
+        try:
+            os.remove(django_app.DATABASE_PATH)
+        except OSError:
+            pass
+
     with override_settings(**settings):
         # Have to create a new WSGI app each time because the middleware stack
         # within it is static
