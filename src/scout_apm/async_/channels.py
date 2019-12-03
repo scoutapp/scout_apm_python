@@ -29,6 +29,15 @@ def instrument_channels():
             AsyncHttpConsumer.http_request
         )
 
+    try:
+        from channels.generic.websocket import WebsocketConsumer
+    except ImportError:  # pragma: no cover
+        pass
+    else:
+        WebsocketConsumer.websocket_connect = wrapped_websocket_connect(
+            WebsocketConsumer.websocket_connect
+        )
+
 
 @wrapt.decorator
 async def wrapped_http_request(wrapped, instance, args, kwargs):
@@ -92,3 +101,58 @@ async def wrapped_http_request(wrapped, instance, args, kwargs):
 
 def _extract_message(message, *args, **kwargs):
     return message
+
+
+@wrapt.decorator
+def wrapped_websocket_connect(wrapped, instance, args, kwargs):
+    scope = instance.scope
+
+    tracked_request = TrackedRequest.instance()
+    tracked_request.is_real_request = True
+
+    path = scope.get("root_path", "") + scope["path"]
+    query_params = parse_qsl(scope.get("query_string", b"").decode("utf-8"))
+    tracked_request.tag("path", create_filtered_path(path, query_params))
+    if ignore_path(path):
+        tracked_request.tag("ignore_transaction", True)
+
+    # We only care about the last values of headers so don't care that we use
+    # a plain dict rather than a multi-value dict
+    headers = {k.lower(): v for k, v in scope.get("headers", ())}
+
+    user_ip = (
+        headers.get(b"x-forwarded-for", b"").decode("latin1").split(",")[0]
+        or headers.get(b"client-ip", b"").decode("latin1").split(",")[0]
+        or scope.get("client", ("",))[0]
+    )
+    tracked_request.tag("user_ip", user_ip)
+
+    queue_time = headers.get(b"x-queue-start", b"") or headers.get(
+        b"x-request-start", b""
+    )
+    tracked_queue_time = track_request_queue_time(
+        queue_time.decode("latin1"), tracked_request
+    )
+    if not tracked_queue_time:
+        amazon_queue_time = headers.get(b"x-amzn-trace-id", b"")
+        track_amazon_request_queue_time(
+            amazon_queue_time.decode("latin1"), tracked_request
+        )
+
+    user = scope.get("user", None)
+    if user is not None:
+        try:
+            tracked_request.tag("username", user.get_username())
+        except Exception:
+            pass
+
+    tracked_request.start_span(
+        operation="Controller/{}.{}.websocket_connect".format(
+            instance.__module__, instance.__class__.__qualname__
+        )
+    )
+
+    try:
+        return wrapped(*args, **kwargs)
+    finally:
+        tracked_request.stop_span()
