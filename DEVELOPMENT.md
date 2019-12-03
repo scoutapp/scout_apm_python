@@ -1,118 +1,76 @@
 Dev Guide
 =========
 
-Setup
------
+Basic Setup
+-----------
 
-Install Python. Any version will do.
+**First,** install one or more of the supported Python versions. It's best to
+install all which can be done with [pyenv](https://github.com/pyenv/pyenv).
 
-Create a virtualenv. There are various ways to do this depending on which
-Python version you're using and which tools you prefer.
-[virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/) is a good
-choice:
+**Second,** install [tox](https://tox.readthedocs.io/en/latest/) with
+`python -m pip install tox`. Best to use the latest version of Python you have
+installed for this.
 
-    $ mkvirtualenv scout_apm
+**Third,** run the tests with a tox environment. For example,
+`tox -e py37-django22` will run with Python 3.7 and Django 2.2.
 
-Install development tools:
+You can get a list of all the defined environments with `tox -l`. They're
+defined at the top of `tox.ini`.
 
-    $ pip install black flake8 isort tox
+If you run `tox` with no arguments, it will test all environments. There are a
+lot of environments so this can take some time. It's best to only let CI do
+this when you create a pull request.
 
-If you want to test the Elasticsearch, MongoDB and Redis integrations, install
-these services and set env variables to declare where they're running. If
-you're using virtualenvwrapper, you can export them automatically when
-activating the virtualenv:
+**Fourth,** run the code style checks with `tox -e check`. Everything should
+pass.
 
-    $ vi $VIRTUAL_ENV/bin/postactivate
+**Fifth,** install the pre-commit code style checks hook with
+`.tox/check/bin/pre-commit install`. This will use
+[pre-commit](https://pre-commit.com/) inside the virtual environment that tox
+made to run the checks every time you commit.
 
-    export ELASTICSEARCH_URL="http://localhost:9200/"
-    export MONGODB_URL="mongodb://localhost:27017/"
-    export REDIS_URL="redis://localhost:6379/0"
-    export URLLIB3_URL="http://localhost:9200/"
-
-Re-activate the virtualenv to export the env variables:
-
-    $ workon scout_apm
-
-Checking code quality
----------------------
-
-scout_apm relies on [black](https://black.readthedocs.io/) and
-[isort](https://isort.readthedocs.io/) for automated code formatting.
-
-Don't spend a second thinking about code formatting. Just type valid Python
-and let the computer do the work for you:
-
-    $ make style
-
-scout_apm also relies on [flake8](https://flake8.readthedocs.io/) to enforce
-good Python style, which is known as "linting".
-
-Check for errors with:
-
-    $ make lint
-
-Travis CI enforces these checks.
-
-Running tests
+Editable Mode
 -------------
 
-[tox](https://tox.readthedocs.io/) allows testing easily against various
-Python and Django versions.
+If you want to test an application with the development version of Scout, you
+can install it in "editable mode" in that application's virtual environment.
+Use `pip install -e path/to/scout_apm_python` to do this. This makes the
+virtual environment import scout from the repository directly so you can edit
+it to test changes.
 
-tox creates a virtualenv and installs dependencies according to the requested
-version.
+Running Tests
+-------------
 
-See supported versions:
+Tox runs the tests with [pytest](https://docs.pytest.org/en/latest/). You can
+pass arguments through to Pytest after a `--` to signify the end of arguments
+for tox to parse.
 
-    $ tox -l
+For example, to run `pytest --pdb`, which starts PDB on test failure, run
+`tox -e py37-django22 -- --pdb`.
 
-Run tests with selected Python and Django versions (recommended):
+You can use this to run a specific test file, for example
+`tox -e py37-django22 -- tests/integration/test_django.py`.
 
-    $ tox -e py37-django21
+Test Services
+-------------
 
-Run tests on all supported combinations (not recommended - this is slow):
+Some of the tests require external services to run against. These are specified
+by environment variables. These are:
 
-    $ tox
+* `ELASTICSEARCH_URL` - point to a running Elasticsearch instance, e.g.
+  "http://localhost:9200/"
+* `MONGODB_URL` - point to a running MongoDB instance e.g.
+  "mongodb://localhost:27017/"
+* `REDIS_URL` - point to a running Redis instance e.g.
+  "redis://localhost:6379/0"
 
-Writing a test, creating a pull request and letting Travis CI run `tox` is
-usually the most efficient way to confirm that code works across Python and
-Django versions.
-
-Running tests quickly
----------------------
-
-If you want to iterate quickly and find tox slow, you can run tests directly
-in the virtualenv where you're working.
-
-You can create different virtualenvs to test with different Python versions,
-for example 2.7 and 3.7. In that case, do the whole setup for each virtualenv.
-
-Install all test dependencies:
-
-    $ pip install bottle celery Django elasticsearch flask flask-sqlalchemy jinja2 mock psutil pymongo pyramid pytest pytest-travis-fold pytest-cov redis requests sqlalchemy urllib3 webtest
-
-Run tests with:
-
-    $ PYTHONPATH=src pytest
-
-Run tests only for a package or module like this:
-
-    $ PYTHONPATH=src pytest tests/unit/core/test_config.py
-
-Run a single test like this:
-
-    $ PYTHONPATH=src pytest -k test_boolean_conversion_from_env
-
-The source code is in a `src/` subdirectory to prevent importing it
-accidentally so you need to add it to `PYTHONPATH` — see details
-[here](https://hynek.me/articles/testing-packaging/).
+You can `export` any of these environment variables and run the respective
+tests with `tox`.
 
 Running the test app
 --------------------
 
 Add the following env variables:
-
-    $ vi $VIRTUAL_ENV/bin/postactivate
 
     export SCOUT_MONITOR="True"
     export SCOUT_KEY="<your Scout APM key>"
