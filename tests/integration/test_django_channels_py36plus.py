@@ -232,9 +232,16 @@ def create_logged_in_session(user):
 async def test_http_consumer_username(tracked_requests):
     with app_with_scout() as app:
         from django.conf.global_settings import SESSION_COOKIE_NAME
+        from channels.db import database_sync_to_async
 
-        admin_user = make_admin_user()
-        session = create_logged_in_session(admin_user)
+        @database_sync_to_async
+        def make_user_and_session():
+            admin_user = make_admin_user()
+            session = create_logged_in_session(admin_user)
+            return admin_user, session
+
+        admin_user, session = await make_user_and_session()
+
         scope = asgi_http_scope(
             path="/channels-basic/",
             headers={
