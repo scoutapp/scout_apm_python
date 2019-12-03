@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 
-from django.conf import settings
+from django.apps import apps
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ def ensure_huey_instrumented():
     huey_instrumented = True
 
     # Avoid importing if not installed
-    if "huey.contrib.djhuey" not in settings.INSTALLED_APPS:  # pragma: no cover
+    if not apps.is_installed("huey.contrib.djhuey"):  # pragma: no cover
         return
 
     try:
