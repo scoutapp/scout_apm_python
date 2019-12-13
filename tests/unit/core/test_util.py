@@ -1,6 +1,8 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import pytest
+
 from scout_apm.core.util import octal
 
 
@@ -13,7 +15,5 @@ def test_octal_with_valid_string():
 
 
 def test_octal_raises_valueerror_on_invalid_value():
-    try:
+    with pytest.raises(ValueError):
         octal("THIS IS INVALID")
-    except ValueError:
-        pass
