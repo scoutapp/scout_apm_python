@@ -15,7 +15,7 @@
 - Fix recording of path for unicode query parameters on Python 2.7
   ([PR #419](https://github.com/scoutapp/scout_apm_python/pull/419)).
 
-## [2.9.0] 2019-11-29
+## [2.9.0] 2019-11-30
 
 ### Added
 
