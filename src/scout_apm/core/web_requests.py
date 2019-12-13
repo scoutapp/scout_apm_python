@@ -42,10 +42,18 @@ FILTER_PARAMETERS = frozenset(
 def create_filtered_path(path, query_params):
     if scout_config.value("uri_reporting") == "path":
         return path
+    # Python 2 unicode compatibility: force all keys and values to bytes
     filtered_params = sorted(
         (
-            (k, "[FILTERED]" if k.lower() in FILTER_PARAMETERS else v)
-            for k, v in query_params
+            (
+                key.encode("utf-8"),
+                (
+                    b"[FILTERED]"
+                    if key.lower() in FILTER_PARAMETERS
+                    else value.encode("utf-8")
+                ),
+            )
+            for key, value in query_params
         )
     )
     if not filtered_params:
