@@ -9,6 +9,11 @@
   - Standardized a `language_version` key in Metadata
   - Autocloses spans that are still running when Request completes
 
+### Fixed
+
+- Fix recording of path for unicode query parameters on Python 2.7
+  ([PR #419](https://github.com/scoutapp/scout_apm_python/pull/419)).
+
 ## [2.9.0] 2019-11-29
 
 ### Added
