@@ -4,10 +4,11 @@
 
 ### Added
 
-- Updated CoreAgent version to 1.2.6, fixing serveral bugs (#415)
-  - SQL statements will now have better names in the Timeline Traces
-  - Standardized a `language_version` key in Metadata
-  - Autocloses spans that are still running when Request completes
+- Updated Core Agent to version 1.2.6, fixing several bugs
+  ([PR #415](https://github.com/scoutapp/scout_apm_python/pull/415)):
+    - Improve SQL statement names in Timeline Traces
+    - Standardize on a `language_version` key in metadata
+    - Autoclose spans that are still running when a Request completes
 
 ### Fixed
 
