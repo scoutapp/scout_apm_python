@@ -3,15 +3,14 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import sys
 
-try:
+if sys.version_info >= (3, 0):
     from unittest import mock
-except ImportError:
-    # Python 2
+else:
     import mock
 
-try:
+if sys.version_info >= (3, 2):
     from tempfile import TemporaryDirectory
-except ImportError:  # Python < 3.2
+else:
     from contextlib import contextmanager
     from tempfile import mkdtemp
     from shutil import rmtree
