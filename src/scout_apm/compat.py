@@ -10,8 +10,9 @@ string_type = str if sys.version_info[0] >= 3 else basestring  # noqa: F821
 text_type = str if sys.version_info[0] >= 3 else unicode  # noqa: F821
 string_types = tuple({string_type, text_type})
 
-# Python 2 (and very early 3.x) didn't have ContextDecorator, so define it for ourselves
-if sys.version_info < (3, 2):
+if sys.version_info >= (3, 2):
+    from contextlib import ContextDecorator
+else:
     import functools
 
     class ContextDecorator(object):
@@ -24,14 +25,9 @@ if sys.version_info < (3, 2):
             return decorated
 
 
-else:
-    from contextlib import ContextDecorator
-
-try:
-    # Python 3.x
+if sys.version_info >= (3, 0):
     import queue
-except ImportError:
-    # Python 2.x
+else:
     import Queue as queue
 
 # datetime_to_timestamp converts a naive UTC datetime to a unix timestamp
@@ -60,9 +56,9 @@ def text(value, encoding="utf-8", errors="strict"):
         return text_type(value)
 
 
-try:
+if sys.version_info >= (3, 0):
     from urllib.parse import urlencode
-except ImportError:
+else:
     from urllib import urlencode
 
 
