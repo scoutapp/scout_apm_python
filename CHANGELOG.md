@@ -1,5 +1,14 @@
 # Changelog
 
+## Pending
+
+### Added
+
+- Updated CoreAgent version to 1.2.6, fixing serveral bugs (#415)
+  - SQL statements will now have better names in the Timeline Traces
+  - Standardized a `language_version` key in Metadata
+  - Autocloses spans that are still running when Request completes
+
 ## [2.9.0] 2019-11-29
 
 ### Added
