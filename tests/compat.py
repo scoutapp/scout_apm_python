@@ -4,9 +4,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import sys
 
 if sys.version_info >= (3, 0):
-    import mock
-else:
     from unittest import mock
+else:
+    import mock
 
 if sys.version_info >= (3, 2):
     from tempfile import TemporaryDirectory
