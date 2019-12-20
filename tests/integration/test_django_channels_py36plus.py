@@ -1,6 +1,7 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import concurrent.futures
 import datetime as dt
 from urllib.parse import urlencode
 
@@ -58,6 +59,10 @@ class app_with_scout:
                     headers=[(b"Content-Type", b"text/plain")],
                 )
 
+        class ErrorHttpConsumer(AsyncHttpConsumer):
+            async def handle(self, body):
+                raise ValueError("BØØM!")  # non-ASCII
+
         class BasicWebsocketConsumer(WebsocketConsumer):
             def connect(self):
                 self.accept()
@@ -65,13 +70,19 @@ class app_with_scout:
             def receive(self, text_data=None, bytes_data=None):
                 self.send(text_data="Hello world!")
 
+        class ErrorWebsocketConsumer(WebsocketConsumer):
+            def connect(self):
+                raise ValueError("BØØM!")  # non-ASCII
+
         if django.VERSION >= (2, 0):
             from django.urls import path
 
             router = URLRouter(
                 [
                     path("basic-http/", BasicHttpConsumer),
+                    path("error-http/", ErrorHttpConsumer),
                     path("basic-ws/", BasicWebsocketConsumer),
+                    path("error-ws/", ErrorWebsocketConsumer),
                     path("", AsgiHandler),
                 ]
             )
@@ -81,7 +92,9 @@ class app_with_scout:
             router = URLRouter(
                 [
                     url(r"^basic-http/$", BasicHttpConsumer),
+                    url(r"^error-http/$", ErrorHttpConsumer),
                     url(r"^basic-ws/$", BasicWebsocketConsumer),
+                    url(r"^error-ws/$", ErrorWebsocketConsumer),
                     url(r"^$", AsgiHandler),
                 ]
             )
@@ -307,6 +320,28 @@ async def test_http_consumer_username_exception(tracked_requests):
 
 
 @async_test
+async def test_http_consumer_error(tracked_requests):
+    async with app_with_scout() as app:
+        communicator = ApplicationCommunicator(
+            app, asgi_http_scope(path="/error-http/")
+        )
+        await communicator.send_input({"type": "http.request"})
+        with pytest.raises(concurrent.futures.TimeoutError):
+            await communicator.receive_output(timeout=0.01)
+
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.tags["error"] == "true"
+    assert tracked_request.tags["path"] == "/error-http/"
+    span = tracked_request.complete_spans[0]
+    assert span.operation == (
+        "Controller/tests.integration.test_django_channels_py36plus."
+        + "app_with_scout.__aenter__.<locals>.ErrorHttpConsumer.http_request"
+    )
+
+
+@async_test
 async def test_websocket_consumer_connect(tracked_requests):
     async with app_with_scout() as app:
         communicator = ApplicationCommunicator(
@@ -448,3 +483,25 @@ async def test_websocket_consumer_connect_username_exception(tracked_requests):
 
     assert response["type"] == "websocket.accept"
     assert "username" not in tracked_requests[0].tags
+
+
+@async_test
+async def test_websocket_consumer_error(tracked_requests):
+    async with app_with_scout() as app:
+        communicator = ApplicationCommunicator(
+            app, asgi_websocket_scope(path="/error-ws/")
+        )
+        await communicator.send_input({"type": "websocket.connect"})
+        with pytest.raises(concurrent.futures.TimeoutError):
+            await communicator.receive_output(timeout=0.01)
+
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.tags["error"] == "true"
+    assert tracked_request.tags["path"] == "/error-ws/"
+    span = tracked_request.complete_spans[0]
+    assert span.operation == (
+        "Controller/tests.integration.test_django_channels_py36plus."
+        + "app_with_scout.__aenter__.<locals>.ErrorWebsocketConsumer.websocket_connect"
+    )

@@ -6,7 +6,7 @@ import logging
 # The async_ module can only be shipped on Python 3.6+
 try:
     from scout_apm.async_.channels import instrument_channels
-except ImportError:
+except ImportError:  # pragma: no cover
     instrument_channels = None
 
 
@@ -21,5 +21,5 @@ def ensure_instrumented():
         return
     instrumented = True
 
-    if instrument_channels is not None:
+    if instrument_channels is not None:  # pragma: no cover
         instrument_channels()

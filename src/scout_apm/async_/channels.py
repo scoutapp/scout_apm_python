@@ -83,7 +83,9 @@ async def wrapped_async_consumer_method(wrapped, instance, args, kwargs):
     tracked_request.start_span(operation=name_span(instance, wrapped))
     try:
         return await wrapped(*args, **kwargs)
-    # TODO: track errors
+    except Exception as exc:
+        tracked_request.tag("error", "true")
+        raise exc
     finally:
         tracked_request.stop_span()
 
@@ -104,7 +106,9 @@ def wrapped_sync_consumer_method(wrapped, instance, args, kwargs):
     tracked_request.start_span(operation=name_span(instance, wrapped))
     try:
         return wrapped(*args, **kwargs)
-    # TODO: track errors
+    except Exception as exc:
+        tracked_request.tag("error", "true")
+        raise exc
     finally:
         tracked_request.stop_span()
 
