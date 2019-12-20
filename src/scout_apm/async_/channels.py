@@ -113,7 +113,7 @@ class ScoutMiddleware:
         return partial(self.coroutine_call, inner_instance, scope)
 
     async def coroutine_call(self, inner_instance, scope, receive, send):
-        # TODO - filter to only recognized HTTP + WS calls
+        # TODO - filter to only recognized HTTP + WS scopes
         tracked_request = TrackedRequest.instance()
         tracked_request.is_real_request = True
 
@@ -138,7 +138,19 @@ class ScoutMiddleware:
             )
         )
 
+        async def wrapped_send(data):
+            type_ = data.get("type", None)
+            if type_ == "http.response.start" and 500 <= data.get("status", 200) <= 599:
+                tracked_request.tag("error", "true")
+            elif type_ == "http.response.body" and not data.get("more_body", False):
+                # Finish HTTP span when body finishes sending, not later (e.g.
+                # after further processing that AsgiHandler does)
+                # grab_extra_data()
+                tracked_request.stop_span()
+            return await send(data)
+
         try:
-            return await inner_instance(receive, send)
+            return await inner_instance(receive, wrapped_send)
         finally:
-            tracked_request.stop_span()
+            if tracked_request.end_time is None:
+                tracked_request.stop_span()

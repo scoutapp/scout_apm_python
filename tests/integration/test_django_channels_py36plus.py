@@ -33,6 +33,8 @@ def app_with_scout(**settings):
     except ImportError:
         pytest.skip("No Channels")
 
+    # TODO: solve the problem of running migrate in a sync context here...
+
     with django_app_with_scout(**settings):
 
         from channels.auth import AuthMiddlewareStack
