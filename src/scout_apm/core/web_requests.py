@@ -173,6 +173,42 @@ def convert_ambiguous_timestamp_to_ns(timestamp):
     return converted_timestamp
 
 
+def asgi_track_request_data(scope, tracked_request):
+    """
+    Track request data from an ASGI HTTP or Websocket scope.
+    """
+    from urllib.parse import parse_qsl  # Inner import due to Python 3+
+
+    path = scope.get("root_path", "") + scope["path"]
+    query_params = parse_qsl(scope.get("query_string", b"").decode("utf-8"))
+    tracked_request.tag("path", create_filtered_path(path, query_params))
+    if ignore_path(path):
+        tracked_request.tag("ignore_transaction", True)
+
+    # We only care about the last values of headers so don't care that we use
+    # a plain dict rather than a multi-value dict
+    headers = {k.lower(): v for k, v in scope.get("headers", ())}
+
+    user_ip = (
+        headers.get(b"x-forwarded-for", b"").decode("latin1").split(",")[0]
+        or headers.get(b"client-ip", b"").decode("latin1").split(",")[0]
+        or scope.get("client", ("",))[0]
+    )
+    tracked_request.tag("user_ip", user_ip)
+
+    queue_time = headers.get(b"x-queue-start", b"") or headers.get(
+        b"x-request-start", b""
+    )
+    tracked_queue_time = track_request_queue_time(
+        queue_time.decode("latin1"), tracked_request
+    )
+    if not tracked_queue_time:
+        amazon_queue_time = headers.get(b"x-amzn-trace-id", b"")
+        track_amazon_request_queue_time(
+            amazon_queue_time.decode("latin1"), tracked_request
+        )
+
+
 def werkzeug_track_request_data(werkzeug_request, tracked_request):
     """
     Several integrations use Werkzeug requests, so share the code for
