@@ -2,11 +2,11 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import datetime as dt
-from contextlib import contextmanager
 from urllib.parse import urlencode
 
 import django
 import pytest
+from asgiref.sync import sync_to_async
 from asgiref.testing import ApplicationCommunicator
 
 from scout_apm.compat import datetime_to_timestamp
@@ -22,20 +22,28 @@ from tests.integration.util import (
 from tests.tools import asgi_http_scope, asgi_websocket_scope, async_test
 
 
-@contextmanager
-def app_with_scout(**settings):
+class app_with_scout:
     """
-    Set up the Django app and then add a Channels ASGI application on top.
+    An async context manager to construct since django_app_with_scout needs to
+    perform queries in 'migrate' on first use.
+
+    Would use contextlib.asynccontextmanager but that's Python 3.7+ and we
+    support 3.5+ at time of writing.
     """
-    try:
-        import channels  # noqa
-    except ImportError:
-        pytest.skip("No Channels")
 
-    # TODO: solve the problem of running migrate in a sync context here...
+    def __init__(self, **settings):
+        self.settings = settings
 
-    with django_app_with_scout(**settings):
+    async def __aenter__(self):
+        try:
+            import channels  # noqa
+        except ImportError:
+            pytest.skip("No Channels")
 
+        self.app_instance = django_app_with_scout(**self.settings)
+        await sync_to_async(self.app_instance.__enter__)()
+
+        # Import after Django setup
         from channels.auth import AuthMiddlewareStack
         from channels.http import AsgiHandler
         from channels.generic.http import AsyncHttpConsumer
@@ -78,7 +86,10 @@ def app_with_scout(**settings):
                 ]
             )
 
-        yield AuthMiddlewareStack(router)
+        return AuthMiddlewareStack(router)
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await sync_to_async(self.app_instance.__exit__)(exc_type, exc_val, exc_tb)
 
 
 def create_logged_in_session(user):
@@ -94,17 +105,18 @@ def create_logged_in_session(user):
     return session
 
 
-def test_instruments_idempotent():
+@async_test
+async def test_instruments_idempotent():
     """
     Check second call doesn't crash (should be a no-op)
     """
-    with app_with_scout():
+    async with app_with_scout():
         ensure_instrumented()
 
 
 @async_test
 async def test_vanilla_view_asgi_handler(tracked_requests):
-    with app_with_scout() as app:
+    async with app_with_scout() as app:
         communicator = ApplicationCommunicator(app, asgi_http_scope(path="/"))
         await communicator.send_input({"type": "http.request"})
         response_start = await communicator.receive_output()
@@ -127,7 +139,7 @@ async def test_vanilla_view_asgi_handler(tracked_requests):
 
 @async_test
 async def test_http_consumer(tracked_requests):
-    with app_with_scout() as app:
+    async with app_with_scout() as app:
         communicator = ApplicationCommunicator(
             app, asgi_http_scope(path="/basic-http/")
         )
@@ -146,13 +158,13 @@ async def test_http_consumer(tracked_requests):
     span = tracked_request.complete_spans[0]
     assert span.operation == (
         "Controller/tests.integration.test_django_channels_py36plus."
-        + "app_with_scout.<locals>.BasicHttpConsumer.http_request"
+        + "app_with_scout.__aenter__.<locals>.BasicHttpConsumer.http_request"
     )
 
 
 @async_test
 async def test_http_consumer_large_body(tracked_requests):
-    with app_with_scout() as app:
+    async with app_with_scout() as app:
         communicator = ApplicationCommunicator(
             app, asgi_http_scope(path="/basic-http/")
         )
@@ -169,7 +181,7 @@ async def test_http_consumer_large_body(tracked_requests):
 @parametrize_filtered_params
 @async_test
 async def test_http_consumer_filtered_params(params, expected_path, tracked_requests):
-    with app_with_scout() as app:
+    async with app_with_scout() as app:
         communicator = ApplicationCommunicator(
             app,
             asgi_http_scope(
@@ -187,7 +199,7 @@ async def test_http_consumer_filtered_params(params, expected_path, tracked_requ
 
 @async_test
 async def test_http_consumer_ignore(tracked_requests):
-    with app_with_scout(SCOUT_IGNORE="/basic-http/") as app:
+    async with app_with_scout(SCOUT_IGNORE="/basic-http/") as app:
         communicator = ApplicationCommunicator(
             app, asgi_http_scope(path="/basic-http/")
         )
@@ -205,7 +217,7 @@ async def test_http_consumer_ignore(tracked_requests):
 async def test_http_consumer_user_ip(
     headers, client_address, expected, tracked_requests
 ):
-    with app_with_scout() as app:
+    async with app_with_scout() as app:
         communicator = ApplicationCommunicator(
             app,
             asgi_http_scope(
@@ -226,7 +238,7 @@ async def test_http_consumer_user_ip(
 async def test_http_consumer_queue_time(header_name, tracked_requests):
     # Not testing floats due to Python 2/3 rounding differences
     queue_start = int(datetime_to_timestamp(dt.datetime.utcnow())) - 2
-    with app_with_scout() as app:
+    async with app_with_scout() as app:
         communicator = ApplicationCommunicator(
             app,
             asgi_http_scope(
@@ -247,7 +259,7 @@ async def test_http_consumer_queue_time(header_name, tracked_requests):
 
 @async_test
 async def test_http_consumer_username(tracked_requests):
-    with app_with_scout() as app:
+    async with app_with_scout() as app:
         from django.conf.global_settings import SESSION_COOKIE_NAME
         from channels.db import database_sync_to_async
 
@@ -279,7 +291,7 @@ async def test_http_consumer_username(tracked_requests):
 
 @async_test
 async def test_http_consumer_username_exception(tracked_requests):
-    with app_with_scout() as app:
+    async with app_with_scout() as app:
         mock_user = mock.Mock()
         mock_user.get_username.side_effect = ValueError
 
@@ -296,7 +308,7 @@ async def test_http_consumer_username_exception(tracked_requests):
 
 @async_test
 async def test_websocket_consumer_connect(tracked_requests):
-    with app_with_scout() as app:
+    async with app_with_scout() as app:
         communicator = ApplicationCommunicator(
             app, asgi_websocket_scope(path="/basic-ws/")
         )
@@ -312,7 +324,7 @@ async def test_websocket_consumer_connect(tracked_requests):
     span = tracked_request.complete_spans[0]
     assert span.operation == (
         "Controller/tests.integration.test_django_channels_py36plus."
-        + "app_with_scout.<locals>.BasicWebsocketConsumer.websocket_connect"
+        + "app_with_scout.__aenter__.<locals>.BasicWebsocketConsumer.websocket_connect"
     )
 
 
@@ -321,7 +333,7 @@ async def test_websocket_consumer_connect(tracked_requests):
 async def test_websocket_consumer_connect_filtered_params(
     params, expected_path, tracked_requests
 ):
-    with app_with_scout() as app:
+    async with app_with_scout() as app:
         communicator = ApplicationCommunicator(
             app,
             asgi_websocket_scope(
@@ -338,7 +350,7 @@ async def test_websocket_consumer_connect_filtered_params(
 
 @async_test
 async def test_websocket_consumer_ignore(tracked_requests):
-    with app_with_scout(SCOUT_IGNORE="/basic-ws/") as app:
+    async with app_with_scout(SCOUT_IGNORE="/basic-ws/") as app:
         communicator = ApplicationCommunicator(
             app, asgi_websocket_scope(path="/basic-ws/")
         )
@@ -355,7 +367,7 @@ async def test_websocket_consumer_ignore(tracked_requests):
 async def test_websocket_consumer_connect_user_ip(
     headers, client_address, expected, tracked_requests
 ):
-    with app_with_scout() as app:
+    async with app_with_scout() as app:
         communicator = ApplicationCommunicator(
             app,
             asgi_websocket_scope(
@@ -375,7 +387,7 @@ async def test_websocket_consumer_connect_user_ip(
 async def test_websocket_consumer_connect_queue_time(header_name, tracked_requests):
     # Not testing floats due to Python 2/3 rounding differences
     queue_start = int(datetime_to_timestamp(dt.datetime.utcnow())) - 2
-    with app_with_scout() as app:
+    async with app_with_scout() as app:
         communicator = ApplicationCommunicator(
             app,
             asgi_websocket_scope(
@@ -394,7 +406,7 @@ async def test_websocket_consumer_connect_queue_time(header_name, tracked_reques
 
 @async_test
 async def test_websocket_consumer_connect_username(tracked_requests):
-    with app_with_scout() as app:
+    async with app_with_scout() as app:
         from django.conf.global_settings import SESSION_COOKIE_NAME
         from channels.db import database_sync_to_async
 
@@ -424,7 +436,7 @@ async def test_websocket_consumer_connect_username(tracked_requests):
 
 @async_test
 async def test_websocket_consumer_connect_username_exception(tracked_requests):
-    with app_with_scout() as app:
+    async with app_with_scout() as app:
         mock_user = mock.Mock()
         mock_user.get_username.side_effect = ValueError
 
