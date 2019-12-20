@@ -18,7 +18,7 @@ class ScoutMiddleware:
             install_background_instrumentation()
 
     async def __call__(self, scope, receive, send):
-        if self._do_nothing or scope["type"] != "http":
+        if self._do_nothing or scope["type"] not in ("http", "websocket"):
             return await self.app(scope, receive, send)
 
         tracked_request = TrackedRequest.instance()

@@ -10,11 +10,11 @@ from asgiref.testing import ApplicationCommunicator
 from starlette.applications import Starlette
 from starlette.authentication import AuthCredentials, AuthenticationBackend, SimpleUser
 from starlette.background import BackgroundTasks
-from starlette.endpoints import HTTPEndpoint
+from starlette.endpoints import HTTPEndpoint, WebSocketEndpoint
 from starlette.middleware import Middleware
 from starlette.middleware.authentication import AuthenticationMiddleware
 from starlette.responses import PlainTextResponse
-from starlette.routing import Route
+from starlette.routing import Route, WebSocketRoute
 
 from scout_apm.api import Config
 from scout_apm.async_.starlette import ScoutMiddleware
@@ -24,7 +24,7 @@ from tests.integration.util import (
     parametrize_queue_time_header_name,
     parametrize_user_ip_headers,
 )
-from tests.tools import asgi_http_scope, async_test
+from tests.tools import asgi_http_scope, asgi_websocket_scope, async_test
 
 
 @contextmanager
@@ -65,12 +65,25 @@ def app_with_scout(*, middleware=None, scout_config=None):
 
         return PlainTextResponse("Triggering background jobs", background=tasks)
 
+    class HelloWsEndpoint(WebSocketEndpoint):
+        encoding = "bytes"
+
+        async def on_connect(self, websocket):
+            await websocket.accept()
+
+        async def on_receive(self, websocket, data):
+            await websocket.send_bytes(b"Message: " + data)
+
+        async def on_disconnect(self, websocket, close_code):
+            pass
+
     routes = [
         Route("/", endpoint=home),
         Route("/hello/", endpoint=HelloEndpoint),
         Route("/crash/", endpoint=crash),
         Route("/return-error/", endpoint=return_error),
         Route("/background-jobs/", endpoint=background_jobs),
+        WebSocketRoute("/hello-ws/", endpoint=HelloWsEndpoint),
     ]
 
     async def raise_error_handler(request, exc):
@@ -393,3 +406,24 @@ async def test_username_bad_user(tracked_requests):
     assert len(tracked_requests) == 1
     tracked_request = tracked_requests[0]
     assert "username" not in tracked_request.tags
+
+
+@async_test
+async def test_hello_websockets(tracked_requests):
+    with app_with_scout() as app:
+        communicator = ApplicationCommunicator(
+            app, asgi_websocket_scope(path="/hello-ws/")
+        )
+        await communicator.send_input({"type": "websocket.connect"})
+        response = await communicator.receive_output()
+
+    assert response["type"] == "websocket.accept"
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.tags["path"] == "/hello-ws/"
+    span = tracked_request.complete_spans[0]
+    assert span.operation == (
+        "Controller/tests.integration.test_starlette_py36plus."
+        + "app_with_scout.<locals>.HelloWsEndpoint"
+    )
