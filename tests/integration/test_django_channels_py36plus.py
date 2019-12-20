@@ -9,7 +9,6 @@ import django
 import pytest
 from asgiref.testing import ApplicationCommunicator
 
-from scout_apm.async_.channels import ScoutMiddleware
 from scout_apm.compat import datetime_to_timestamp
 from scout_apm.django.instruments.channels import ensure_instrumented
 from tests.compat import mock
@@ -20,7 +19,7 @@ from tests.integration.util import (
     parametrize_queue_time_header_name,
     parametrize_user_ip_headers,
 )
-from tests.tools import asgi_http_scope, async_test
+from tests.tools import asgi_http_scope, asgi_websocket_scope, async_test
 
 
 @contextmanager
@@ -79,7 +78,7 @@ def app_with_scout(**settings):
                 ]
             )
 
-        yield ScoutMiddleware(AuthMiddlewareStack(router))
+        yield AuthMiddlewareStack(router)
 
 
 def create_logged_in_session(user):
@@ -147,7 +146,7 @@ async def test_http_consumer(tracked_requests):
     span = tracked_request.complete_spans[0]
     assert span.operation == (
         "Controller/tests.integration.test_django_channels_py36plus."
-        + "app_with_scout.<locals>.BasicHttpConsumer"
+        + "app_with_scout.<locals>.BasicHttpConsumer.http_request"
     )
 
 
@@ -298,7 +297,9 @@ async def test_http_consumer_username_exception(tracked_requests):
 @async_test
 async def test_websocket_consumer_connect(tracked_requests):
     with app_with_scout() as app:
-        communicator = ApplicationCommunicator(app, asgi_http_scope(path="/basic-ws/"))
+        communicator = ApplicationCommunicator(
+            app, asgi_websocket_scope(path="/basic-ws/")
+        )
         await communicator.send_input({"type": "websocket.connect"})
         response = await communicator.receive_output()
         await communicator.wait(timeout=0.001)
@@ -323,7 +324,7 @@ async def test_websocket_consumer_connect_filtered_params(
     with app_with_scout() as app:
         communicator = ApplicationCommunicator(
             app,
-            asgi_http_scope(
+            asgi_websocket_scope(
                 path="/basic-ws/", query_string=urlencode(params).encode("utf-8")
             ),
         )
@@ -338,7 +339,9 @@ async def test_websocket_consumer_connect_filtered_params(
 @async_test
 async def test_websocket_consumer_ignore(tracked_requests):
     with app_with_scout(SCOUT_IGNORE="/basic-ws/") as app:
-        communicator = ApplicationCommunicator(app, asgi_http_scope(path="/basic-ws/"))
+        communicator = ApplicationCommunicator(
+            app, asgi_websocket_scope(path="/basic-ws/")
+        )
         await communicator.send_input({"type": "websocket.connect"})
         response = await communicator.receive_output()
         await communicator.wait(timeout=0.001)
@@ -355,7 +358,7 @@ async def test_websocket_consumer_connect_user_ip(
     with app_with_scout() as app:
         communicator = ApplicationCommunicator(
             app,
-            asgi_http_scope(
+            asgi_websocket_scope(
                 path="/basic-ws/", headers=headers, client=(client_address, None)
             ),
         )
@@ -375,7 +378,7 @@ async def test_websocket_consumer_connect_queue_time(header_name, tracked_reques
     with app_with_scout() as app:
         communicator = ApplicationCommunicator(
             app,
-            asgi_http_scope(
+            asgi_websocket_scope(
                 path="/basic-ws/", headers={header_name: str("t=") + str(queue_start)},
             ),
         )
@@ -402,7 +405,7 @@ async def test_websocket_consumer_connect_username(tracked_requests):
             return admin_user, session
 
         admin_user, session = await make_user_and_session()
-        scope = asgi_http_scope(
+        scope = asgi_websocket_scope(
             path="/basic-ws/",
             headers={
                 "cookie": "{}={}".format(SESSION_COOKIE_NAME, session.session_key)
@@ -425,7 +428,7 @@ async def test_websocket_consumer_connect_username_exception(tracked_requests):
         mock_user = mock.Mock()
         mock_user.get_username.side_effect = ValueError
 
-        scope = asgi_http_scope(path="/basic-ws/", user=mock_user)
+        scope = asgi_websocket_scope(path="/basic-ws/", user=mock_user)
         communicator = ApplicationCommunicator(app, scope)
         await communicator.send_input({"type": "websocket.connect"})
         response = await communicator.receive_output()

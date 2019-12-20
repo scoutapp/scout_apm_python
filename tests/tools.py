@@ -110,3 +110,23 @@ def asgi_http_scope(headers=None, **kwargs):
     }
     scope.update(kwargs)
     return scope
+
+
+def asgi_websocket_scope(headers=None, **kwargs):
+    if headers is None:
+        headers = {}
+    headers = [
+        [k.lower().encode("latin-1"), v.encode("latin-1")] for k, v in headers.items()
+    ]
+    scope = {
+        "type": "websocket",
+        "asgi": {"version": "3.0", "spec_version": "2.1"},
+        "http_version": "1.1",
+        "path": "/",
+        "scheme": "ws",
+        "query_string": b"",
+        "server": ("testserver", 80),
+        "headers": headers,
+    }
+    scope.update(kwargs)
+    return scope
