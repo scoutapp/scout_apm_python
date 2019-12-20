@@ -9,6 +9,7 @@ import django
 import pytest
 from asgiref.testing import ApplicationCommunicator
 
+from scout_apm.async_.channels import ScoutMiddleware
 from scout_apm.compat import datetime_to_timestamp
 from scout_apm.django.instruments.channels import ensure_instrumented
 from tests.compat import mock
@@ -76,7 +77,7 @@ def app_with_scout(**settings):
                 ]
             )
 
-        yield AuthMiddlewareStack(router)
+        yield ScoutMiddleware(AuthMiddlewareStack(router))
 
 
 def create_logged_in_session(user):
