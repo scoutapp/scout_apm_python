@@ -261,8 +261,8 @@ async def test_amazon_queue_time(tracked_requests):
 async def test_server_error(tracked_requests):
     with app_with_scout() as app:
         communicator = ApplicationCommunicator(app, asgi_http_scope(path="/crash/"))
+        await communicator.send_input({"type": "http.request"})
         with pytest.raises(ValueError) as excinfo:
-            await communicator.send_input({"type": "http.request"})
             await communicator.receive_output()
 
     assert excinfo.value.args == ("BØØM!",)
