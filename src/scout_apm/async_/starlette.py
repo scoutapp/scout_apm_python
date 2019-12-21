@@ -55,6 +55,11 @@ class ScoutMiddleware:
                 # after background tasks)
                 grab_extra_data()
                 tracked_request.stop_span()
+            elif type_ in ("websocket.accept", "websocket.close"):
+                # Finish HTTP span when body finishes sending, not later (e.g.
+                # after background tasks)
+                grab_extra_data()
+                tracked_request.stop_span()
             return await send(data)
 
         try:
