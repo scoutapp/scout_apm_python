@@ -1,5 +1,12 @@
 # Changelog
 
+## Pending
+
+### Added
+
+- Track Starlette WebSocket requests
+  ([PR #427](https://github.com/scoutapp/scout_apm_python/pull/427)).
+
 ## [2.9.1] 2019-12-13
 
 ### Added
