@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 
+import certifi
 import httpretty
 import pytest
 import urllib3
@@ -79,7 +80,7 @@ def test_request(tracked_request):
             httpretty.GET, "https://example.com/", body="Hello World!"
         )
 
-        http = urllib3.PoolManager()
+        http = urllib3.PoolManager(cert_reqs="CERT_REQUIRED", ca_certs=certifi.where())
         response = http.request("GET", "https://example.com")
 
     assert response.status == 200
@@ -93,7 +94,7 @@ def test_request(tracked_request):
 def test_request_type_error(tracked_request):
     ensure_installed()
     with pytest.raises(TypeError):
-        http = urllib3.PoolManager()
+        http = urllib3.PoolManager(cert_reqs="CERT_REQUIRED", ca_certs=certifi.where())
         connection = http.connection_from_host("example.com", scheme="https")
         connection.urlopen()
 
@@ -111,7 +112,7 @@ def test_request_no_absolute_url(caplog, tracked_request):
             httpretty.GET, "https://example.com/", body="Hello World!"
         )
 
-        http = urllib3.PoolManager()
+        http = urllib3.PoolManager(cert_reqs="CERT_REQUIRED", ca_certs=certifi.where())
         response = http.request("GET", "https://example.com")
 
     assert response.status == 200
