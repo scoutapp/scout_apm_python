@@ -8,7 +8,7 @@ import httpretty
 import pytest
 import urllib3
 
-from scout_apm.compat import string_type
+from scout_apm.compat import text_type
 from scout_apm.instruments.urllib3 import ensure_installed
 from tests.compat import mock
 from tests.tools import delete_attributes
@@ -82,7 +82,7 @@ def test_request(tracked_request):
         )
 
         http = urllib3.PoolManager(
-            cert_reqs=string_type("CERT_REQUIRED"), ca_certs=certifi.where()
+            cert_reqs=text_type("CERT_REQUIRED"), ca_certs=certifi.where()
         )
         response = http.request("GET", "https://example.com")
 
@@ -98,7 +98,7 @@ def test_request_type_error(tracked_request):
     ensure_installed()
     with pytest.raises(TypeError):
         http = urllib3.PoolManager(
-            cert_reqs=string_type("CERT_REQUIRED"), ca_certs=certifi.where()
+            cert_reqs=text_type("CERT_REQUIRED"), ca_certs=certifi.where()
         )
         connection = http.connection_from_host("example.com", scheme="https")
         connection.urlopen()
