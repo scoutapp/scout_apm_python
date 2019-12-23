@@ -47,11 +47,15 @@ def get_metadata():
 
 def get_python_packages_versions():
     try:
-        import pkg_resources
+        if sys.version_info >= (3, 8):
+            from importlib.metadata import distributions
+        else:
+            from importlib_metadata import distributions
     except ImportError:
+        # For some reason it is unavailable
         return []
 
     return sorted(
-        (distribution.project_name, distribution.version)
-        for distribution in pkg_resources.working_set
+        (distribution.metadata["Name"], distribution.metadata["Version"])
+        for distribution in distributions()
     )

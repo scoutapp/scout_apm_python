@@ -57,6 +57,7 @@ setup(
     },
     install_requires=[
         'asgiref ; python_version >= "3.5"',
+        'importlib-metadata ; python_version < "3.8"',
         "psutil>=5,<6",
         "requests>=2,<3",
         "wrapt>=1.10,<2.0",

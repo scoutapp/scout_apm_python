@@ -1,5 +1,14 @@
 # Changelog
 
+## Pending
+
+### Added
+
+- Use Python 3.8's standard library `importlib.metadata.distributions()` to
+  determine package versions, rather than `pkg_resources`. The backport
+  `importlib_metadata` is required on older Python versions
+  ([PR #430](https://github.com/scoutapp/scout_apm_python/pull/430)).
+
 ## [2.9.1] 2019-12-13
 
 ### Added
