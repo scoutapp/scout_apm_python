@@ -6,6 +6,7 @@ from cherrypy.lib.encoding import ResponseEncoder
 from cherrypy.process import plugins
 
 from scout_apm.core.tracked_request import TrackedRequest
+from scout_apm.core.web_requests import ignore_path
 
 
 class ScoutPlugin(plugins.SimplePlugin):
@@ -18,7 +19,10 @@ class ScoutPlugin(plugins.SimplePlugin):
         tracked_request.is_real_request = True
         request._scout_tracked_request = tracked_request
 
-        tracked_request.tag("path", request.path_info)
+        path = request.path_info
+        tracked_request.tag("path", path)
+        if ignore_path(path):
+            tracked_request.tag("ignore_transaction", True)
         # request.headers
 
         # Can't name operation until after request, when routing has been done

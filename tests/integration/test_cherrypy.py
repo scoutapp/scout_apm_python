@@ -53,3 +53,12 @@ def test_home(tracked_requests):
     assert tracked_request.tags["path"] == "/"
     span = tracked_request.complete_spans[0]
     assert span.operation == "Controller/tests.integration.test_cherrypy.index"
+
+
+def test_home_ignored(tracked_requests):
+    with app_with_scout(scout_config={"ignore": "/"}) as app:
+        response = TestApp(app).get("/")
+
+    assert response.status_int == 200
+    assert response.text == "Welcome home."
+    assert tracked_requests == []
