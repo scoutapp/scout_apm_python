@@ -59,7 +59,8 @@ def text(value, encoding="utf-8", errors="strict"):
 if sys.version_info >= (3, 0):
     from urllib.parse import parse_qsl, urlencode
 else:
-    from urllib import parse_qsl, urlencode
+    from urllib import urlencode
+    from urlparse import parse_qsl
 
 
 def kwargs_only(func):
