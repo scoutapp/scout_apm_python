@@ -86,6 +86,17 @@ def get_operation_name(request):
     while hasattr(real_handler, "callable"):
         real_handler = real_handler.callable
 
+    # TODO: handle 404's
+    # ERROR    cherrypy.error:_cplogging.py:216 [24/Dec/2019:15:45:09] ENGINE Error in 'after_request' listener <bound method ScoutPlugin.after_request of <scout_apm.cherrypy.ScoutPlugin object at 0x10a659c50>>
+    # Traceback (most recent call last):
+    #   File "/Users/chainz/Documents/Projects/scout_apm_python/.tox/py37-django30/lib/python3.7/site-packages/cherrypy/process/wspbus.py", line 230, in publish
+    #     output.append(listener(*args, **kwargs))
+    #   File "/Users/chainz/Documents/Projects/scout_apm_python/.tox/py37-django30/lib/python3.7/site-packages/scout_apm/cherrypy.py", line 41, in after_request
+    #     operation_name = get_operation_name(request)
+    #   File "/Users/chainz/Documents/Projects/scout_apm_python/.tox/py37-django30/lib/python3.7/site-packages/scout_apm/cherrypy.py", line 90, in get_operation_name
+    #     real_handler.__func__.__module__, real_handler.__func__.__name__
+    # AttributeError: 'NotFound' object has no attribute '__func__'
+
     return "Controller/{}.{}".format(
         real_handler.__func__.__module__, real_handler.__func__.__name__
     )
