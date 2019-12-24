@@ -8,7 +8,10 @@ from webtest import TestApp
 
 from scout_apm.api import Config
 from scout_apm.cherrypy import ScoutPlugin
-from tests.integration.util import parametrize_filtered_params
+from tests.integration.util import (
+    parametrize_filtered_params,
+    parametrize_user_ip_headers,
+)
 
 
 @contextmanager
@@ -71,3 +74,20 @@ def test_filtered_params(params, expected_path, tracked_requests):
         TestApp(app).get("/", params=params)
 
     assert tracked_requests[0].tags["path"] == expected_path
+
+
+@parametrize_user_ip_headers
+def test_user_ip(headers, client_address, expected, tracked_requests):
+    with app_with_scout() as app:
+        TestApp(app).get(
+            "/",
+            headers=headers,
+            extra_environ=(
+                {str("REMOTE_ADDR"): client_address}
+                if client_address is not None
+                else {}
+            ),
+        )
+
+    tracked_request = tracked_requests[0]
+    assert tracked_request.tags["user_ip"] == expected
