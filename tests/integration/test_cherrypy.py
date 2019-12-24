@@ -187,3 +187,11 @@ def test_return_error(tracked_requests):
         span.operation
         == "Controller/tests.integration.test_cherrypy.Views.return_error"
     )
+
+
+def test_no_monitor(tracked_requests):
+    with app_with_scout(scout_config={"monitor": False}) as app:
+        response = TestApp(app).get("/")
+
+    assert response.status_int == 200
+    assert tracked_requests == []

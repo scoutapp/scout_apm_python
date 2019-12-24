@@ -5,6 +5,7 @@ import cherrypy
 from cherrypy.lib.encoding import ResponseEncoder
 from cherrypy.process import plugins
 
+import scout_apm.core
 from scout_apm.compat import parse_qsl
 from scout_apm.core.tracked_request import TrackedRequest
 from scout_apm.core.web_requests import (
@@ -18,8 +19,12 @@ from scout_apm.core.web_requests import (
 class ScoutPlugin(plugins.SimplePlugin):
     def __init__(self, bus):
         super(ScoutPlugin, self).__init__(bus)
+        installed = scout_apm.core.install()
+        self._do_nothing = not installed
 
     def before_request(self):
+        if self._do_nothing:
+            return
         request = cherrypy.request
         tracked_request = TrackedRequest.instance()
         tracked_request.is_real_request = True
@@ -31,6 +36,8 @@ class ScoutPlugin(plugins.SimplePlugin):
         )
 
     def after_request(self):
+        if self._do_nothing:
+            return
         tracked_request = getattr(cherrypy.request, "_scout_tracked_request", None)
         if tracked_request is None:
             return
