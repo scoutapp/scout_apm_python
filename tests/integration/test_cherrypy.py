@@ -29,9 +29,6 @@ def app_with_scout(scout_config=None):
     scout_config.setdefault("monitor", True)
     Config.set(**scout_config)
 
-    # # Disable Flask's error page to improve debugging
-    # config.setdefault("PROPAGATE_EXCEPTIONS", True)
-
     class Views(object):
         @cherrypy.expose
         def index(self, **params):  # Take all params so CherryPy doesn't 404
@@ -51,6 +48,8 @@ def app_with_scout(scout_config=None):
             return "Something went wrong"
 
     app = cherrypy.Application(Views(), "/", config=None)
+
+    # Setup according to https://docs.scoutapm.com/#cherrypy
     plugin = ScoutPlugin(cherrypy.engine)
     plugin.subscribe()
 
