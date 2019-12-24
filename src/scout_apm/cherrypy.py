@@ -97,6 +97,7 @@ def get_operation_name(request):
     #     real_handler.__func__.__module__, real_handler.__func__.__name__
     # AttributeError: 'NotFound' object has no attribute '__func__'
 
-    return "Controller/{}.{}".format(
-        real_handler.__func__.__module__, real_handler.__func__.__name__
+    real_handler_cls = real_handler.__self__.__class__
+    return "Controller/{}.{}.{}".format(
+        real_handler_cls.__module__, real_handler_cls.__name__, real_handler.__name__,
     )

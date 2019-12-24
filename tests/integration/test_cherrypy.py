@@ -34,8 +34,12 @@ def app_with_scout(scout_config=None):
 
     class Views(object):
         @cherrypy.expose
-        def index(self, **params):  # Prevent 404 for unknown params
+        def index(self, **params):  # Take all params so CherryPy doesn't 404
             return "Welcome home."
+
+        @cherrypy.expose
+        def hello(self):
+            return "Hello World!"
 
     app = cherrypy.Application(Views(), "/", config=None)
     plugin = ScoutPlugin(cherrypy.engine)
@@ -59,7 +63,7 @@ def test_home(tracked_requests):
     assert len(tracked_request.complete_spans) == 1
     assert tracked_request.tags["path"] == "/"
     span = tracked_request.complete_spans[0]
-    assert span.operation == "Controller/tests.integration.test_cherrypy.index"
+    assert span.operation == "Controller/tests.integration.test_cherrypy.Views.index"
 
 
 def test_home_ignored(tracked_requests):
@@ -129,3 +133,17 @@ def test_amazon_queue_time(tracked_requests):
     queue_time_ns = tracked_requests[0].tags["scout.queue_time_ns"]
     # Upper bound assumes we didn't take more than 2s to run this test...
     assert queue_time_ns >= 2000000000 and queue_time_ns < 4000000000
+
+
+def test_hello(tracked_requests):
+    with app_with_scout() as app:
+        response = TestApp(app).get("/hello/")
+
+    assert response.status_int == 200
+    assert response.text == "Hello World!"
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.tags["path"] == "/hello/"
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "Controller/tests.integration.test_cherrypy.Views.hello"
