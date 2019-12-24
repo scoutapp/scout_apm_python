@@ -7,7 +7,12 @@ from cherrypy.process import plugins
 
 from scout_apm.compat import parse_qsl
 from scout_apm.core.tracked_request import TrackedRequest
-from scout_apm.core.web_requests import create_filtered_path, ignore_path
+from scout_apm.core.web_requests import (
+    create_filtered_path,
+    ignore_path,
+    track_amazon_request_queue_time,
+    track_request_queue_time,
+)
 
 
 class ScoutPlugin(plugins.SimplePlugin):
@@ -55,6 +60,14 @@ class ScoutPlugin(plugins.SimplePlugin):
             or (request.remote.ip or None)
         )
         tracked_request.tag("user_ip", user_ip)
+
+        queue_time = request.headers.get("x-queue-start", "") or request.headers.get(
+            "x-request-start", ""
+        )
+        tracked_queue_time = track_request_queue_time(queue_time, tracked_request)
+        if not tracked_queue_time:
+            amazon_queue_time = request.headers.get("x-amzn-trace-id", "")
+            track_amazon_request_queue_time(amazon_queue_time, tracked_request)
 
         tracked_request.stop_span()
 
