@@ -69,6 +69,16 @@ class ScoutPlugin(plugins.SimplePlugin):
             amazon_queue_time = request.headers.get("x-amzn-trace-id", "")
             track_amazon_request_queue_time(amazon_queue_time, tracked_request)
 
+        response = cherrypy.response
+        status = response.status.split(" ", 1)[0]
+        try:
+            status_int = int(status)
+        except ValueError:
+            pass
+        else:
+            if 500 <= status_int <= 599:
+                tracked_request.tag("error", "true")
+
         tracked_request.stop_span()
 
 

@@ -41,6 +41,15 @@ def app_with_scout(scout_config=None):
         def hello(self):
             return "Hello World!"
 
+        @cherrypy.expose
+        def crash(self):
+            raise ValueError("BØØM!")  # non-ASCII
+
+        @cherrypy.expose
+        def return_error(self):
+            cherrypy.response.status = 503
+            return "Something went wrong"
+
     app = cherrypy.Application(Views(), "/", config=None)
     plugin = ScoutPlugin(cherrypy.engine)
     plugin.subscribe()
@@ -147,3 +156,34 @@ def test_hello(tracked_requests):
     assert tracked_request.tags["path"] == "/hello/"
     span = tracked_request.complete_spans[0]
     assert span.operation == "Controller/tests.integration.test_cherrypy.Views.hello"
+
+
+def test_server_error(tracked_requests):
+    with app_with_scout() as app:
+        response = TestApp(app).get("/crash/", expect_errors=True)
+
+    assert response.status_int == 500
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert tracked_request.tags["path"] == "/crash/"
+    assert tracked_request.tags["error"] == "true"
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "Controller/tests.integration.test_cherrypy.Views.crash"
+
+
+def test_return_error(tracked_requests):
+    with app_with_scout() as app:
+        response = TestApp(app).get("/return-error/", expect_errors=True)
+
+    assert response.status_int == 503
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert tracked_request.tags["path"] == "/return-error/"
+    assert tracked_request.tags["error"] == "true"
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert (
+        span.operation
+        == "Controller/tests.integration.test_cherrypy.Views.return_error"
+    )
