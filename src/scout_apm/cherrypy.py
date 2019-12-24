@@ -5,8 +5,9 @@ import cherrypy
 from cherrypy.lib.encoding import ResponseEncoder
 from cherrypy.process import plugins
 
+from scout_apm.compat import parse_qsl
 from scout_apm.core.tracked_request import TrackedRequest
-from scout_apm.core.web_requests import ignore_path
+from scout_apm.core.web_requests import create_filtered_path, ignore_path
 
 
 class ScoutPlugin(plugins.SimplePlugin):
@@ -19,12 +20,6 @@ class ScoutPlugin(plugins.SimplePlugin):
         tracked_request.is_real_request = True
         request._scout_tracked_request = tracked_request
 
-        path = request.path_info
-        tracked_request.tag("path", path)
-        if ignore_path(path):
-            tracked_request.tag("ignore_transaction", True)
-        # request.headers
-
         # Can't name operation until after request, when routing has been done
         request._scout_controller_span = tracked_request.start_span(
             "Controller/Unknown"
@@ -32,15 +27,26 @@ class ScoutPlugin(plugins.SimplePlugin):
 
     def after_request(self):
         tracked_request = getattr(cherrypy.request, "_scout_tracked_request", None)
-        if tracked_request is not None:
-            request = cherrypy.request
+        if tracked_request is None:
+            return
 
-            # Rename controller span now routing has been done
-            operation_name = get_operation_name(request)
-            if operation_name is not None:
-                request._scout_controller_span.operation = operation_name
+        request = cherrypy.request
 
-            tracked_request.stop_span()
+        # Rename controller span now routing has been done
+        operation_name = get_operation_name(request)
+        if operation_name is not None:
+            request._scout_controller_span.operation = operation_name
+
+        # Grab general request data now it has been parsed
+        path = request.path_info
+        # Parse params because we want only GET params but CherryPy parses
+        # POST params into the same dict.
+        params = parse_qsl(request.query_string)
+        tracked_request.tag("path", create_filtered_path(path, params))
+        if ignore_path(path):
+            tracked_request.tag("ignore_transaction", True)
+
+        tracked_request.stop_span()
 
 
 def get_operation_name(request):

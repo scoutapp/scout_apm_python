@@ -57,9 +57,9 @@ def text(value, encoding="utf-8", errors="strict"):
 
 
 if sys.version_info >= (3, 0):
-    from urllib.parse import urlencode
+    from urllib.parse import parse_qsl, urlencode
 else:
-    from urllib import urlencode
+    from urllib import parse_qsl, urlencode
 
 
 def kwargs_only(func):
@@ -98,6 +98,7 @@ __all__ = [
     "ContextDecorator",
     "datetime_to_timestamp",
     "kwargs_only",
+    "parse_qsl",
     "queue",
     "string_type",
     "text",
