@@ -8,6 +8,8 @@
   determine package versions, rather than `pkg_resources`. The backport
   `importlib_metadata` is required on older Python versions
   ([PR #430](https://github.com/scoutapp/scout_apm_python/pull/430)).
+- Add CherryPy integration
+  ([PR #431](https://github.com/scoutapp/scout_apm_python/pull/431)).
 
 ## [2.9.1] 2019-12-13
 
