@@ -188,6 +188,14 @@ def test_return_error(tracked_requests):
     )
 
 
+def test_not_found(tracked_requests):
+    with app_with_scout() as app:
+        response = TestApp(app).get("/not-found/", expect_errors=True)
+
+    assert response.status_int == 404
+    assert tracked_requests == []
+
+
 def test_no_monitor(tracked_requests):
     with app_with_scout(scout_config={"monitor": False}) as app:
         response = TestApp(app).get("/")
