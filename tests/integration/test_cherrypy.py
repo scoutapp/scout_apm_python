@@ -47,7 +47,7 @@ def app_with_scout(scout_config=None):
             cherrypy.response.status = 503
             return "Something went wrong"
 
-        # Something like this??
+        # Serve this source file statically
         static_file = cherrypy.tools.staticfile.handler(__file__)
 
     app = cherrypy.Application(Views(), "/", config=None)
