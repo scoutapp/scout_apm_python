@@ -179,6 +179,9 @@ class CoreAgentSocket(threading.Thread):
     def _read_response(self):
         try:
             raw_size = self.socket.recv(4)
+            if len(raw_size) != 4:
+                # Ignore invalid responses
+                return None
             size = struct.unpack(">I", raw_size)[0]
             message = bytearray(0)
 
