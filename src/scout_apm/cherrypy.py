@@ -116,7 +116,7 @@ def get_operation_name(request):
             pass
         else:
             try:
-                return wrapped_tool.__name__
+                return "Controller/{}".format(wrapped_tool.__name__)
             except AttributeError:
                 pass
 
