@@ -47,6 +47,9 @@ def app_with_scout(scout_config=None):
             cherrypy.response.status = 503
             return "Something went wrong"
 
+        # Something like this??
+        # static_file = tools.staticfile.handler("")
+
     app = cherrypy.Application(Views(), "/", config=None)
 
     # Setup according to https://docs.scoutapm.com/#cherrypy
@@ -72,6 +75,21 @@ def test_home(tracked_requests):
     assert tracked_request.tags["path"] == "/"
     span = tracked_request.complete_spans[0]
     assert span.operation == "Controller/tests.integration.test_cherrypy.Views.index"
+
+
+def test_static_favicon(tracked_requests):
+    with app_with_scout() as app:
+        # CherryPy serves its built-in favicon by default
+        response = TestApp(app).get("/favicon.ico")
+
+    assert response.status_int == 200
+    assert response.headers["content-type"] == "image/x-icon"
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.tags["path"] == "/"
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "Controller/staticfile"
 
 
 def test_home_ignored(tracked_requests):
