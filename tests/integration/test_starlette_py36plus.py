@@ -42,9 +42,16 @@ def app_with_scout(*, middleware=None, scout_config=None):
     async def home(request):
         return PlainTextResponse("Welcome home.")
 
+    def sync_home(request):
+        return PlainTextResponse("Welcome home, synchronously.")
+
     class HelloEndpoint(HTTPEndpoint):
         async def get(self, request):
             return PlainTextResponse("Hello World!")
+
+    class SyncHelloEndpoint(HTTPEndpoint):
+        def get(self, request):
+            return PlainTextResponse("Hello Synchronous World!")
 
     async def crash(request):
         raise ValueError("BØØM!")  # non-ASCII
@@ -67,7 +74,9 @@ def app_with_scout(*, middleware=None, scout_config=None):
 
     routes = [
         Route("/", endpoint=home),
+        Route("/sync-home/", endpoint=sync_home),
         Route("/hello/", endpoint=HelloEndpoint),
+        Route("/sync-hello/", endpoint=SyncHelloEndpoint),
         Route("/crash/", endpoint=crash),
         Route("/return-error/", endpoint=return_error),
         Route("/background-jobs/", endpoint=background_jobs),
@@ -121,6 +130,30 @@ async def test_home(tracked_requests):
 
 
 @async_test
+async def test_sync_home(tracked_requests):
+    with app_with_scout() as app:
+        communicator = ApplicationCommunicator(app, asgi_http_scope(path="/sync-home/"))
+        await communicator.send_input({"type": "http.request"})
+        # Read the response.
+        response_start = await communicator.receive_output()
+        response_body = await communicator.receive_output()
+
+    assert response_start["type"] == "http.response.start"
+    assert response_start["status"] == 200
+    assert response_body["type"] == "http.response.body"
+    assert response_body["body"] == b"Welcome home, synchronously."
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.tags["path"] == "/sync-home/"
+    span = tracked_request.complete_spans[0]
+    assert span.operation == (
+        "Controller/tests.integration.test_starlette_py36plus."
+        + "app_with_scout.<locals>.sync_home"
+    )
+
+
+@async_test
 async def test_home_ignored(tracked_requests):
     with app_with_scout(scout_config={"ignore": ["/"]}) as app:
         communicator = ApplicationCommunicator(app, asgi_http_scope(path="/"))
@@ -157,6 +190,32 @@ async def test_hello(tracked_requests):
     assert span.operation == (
         "Controller/tests.integration.test_starlette_py36plus."
         + "app_with_scout.<locals>.HelloEndpoint"
+    )
+
+
+@async_test
+async def test_sync_hello(tracked_requests):
+    with app_with_scout() as app:
+        communicator = ApplicationCommunicator(
+            app, asgi_http_scope(path="/sync-hello/")
+        )
+        await communicator.send_input({"type": "http.request"})
+        # Read the response.
+        response_start = await communicator.receive_output()
+        response_body = await communicator.receive_output()
+
+    assert response_start["type"] == "http.response.start"
+    assert response_start["status"] == 200
+    assert response_body["type"] == "http.response.body"
+    assert response_body["body"] == b"Hello Synchronous World!"
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.tags["path"] == "/sync-hello/"
+    span = tracked_request.complete_spans[0]
+    assert span.operation == (
+        "Controller/tests.integration.test_starlette_py36plus."
+        + "app_with_scout.<locals>.SyncHelloEndpoint"
     )
 
 
