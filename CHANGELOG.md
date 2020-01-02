@@ -12,14 +12,14 @@
   ([PR #430](https://github.com/scoutapp/scout_apm_python/pull/430)).
 - Add CherryPy integration
   ([PR #431](https://github.com/scoutapp/scout_apm_python/pull/431)).
-- Added tracking for missing PyMongo Collection methods
+- Add tracking for missing PyMongo Collection methods
   ([PR #436](https://github.com/scoutapp/scout_apm_python/pull/436)).
-- Added tracking for missing Elasticsearch client methods
+- Add tracking for missing Elasticsearch client methods
   ([PR #438](https://github.com/scoutapp/scout_apm_python/pull/438)).
 
 ### Removed
 
-- Removed the "name" context tag on Flask requests - it only duplicated the
+- Remove the "name" context tag from Flask requests - it only duplicated the
   request name
   ([PR #432](https://github.com/scoutapp/scout_apm_python/pull/432)).
 
@@ -27,7 +27,7 @@
 
 ### Added
 
-- Updated Core Agent to version 1.2.6, fixing several bugs
+- Update Core Agent to version 1.2.6, fixing several bugs
   ([PR #415](https://github.com/scoutapp/scout_apm_python/pull/415)):
     - Improve SQL statement names in Timeline Traces
     - Standardize on a `language_version` key in metadata
