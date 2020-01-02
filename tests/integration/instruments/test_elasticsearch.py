@@ -1,6 +1,7 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import inspect
 import logging
 import os
 
@@ -8,8 +9,9 @@ import elasticsearch
 import elasticsearch.exceptions
 import pytest
 
-from scout_apm.instruments.elasticsearch import ensure_installed
+from scout_apm.instruments.elasticsearch import CLIENT_METHODS, ensure_installed
 from tests.compat import mock
+from tests.tools import delete_attributes, skip_if_python_2
 
 
 @pytest.fixture(scope="module")
@@ -19,6 +21,36 @@ def elasticsearch_client():
     if "ELASTICSEARCH_URL" not in os.environ:
         raise pytest.skip("Elasticsearch isn't available")
     yield elasticsearch.Elasticsearch(os.environ["ELASTICSEARCH_URL"])
+
+
+def test_all_client_attributes_accounted_for():
+    public_attributes = {
+        m for m in dir(elasticsearch.Elasticsearch) if not m.startswith("_")
+    }
+    deliberately_ignored_attributes = set()
+    wrapped_methods = {m.name for m in CLIENT_METHODS}
+    assert (
+        public_attributes - deliberately_ignored_attributes - wrapped_methods
+    ) == set()
+
+
+@pytest.mark.parametrize(["method_name"], [[m.name] for m in CLIENT_METHODS])
+def test_all_client_methods_exist(method_name):
+    assert hasattr(elasticsearch.Elasticsearch, method_name)
+
+
+@skip_if_python_2
+@pytest.mark.parametrize(
+    ["method_name", "takes_index_argument"],
+    [[m.name, m.takes_index_argument] for m in CLIENT_METHODS],
+)
+def test_all_client_methods_match_index_argument(method_name, takes_index_argument):
+    signature = inspect.signature(getattr(elasticsearch.Elasticsearch, method_name))
+
+    if takes_index_argument:
+        assert "index" in signature.parameters
+    else:
+        assert "index" not in signature.parameters
 
 
 def test_ensure_installed_twice(caplog):
@@ -59,10 +91,8 @@ def test_ensure_installed_fail_no_client_bulk(caplog):
     mock_not_patched = mock.patch(
         "scout_apm.instruments.elasticsearch.have_patched_client", new=False
     )
-    mock_client = mock.patch("scout_apm.instruments.elasticsearch.Elasticsearch")
-    with mock_not_patched, mock_client as mocked_client:
-        del mocked_client.bulk
-
+    mock_no_bulk = delete_attributes(elasticsearch.Elasticsearch, "bulk")
+    with mock_not_patched, mock_no_bulk:
         ensure_installed()
 
     assert len(caplog.record_tuples) == 2
@@ -101,6 +131,14 @@ def test_ensure_installed_fail_no_transport_perform_request(caplog):
     assert message.startswith(
         "Unable to instrument elasticsearch.Transport.perform_request: AttributeError"
     )
+
+
+def test_ping(elasticsearch_client, tracked_request):
+    elasticsearch_client.ping()
+
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "Elasticsearch/Ping"
 
 
 def test_search(elasticsearch_client, tracked_request):

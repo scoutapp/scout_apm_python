@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
+from collections import namedtuple
 
 import wrapt
 
@@ -26,31 +27,46 @@ def ensure_installed():
         ensure_transport_instrumented()
 
 
+ClientMethod = namedtuple("ClientMethod", ["name", "takes_index_argument"])
+
 CLIENT_METHODS = [
-    "bulk",
-    "count",
-    "create",
-    "delete",
-    "delete_by_query",
-    "exists",
-    "exists_source",
-    "explain",
-    "field_caps",
-    "get",
-    "get_source",
-    "index",
-    "mget",
-    "msearch",
-    "msearch_template",
-    "mtermvectors",
-    "reindex",
-    "reindex_rethrottle",
-    "search",
-    "search_shards",
-    "search_template",
-    "termvectors",
-    "update",
-    "update_by_query",
+    ClientMethod("bulk", True),
+    ClientMethod("clear_scroll", False),
+    ClientMethod("count", True),
+    ClientMethod("create", True),
+    ClientMethod("delete", True),
+    ClientMethod("delete_by_query", True),
+    ClientMethod("delete_by_query_rethrottle", False),
+    ClientMethod("delete_script", False),
+    ClientMethod("exists", True),
+    ClientMethod("exists_source", True),
+    ClientMethod("explain", True),
+    ClientMethod("field_caps", True),
+    ClientMethod("get", True),
+    ClientMethod("get_script", False),
+    ClientMethod("get_source", True),
+    ClientMethod("index", True),
+    ClientMethod("info", False),
+    ClientMethod("mget", True),
+    ClientMethod("msearch", True),
+    ClientMethod("msearch_template", True),
+    ClientMethod("mtermvectors", True),
+    ClientMethod("ping", False),
+    ClientMethod("put_script", False),
+    ClientMethod("rank_eval", True),
+    ClientMethod("reindex", False),
+    ClientMethod("reindex_rethrottle", False),
+    ClientMethod("render_search_template", False),
+    ClientMethod("scripts_painless_context", False),
+    ClientMethod("scripts_painless_execute", False),
+    ClientMethod("scroll", False),
+    ClientMethod("search", True),
+    ClientMethod("search_shards", True),
+    ClientMethod("search_template", True),
+    ClientMethod("termvectors", True),
+    ClientMethod("update", True),
+    ClientMethod("update_by_query", True),
+    ClientMethod("update_by_query_rethrottle", False),
 ]
 
 
@@ -61,13 +77,14 @@ def ensure_client_instrumented():
     global have_patched_client
 
     if not have_patched_client:
-        for name in CLIENT_METHODS:
+        for name, takes_index_argument in CLIENT_METHODS:
             try:
-                setattr(
-                    Elasticsearch,
-                    name,
-                    wrap_client_method(getattr(Elasticsearch, name)),
-                )
+                method = getattr(Elasticsearch, name)
+                if takes_index_argument:
+                    wrapped = wrap_client_index_method(method)
+                else:
+                    wrapped = wrap_client_method(method)
+                setattr(Elasticsearch, name, wrapped)
             except Exception as exc:
                 logger.warning(
                     "Unable to instrument elasticsearch.Elasticsearch.%s: %r",
@@ -80,7 +97,7 @@ def ensure_client_instrumented():
 
 
 @wrapt.decorator
-def wrap_client_method(wrapped, instance, args, kwargs):
+def wrap_client_index_method(wrapped, instance, args, kwargs):
     def _get_index(index, *args, **kwargs):
         return index
 
@@ -96,6 +113,19 @@ def wrap_client_method(wrapped, instance, args, kwargs):
     index = index.title()
     camel_name = "".join(c.title() for c in wrapped.__name__.split("_"))
     operation = "Elasticsearch/{}/{}".format(index, camel_name)
+    tracked_request = TrackedRequest.instance()
+    tracked_request.start_span(operation=operation, ignore_children=True)
+
+    try:
+        return wrapped(*args, **kwargs)
+    finally:
+        tracked_request.stop_span()
+
+
+@wrapt.decorator
+def wrap_client_method(wrapped, instance, args, kwargs):
+    camel_name = "".join(c.title() for c in wrapped.__name__.split("_"))
+    operation = "Elasticsearch/{}".format(camel_name)
     tracked_request = TrackedRequest.instance()
     tracked_request.start_span(operation=operation, ignore_children=True)
 
