@@ -11,6 +11,12 @@
 - Add CherryPy integration
   ([PR #431](https://github.com/scoutapp/scout_apm_python/pull/431)).
 
+### Removed
+
+- Removed the "name" context tag on Flask requests - it only duplicated the
+  request name
+  ([PR #432](https://github.com/scoutapp/scout_apm_python/pull/432)).
+
 ## [2.9.1] 2019-12-13
 
 ### Added

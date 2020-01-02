@@ -48,7 +48,6 @@ class ScoutApm(object):
             operation=operation, should_capture_backtrace=False
         )
         request._scout_view_span = span
-        span.tag("name", name)
 
         werkzeug_track_request_data(request, tracked_request)
 
