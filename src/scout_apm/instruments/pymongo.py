@@ -25,7 +25,7 @@ def ensure_installed():
     if Collection is None:
         logger.info("Unable to import pymongo.Collection")
     elif not have_patched_collection:
-        for name in CLIENT_METHODS:
+        for name in COLLECTION_METHODS:
             try:
                 setattr(
                     Collection, name, wrap_collection_method(getattr(Collection, name))
@@ -40,10 +40,12 @@ def ensure_installed():
         have_patched_collection = True
 
 
-CLIENT_METHODS = [
+COLLECTION_METHODS = [
     "aggregate",
+    "aggregate_raw_batches",
     "bulk_write",
     "count",
+    "count_documents",
     "create_index",
     "create_indexes",
     "delete_many",
@@ -53,17 +55,23 @@ CLIENT_METHODS = [
     "drop_index",
     "drop_indexes",
     "ensure_index",
+    "estimated_document_count",
+    "find",
     "find_and_modify",
     "find_one",
     "find_one_and_delete",
     "find_one_and_replace",
     "find_one_and_update",
+    "find_raw_batches",
     "group",
+    "index_information",
     "inline_map_reduce",
     "insert",
     "insert_many",
     "insert_one",
+    "list_indexes",
     "map_reduce",
+    "parallel_scan",
     "reindex",
     "remove",
     "rename",

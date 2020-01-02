@@ -10,6 +10,8 @@
   ([PR #430](https://github.com/scoutapp/scout_apm_python/pull/430)).
 - Add CherryPy integration
   ([PR #431](https://github.com/scoutapp/scout_apm_python/pull/431)).
+- Added tracking for missing PyMongo Collection methods
+  ([PR #436](https://github.com/scoutapp/scout_apm_python/pull/436)).
 
 ### Removed
 
