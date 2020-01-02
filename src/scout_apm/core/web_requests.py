@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import time
 
-from scout_apm.compat import datetime_to_timestamp, urlencode
+from scout_apm.compat import datetime_to_timestamp, parse_qsl, urlencode
 from scout_apm.core.config import scout_config
 
 # Originally derived from:
@@ -177,8 +177,6 @@ def asgi_track_request_data(scope, tracked_request):
     """
     Track request data from an ASGI HTTP or Websocket scope.
     """
-    from urllib.parse import parse_qsl  # Inner import due to Python 3+
-
     path = scope.get("root_path", "") + scope["path"]
     query_params = parse_qsl(scope.get("query_string", b"").decode("utf-8"))
     tracked_request.tag("path", create_filtered_path(path, query_params))
