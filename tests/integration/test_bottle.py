@@ -143,7 +143,7 @@ def test_amazon_queue_time(tracked_requests):
 
 
 def test_home_ignored(tracked_requests):
-    with app_with_scout({"scout.ignore": ["/"]}) as app:
+    with app_with_scout(config={"scout.ignore": ["/"]}) as app:
         response = TestApp(app).get("/")
 
     assert response.status_int == 200
