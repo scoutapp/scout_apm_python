@@ -1,6 +1,7 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import inspect
 import logging
 import os
 
@@ -10,7 +11,7 @@ import pytest
 
 from scout_apm.instruments.elasticsearch import CLIENT_METHODS, ensure_installed
 from tests.compat import mock
-from tests.tools import delete_attributes
+from tests.tools import delete_attributes, skip_if_python_2
 
 
 @pytest.fixture(scope="module")
@@ -36,6 +37,20 @@ def test_all_client_attributes_accounted_for():
 @pytest.mark.parametrize(["method_name"], [[m.name] for m in CLIENT_METHODS])
 def test_all_client_methods_exist(method_name):
     assert hasattr(elasticsearch.Elasticsearch, method_name)
+
+
+@skip_if_python_2
+@pytest.mark.parametrize(
+    ["method_name", "takes_index_argument"],
+    [[m.name, m.takes_index_argument] for m in CLIENT_METHODS],
+)
+def test_all_client_methods_match_index_argument(method_name, takes_index_argument):
+    signature = inspect.signature(getattr(elasticsearch.Elasticsearch, method_name))
+
+    if takes_index_argument:
+        assert "index" in signature.parameters
+    else:
+        assert "index" not in signature.parameters
 
 
 def test_ensure_installed_twice(caplog):
