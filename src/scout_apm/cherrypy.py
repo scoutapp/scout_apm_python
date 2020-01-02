@@ -38,11 +38,10 @@ class ScoutPlugin(plugins.SimplePlugin):
     def after_request(self):
         if self._do_nothing:
             return
-        tracked_request = getattr(cherrypy.request, "_scout_tracked_request", None)
+        request = cherrypy.request
+        tracked_request = getattr(request, "_scout_tracked_request", None)
         if tracked_request is None:
             return
-
-        request = cherrypy.request
 
         # Rename controller span now routing has been done
         operation_name = get_operation_name(request)
