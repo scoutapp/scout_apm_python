@@ -47,6 +47,9 @@ def app_with_scout(scout_config=None):
             cherrypy.response.status = 503
             return "Something went wrong"
 
+        # Serve this source file statically
+        static_file = cherrypy.tools.staticfile.handler(__file__)
+
     app = cherrypy.Application(Views(), "/", config=None)
 
     # Setup according to https://docs.scoutapm.com/#cherrypy
@@ -186,6 +189,20 @@ def test_return_error(tracked_requests):
         span.operation
         == "Controller/tests.integration.test_cherrypy.Views.return_error"
     )
+
+
+def test_static_file(tracked_requests):
+    with app_with_scout() as app:
+        # CherryPy serves its built-in favicon by default
+        response = TestApp(app).get("/static-file/")
+
+    assert response.status_int == 200
+    assert response.headers["content-type"] == "text/x-python;charset=utf-8"
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "Controller/staticfile"
 
 
 def test_not_found(tracked_requests):

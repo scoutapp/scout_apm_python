@@ -108,6 +108,18 @@ def get_operation_name(request):
     while hasattr(real_handler, "callable"):
         real_handler = real_handler.callable
 
+    # Looks like it's from HandlerTool
+    if getattr(real_handler, "__name__", "") == "handle_func":
+        try:
+            wrapped_tool = real_handler.__closure__[2].cell_contents.callable
+        except (AttributeError, IndexError):
+            pass
+        else:
+            try:
+                return "Controller/{}".format(wrapped_tool.__name__)
+            except AttributeError:
+                pass
+
     # Not a method? Not from an exposed view then
     if not hasattr(real_handler, "__self__"):
         return None
