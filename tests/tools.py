@@ -12,10 +12,10 @@ from scout_apm.core.n_plus_one_tracker import NPlusOneTracker
 from tests.compat import mock, nullcontext
 
 skip_if_python_2 = pytest.mark.skipif(
-    sys.version_info[0] == 2, reason="Requires Python 3"
+    sys.version_info[0] < 3, reason="Requires Python 3"
 )
 skip_if_python_3 = pytest.mark.skipif(
-    sys.version_info[0] == 3, reason="Requires Python 2"
+    sys.version_info[0] >= 3, reason="Requires Python 2"
 )
 
 skip_if_objtrace_not_extension = pytest.mark.skipif(

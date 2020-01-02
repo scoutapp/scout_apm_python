@@ -86,7 +86,7 @@ def _get_tastypie_operation_name(request, view_func):
             wrapper = view_func.__closure__[0].cell_contents
         except (AttributeError, IndexError):
             return None
-    elif sys.version_info[0] == 3:
+    else:
         try:
             wrapper = view_func.__wrapped__
         except AttributeError:
