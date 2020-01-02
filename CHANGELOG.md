@@ -12,6 +12,8 @@
   ([PR #431](https://github.com/scoutapp/scout_apm_python/pull/431)).
 - Added tracking for missing PyMongo Collection methods
   ([PR #436](https://github.com/scoutapp/scout_apm_python/pull/436)).
+- Added tracking for missing Elasticsearch client methods
+  ([PR #438](https://github.com/scoutapp/scout_apm_python/pull/438)).
 
 ### Removed
 

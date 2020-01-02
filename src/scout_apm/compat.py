@@ -95,6 +95,18 @@ def kwargs_only(func):
     return wrapper
 
 
+if sys.version_info >= (3, 0):
+
+    def get_function_argument_names(func):
+        return set(inspect.signature(func).parameters)
+
+
+else:
+
+    def get_function_argument_names(func):
+        return set(inspect.getargspec(func).args)
+
+
 __all__ = [
     "ContextDecorator",
     "datetime_to_timestamp",

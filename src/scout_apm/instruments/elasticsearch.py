@@ -5,6 +5,7 @@ import logging
 
 import wrapt
 
+from scout_apm.compat import get_function_argument_names
 from scout_apm.core.tracked_request import TrackedRequest
 
 try:
@@ -28,29 +29,42 @@ def ensure_installed():
 
 CLIENT_METHODS = [
     "bulk",
+    "clear_scroll",
     "count",
     "create",
     "delete",
     "delete_by_query",
+    "delete_by_query_rethrottle",
+    "delete_script",
     "exists",
     "exists_source",
     "explain",
     "field_caps",
     "get",
+    "get_script",
     "get_source",
     "index",
+    "info",
     "mget",
     "msearch",
     "msearch_template",
     "mtermvectors",
+    "ping",
+    "put_script",
+    "rank_eval",
     "reindex",
     "reindex_rethrottle",
+    "render_search_template",
+    "scripts_painless_context",
+    "scripts_painless_execute",
+    "scroll",
     "search",
     "search_shards",
     "search_template",
     "termvectors",
     "update",
     "update_by_query",
+    "update_by_query_rethrottle",
 ]
 
 
@@ -63,11 +77,12 @@ def ensure_client_instrumented():
     if not have_patched_client:
         for name in CLIENT_METHODS:
             try:
-                setattr(
-                    Elasticsearch,
-                    name,
-                    wrap_client_method(getattr(Elasticsearch, name)),
-                )
+                method = getattr(Elasticsearch, name)
+                if "index" in get_function_argument_names(method):
+                    wrapped = wrap_client_index_method(method)
+                else:
+                    wrapped = wrap_client_method(method)
+                setattr(Elasticsearch, name, wrapped)
             except Exception as exc:
                 logger.warning(
                     "Unable to instrument elasticsearch.Elasticsearch.%s: %r",
@@ -80,7 +95,7 @@ def ensure_client_instrumented():
 
 
 @wrapt.decorator
-def wrap_client_method(wrapped, instance, args, kwargs):
+def wrap_client_index_method(wrapped, instance, args, kwargs):
     def _get_index(index, *args, **kwargs):
         return index
 
@@ -96,6 +111,19 @@ def wrap_client_method(wrapped, instance, args, kwargs):
     index = index.title()
     camel_name = "".join(c.title() for c in wrapped.__name__.split("_"))
     operation = "Elasticsearch/{}/{}".format(index, camel_name)
+    tracked_request = TrackedRequest.instance()
+    tracked_request.start_span(operation=operation, ignore_children=True)
+
+    try:
+        return wrapped(*args, **kwargs)
+    finally:
+        tracked_request.stop_span()
+
+
+@wrapt.decorator
+def wrap_client_method(wrapped, instance, args, kwargs):
+    camel_name = "".join(c.title() for c in wrapped.__name__.split("_"))
+    operation = "Elasticsearch/{}".format(camel_name)
     tracked_request = TrackedRequest.instance()
     tracked_request.start_span(operation=operation, ignore_children=True)
 
