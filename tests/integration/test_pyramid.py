@@ -10,7 +10,7 @@ from pyramid.response import Response
 from webtest import TestApp
 
 from scout_apm.api import Config
-from scout_apm.compat import datetime_to_timestamp
+from scout_apm.compat import datetime_to_timestamp, kwargs_only
 from tests.integration.util import (
     parametrize_filtered_params,
     parametrize_queue_time_header_name,
@@ -19,6 +19,7 @@ from tests.integration.util import (
 
 
 @contextmanager
+@kwargs_only
 def app_with_scout(config=None):
     """
     Context manager that configures and installs the Scout plugin for Bottle.
@@ -139,7 +140,7 @@ def test_amazon_queue_time(tracked_requests):
 
 
 def test_home_ignored(tracked_requests):
-    with app_with_scout({"SCOUT_MONITOR": True, "SCOUT_IGNORE": ["/"]}) as app:
+    with app_with_scout(config={"SCOUT_MONITOR": True, "SCOUT_IGNORE": ["/"]}) as app:
         response = TestApp(app).get("/")
 
     assert response.status_int == 200
@@ -200,7 +201,7 @@ def test_return_error(tracked_requests):
 
 def test_no_monitor(tracked_requests):
     # With an empty config, "SCOUT_MONITOR" defaults to False.
-    with app_with_scout({}) as app:
+    with app_with_scout(config={}) as app:
         response = TestApp(app).get("/hello/")
 
     assert response.status_int == 200

@@ -8,8 +8,8 @@ from fakeredis import FakeStrictRedis
 from rq import Queue
 
 import scout_apm.rq
-from scout_apm import compat
 from scout_apm.api import Config
+from scout_apm.compat import kwargs_only, string_type
 
 
 def hello():
@@ -21,6 +21,7 @@ def fail():
 
 
 @contextmanager
+@kwargs_only
 def app_with_scout(scout_config=None):
     """
     Context manager that configures a Huey app with Scout installed.
@@ -58,7 +59,7 @@ def test_hello(tracked_requests):
     assert len(tracked_requests) == 1
     tracked_request = tracked_requests[0]
     task_id = tracked_request.tags["task_id"]
-    assert isinstance(task_id, compat.string_type) and len(task_id) == 36
+    assert isinstance(task_id, string_type) and len(task_id) == 36
     assert tracked_request.tags["queue"] == "myqueue"
     assert 0.0 < tracked_request.tags["queue_time"] < 60.0
     assert len(tracked_request.complete_spans) == 2
@@ -76,7 +77,7 @@ def test_fail(tracked_requests):
 
     tracked_request = tracked_requests[0]
     task_id = tracked_request.tags["task_id"]
-    assert isinstance(task_id, compat.string_type) and len(task_id) == 36
+    assert isinstance(task_id, string_type) and len(task_id) == 36
     assert tracked_request.tags["queue"] == "myqueue"
     assert 0.0 < tracked_request.tags["queue_time"] < 60.0
     assert tracked_request.tags["error"] == "true"

@@ -9,7 +9,7 @@ from webtest import TestApp
 
 from scout_apm.api import Config
 from scout_apm.cherrypy import ScoutPlugin
-from scout_apm.compat import datetime_to_timestamp
+from scout_apm.compat import datetime_to_timestamp, kwargs_only
 from tests.integration.util import (
     parametrize_filtered_params,
     parametrize_queue_time_header_name,
@@ -18,6 +18,7 @@ from tests.integration.util import (
 
 
 @contextmanager
+@kwargs_only
 def app_with_scout(scout_config=None):
     """
     Context manager that configures and installs the Scout plugin for CherryPy.

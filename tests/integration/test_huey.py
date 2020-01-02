@@ -9,10 +9,12 @@ from huey import MemoryHuey
 from huey.exceptions import CancelExecution, HueyException, RetryTask, TaskException
 
 from scout_apm.api import Config
+from scout_apm.compat import kwargs_only
 from scout_apm.huey import attach_scout
 
 
 @contextmanager
+@kwargs_only
 def app_with_scout(scout_config=None):
     """
     Context manager that configures a Huey app with Scout installed.

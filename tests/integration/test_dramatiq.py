@@ -6,6 +6,8 @@ from contextlib import contextmanager
 
 import pytest
 
+from scout_apm.compat import kwargs_only
+
 try:
     import dramatiq
 except ImportError:
@@ -24,6 +26,7 @@ pytestmark = [skip_if_dramatiq_unavailable]
 
 
 @contextmanager
+@kwargs_only
 def app_with_scout(config=None):
     """
     Context manager that configures a Dramatiq app with Scout middleware

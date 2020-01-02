@@ -73,13 +73,13 @@ def kwargs_only(func):
     if hasattr(inspect, "signature"):  # pragma: no cover
         # Python 3
         signature = inspect.signature(func)
-        first_arg_name = list(signature.parameters.keys())[0]
+        arg_names = list(signature.parameters.keys())
     else:  # pragma: no cover
         # Python 2
         signature = inspect.getargspec(func)
-        first_arg_name = signature.args[0]
+        arg_names = signature.args
 
-    if first_arg_name in ("self", "cls"):
+    if len(arg_names) > 0 and arg_names[0] in ("self", "cls"):
         allowable_args = 1
     else:
         allowable_args = 0

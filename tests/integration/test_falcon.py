@@ -10,7 +10,7 @@ import pytest
 from webtest import TestApp
 
 from scout_apm.api import Config
-from scout_apm.compat import datetime_to_timestamp
+from scout_apm.compat import datetime_to_timestamp, kwargs_only
 from scout_apm.falcon import ScoutMiddleware
 from tests.integration.util import (
     parametrize_filtered_params,
@@ -20,6 +20,7 @@ from tests.integration.util import (
 
 
 @contextmanager
+@kwargs_only
 def app_with_scout(config=None, middleware=None, set_api=True):
     """
     Context manager that yields a fresh Falcon app with Scout configured.
@@ -174,7 +175,7 @@ def test_home_suffixed(tracked_requests):
 
 
 def test_home_ignored(tracked_requests):
-    with app_with_scout({"ignore": ["/"]}) as app:
+    with app_with_scout(config={"ignore": ["/"]}) as app:
         response = TestApp(app).get("/")
 
     assert response.status_int == 200
