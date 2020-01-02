@@ -50,8 +50,8 @@ class ScoutPlugin(plugins.SimplePlugin):
 
         # Grab general request data now it has been parsed
         path = request.path_info
-        # Parse params because we want only GET params but CherryPy parses
-        # POST params into the same dict.
+        # Parse params ourselves because we want only GET params but CherryPy
+        # parses POST params (nearly always sensitive) into the same dict.
         params = parse_qsl(request.query_string)
         tracked_request.tag("path", create_filtered_path(path, params))
         if ignore_path(path):
@@ -76,7 +76,6 @@ class ScoutPlugin(plugins.SimplePlugin):
             track_amazon_request_queue_time(amazon_queue_time, tracked_request)
 
         response = cherrypy.response
-
         status = response.status
         if isinstance(status, int):
             status_int = status
