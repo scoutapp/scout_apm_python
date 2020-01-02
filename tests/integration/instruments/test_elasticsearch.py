@@ -27,12 +27,13 @@ def test_all_client_attributes_accounted_for():
         m for m in dir(elasticsearch.Elasticsearch) if not m.startswith("_")
     }
     deliberately_ignored_attributes = set()
+    wrapped_methods = {m.name for m in CLIENT_METHODS}
     assert (
-        public_attributes - deliberately_ignored_attributes - set(CLIENT_METHODS)
+        public_attributes - deliberately_ignored_attributes - wrapped_methods
     ) == set()
 
 
-@pytest.mark.parametrize(["method_name"], [[x] for x in CLIENT_METHODS])
+@pytest.mark.parametrize(["method_name"], [[m.name] for m in CLIENT_METHODS])
 def test_all_client_methods_exist(method_name):
     assert hasattr(elasticsearch.Elasticsearch, method_name)
 

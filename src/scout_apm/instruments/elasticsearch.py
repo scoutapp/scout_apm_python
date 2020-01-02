@@ -2,10 +2,10 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
+from collections import namedtuple
 
 import wrapt
 
-from scout_apm.compat import get_function_argument_names
 from scout_apm.core.tracked_request import TrackedRequest
 
 try:
@@ -27,44 +27,46 @@ def ensure_installed():
         ensure_transport_instrumented()
 
 
+ClientMethod = namedtuple("ClientMethod", ["name", "takes_index_argument"])
+
 CLIENT_METHODS = [
-    "bulk",
-    "clear_scroll",
-    "count",
-    "create",
-    "delete",
-    "delete_by_query",
-    "delete_by_query_rethrottle",
-    "delete_script",
-    "exists",
-    "exists_source",
-    "explain",
-    "field_caps",
-    "get",
-    "get_script",
-    "get_source",
-    "index",
-    "info",
-    "mget",
-    "msearch",
-    "msearch_template",
-    "mtermvectors",
-    "ping",
-    "put_script",
-    "rank_eval",
-    "reindex",
-    "reindex_rethrottle",
-    "render_search_template",
-    "scripts_painless_context",
-    "scripts_painless_execute",
-    "scroll",
-    "search",
-    "search_shards",
-    "search_template",
-    "termvectors",
-    "update",
-    "update_by_query",
-    "update_by_query_rethrottle",
+    ClientMethod("bulk", True),
+    ClientMethod("clear_scroll", False),
+    ClientMethod("count", True),
+    ClientMethod("create", True),
+    ClientMethod("delete", True),
+    ClientMethod("delete_by_query", True),
+    ClientMethod("delete_by_query_rethrottle", False),
+    ClientMethod("delete_script", False),
+    ClientMethod("exists", True),
+    ClientMethod("exists_source", True),
+    ClientMethod("explain", True),
+    ClientMethod("field_caps", True),
+    ClientMethod("get", True),
+    ClientMethod("get_script", False),
+    ClientMethod("get_source", True),
+    ClientMethod("index", True),
+    ClientMethod("info", False),
+    ClientMethod("mget", True),
+    ClientMethod("msearch", True),
+    ClientMethod("msearch_template", True),
+    ClientMethod("mtermvectors", True),
+    ClientMethod("ping", False),
+    ClientMethod("put_script", False),
+    ClientMethod("rank_eval", True),
+    ClientMethod("reindex", False),
+    ClientMethod("reindex_rethrottle", False),
+    ClientMethod("render_search_template", False),
+    ClientMethod("scripts_painless_context", False),
+    ClientMethod("scripts_painless_execute", False),
+    ClientMethod("scroll", False),
+    ClientMethod("search", True),
+    ClientMethod("search_shards", True),
+    ClientMethod("search_template", True),
+    ClientMethod("termvectors", True),
+    ClientMethod("update", True),
+    ClientMethod("update_by_query", True),
+    ClientMethod("update_by_query_rethrottle", False),
 ]
 
 
@@ -75,10 +77,10 @@ def ensure_client_instrumented():
     global have_patched_client
 
     if not have_patched_client:
-        for name in CLIENT_METHODS:
+        for name, takes_index_argument in CLIENT_METHODS:
             try:
                 method = getattr(Elasticsearch, name)
-                if "index" in get_function_argument_names(method):
+                if takes_index_argument:
                     wrapped = wrap_client_index_method(method)
                 else:
                     wrapped = wrap_client_method(method)
