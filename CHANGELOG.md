@@ -1,6 +1,6 @@
 # Changelog
 
-## Pending
+## [2.10.0] 2020-01-02
 
 ### Added
 
