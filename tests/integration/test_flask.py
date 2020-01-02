@@ -8,7 +8,7 @@ import flask
 from webtest import TestApp
 
 from scout_apm.api import Config
-from scout_apm.compat import datetime_to_timestamp
+from scout_apm.compat import datetime_to_timestamp, kwargs_only
 from scout_apm.flask import ScoutApm
 from tests.integration.util import (
     parametrize_filtered_params,
@@ -18,6 +18,7 @@ from tests.integration.util import (
 
 
 @contextmanager
+@kwargs_only
 def app_with_scout(config=None):
     """
     Context manager that configures and installs the Scout plugin for Bottle.
@@ -77,7 +78,7 @@ def test_home(tracked_requests):
 
 
 def test_home_ignored(tracked_requests):
-    with app_with_scout({"SCOUT_MONITOR": True, "SCOUT_IGNORE": "/"}) as app:
+    with app_with_scout(config={"SCOUT_MONITOR": True, "SCOUT_IGNORE": "/"}) as app:
         response = TestApp(app).get("/")
 
     assert response.status_int == 200
@@ -182,7 +183,7 @@ def test_not_found(tracked_requests):
 
 
 def test_server_error(tracked_requests):
-    with app_with_scout({"PROPAGATE_EXCEPTIONS": False}) as app:
+    with app_with_scout(config={"PROPAGATE_EXCEPTIONS": False}) as app:
         response = TestApp(app).get("/crash/", expect_errors=True)
 
     assert response.status_int == 500
@@ -242,7 +243,7 @@ def test_preprocessor_response(tracked_requests):
 
 
 def test_no_monitor(tracked_requests):
-    with app_with_scout({"SCOUT_MONITOR": False}) as app:
+    with app_with_scout(config={"SCOUT_MONITOR": False}) as app:
         response = TestApp(app).get("/hello/")
 
     assert response.status_int == 200

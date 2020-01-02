@@ -15,7 +15,7 @@ from django.http import HttpResponse
 from django.test.utils import override_settings
 from webtest import TestApp
 
-from scout_apm.compat import datetime_to_timestamp
+from scout_apm.compat import datetime_to_timestamp, kwargs_only
 from scout_apm.core.config import scout_config
 from scout_apm.django.instruments.huey import ensure_huey_instrumented
 from scout_apm.django.instruments.sql import ensure_sql_instrumented
@@ -63,6 +63,7 @@ def ensure_no_django_config_applied_after_tests():
 
 
 @contextmanager
+@kwargs_only
 def app_with_scout(**settings):
     """
     Context manager that simply overrides settings. Unlike the other web

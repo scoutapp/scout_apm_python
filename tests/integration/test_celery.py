@@ -9,6 +9,7 @@ from celery.signals import setup_logging
 
 import scout_apm.celery
 from scout_apm.api import Config
+from scout_apm.compat import kwargs_only
 
 # http://docs.celeryproject.org/en/latest/userguide/testing.html#py-test
 skip_unless_celery_4_plus = pytest.mark.skipif(
@@ -25,6 +26,7 @@ def do_nothing(**kwargs):
 
 
 @contextmanager
+@kwargs_only
 def app_with_scout(app=None, config=None):
     """
     Context manager that configures a Celery app with Scout installed.

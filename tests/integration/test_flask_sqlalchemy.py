@@ -6,11 +6,13 @@ from contextlib import contextmanager
 from flask_sqlalchemy import SQLAlchemy
 from webtest import TestApp
 
+from scout_apm.compat import kwargs_only
 from scout_apm.flask.sqlalchemy import instrument_sqlalchemy
 from tests.integration.test_flask import app_with_scout as flask_app_with_scout
 
 
 @contextmanager
+@kwargs_only
 def app_with_scout():
     with flask_app_with_scout() as app:
         app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"

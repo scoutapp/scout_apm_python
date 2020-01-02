@@ -11,7 +11,7 @@ from webtest import TestApp
 from werkzeug.wrappers import Response
 
 from scout_apm.api import Config
-from scout_apm.compat import datetime_to_timestamp
+from scout_apm.compat import datetime_to_timestamp, kwargs_only
 from scout_apm.nameko import ScoutReporter
 from tests.integration.util import (
     parametrize_filtered_params,
@@ -21,6 +21,7 @@ from tests.integration.util import (
 
 
 @contextmanager
+@kwargs_only
 def app_with_scout(nameko_config=None, scout_config=None):
     """
     Context manager that yields a fresh Nameko WSGI app with Scout configured.
