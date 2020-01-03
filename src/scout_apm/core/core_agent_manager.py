@@ -170,9 +170,11 @@ class CoreAgentDownloader(object):
                 self.download_lock_path,
                 os.O_RDWR | os.O_CREAT | os.O_EXCL | os.O_NONBLOCK,
             )
-        except OSError as e:
+        except OSError as exc:
             logger.debug(
-                "Could not obtain download lock on %s: %r", self.download_lock_path, e
+                "Could not obtain download lock on %s",
+                self.download_lock_path,
+                exc_info=exc,
             )
             self.download_lock_fd = None
 
@@ -219,8 +221,8 @@ class CoreAgentManifest(object):
         self.valid = False
         try:
             self.parse()
-        except (ValueError, TypeError, OSError, IOError) as e:
-            logger.debug("Error parsing Core Agent Manifest: %r", e)
+        except (ValueError, TypeError, OSError, IOError) as exc:
+            logger.debug("Error parsing Core Agent Manifest", exc_info=exc)
 
     def parse(self):
         logger.debug("Parsing Core Agent manifest path: %s", self.manifest_path)
@@ -245,6 +247,6 @@ def sha256_digest(filename, block_size=65536):
             for block in iter(lambda: f.read(block_size), b""):
                 sha256.update(block)
         return sha256.hexdigest()
-    except OSError as e:
-        logger.debug("Error on digest: %r", e)
+    except OSError as exc:
+        logger.debug("Error on digest", exc_info=exc)
         return None
