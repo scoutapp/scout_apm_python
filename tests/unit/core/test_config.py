@@ -8,7 +8,7 @@ import sys
 
 import pytest
 
-from scout_apm.core.config import ScoutConfig, ScoutConfigNull
+from scout_apm.core.config import ScoutConfig, ScoutConfigNull, scout_config
 from tests.compat import mock
 
 
@@ -135,24 +135,29 @@ def test_log_config():
 
 
 def test_core_agent_permissions_default():
-    config = ScoutConfig()
-    assert 0o700 == config.core_agent_permissions()
+    assert scout_config.core_agent_permissions() == 0o700
 
 
-def test_core_agent_permissions_custom():
-    ScoutConfig.set(core_agent_permissions=770)
-    config = ScoutConfig()
+def test_core_agent_permissions_custom_int():
+    scout_config.set(core_agent_permissions=770)
     try:
-        assert 0o770 == config.core_agent_permissions()
+        assert scout_config.core_agent_permissions() == 0o770
+    finally:
+        ScoutConfig.reset_all()
+
+
+def test_core_agent_permissions_custom_str():
+    scout_config.set(core_agent_permissions="770")
+    try:
+        assert scout_config.core_agent_permissions() == 0o770
     finally:
         ScoutConfig.reset_all()
 
 
 def test_core_agent_permissions_invalid_uses_default():
-    ScoutConfig.set(core_agent_permissions="THIS IS INVALID")
-    config = ScoutConfig()
+    scout_config.set(core_agent_permissions="THIS IS INVALID")
     try:
-        assert 0o700 == config.core_agent_permissions()
+        assert scout_config.core_agent_permissions() == 0o700
     finally:
         ScoutConfig.reset_all()
 

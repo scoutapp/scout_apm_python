@@ -6,7 +6,6 @@ import os
 
 from scout_apm.compat import string_type
 from scout_apm.core import platform_detection
-from scout_apm.core.util import octal
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +76,7 @@ class ScoutConfig(object):
 
     def core_agent_permissions(self):
         try:
-            return octal(self.value("core_agent_permissions"))
+            return int(str(self.value("core_agent_permissions")), 8)
         except ValueError:
             logger.exception(
                 "Invalid core_agent_permissions value, using default of 0o700"
