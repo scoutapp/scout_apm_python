@@ -10,43 +10,14 @@ from scout_apm.core.commands import ApplicationEvent
 from scout_apm.core.samplers.cpu import Cpu
 from scout_apm.core.samplers.memory import Memory
 from scout_apm.core.socket import CoreAgentSocket
+from scout_apm.core.threading import SingletonThread
 
 logger = logging.getLogger(__name__)
 
 
-class SamplersThread(threading.Thread):
-    _instance = None
+class SamplersThread(SingletonThread):
     _instance_lock = threading.Lock()
     _stop_event = threading.Event()
-
-    @classmethod
-    def ensure_started(cls):
-        with cls._instance_lock:
-            if cls._instance is None:
-                cls._instance = cls()
-                cls._instance.start()
-
-    @classmethod
-    def ensure_stopped(cls):
-        with cls._instance_lock:
-            if cls._instance is None:
-                # Nothing to stop
-                return
-            elif not cls._instance.is_alive():
-                # Thread died
-                cls._instance = None
-                return
-
-            # Signal stopping
-            cls._stop_event.set()
-            cls._instance.join()
-
-            cls._instance = None
-            cls._stop_event.clear()
-
-    def __init__(self, *args, **kwargs):
-        super(SamplersThread, self).__init__(*args, **kwargs)
-        self.daemon = True
 
     def run(self):
         logger.debug("Starting Samplers.")

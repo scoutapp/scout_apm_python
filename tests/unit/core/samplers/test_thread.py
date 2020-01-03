@@ -22,7 +22,6 @@ def test_ensure_started(caplog):
     SamplersThread.ensure_started()
     time.sleep(0.001)
 
-    assert SamplersThread._instance is not None
     assert caplog.record_tuples[0] == (
         "scout_apm.core.samplers.thread",
         10,
@@ -35,7 +34,6 @@ def test_ensure_stopped(caplog):
     time.sleep(0.001)
     SamplersThread.ensure_stopped()
 
-    assert SamplersThread._instance is None
     assert caplog.record_tuples[-1] == (
         "scout_apm.core.samplers.thread",
         10,
