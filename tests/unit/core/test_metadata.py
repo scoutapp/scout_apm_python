@@ -1,6 +1,8 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import sys
+
 import pytest
 
 from scout_apm.core.metadata import report_app_metadata
@@ -25,8 +27,12 @@ def test_report_app_metadata(send):
 
 
 @mock.patch("scout_apm.core.socket.CoreAgentSocket.send")
-def test_report_app_metadata_no_pkg_resources(send):
-    with pretend_package_unavailable("pkg_resources"):
+def test_report_app_metadata_no_importlib_metadata(send):
+    if sys.version_info >= (3, 8):
+        module_name = "importlib"
+    else:
+        module_name = "importlib_metadata"
+    with pretend_package_unavailable(module_name):
         report_app_metadata()
 
     assert send.call_count == 1
