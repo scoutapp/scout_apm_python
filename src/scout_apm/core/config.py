@@ -21,11 +21,11 @@ class ScoutConfig(object):
 
     def __init__(self):
         self.layers = [
-            ScoutConfigEnv(),
-            ScoutConfigPython(),
-            ScoutConfigDerived(self),
-            ScoutConfigDefaults(),
-            ScoutConfigNull(),
+            Env(),
+            Python(),
+            Derived(self),
+            Defaults(),
+            Null(),
         ]
 
     def value(self, key):
@@ -39,15 +39,16 @@ class ScoutConfig(object):
             if layer.has_config(key):
                 return layer
 
-        # Should be unreachable because ScoutConfigNull returns None for all
-        # keys.
+        # Should be unreachable because Null returns None for all keys.
         raise ValueError("key {!r} not found in any layer".format(key))
 
     def log(self):
         logger.debug("Configuration Loaded:")
         for key in self.known_keys():
             layer = self.locate_layer_for_key(key)
-            logger.debug("%-9s: %s = %s", layer.name(), key, layer.value(key))
+            logger.debug(
+                "%-9s: %s = %s", layer.__class__.__name__, key, layer.value(key)
+            )
 
     def known_keys(self):
         return [
@@ -89,7 +90,6 @@ class ScoutConfig(object):
         Sets a configuration value for the Scout agent. Values set here will
         not override values set in ENV.
         """
-        global SCOUT_PYTHON_VALUES
         for key, value in kwargs.items():
             SCOUT_PYTHON_VALUES[key] = value
 
@@ -98,7 +98,6 @@ class ScoutConfig(object):
         """
         Removes a configuration value for the Scout agent.
         """
-        global SCOUT_PYTHON_VALUES
         for key in keys:
             SCOUT_PYTHON_VALUES.pop(key, None)
 
@@ -109,7 +108,6 @@ class ScoutConfig(object):
 
         This is meant for use in testing.
         """
-        global SCOUT_PYTHON_VALUES
         SCOUT_PYTHON_VALUES.clear()
 
 
@@ -117,13 +115,10 @@ class ScoutConfig(object):
 SCOUT_PYTHON_VALUES = {}
 
 
-class ScoutConfigPython(object):
+class Python(object):
     """
     A configuration overlay that lets other parts of python set values.
     """
-
-    def name(self):
-        return "Python"
 
     def has_config(self, key):
         return key in SCOUT_PYTHON_VALUES
@@ -132,7 +127,7 @@ class ScoutConfigPython(object):
         return SCOUT_PYTHON_VALUES[key]
 
 
-class ScoutConfigEnv(object):
+class Env(object):
     """
     Reads configuration from environment by prefixing the key
     requested with "SCOUT_"
@@ -140,9 +135,6 @@ class ScoutConfigEnv(object):
     Example: the `key` config looks for SCOUT_KEY
     environment variable
     """
-
-    def name(self):
-        return "ENV"
 
     def has_config(self, key):
         env_key = self.modify_key(key)
@@ -157,7 +149,7 @@ class ScoutConfigEnv(object):
         return env_key
 
 
-class ScoutConfigDerived(object):
+class Derived(object):
     """
     A configuration overlay that calculates from other values.
     """
@@ -168,9 +160,6 @@ class ScoutConfigDerived(object):
         components of the derived info.
         """
         self.config = config
-
-    def name(self):
-        return "Derived"
 
     def has_config(self, key):
         return self.lookup_func(key) is not None
@@ -205,13 +194,10 @@ class ScoutConfigDerived(object):
         return platform_detection.get_triple()
 
 
-class ScoutConfigDefaults(object):
+class Defaults(object):
     """
     Provides default values for important configurations
     """
-
-    def name(self):
-        return "Defaults"
 
     def __init__(self):
         self.defaults = {
@@ -238,7 +224,7 @@ class ScoutConfigDefaults(object):
 
     def _git_revision_sha(self):
         # N.B. The environment variable SCOUT_REVISION_SHA may also be used,
-        # but that will be picked up by ScoutConfigEnv
+        # but that will be picked up by Env
         return os.environ.get("HEROKU_SLUG_COMMIT", "")
 
     def has_config(self, key):
@@ -248,16 +234,12 @@ class ScoutConfigDefaults(object):
         return self.defaults[key]
 
 
-# Always returns None to any key
-class ScoutConfigNull(object):
+class Null(object):
     """
     Always answers that a key is present, but the value is None
 
     Used as the last step of the layered configuration.
     """
-
-    def name(self):
-        return "Null"
 
     def has_config(self, key):
         return True

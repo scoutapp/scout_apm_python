@@ -8,7 +8,7 @@ import sys
 
 import pytest
 
-from scout_apm.core.config import ScoutConfig, ScoutConfigNull, scout_config
+from scout_apm.core.config import Null, ScoutConfig, scout_config
 from tests.compat import mock
 
 
@@ -97,7 +97,7 @@ def test_get_undefined_config_value():
 def test_get_undefined_config_value_null_layer_removed():
     # For coverage
     config = ScoutConfig()
-    config.layers = [x for x in config.layers if not isinstance(x, ScoutConfigNull)]
+    config.layers = [x for x in config.layers if not isinstance(x, Null)]
 
     with pytest.raises(ValueError) as excinfo:
         config.value("unknown value")
@@ -160,11 +160,6 @@ def test_core_agent_permissions_invalid_uses_default():
         assert scout_config.core_agent_permissions() == 0o700
     finally:
         ScoutConfig.reset_all()
-
-
-def test_null_config_name():
-    # For coverage... this is never called elsewhere.
-    ScoutConfigNull().name()
 
 
 def test_boolean_conversion_from_env():
