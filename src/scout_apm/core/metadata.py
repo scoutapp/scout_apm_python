@@ -7,11 +7,11 @@ from os import getpid
 
 from scout_apm.core.commands import ApplicationEvent
 from scout_apm.core.config import scout_config
-from scout_apm.core.socket import CoreAgentSocket
+from scout_apm.core.socket import CoreAgentSocketThread
 
 
 def report_app_metadata():
-    CoreAgentSocket.instance().send(
+    CoreAgentSocketThread.send(
         ApplicationEvent(
             event_type="scout.metadata",
             event_value=get_metadata(),
