@@ -155,7 +155,10 @@ class CoreAgentSocketThread(SingletonThread):
     def _connect(self, connect_attempts=5, retry_wait_secs=1):
         for attempt in range(1, connect_attempts + 1):
             logger.debug(
-                "CoreAgentSocketThread attempt %d, connecting to %s, PID: %s, Thread: %s",
+                (
+                    "CoreAgentSocketThread attempt %d, connecting to %s, "
+                    + "PID: %s, Thread: %s"
+                ),
                 attempt,
                 self.socket_path,
                 os.getpid(),
