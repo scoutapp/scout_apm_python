@@ -10,7 +10,7 @@ from tests.compat import mock
 from tests.tools import pretend_package_unavailable
 
 
-@mock.patch("scout_apm.core.socket.CoreAgentSocket.send")
+@mock.patch("scout_apm.core.socket.CoreAgentSocketThread.send")
 def test_report_app_metadata(send):
     report_app_metadata()
 
@@ -26,7 +26,7 @@ def test_report_app_metadata(send):
     assert ("pytest", pytest.__version__) in data["libraries"]
 
 
-@mock.patch("scout_apm.core.socket.CoreAgentSocket.send")
+@mock.patch("scout_apm.core.socket.CoreAgentSocketThread.send")
 def test_report_app_metadata_no_importlib_metadata(send):
     if sys.version_info >= (3, 8):
         module_name = "importlib"

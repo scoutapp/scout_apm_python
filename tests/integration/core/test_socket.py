@@ -5,7 +5,7 @@ import time
 
 import pytest
 
-from scout_apm.core.socket import CoreAgentSocket
+from scout_apm.core.socket import CoreAgentSocketThread
 from tests.compat import mock
 from tests.conftest import is_running, shutdown
 
@@ -25,37 +25,14 @@ def running_agent(core_agent_manager):
 
 @pytest.fixture
 def socket(running_agent):
-    socket = CoreAgentSocket.instance()
+    socket = CoreAgentSocketThread.ensure_started()
     try:
-        time.sleep(0.01)  # wait for socket to connect and register
+        # Wait for socket to connect and register:
+        time.sleep(0.01)
+
         yield socket
     finally:
-        socket.stop()
-        socket.join()
-
-
-def test_socket_instance_is_a_singleton(running_agent):
-    socket1 = CoreAgentSocket.instance()
-    socket2 = CoreAgentSocket.instance()
-    try:
-        assert socket2 is socket1
-    finally:
-        socket1.stop()
-        socket1.join()
-        socket2.stop()
-        socket2.join()
-
-
-def test_socket_instance_is_recreated_if_not_running(running_agent):
-    socket1 = CoreAgentSocket.instance()
-    socket1.stop()
-    socket1.join()
-    socket2 = CoreAgentSocket.instance()
-    try:
-        assert socket2 is not socket1
-    finally:
-        socket2.stop()
-        socket2.join()
+        CoreAgentSocketThread.ensure_stopped()
 
 
 class Command(object):
@@ -64,7 +41,7 @@ class Command(object):
 
 
 def test_send(socket):
-    socket.send(Command())
+    CoreAgentSocketThread.send(Command())
 
 
 class NonSerializableCommand(object):
@@ -73,10 +50,10 @@ class NonSerializableCommand(object):
 
 
 def test_send_serialization_error(socket):
-    socket.send(NonSerializableCommand())
+    CoreAgentSocketThread.send(NonSerializableCommand())
 
 
 @mock.patch("socket.socket.sendall")
 def test_send_network_error(sendall, socket):
     sendall.side_effect = OSError
-    socket.send(Command())
+    CoreAgentSocketThread.send(Command())
