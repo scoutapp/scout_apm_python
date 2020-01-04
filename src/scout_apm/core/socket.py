@@ -14,7 +14,8 @@ from scout_apm.core.commands import Register
 from scout_apm.core.config import scout_config
 from scout_apm.core.threading import SingletonThread
 
-SECOND = 1  # time unit - monkey-patched in tests to make them run faster
+# Time unit - monkey-patched in tests to make them run faster
+SECOND = 1
 
 logger = logging.getLogger(__name__)
 
@@ -27,20 +28,18 @@ class CoreAgentSocketThread(SingletonThread):
     @classmethod
     def _on_stop(cls):
         super(CoreAgentSocketThread, cls)._on_stop()
-        # unblock any pending get()
+        # Unblock _command_queue.get()
         cls._command_queue.put(None, False)
 
     @classmethod
     def send(cls, command):
-        # Optimistically don't always call _ensure_started()
-        # This avoids holding the lock but means that we put commands in the
-        # queue whilst the thread is shutting down.
-        cls.ensure_started()
         try:
             cls._command_queue.put(command, False)
         except queue.Full as exc:
             # TODO mark the command as not queued?
             logger.debug("CoreAgentSocketThread error on send: %r", exc, exc_info=exc)
+
+        cls.ensure_started()
 
     def run(self):
         self.socket_path = scout_config.value("socket_path")
@@ -65,9 +64,9 @@ class CoreAgentSocketThread(SingletonThread):
                         self._connect()
                         self._register()
 
-                # Check for stop event after each read. This is allows
-                # opening, sending, and then immediately stopping. We do
-                # this for metadata send at application start time.
+                # Check for stop event after each read. This allows opening,
+                # sending, and then immediately stopping. We do this for
+                # the metadata event at application start time.
                 if self._stop_event.is_set():
                     logger.debug("CoreAgentSocketThread stopping.")
                     break
