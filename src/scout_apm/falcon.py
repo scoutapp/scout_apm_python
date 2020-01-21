@@ -14,6 +14,11 @@ from scout_apm.core.web_requests import (
     track_request_queue_time,
 )
 
+try:
+    from hug.interface import HTTP as HugHTTP
+except ImportError:
+    HugHTTP = None
+
 logger = logging.getLogger(__name__)
 
 # Falcon Middleware docs:
@@ -98,13 +103,20 @@ class ScoutMiddleware(object):
             # current resource but unfortunately not the method being called, hence
             # we have to go through routing again.
             responder, _params, _resource, _uri_template = self.api._get_responder(req)
-            try:
-                last_part = responder.__name__
-            except AttributeError:
-                last_part = req.method
-            operation = "Controller/{}.{}.{}".format(
-                resource.__module__, resource.__class__.__name__, last_part
-            )
+            if HugHTTP is not None and isinstance(responder, HugHTTP):
+                # Hug doesn't use functions but its customm callable classes
+                operation = "Controller/{}.{}".format(
+                    responder.interface._function.__module__,
+                    responder.interface._function.__name__,
+                )
+            else:
+                try:
+                    last_part = responder.__name__
+                except AttributeError:
+                    last_part = req.method
+                operation = "Controller/{}.{}.{}".format(
+                    resource.__module__, resource.__class__.__name__, last_part
+                )
 
         span = tracked_request.start_span(
             operation=operation, should_capture_backtrace=False
