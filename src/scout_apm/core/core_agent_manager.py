@@ -221,7 +221,8 @@ class CoreAgentManifest(object):
         self.valid = False
         try:
             self.parse()
-        except (ValueError, TypeError, OSError, IOError) as exc:
+        # noqa for this issue: https://github.com/PyCQA/flake8-bugbear/issues/110
+        except (ValueError, TypeError, OSError, IOError) as exc:  # noqa: B014
             logger.debug("Error parsing Core Agent Manifest", exc_info=exc)
 
     def parse(self):
