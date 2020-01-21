@@ -36,6 +36,10 @@ def test_all_client_attributes_accounted_for():
 
 @pytest.mark.parametrize(["method_name"], [[m.name] for m in CLIENT_METHODS])
 def test_all_client_methods_exist(method_name):
+    # Workaround for version 7.5.0 removing scripts_painless_context:
+    # https://github.com/elastic/elasticsearch-py/issues/1098
+    if method_name == "scripts_painless_context":
+        return
     assert hasattr(elasticsearch.Elasticsearch, method_name)
 
 
@@ -45,6 +49,11 @@ def test_all_client_methods_exist(method_name):
     [[m.name, m.takes_index_argument] for m in CLIENT_METHODS],
 )
 def test_all_client_methods_match_index_argument(method_name, takes_index_argument):
+    # Workaround for version 7.5.0 removing scripts_painless_context:
+    # https://github.com/elastic/elasticsearch-py/issues/1098
+    if method_name == "scripts_painless_context":
+        return
+
     signature = inspect.signature(getattr(elasticsearch.Elasticsearch, method_name))
 
     if takes_index_argument:
