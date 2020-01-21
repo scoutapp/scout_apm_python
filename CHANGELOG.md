@@ -1,5 +1,13 @@
 # Changelog
 
+## Pending
+
+### Added
+
+- Improved Falcon integration: `set_api()`  is no longer required, tracing
+  is automatically disabled if installation fails, and callable class-based
+  responders are supported.
+
 ## [2.10.0] 2020-01-02
 
 ### Added
