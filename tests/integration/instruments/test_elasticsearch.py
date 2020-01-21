@@ -158,6 +158,12 @@ def test_search(elasticsearch_client, tracked_request):
     assert span.operation == "Elasticsearch/Unknown/Search"
 
 
+@pytest.mark.xfail(
+    reason=(
+        "Broken argument order in Elasticsearch 7.5.1 - see "
+        "https://github.com/scoutapp/scout_apm_python/issues/456"
+    )
+)
 def test_search_arg_named_index(elasticsearch_client, tracked_request):
     with pytest.raises(elasticsearch.exceptions.NotFoundError):
         elasticsearch_client.search("myindex")
