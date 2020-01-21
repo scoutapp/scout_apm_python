@@ -45,13 +45,13 @@ class ScoutMiddleware(object):
         if self._attempted_to_discover_api:
             return
         self._attempted_to_discover_api = True
-        try:
-            frame = inspect.currentframe()
-            process_request_frame = frame.f_back
-            API_call_frame = process_request_frame.f_back
-            self.api = API_call_frame.f_locals["self"]
-        except Exception:  # pragma: no cover
-            pass
+        # try:
+        frame = inspect.currentframe()
+        process_request_frame = frame.f_back
+        API_call_frame = process_request_frame.f_back
+        self.api = API_call_frame.f_locals["self"]
+        # except Exception:  # pragma: no cover
+        #     pass
 
     def process_request(self, req, resp):
         if self._do_nothing:
