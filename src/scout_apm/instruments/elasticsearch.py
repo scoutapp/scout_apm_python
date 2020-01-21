@@ -86,12 +86,15 @@ def ensure_client_instrumented():
                     wrapped = wrap_client_method(method)
                 setattr(Elasticsearch, name, wrapped)
             except Exception as exc:
-                logger.warning(
-                    "Unable to instrument elasticsearch.Elasticsearch.%s: %r",
-                    name,
-                    exc,
-                    exc_info=exc,
-                )
+                # Workaround for version 7.5.0 removing scripts_painless_context:
+                # https://github.com/elastic/elasticsearch-py/issues/1098
+                if name != "scripts_painless_context":
+                    logger.warning(
+                        "Unable to instrument elasticsearch.Elasticsearch.%s: %r",
+                        name,
+                        exc,
+                        exc_info=exc,
+                    )
 
         have_patched_client = True
 
