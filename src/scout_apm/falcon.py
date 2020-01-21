@@ -7,6 +7,7 @@ import logging
 import falcon
 
 from scout_apm.api import install
+from scout_apm.compat import identifier_type
 from scout_apm.core.tracked_request import TrackedRequest
 from scout_apm.core.web_requests import (
     create_filtered_path,
@@ -49,7 +50,7 @@ class ScoutMiddleware(object):
         frame = inspect.currentframe()
         process_request_frame = frame.f_back
         API_call_frame = process_request_frame.f_back
-        self.api = API_call_frame.f_locals["self"]
+        self.api = API_call_frame.f_locals[identifier_type("self")]
         # except Exception:  # pragma: no cover
         #     pass
 
