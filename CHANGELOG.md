@@ -1,5 +1,12 @@
 # Changelog
 
+## Pending
+
+### Added
+
+- Improved Falcon integration: tracing is automatically disabled if
+  installation fails, and callable class-based responders are supported.
+
 ## [2.10.0] 2020-01-02
 
 ### Added

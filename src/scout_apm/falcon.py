@@ -26,8 +26,9 @@ class ScoutMiddleware(object):
     """
 
     def __init__(self, config):
-        install(config=config)
         self.api = None
+        installed = install(config=config)
+        self._do_nothing = not installed
 
     def set_api(self, api):
         if not isinstance(api, falcon.API):
@@ -35,6 +36,8 @@ class ScoutMiddleware(object):
         self.api = api
 
     def process_request(self, req, resp):
+        if self._do_nothing:
+            return
         tracked_request = TrackedRequest.instance()
         tracked_request.is_real_request = True
         req.context.scout_tracked_request = tracked_request
@@ -69,6 +72,9 @@ class ScoutMiddleware(object):
             track_amazon_request_queue_time(amazon_queue_time, tracked_request)
 
     def process_resource(self, req, resp, resource, params):
+        if self._do_nothing:
+            return
+
         tracked_request = getattr(req.context, "scout_tracked_request", None)
         if tracked_request is None:
             # Somehow we didn't start a request - this might occur in
@@ -80,8 +86,8 @@ class ScoutMiddleware(object):
         if self.api is None:
             logger.warning(
                 (
-                    "{}.set_api() should be called before requests begin for "
-                    "more detail"
+                    "{}.set_api() should be called before requests begin for"
+                    + " more detail."
                 ).format(self.__class__.__name__)
             )
             operation = "Controller/{}.{}.{}".format(
@@ -92,8 +98,12 @@ class ScoutMiddleware(object):
             # current resource but unfortunately not the method being called, hence
             # we have to go through routing again.
             responder, _params, _resource, _uri_template = self.api._get_responder(req)
+            try:
+                last_part = responder.__name__
+            except AttributeError:
+                last_part = req.method
             operation = "Controller/{}.{}.{}".format(
-                resource.__module__, resource.__class__.__name__, responder.__name__
+                resource.__module__, resource.__class__.__name__, last_part
             )
 
         span = tracked_request.start_span(

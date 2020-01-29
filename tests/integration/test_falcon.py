@@ -19,13 +19,21 @@ from tests.integration.util import (
 )
 
 
+class FalconAPI(falcon.API):
+    """
+    Custom subclass that dosen't use __slots__, allowing us to attach
+    'scout_middleware' as an attribute for access in tests.
+    """
+
+    pass
+
+
 @contextmanager
 @kwargs_only
 def app_with_scout(config=None, middleware=None, set_api=True):
     """
     Context manager that yields a fresh Falcon app with Scout configured.
     """
-    # Enable Scout by default in tests.
     if config is None:
         config = {}
 
@@ -39,7 +47,7 @@ def app_with_scout(config=None, middleware=None, set_api=True):
     scout_middleware = ScoutMiddleware(config=config)
     middleware[scout_index] = scout_middleware
 
-    app = falcon.API(middleware=middleware)
+    app = FalconAPI(middleware=middleware)
     if set_api:
         scout_middleware.set_api(app)
 
@@ -80,6 +88,17 @@ def app_with_scout(config=None, middleware=None, set_api=True):
             resp.status = "bad"
 
     app.add_route("/bad-status", BadStatusResource())
+
+    class ResponderClass(object):
+        def __call__(self, req, resp):
+            resp.body = "Responder class"
+
+    class ResponderClassResource(object):
+        on_get = ResponderClass()
+
+    app.add_route("/responder-class", ResponderClassResource())
+
+    app.scout_middleware = scout_middleware
 
     try:
         yield app
@@ -132,8 +151,8 @@ def test_home_without_set_api(caplog, tracked_requests):
             "scout_apm.falcon",
             logging.WARNING,
             (
-                "ScoutMiddleware.set_api() should be called before requests "
-                "begin for more detail"
+                "ScoutMiddleware.set_api() should be called before requests"
+                + " begin for more detail."
             ),
         )
     ]
@@ -394,3 +413,29 @@ def test_bad_status(tracked_requests):
         span.operation
         == "Controller/tests.integration.test_falcon.BadStatusResource.on_get"
     )
+
+
+def test_responder_class(tracked_requests):
+    with app_with_scout() as app:
+        response = TestApp(app).get("/responder-class")
+
+    assert response.status_int == 200
+    assert response.text == "Responder class"
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert tracked_request.tags["path"] == "/responder-class"
+    assert tracked_request.active_spans == []
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert (
+        span.operation
+        == "Controller/tests.integration.test_falcon.ResponderClassResource.GET"
+    )
+
+
+def test_no_monitor(tracked_requests):
+    with app_with_scout(config={"monitor": False}) as app:
+        response = TestApp(app).get("/")
+
+    assert response.status_int == 200
+    assert tracked_requests == []
