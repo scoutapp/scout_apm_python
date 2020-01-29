@@ -50,6 +50,8 @@ class ScoutMiddleware(object):
         frame = inspect.currentframe()
         process_request_frame = frame.f_back
         API_call_frame = process_request_frame.f_back
+        print(API_call_frame)
+        print(API_call_frame.f_locals)
         self.api = API_call_frame.f_locals[identifier_type("self")]
         # except Exception:  # pragma: no cover
         #     pass
