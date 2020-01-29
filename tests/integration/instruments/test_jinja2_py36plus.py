@@ -18,18 +18,15 @@ def test_ensure_installed_fail_no_render_async_attribute(caplog):
 
         ensure_installed()
 
-    assert len(caplog.record_tuples) == 2
-    assert caplog.record_tuples[0] == (
-        "scout_apm.instruments.jinja2",
-        logging.INFO,
-        "Ensuring Jinja2 instrumentation is installed.",
-    )
-    logger, level, message = caplog.record_tuples[1]
-    assert logger == "scout_apm.instruments.jinja2"
-    assert level == logging.WARNING
-    assert message.startswith(
-        "Unable to instrument jinja2.Template.render_async: AttributeError"
-    )
+        jinja2.Environment()
+
+    assert caplog.record_tuples == [
+        (
+            "scout_apm.instruments.jinja2",
+            logging.INFO,
+            "Ensuring Jinja2 instrumentation is installed.",
+        )
+    ]
 
 
 @async_test
