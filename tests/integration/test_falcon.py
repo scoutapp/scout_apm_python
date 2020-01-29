@@ -30,7 +30,7 @@ class FalconAPI(falcon.API):
 
 @contextmanager
 @kwargs_only
-def app_with_scout(config=None, middleware=None):
+def app_with_scout(config=None, middleware=None, set_api=True):
     """
     Context manager that yields a fresh Falcon app with Scout configured.
     """
@@ -48,6 +48,8 @@ def app_with_scout(config=None, middleware=None):
     middleware[scout_index] = scout_middleware
 
     app = FalconAPI(middleware=middleware)
+    if set_api:
+        scout_middleware.set_api(app)
 
     class HomeResource(object):
         def on_get(self, req, resp):
@@ -131,9 +133,7 @@ def test_home(tracked_requests):
 
 
 def test_home_without_set_api(caplog, tracked_requests):
-    with app_with_scout() as app:
-        # Fake that discovery has failed
-        app.scout_middleware._attempted_to_discover_api = True
+    with app_with_scout(set_api=False) as app:
         response = TestApp(app).get("/")
 
     assert response.status_int == 200
@@ -151,9 +151,8 @@ def test_home_without_set_api(caplog, tracked_requests):
             "scout_apm.falcon",
             logging.WARNING,
             (
-                "Automatic API object discovery failed. Call"
-                " ScoutMiddleware.set_api() before requests begin to enable"
-                " more detail to be captured."
+                "ScoutMiddleware.set_api() should be called before requests"
+                + " begin for more detail."
             ),
         )
     ]

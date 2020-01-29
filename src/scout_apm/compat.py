@@ -8,7 +8,6 @@ from functools import wraps
 
 string_type = str if sys.version_info[0] >= 3 else basestring  # noqa: F821
 text_type = str if sys.version_info[0] >= 3 else unicode  # noqa: F821
-identifier_type = str if sys.version_info[0] >= 3 else bytes
 string_types = tuple({string_type, text_type})
 
 if sys.version_info >= (3, 2):

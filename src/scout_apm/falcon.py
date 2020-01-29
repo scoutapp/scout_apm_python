@@ -1,13 +1,11 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import inspect
 import logging
 
 import falcon
 
 from scout_apm.api import install
-from scout_apm.compat import identifier_type
 from scout_apm.core.tracked_request import TrackedRequest
 from scout_apm.core.web_requests import (
     create_filtered_path,
@@ -29,7 +27,6 @@ class ScoutMiddleware(object):
 
     def __init__(self, config):
         self.api = None
-        self._attempted_to_discover_api = False
         installed = install(config=config)
         self._do_nothing = not installed
 
@@ -38,29 +35,9 @@ class ScoutMiddleware(object):
             raise ValueError("api should be an instance of falcon.API")
         self.api = api
 
-    def _discover_api(self):
-        """
-        Discover the Falcon API this middleware is attached to via stack
-        inspection. If it fails, record the fact, so we don't attempt it again.
-        """
-        if self._attempted_to_discover_api:
-            return
-        self._attempted_to_discover_api = True
-        # try:
-        frame = inspect.currentframe()
-        process_request_frame = frame.f_back
-        API_call_frame = process_request_frame.f_back
-        print(API_call_frame)
-        print(API_call_frame.f_locals)
-        self.api = API_call_frame.f_locals[identifier_type("self")]
-        # except Exception:  # pragma: no cover
-        #     pass
-
     def process_request(self, req, resp):
         if self._do_nothing:
             return
-        if self.api is None:
-            self._discover_api()
         tracked_request = TrackedRequest.instance()
         tracked_request.is_real_request = True
         req.context.scout_tracked_request = tracked_request
@@ -109,9 +86,8 @@ class ScoutMiddleware(object):
         if self.api is None:
             logger.warning(
                 (
-                    "Automatic API object discovery failed. Call {}.set_api()"
-                    " before requests begin to enable more detail to be"
-                    " captured."
+                    "{}.set_api() should be called before requests begin for"
+                    + " more detail."
                 ).format(self.__class__.__name__)
             )
             operation = "Controller/{}.{}.{}".format(
