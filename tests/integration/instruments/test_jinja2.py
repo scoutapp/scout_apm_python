@@ -12,13 +12,16 @@ from tests.compat import mock
 
 @contextmanager
 def mock_not_attempted():
+    not_environment = mock.patch(
+        "scout_apm.instruments.jinja2.have_patched_environment_init", new=False
+    )
     not_render = mock.patch(
         "scout_apm.instruments.jinja2.have_patched_template_render", new=False
     )
     not_render_async = mock.patch(
         "scout_apm.instruments.jinja2.have_patched_template_render_async", new=False
     )
-    with not_render, not_render_async:
+    with not_environment, not_render, not_render_async:
         yield
 
 

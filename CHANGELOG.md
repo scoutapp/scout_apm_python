@@ -7,6 +7,11 @@
 - Improved Falcon integration: tracing is automatically disabled if
   installation fails, and callable class-based responders are supported.
 
+### Fixed
+
+- Fix Jinja2 asynchronous rendering instrumentation for Jinja2 2.11.0+
+  ([PR #462](https://github.com/scoutapp/scout_apm_python/pull/462)).
+
 ## [2.10.0] 2020-01-02
 
 ### Added
