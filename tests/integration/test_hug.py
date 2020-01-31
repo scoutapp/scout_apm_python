@@ -1,27 +1,38 @@
 # coding=utf-8
+"""
+Because the Hug integration is based on the Falcon one, we test only the
+extras here, specifically the transaction naming.
+"""
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from contextlib import contextmanager
 
-import hug
+import pytest
 from webtest import TestApp
 
 from scout_apm.api import Config
 from scout_apm.compat import kwargs_only
-from scout_apm.hug import integrate_scout
-
-# Because the Hug integration is based on the Falcon one, we test only the
-# extensions here, specifically the transaction naming
 
 
-# Hug doesn't (seem to) support individual apps, since they're automatically
-# module scoped, so use a single global app:
+try:
+    import hug
+except ImportError:
+    hug = None
+else:
+    from scout_apm.hug import integrate_scout
 
 
-@hug.get("/")
-def home():
-    return "Welcome home."
+if hug is not None:
+    # Hug doesn't (seem to) support individual apps, since they're automatically
+    # module scoped, so use a single module level app:
 
+    @hug.get("/")
+    def home():
+        return "Welcome home."
+
+
+skip_if_hug_unavailable = pytest.mark.skipif(hug is None, reason="Hug isn't available")
+pytestmark = [skip_if_hug_unavailable]
 
 scout_integrated = False
 
