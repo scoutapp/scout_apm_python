@@ -13,16 +13,12 @@ class ScoutMiddleware(FalconMiddleware):
     Falcon integration with Hug specific extras.
     """
 
-    def __init__(self, config, hug_http_interface=None):
+    def __init__(self, config, hug_http_interface):
         super(ScoutMiddleware, self).__init__(config)
         self.hug_http_interface = hug_http_interface
 
     def process_request(self, req, resp):
-        if (
-            not self._do_nothing
-            and self.api is None
-            and self.hug_http_interface is not None
-        ):
+        if not self._do_nothing and self.api is None:
             self.api = self.hug_http_interface.falcon
         return super(ScoutMiddleware, self).process_request(req, resp)
 
