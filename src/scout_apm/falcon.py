@@ -47,7 +47,11 @@ class ScoutMiddleware(object):
         if self.api is None and self.hug_http_interface is not None:
             self.api = self.hug_http_interface.falcon
         tracked_request = TrackedRequest.instance()
+        tracked_request.is_real_request = True
         req.context.scout_tracked_request = tracked_request
+        tracked_request.start_span(
+            operation="Middleware", should_capture_backtrace=False
+        )
 
         path = req.path
         # Falcon URL parameter values are *either* single items or lists
@@ -111,7 +115,6 @@ class ScoutMiddleware(object):
             operation=operation, should_capture_backtrace=False
         )
         req.context.scout_resource_span = span
-        tracked_request.is_real_request = True
 
     def _name_operation(self, req, responder, resource):
         try:
@@ -142,5 +145,5 @@ class ScoutMiddleware(object):
         span = getattr(req.context, "scout_resource_span", None)
         if span is not None:
             tracked_request.stop_span()
-        else:
-            tracked_request.finish()
+        # Stop Middleware span
+        tracked_request.stop_span()

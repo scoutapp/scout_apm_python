@@ -13,7 +13,6 @@ from webtest import TestApp
 from scout_apm.api import Config
 from scout_apm.compat import kwargs_only
 
-
 try:
     import hug
 except ImportError:
@@ -74,6 +73,9 @@ def test_home(tracked_requests):
     tracked_request = tracked_requests[0]
     assert tracked_request.tags["path"] == "/"
     assert tracked_request.active_spans == []
-    assert len(tracked_request.complete_spans) == 1
-    span = tracked_request.complete_spans[0]
-    assert span.operation == "Controller/tests.integration.test_hug.home"
+    assert len(tracked_request.complete_spans) == 2
+    assert (
+        tracked_request.complete_spans[0].operation
+        == "Controller/tests.integration.test_hug.home"
+    )
+    assert tracked_request.complete_spans[1].operation == "Middleware"
