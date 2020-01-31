@@ -3,16 +3,16 @@ repos:
   hooks:
   - id: black
     name: black
-    entry: black
+    entry: .tox/check/bin/black
     language: system
     types: [python]
   - id: flake8
     name: flake8
-    entry: flake8 --config=setup.cfg
+    entry: .tox/check/bin/flake8 --config=setup.cfg
     language: system
     types: [python]
   - id: isort
     name: isort
-    entry: isort
+    entry: .tox/check/bin/isort
     language: system
     types: [python]
