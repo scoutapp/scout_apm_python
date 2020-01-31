@@ -107,7 +107,6 @@ class ScoutMiddleware(object):
             # we have to go through routing again.
             responder, _params, _resource, _uri_template = self.api._get_responder(req)
             operation = self._name_operation(req, responder, resource)
-            print(operation)
 
         span = tracked_request.start_span(
             operation=operation, should_capture_backtrace=False
