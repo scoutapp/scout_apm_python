@@ -125,11 +125,12 @@ def test_home(tracked_requests):
     tracked_request = tracked_requests[0]
     assert tracked_request.tags["path"] == "/"
     assert tracked_request.active_spans == []
-    assert len(tracked_request.complete_spans) == 1
-    span = tracked_request.complete_spans[0]
+    assert len(tracked_request.complete_spans) == 2
     assert (
-        span.operation == "Controller/tests.integration.test_falcon.HomeResource.on_get"
+        tracked_request.complete_spans[0].operation
+        == "Controller/tests.integration.test_falcon.HomeResource.on_get"
     )
+    assert tracked_request.complete_spans[1].operation == "Middleware"
 
 
 def test_home_without_set_api(caplog, tracked_requests):
@@ -142,9 +143,12 @@ def test_home_without_set_api(caplog, tracked_requests):
     tracked_request = tracked_requests[0]
     assert tracked_request.tags["path"] == "/"
     assert tracked_request.active_spans == []
-    assert len(tracked_request.complete_spans) == 1
-    span = tracked_request.complete_spans[0]
-    assert span.operation == "Controller/tests.integration.test_falcon.HomeResource.GET"
+    assert len(tracked_request.complete_spans) == 2
+    assert (
+        tracked_request.complete_spans[0].operation
+        == "Controller/tests.integration.test_falcon.HomeResource.GET"
+    )
+    assert tracked_request.complete_spans[1].operation == "Middleware"
     falcon_log_tuples = [x for x in caplog.record_tuples if x[0] == "scout_apm.falcon"]
     assert falcon_log_tuples == [
         (
@@ -171,8 +175,7 @@ def test_user_ip(headers, client_address, expected, tracked_requests):
             ),
         )
 
-    tracked_request = tracked_requests[0]
-    assert tracked_request.tags["user_ip"] == expected
+    assert tracked_requests[0].tags["user_ip"] == expected
 
 
 def test_home_suffixed(tracked_requests):
@@ -185,10 +188,9 @@ def test_home_suffixed(tracked_requests):
     tracked_request = tracked_requests[0]
     assert tracked_request.tags["path"] == "/suffixed"
     assert tracked_request.active_spans == []
-    assert len(tracked_request.complete_spans) == 1
-    span = tracked_request.complete_spans[0]
+    assert len(tracked_request.complete_spans) == 2
     assert (
-        span.operation
+        tracked_request.complete_spans[0].operation
         == "Controller/tests.integration.test_falcon.HomeResource.on_get_suffixed"
     )
 
@@ -298,7 +300,8 @@ def test_middleware_deleting_scout_tracked_request(tracked_requests):
     tracked_request = tracked_requests[0]
     assert tracked_request.tags["path"] == "/"
     assert tracked_request.active_spans == []
-    assert tracked_request.complete_spans == []
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.complete_spans[0].operation == "Middleware"
 
 
 def test_middleware_returning_early_from_process_resource(tracked_requests):
@@ -323,7 +326,8 @@ def test_middleware_returning_early_from_process_resource(tracked_requests):
     tracked_request = tracked_requests[0]
     assert tracked_request.tags["path"] == "/"
     assert tracked_request.active_spans == []
-    assert tracked_request.complete_spans == []
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.complete_spans[0].operation == "Middleware"
 
 
 def test_not_found(tracked_requests):
@@ -336,7 +340,8 @@ def test_not_found(tracked_requests):
     assert tracked_request.tags["path"] == "/not-found"
     assert tracked_request.tags["error"] == "true"
     assert tracked_request.active_spans == []
-    assert tracked_request.complete_spans == []
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.complete_spans[0].operation == "Middleware"
 
 
 def test_crash(tracked_requests):
@@ -351,10 +356,9 @@ def test_crash(tracked_requests):
     assert tracked_request.tags["path"] == "/crash"
     assert tracked_request.tags["error"] == "true"
     assert tracked_request.active_spans == []
-    assert len(tracked_request.complete_spans) == 1
-    span = tracked_request.complete_spans[0]
+    assert len(tracked_request.complete_spans) == 2
     assert (
-        span.operation
+        tracked_request.complete_spans[0].operation
         == "Controller/tests.integration.test_falcon.CrashResource.on_get"
     )
 
@@ -370,10 +374,9 @@ def test_error(tracked_requests):
     assert tracked_request.tags["path"] == "/error"
     assert tracked_request.tags["error"] == "true"
     assert tracked_request.active_spans == []
-    assert len(tracked_request.complete_spans) == 1
-    span = tracked_request.complete_spans[0]
+    assert len(tracked_request.complete_spans) == 2
     assert (
-        span.operation
+        tracked_request.complete_spans[0].operation
         == "Controller/tests.integration.test_falcon.ErrorResource.on_get"
     )
 
@@ -389,10 +392,9 @@ def test_return_error(tracked_requests):
     assert tracked_request.tags["path"] == "/return-error"
     assert tracked_request.tags["error"] == "true"
     assert tracked_request.active_spans == []
-    assert len(tracked_request.complete_spans) == 1
-    span = tracked_request.complete_spans[0]
+    assert len(tracked_request.complete_spans) == 2
     assert (
-        span.operation
+        tracked_request.complete_spans[0].operation
         == "Controller/tests.integration.test_falcon.ReturnErrorResource.on_get"
     )
 
@@ -407,10 +409,9 @@ def test_bad_status(tracked_requests):
     assert tracked_request.tags["path"] == "/bad-status"
     assert tracked_request.tags["error"] == "true"
     assert tracked_request.active_spans == []
-    assert len(tracked_request.complete_spans) == 1
-    span = tracked_request.complete_spans[0]
+    assert len(tracked_request.complete_spans) == 2
     assert (
-        span.operation
+        tracked_request.complete_spans[0].operation
         == "Controller/tests.integration.test_falcon.BadStatusResource.on_get"
     )
 
@@ -425,10 +426,9 @@ def test_responder_class(tracked_requests):
     tracked_request = tracked_requests[0]
     assert tracked_request.tags["path"] == "/responder-class"
     assert tracked_request.active_spans == []
-    assert len(tracked_request.complete_spans) == 1
-    span = tracked_request.complete_spans[0]
+    assert len(tracked_request.complete_spans) == 2
     assert (
-        span.operation
+        tracked_request.complete_spans[0].operation
         == "Controller/tests.integration.test_falcon.ResponderClassResource.GET"
     )
 

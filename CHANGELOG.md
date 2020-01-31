@@ -4,8 +4,12 @@
 
 ### Added
 
-- Improved Falcon integration: tracing is automatically disabled if
-  installation fails, and callable class-based responders are supported.
+- Improve Falcon integration: tracing is automatically disabled if
+  installation fails, track middleware, and support class-based responders
+  ([PR #453](https://github.com/scoutapp/scout_apm_python/pull/453),
+  [PR #460](https://github.com/scoutapp/scout_apm_python/pull/460)).
+- Add Hug integration
+  ([PR #460](https://github.com/scoutapp/scout_apm_python/pull/460)).
 
 ### Fixed
 

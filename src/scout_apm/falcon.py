@@ -14,6 +14,11 @@ from scout_apm.core.web_requests import (
     track_request_queue_time,
 )
 
+try:
+    from hug.interface import HTTP as HugHTTP
+except ImportError:
+    HugHTTP = None
+
 logger = logging.getLogger(__name__)
 
 # Falcon Middleware docs:
@@ -25,8 +30,9 @@ class ScoutMiddleware(object):
     Falcon Middleware for integration with Scout APM.
     """
 
-    def __init__(self, config):
+    def __init__(self, config, hug_http_interface=None):
         self.api = None
+        self.hug_http_interface = hug_http_interface
         installed = install(config=config)
         self._do_nothing = not installed
 
@@ -38,9 +44,14 @@ class ScoutMiddleware(object):
     def process_request(self, req, resp):
         if self._do_nothing:
             return
+        if self.api is None and self.hug_http_interface is not None:
+            self.api = self.hug_http_interface.falcon
         tracked_request = TrackedRequest.instance()
         tracked_request.is_real_request = True
         req.context.scout_tracked_request = tracked_request
+        tracked_request.start_span(
+            operation="Middleware", should_capture_backtrace=False
+        )
 
         path = req.path
         # Falcon URL parameter values are *either* single items or lists
@@ -98,18 +109,21 @@ class ScoutMiddleware(object):
             # current resource but unfortunately not the method being called, hence
             # we have to go through routing again.
             responder, _params, _resource, _uri_template = self.api._get_responder(req)
-            try:
-                last_part = responder.__name__
-            except AttributeError:
-                last_part = req.method
-            operation = "Controller/{}.{}.{}".format(
-                resource.__module__, resource.__class__.__name__, last_part
-            )
+            operation = self._name_operation(req, responder, resource)
 
         span = tracked_request.start_span(
             operation=operation, should_capture_backtrace=False
         )
         req.context.scout_resource_span = span
+
+    def _name_operation(self, req, responder, resource):
+        try:
+            last_part = responder.__name__
+        except AttributeError:
+            last_part = req.method
+        return "Controller/{}.{}.{}".format(
+            resource.__module__, resource.__class__.__name__, last_part
+        )
 
     def process_response(self, req, resp, resource, req_succeeded):
         tracked_request = getattr(req.context, "scout_tracked_request", None)
@@ -131,5 +145,5 @@ class ScoutMiddleware(object):
         span = getattr(req.context, "scout_resource_span", None)
         if span is not None:
             tracked_request.stop_span()
-        else:
-            tracked_request.finish()
+        # Stop Middleware span
+        tracked_request.stop_span()
