@@ -47,7 +47,6 @@ class ScoutMiddleware(object):
         if self.api is None and self.hug_http_interface is not None:
             self.api = self.hug_http_interface.falcon
         tracked_request = TrackedRequest.instance()
-        tracked_request.is_real_request = True
         req.context.scout_tracked_request = tracked_request
 
         path = req.path
@@ -112,6 +111,7 @@ class ScoutMiddleware(object):
             operation=operation, should_capture_backtrace=False
         )
         req.context.scout_resource_span = span
+        tracked_request.is_real_request = True
 
     def _name_operation(self, req, responder, resource):
         try:
