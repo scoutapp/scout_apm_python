@@ -1,15 +1,28 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import os
 from collections import namedtuple
 from contextlib import contextmanager
 
-from fakeredis import FakeStrictRedis
+import pytest
+import redis
 from rq import Queue
 
 import scout_apm.rq
 from scout_apm.api import Config
 from scout_apm.compat import kwargs_only, string_type
+from scout_apm.instruments.redis import ensure_installed
+
+
+@pytest.fixture(scope="module")
+def redis_conn():
+    # Copied from test_redis.py
+    ensure_installed()
+    # e.g. export REDIS_URL="redis://localhost:6379/0"
+    if "REDIS_URL" not in os.environ:
+        raise pytest.skip("Redis isn't available")
+    yield redis.Redis.from_url(os.environ["REDIS_URL"])
 
 
 def hello():
@@ -22,7 +35,7 @@ def fail():
 
 @contextmanager
 @kwargs_only
-def app_with_scout(scout_config=None):
+def app_with_scout(redis_conn, scout_config=None):
     """
     Context manager that configures a Huey app with Scout installed.
     """
@@ -39,7 +52,7 @@ def app_with_scout(scout_config=None):
     # Setup according to https://docs.scoutapm.com/#rq
     # Using job_class argument to Queue
     Config.set(**scout_config)
-    queue = Queue(name="myqueue", connection=FakeStrictRedis())
+    queue = Queue(name="myqueue", connection=redis_conn)
     worker = scout_apm.rq.SimpleWorker([queue], connection=queue.connection)
 
     App = namedtuple("App", ["queue", "worker"])
@@ -49,8 +62,8 @@ def app_with_scout(scout_config=None):
         Config.reset_all()
 
 
-def test_hello(tracked_requests):
-    with app_with_scout() as app:
+def test_hello(redis_conn, tracked_requests):
+    with app_with_scout(redis_conn=redis_conn) as app:
         job = app.queue.enqueue(hello)
         app.worker.work(burst=True)
 
@@ -70,8 +83,8 @@ def test_hello(tracked_requests):
     )
 
 
-def test_fail(tracked_requests):
-    with app_with_scout() as app:
+def test_fail(redis_conn, tracked_requests):
+    with app_with_scout(redis_conn=redis_conn) as app:
         app.queue.enqueue(fail)
         app.worker.work(burst=True)
 
@@ -89,8 +102,8 @@ def test_fail(tracked_requests):
     )
 
 
-def test_no_monitor(tracked_requests):
-    with app_with_scout(scout_config={"monitor": False}) as app:
+def test_no_monitor(redis_conn, tracked_requests):
+    with app_with_scout(redis_conn=redis_conn, scout_config={"monitor": False}) as app:
         job = app.queue.enqueue(hello)
         app.worker.work(burst=True)
 
