@@ -149,6 +149,7 @@ def test_search(elasticsearch_client, tracked_request):
     assert span.operation == "Elasticsearch/Unknown/Search"
 
 
+@skip_if_python_2  # Cannot unwrap decorators on Python 2
 def test_search_arg_named_index(elasticsearch_client, tracked_request):
     with pytest.raises(elasticsearch.exceptions.NotFoundError):
         # body, index
