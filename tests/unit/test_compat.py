@@ -2,10 +2,18 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import datetime as dt
+import functools
+import sys
 
 import pytest
 
-from scout_apm.compat import ContextDecorator, datetime_to_timestamp, get_pos_args, text
+from scout_apm.compat import (
+    ContextDecorator,
+    datetime_to_timestamp,
+    get_pos_args,
+    text,
+    unwrap_decorators,
+)
 
 
 def test_context_decorator():
@@ -62,3 +70,24 @@ def test_get_pos_args_kwargs():
         pass
 
     assert get_pos_args(foo) == ["bar", "baz"]
+
+
+def test_unwrap_decorators_no_decorators():
+    def foo():
+        pass
+
+    assert unwrap_decorators(foo) is foo
+
+
+def test_unwrap_decorators_one_decorator():
+    def foo():
+        pass
+
+    @functools.wraps(foo)
+    def bar():
+        return foo()
+
+    if sys.version_info < (3,):
+        bar.__wrapped__ = foo
+
+    assert unwrap_decorators(bar) is foo

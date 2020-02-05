@@ -6,7 +6,7 @@ from collections import namedtuple
 
 import wrapt
 
-from scout_apm.compat import get_pos_args
+from scout_apm.compat import get_pos_args, unwrap_decorators
 from scout_apm.core.tracked_request import TrackedRequest
 
 try:
@@ -104,13 +104,7 @@ def wrap_client_index_method(wrapped, instance, args, kwargs):
     if "index" in kwargs:
         index = kwargs["index"]
     else:
-        unwrapped = wrapped
-        while True:
-            try:
-                unwrapped = unwrapped.__wrapped__
-            except AttributeError:
-                break
-
+        unwrapped = unwrap_decorators(wrapped)
         pos_args = get_pos_args(unwrapped)
         try:
             index_index = pos_args.index("index")
