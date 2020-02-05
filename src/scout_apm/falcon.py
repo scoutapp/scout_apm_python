@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
+import warnings
 
 import falcon
 
@@ -90,11 +91,12 @@ class ScoutMiddleware(object):
             return
 
         if self.api is None:
-            logger.warning(
+            warnings.warn(
                 (
                     "{}.set_api() should be called before requests begin for"
                     + " more detail."
-                ).format(self.__class__.__name__)
+                ).format(self.__class__.__name__),
+                RuntimeWarning,
             )
             operation = "Controller/{}.{}.{}".format(
                 resource.__module__, resource.__class__.__name__, req.method
