@@ -6,6 +6,7 @@ from collections import namedtuple
 
 import wrapt
 
+from scout_apm.compat import get_pos_args
 from scout_apm.core.tracked_request import TrackedRequest
 
 try:
@@ -57,7 +58,6 @@ CLIENT_METHODS = [
     ClientMethod("reindex", False),
     ClientMethod("reindex_rethrottle", False),
     ClientMethod("render_search_template", False),
-    ClientMethod("scripts_painless_context", False),
     ClientMethod("scripts_painless_execute", False),
     ClientMethod("scroll", False),
     ClientMethod("search", True),
@@ -86,34 +86,50 @@ def ensure_client_instrumented():
                     wrapped = wrap_client_method(method)
                 setattr(Elasticsearch, name, wrapped)
             except Exception as exc:
-                # Workaround for version 7.5.0 removing scripts_painless_context:
-                # https://github.com/elastic/elasticsearch-py/issues/1098
-                if name != "scripts_painless_context":
-                    logger.warning(
-                        "Unable to instrument elasticsearch.Elasticsearch.%s: %r",
-                        name,
-                        exc,
-                        exc_info=exc,
-                    )
+                logger.warning(
+                    "Unable to instrument elasticsearch.Elasticsearch.%s: %r",
+                    name,
+                    exc,
+                    exc_info=exc,
+                )
 
         have_patched_client = True
 
 
 @wrapt.decorator
 def wrap_client_index_method(wrapped, instance, args, kwargs):
-    def _get_index(index, *args, **kwargs):
-        return index
-
-    try:
-        index = _get_index(*args, **kwargs)
-    except TypeError:
-        index = "Unknown"
+    # elasticsearch-py 7.5.1 changed the order of arguments for client methods,
+    # so to be safe we need to inspect the wrapped method's positional
+    # arguments to see if we should pull it from there
+    if "index" in kwargs:
+        index = kwargs["index"]
     else:
-        if not index:
-            index = "Unknown"
-        if isinstance(index, (list, tuple)):
-            index = ",".join(index)
+        unwrapped = wrapped
+        while True:
+            try:
+                unwrapped = unwrapped.__wrapped__
+            except AttributeError:
+                break
+
+        pos_args = get_pos_args(unwrapped)
+        try:
+            index_index = pos_args.index("index")
+        except ValueError:  # pragma: no cover
+            # This guards against the method not accepting an 'index' argument
+            # but they all do - for now
+            index = ""
+        else:
+            try:
+                index = args[index_index - 1]  # subtract 'self'
+            except IndexError:
+                index = ""
+
+    if isinstance(index, (list, tuple)):
+        index = ",".join(index)
+    if index == "":
+        index = "Unknown"
     index = index.title()
+
     camel_name = "".join(c.title() for c in wrapped.__name__.split("_"))
     operation = "Elasticsearch/{}/{}".format(index, camel_name)
     tracked_request = TrackedRequest.instance()

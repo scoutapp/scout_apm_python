@@ -5,7 +5,7 @@ import datetime as dt
 
 import pytest
 
-from scout_apm.compat import ContextDecorator, datetime_to_timestamp, text
+from scout_apm.compat import ContextDecorator, datetime_to_timestamp, get_pos_args, text
 
 
 def test_context_decorator():
@@ -48,3 +48,17 @@ def test_datetime_to_timestamp(given, expected):
 )
 def test_text(given, expected):
     assert text(given) == expected
+
+
+def test_get_pos_args_args():
+    def foo(bar, baz):
+        pass
+
+    assert get_pos_args(foo) == ["bar", "baz"]
+
+
+def test_get_pos_args_kwargs():
+    def foo(bar, baz=None):
+        pass
+
+    assert get_pos_args(foo) == ["bar", "baz"]

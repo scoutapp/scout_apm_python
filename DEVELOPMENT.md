@@ -58,11 +58,14 @@ Some of the tests require external services to run against. These are specified
 by environment variables. These are:
 
 * `ELASTICSEARCH_URL` - point to a running Elasticsearch instance, e.g.
-  "http://localhost:9200/"
+  "http://localhost:9200/" . You can start it with:
+  `docker run --detach --name elasticsearch --publish 9200:9200 -e "discovery.type=single-node" elasticsearch:7.5.2` .
 * `MONGODB_URL` - point to a running MongoDB instance e.g.
-  "mongodb://localhost:27017/"
+  "mongodb://localhost:27017/" . You can start it with:
+  `docker run --detach --name mongo --publish 27017:27017 mongo:4.0` .
 * `REDIS_URL` - point to a running Redis instance e.g.
-  "redis://localhost:6379/0"
+  "redis://localhost:6379/0" . You can start it with:
+  `docker run --detach --name redis --publish 6379:6379 redis:5` .
 
 You can `export` any of these environment variables and run the respective
 tests with `tox`.
