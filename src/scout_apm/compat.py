@@ -75,6 +75,17 @@ else:
         return inspect.getargspec(func).args
 
 
+def unwrap_decorators(func):
+    unwrapped = func
+    while True:
+        # N.B. only some decorators set __wrapped__ on Python 2.7
+        try:
+            unwrapped = unwrapped.__wrapped__
+        except AttributeError:
+            break
+    return unwrapped
+
+
 def kwargs_only(func):
     """
     Source: https://pypi.org/project/kwargs-only/
