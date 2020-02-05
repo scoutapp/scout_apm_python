@@ -13,6 +13,9 @@
 
 ### Fixed
 
+- Moved some user-facing warnings, such as for deprecated features, from
+  `logging` to `warnings`, so they can be caught during testing
+  ([PR #468](https://github.com/scoutapp/scout_apm_python/pull/468)).
 - Fix Jinja2 asynchronous rendering instrumentation for Jinja2 2.11.0+
   ([PR #462](https://github.com/scoutapp/scout_apm_python/pull/462)).
 

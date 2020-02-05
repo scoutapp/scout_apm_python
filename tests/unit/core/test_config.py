@@ -1,7 +1,6 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import logging
 import os
 import re
 import sys
@@ -65,7 +64,7 @@ def test_override_triple(caplog):
     assert caplog.record_tuples == []
 
 
-def test_override_triple_invalid(caplog):
+def test_override_triple_invalid(recwarn):
     bad_triple = "badtriple"
     ScoutConfig.set(core_agent_triple=bad_triple)
     config = ScoutConfig()
@@ -75,13 +74,9 @@ def test_override_triple_invalid(caplog):
         ScoutConfig.reset_all()
 
     assert full_name.endswith(bad_triple)
-    assert caplog.record_tuples == [
-        (
-            "scout_apm.core.config",
-            logging.WARNING,
-            "Invalid value for core_agent_triple: badtriple",
-        )
-    ]
+    assert len(recwarn) == 1
+    warning = recwarn.pop(Warning)
+    assert str(warning.message) == "Invalid value for core_agent_triple: badtriple"
 
 
 def test_get_default_config_value():

@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import datetime as dt
-import logging
 from contextlib import contextmanager
 
 import falcon
@@ -133,7 +132,7 @@ def test_home(tracked_requests):
     assert tracked_request.complete_spans[1].operation == "Middleware"
 
 
-def test_home_without_set_api(caplog, tracked_requests):
+def test_home_without_set_api(recwarn, tracked_requests):
     with app_with_scout(set_api=False) as app:
         response = TestApp(app).get("/")
 
@@ -149,17 +148,12 @@ def test_home_without_set_api(caplog, tracked_requests):
         == "Controller/tests.integration.test_falcon.HomeResource.GET"
     )
     assert tracked_request.complete_spans[1].operation == "Middleware"
-    falcon_log_tuples = [x for x in caplog.record_tuples if x[0] == "scout_apm.falcon"]
-    assert falcon_log_tuples == [
-        (
-            "scout_apm.falcon",
-            logging.WARNING,
-            (
-                "ScoutMiddleware.set_api() should be called before requests"
-                + " begin for more detail."
-            ),
-        )
-    ]
+    assert len(recwarn) == 1
+    warning = recwarn.pop(RuntimeWarning)
+    assert str(warning.message) == (
+        "ScoutMiddleware.set_api() should be called before requests begin for"
+        + " more detail."
+    )
 
 
 @parametrize_user_ip_headers
