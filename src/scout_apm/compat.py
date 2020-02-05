@@ -63,8 +63,21 @@ else:
     from urlparse import parse_qsl
 
 
+if sys.version_info >= (3, 0):
+
+    def get_pos_args(func):
+        return inspect.getfullargspec(func).args
+
+
+else:
+
+    def get_pos_args(func):
+        return inspect.getargspec(func).args
+
+
 def kwargs_only(func):
     """
+    Source: https://pypi.org/project/kwargs-only/
     Make a function only accept keyword arguments.
     This can be dropped in Python 3 in lieu of:
         def foo(*, bar=default):

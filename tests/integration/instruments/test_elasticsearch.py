@@ -36,10 +36,6 @@ def test_all_client_attributes_accounted_for():
 
 @pytest.mark.parametrize(["method_name"], [[m.name] for m in CLIENT_METHODS])
 def test_all_client_methods_exist(method_name):
-    # Workaround for version 7.5.0 removing scripts_painless_context:
-    # https://github.com/elastic/elasticsearch-py/issues/1098
-    if method_name == "scripts_painless_context":
-        return
     assert hasattr(elasticsearch.Elasticsearch, method_name)
 
 
@@ -49,11 +45,6 @@ def test_all_client_methods_exist(method_name):
     [[m.name, m.takes_index_argument] for m in CLIENT_METHODS],
 )
 def test_all_client_methods_match_index_argument(method_name, takes_index_argument):
-    # Workaround for version 7.5.0 removing scripts_painless_context:
-    # https://github.com/elastic/elasticsearch-py/issues/1098
-    if method_name == "scripts_painless_context":
-        return
-
     signature = inspect.signature(getattr(elasticsearch.Elasticsearch, method_name))
 
     if takes_index_argument:
@@ -158,15 +149,10 @@ def test_search(elasticsearch_client, tracked_request):
     assert span.operation == "Elasticsearch/Unknown/Search"
 
 
-@pytest.mark.xfail(
-    reason=(
-        "Broken argument order in Elasticsearch 7.5.1 - see "
-        "https://github.com/scoutapp/scout_apm_python/issues/456"
-    )
-)
 def test_search_arg_named_index(elasticsearch_client, tracked_request):
     with pytest.raises(elasticsearch.exceptions.NotFoundError):
-        elasticsearch_client.search("myindex")
+        # body, index
+        elasticsearch_client.search(None, "myindex")
 
     assert len(tracked_request.complete_spans) == 1
     span = tracked_request.complete_spans[0]
@@ -183,7 +169,8 @@ def test_search_kwarg_named_index(elasticsearch_client, tracked_request):
 
 
 def test_search_arg_empty_index(elasticsearch_client, tracked_request):
-    elasticsearch_client.search("")
+    # body, index
+    elasticsearch_client.search(None, "")
 
     assert len(tracked_request.complete_spans) == 1
     span = tracked_request.complete_spans[0]

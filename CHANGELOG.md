@@ -15,6 +15,11 @@
 
 - Fix Jinja2 asynchronous rendering instrumentation for Jinja2 2.11.0+
   ([PR #462](https://github.com/scoutapp/scout_apm_python/pull/462)).
+- Stop patching `elasticsearch`'s `scripts_painless_context()`, because it has
+  been removed in version 7.5.1
+  ([Issue #454](https://github.com/scoutapp/scout_apm_python/issues/454)).
+- Fix for `elasticsearch` version 7.5.1's change of positional argument order
+  ([Issue #456](https://github.com/scoutapp/scout_apm_python/issues/456)).
 
 ## [2.10.0] 2020-01-02
 
