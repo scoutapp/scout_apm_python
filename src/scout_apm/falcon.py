@@ -14,11 +14,6 @@ from scout_apm.core.web_requests import (
     track_request_queue_time,
 )
 
-try:
-    from hug.interface import HTTP as HugHTTP
-except ImportError:
-    HugHTTP = None
-
 logger = logging.getLogger(__name__)
 
 # Falcon Middleware docs:
