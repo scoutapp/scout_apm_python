@@ -26,13 +26,11 @@ def running_agent(core_agent_manager):
 @pytest.fixture
 def socket(running_agent):
     socket = CoreAgentSocketThread.ensure_started()
-    try:
-        # Wait for socket to connect and register:
-        time.sleep(0.01)
+    # Wait for socket to connect and register:
+    time.sleep(0.01)
 
-        yield socket
-    finally:
-        CoreAgentSocketThread.ensure_stopped()
+    yield socket
+    # ensure_stopped() already called by global auto_stop_core_agent_socket
 
 
 class Command(object):
