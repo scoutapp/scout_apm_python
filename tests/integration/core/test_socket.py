@@ -55,3 +55,22 @@ def test_send_serialization_error(socket):
 def test_send_network_error(sendall, socket):
     sendall.side_effect = OSError
     CoreAgentSocketThread.send(Command())
+
+
+def test_wait_until_drained_empty(socket):
+    CoreAgentSocketThread.ensure_stopped()
+
+    empty = CoreAgentSocketThread.wait_until_drained()
+    assert empty
+
+
+def test_wait_until_drained_one_item(socket):
+    CoreAgentSocketThread.ensure_stopped()
+    try:
+        CoreAgentSocketThread._command_queue.put(Command(), False)
+
+        empty = CoreAgentSocketThread.wait_until_drained(timeout=0.1)
+    finally:
+        # Clear that one item we added
+        CoreAgentSocketThread._command_queue.task_done()
+    assert not empty

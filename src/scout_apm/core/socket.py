@@ -44,6 +44,18 @@ class CoreAgentSocketThread(SingletonThread):
 
         cls.ensure_started()
 
+    @classmethod
+    def wait_until_drained(cls, timeout=5.0):
+        interval_seconds = min(timeout, 0.05)
+        start = time.time()
+        while True:
+            queue_empty = cls._command_queue.qsize() == 0
+            elapsed = time.time() - start
+            if queue_empty or elapsed >= timeout:
+                break
+            time.sleep(interval_seconds)
+        return queue_empty
+
     def run(self):
         self.socket_path = scout_config.value("socket_path")
         self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)

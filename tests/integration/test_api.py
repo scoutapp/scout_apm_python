@@ -6,6 +6,7 @@ from scout_apm.api import (
     Config,
     Context,
     WebTransaction,
+    flush_transactions,
     ignore_transaction,
     instrument,
     rename_transaction,
@@ -274,3 +275,8 @@ def test_rename_transaction_none(tracked_request):
     rename_transaction(None)
 
     assert "transaction.name" not in tracked_request.tags
+
+
+def test_flush_transactions():
+    flushed = flush_transactions(timeout=0.1)
+    assert flushed
