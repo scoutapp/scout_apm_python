@@ -240,7 +240,7 @@ class Span(object):
                 start_allocs,
                 end_allocs,
             )
-            return 0
+            return
 
         self.tag("allocations", end_allocs - start_allocs)
         self.tag("start_allocations", start_allocs)
