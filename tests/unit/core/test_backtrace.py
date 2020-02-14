@@ -26,3 +26,14 @@ def format_py_filename(filename):
         # Python 2 will include .pyc filename if it's used, so strip that
         return filename[:-1]
     return filename
+
+
+def test_capture_limit():
+    def capture_recursive_bottom(limit):
+        if limit <= 1:
+            return backtrace.capture()
+        else:
+            return capture_recursive_bottom(limit - 1)
+
+    stack = capture_recursive_bottom(backtrace.LIMIT * 2)
+    assert len(stack) == backtrace.LIMIT
