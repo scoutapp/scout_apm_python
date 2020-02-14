@@ -10,6 +10,8 @@
   [PR #460](https://github.com/scoutapp/scout_apm_python/pull/460)).
 - Add Hug integration
   ([PR #460](https://github.com/scoutapp/scout_apm_python/pull/460)).
+- Limit size of recorded tracebacks to reduce memory usage
+  ([PR #467](https://github.com/scoutapp/scout_apm_python/pull/467)).
 
 ### Fixed
 
