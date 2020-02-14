@@ -29,7 +29,10 @@ class CoreAgentSocketThread(SingletonThread):
     def _on_stop(cls):
         super(CoreAgentSocketThread, cls)._on_stop()
         # Unblock _command_queue.get()
-        cls._command_queue.put(None, False)
+        try:
+            cls._command_queue.put(None, False)
+        except queue.Full:
+            pass
 
     @classmethod
     def send(cls, command):
