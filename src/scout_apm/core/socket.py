@@ -59,6 +59,8 @@ class CoreAgentSocketThread(SingletonThread):
                 callback(queue_size)
                 callback = None
 
+            cls.ensure_started()
+
             time.sleep(interval_seconds)
         return queue_empty
 
