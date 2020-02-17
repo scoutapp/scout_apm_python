@@ -65,12 +65,7 @@ def test_wait_until_drained_empty(socket):
 
 
 def test_wait_until_drained_one_item(socket):
-    CoreAgentSocketThread.ensure_stopped()
-    try:
-        CoreAgentSocketThread._command_queue.put(Command(), False)
+    CoreAgentSocketThread._command_queue.put(Command(), False)
 
-        empty = CoreAgentSocketThread.wait_until_drained(timeout_seconds=0.1)
-    finally:
-        # Clear that one item we added
-        CoreAgentSocketThread._command_queue.task_done()
-    assert not empty
+    empty = CoreAgentSocketThread.wait_until_drained(timeout_seconds=0.1)
+    assert empty
