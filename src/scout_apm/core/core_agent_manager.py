@@ -10,6 +10,8 @@ import tarfile
 import time
 import warnings
 
+from urllib3.exceptions import HTTPError
+
 from scout_apm.compat import urllib3_cert_pool_manager
 from scout_apm.core.config import scout_config
 
@@ -154,7 +156,7 @@ class CoreAgentDownloader(object):
                 downloaded = self.download_package()
                 if downloaded:
                     self.untar()
-            except OSError:
+            except (OSError, HTTPError):
                 logger.exception("Exception raised while downloading Core Agent")
             finally:
                 self.release_download_lock()
