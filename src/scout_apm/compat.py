@@ -6,6 +6,9 @@ import inspect
 import sys
 from functools import wraps
 
+import certifi
+import urllib3
+
 string_type = str if sys.version_info[0] >= 3 else basestring  # noqa: F821
 text_type = str if sys.version_info[0] >= 3 else unicode  # noqa: F821
 string_types = tuple({string_type, text_type})
@@ -117,6 +120,14 @@ def kwargs_only(func):
         return func(*args, **kwargs)
 
     return wrapper
+
+
+def urllib3_cert_pool_manager(**kwargs):
+    if sys.version_info >= (3, 0):
+        CERT_REQUIRED = "CERT_REQUIRED"
+    else:
+        CERT_REQUIRED = b"CERT_REQUIRED"
+    return urllib3.PoolManager(cert_reqs=CERT_REQUIRED, ca_certs=certifi.where())
 
 
 __all__ = [

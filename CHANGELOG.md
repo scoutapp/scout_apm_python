@@ -17,6 +17,9 @@
   This ensures that all traces are recorded, rather than lost, especially
   useful for single-run background commands.
   ([Issue # 473](https://github.com/scoutapp/scout_apm_python/issues/473)).
+- Move from **requests** to underlying **urllib3** for downloads to reduce
+  dependency footprint
+  ([PR #480](https://github.com/scoutapp/scout_apm_python/pull/480)).
 
 ### Fixed
 

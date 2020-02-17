@@ -10,8 +10,7 @@ import tarfile
 import time
 import warnings
 
-import requests
-
+from scout_apm.compat import urllib3_cert_pool_manager
 from scout_apm.core.config import scout_config
 
 logger = logging.getLogger(__name__)
@@ -195,11 +194,16 @@ class CoreAgentDownloader(object):
             os.close(self.download_lock_fd)
 
     def download_package(self):
-        logger.debug("Downloading: %s to %s", self.full_url(), self.package_location)
-        req = requests.get(self.full_url(), stream=True)
-        with open(self.package_location, "wb") as f:
-            for chunk in req.iter_content(1024 * 1000):
-                f.write(chunk)
+        full_url = self.full_url()
+        logger.debug("Downloading: %s to %s", full_url, self.package_location)
+        http = urllib3_cert_pool_manager()
+        response = http.request("GET", full_url, preload_content=False)
+        try:
+            with open(self.package_location, "wb") as fp:
+                for chunk in response.stream(1024 * 1000):
+                    fp.write(chunk)
+        finally:
+            response.release_conn()
 
     def untar(self):
         t = tarfile.open(self.package_location, "r")
