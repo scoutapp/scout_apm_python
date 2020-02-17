@@ -110,40 +110,26 @@ class CoreAgentSocketThread(SingletonThread):
             )
             return False
 
+        full_data = struct.pack(">I", len(data)) + data.encode("utf-8")
         try:
-            self.socket.sendall(self._message_length(data))
+            self.socket.sendall(full_data)
         except OSError as exc:
             logger.debug(
-                "CoreAgentSocketThread exception on length _send: "
-                "%r on PID: %s on thread: %s",
+                (
+                    "CoreAgentSocketThread exception on _send:"
+                    + " %r on PID: %s on thread: %s"
+                ),
                 exc,
                 os.getpid(),
                 threading.current_thread(),
                 exc_info=exc,
             )
-            return None
-
-        try:
-            self.socket.sendall(data.encode())
-        except OSError as exc:
-            logger.debug(
-                "CoreAgentSocketThread exception on data _send: "
-                "%r on PID: %s on thread: %s",
-                exc,
-                os.getpid(),
-                threading.current_thread(),
-                exc_info=exc,
-            )
-            return None
+            return False
 
         # TODO do something with the response sent back in reply to command
         self._read_response()
 
         return True
-
-    def _message_length(self, body):
-        length = len(body)
-        return struct.pack(">I", length)
 
     def _read_response(self):
         try:
