@@ -260,6 +260,13 @@ def convert_to_bool(value):
     return False
 
 
+def convert_to_int(value):
+    try:
+        return int(value)
+    except ValueError:
+        return 0
+
+
 def convert_to_list(value):
     if isinstance(value, list):
         return value
@@ -275,9 +282,10 @@ def convert_to_list(value):
 CONVERSIONS = {
     "core_agent_download": convert_to_bool,
     "core_agent_launch": convert_to_bool,
-    "monitor": convert_to_bool,
     "disabled_instruments": convert_to_list,
     "ignore": convert_to_list,
+    "monitor": convert_to_bool,
+    "shutdown_timeout_seconds": convert_to_int,
 }
 
 

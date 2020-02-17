@@ -186,6 +186,24 @@ def test_boolean_conversion_from_python(original, converted):
         ScoutConfig.reset_all()
 
 
+def test_int_conversion_from_env():
+    config = ScoutConfig()
+    with mock.patch.dict(os.environ, {"SCOUT_SHUTDOWN_TIMEOUT_SECONDS": "0"}):
+        assert config.value("shutdown_timeout_seconds") == 0
+
+
+@pytest.mark.parametrize(
+    "original, converted", [("0", 0), ("2", 2), ("x", 0)],
+)
+def test_int_conversion_from_python(original, converted):
+    ScoutConfig.set(shutdown_timeout_seconds=original)
+    config = ScoutConfig()
+    try:
+        assert config.value("shutdown_timeout_seconds") == converted
+    finally:
+        ScoutConfig.reset_all()
+
+
 def test_list_conversion_from_env():
     config = ScoutConfig()
     with mock.patch.dict(os.environ, {"SCOUT_DISABLED_INSTRUMENTS": "pymongo, redis"}):
