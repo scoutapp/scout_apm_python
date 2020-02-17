@@ -10,8 +10,9 @@ import tarfile
 import time
 import warnings
 
-import requests
+from urllib3.exceptions import HTTPError
 
+from scout_apm.compat import urllib3_cert_pool_manager
 from scout_apm.core.config import scout_config
 
 logger = logging.getLogger(__name__)
@@ -152,9 +153,10 @@ class CoreAgentDownloader(object):
         self.obtain_download_lock()
         if self.download_lock_fd is not None:
             try:
-                self.download_package()
-                self.untar()
-            except OSError:
+                downloaded = self.download_package()
+                if downloaded:
+                    self.untar()
+            except (OSError, HTTPError):
                 logger.exception("Exception raised while downloading Core Agent")
             finally:
                 self.release_download_lock()
@@ -195,11 +197,21 @@ class CoreAgentDownloader(object):
             os.close(self.download_lock_fd)
 
     def download_package(self):
-        logger.debug("Downloading: %s to %s", self.full_url(), self.package_location)
-        req = requests.get(self.full_url(), stream=True)
-        with open(self.package_location, "wb") as f:
-            for chunk in req.iter_content(1024 * 1000):
-                f.write(chunk)
+        full_url = self.full_url()
+        logger.debug("Downloading: %s to %s", full_url, self.package_location)
+        http = urllib3_cert_pool_manager()
+        response = http.request(
+            "GET", full_url, preload_content=False, timeout=10.0, retries=3
+        )
+        try:
+            if response.status != 200:
+                return False
+            with open(self.package_location, "wb") as fp:
+                for chunk in response.stream():
+                    fp.write(chunk)
+        finally:
+            response.release_conn()
+        return True
 
     def untar(self):
         t = tarfile.open(self.package_location, "r")
