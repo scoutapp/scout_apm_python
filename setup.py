@@ -57,10 +57,10 @@ setup(
     },
     install_requires=[
         'asgiref ; python_version >= "3.5"',
-        "certifi",
         'importlib-metadata ; python_version < "3.8"',
         "psutil>=5,<6",
-        "urllib3>=1,<2",
+        'urllib3[secure] < 1.25 ; python_version < "3.5"',
+        'urllib3[secure] < 2 ; python_version >= "3.5"',
         "wrapt>=1.10,<2.0",
     ],
     keywords="apm performance monitoring development",
