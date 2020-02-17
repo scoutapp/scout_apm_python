@@ -4,7 +4,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import scout_apm.core
 from scout_apm.compat import ContextDecorator, text
 from scout_apm.core.config import ScoutConfig
-from scout_apm.core.socket import CoreAgentSocketThread
 from scout_apm.core.tracked_request import TrackedRequest
 
 __all__ = [
@@ -135,8 +134,3 @@ def rename_transaction(name):
     if name is not None:
         tracked_request = TrackedRequest.instance()
         tracked_request.tag("transaction.name", name)
-
-
-def flush_transactions(timeout=5.0):
-    # print message?
-    CoreAgentSocketThread.wait_until_drained(timeout=timeout)

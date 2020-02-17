@@ -45,14 +45,20 @@ class CoreAgentSocketThread(SingletonThread):
         cls.ensure_started()
 
     @classmethod
-    def wait_until_drained(cls, timeout=5.0):
-        interval_seconds = min(timeout, 0.05)
+    def wait_until_drained(cls, timeout_seconds=2.0, callback=None):
+        interval_seconds = min(timeout_seconds, 0.05)
         start = time.time()
         while True:
-            queue_empty = cls._command_queue.qsize() == 0
+            queue_size = cls._command_queue.qsize()
+            queue_empty = queue_size == 0
             elapsed = time.time() - start
-            if queue_empty or elapsed >= timeout:
+            if queue_empty or elapsed >= timeout_seconds:
                 break
+
+            if callback is not None:
+                callback(queue_size)
+                callback = None
+
             time.sleep(interval_seconds)
         return queue_empty
 

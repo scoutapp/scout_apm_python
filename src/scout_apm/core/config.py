@@ -73,6 +73,7 @@ class ScoutConfig(object):
             "name",
             "revision_sha",
             "scm_subdirectory",
+            "shutdown_timeout_seconds",
             "socket_path",
         ]
 
@@ -220,6 +221,7 @@ class Defaults(object):
             "name": "",
             "revision_sha": self._git_revision_sha(),
             "scm_subdirectory": "",
+            "shutdown_timeout_seconds": 2,
             "uri_reporting": "filtered_params",
         }
 
