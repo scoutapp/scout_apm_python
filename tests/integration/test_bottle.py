@@ -10,6 +10,7 @@ from webtest import TestApp
 from scout_apm.api import Config
 from scout_apm.bottle import ScoutPlugin
 from scout_apm.compat import datetime_to_timestamp, kwargs_only
+from scout_apm.core.config import scout_config
 from tests.integration.util import (
     parametrize_filtered_params,
     parametrize_queue_time_header_name,
@@ -65,6 +66,20 @@ def app_with_scout(config=None, catchall=False):
     finally:
         # Reset Scout configuration.
         Config.reset_all()
+
+
+def test_config_copied():
+    with app_with_scout(config={"scout.foo": "bar"}):
+        value = scout_config.value("foo")
+
+    assert value == "bar"
+
+
+def test_empty_config_not_copied():
+    with app_with_scout(config={"scout.": "foo"}):
+        value = scout_config.value("")
+
+    assert value is None
 
 
 def test_home(tracked_requests):

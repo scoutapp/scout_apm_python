@@ -22,10 +22,12 @@ class ScoutPlugin(object):
 
     def set_config_from_bottle(self, app):
         bottle_configs = {}
-        for key in scout_config.known_keys():
-            value = app.config.get("scout.{}".format(key))
-            if value is not None and value != "":
-                bottle_configs[key] = value
+        prefix = "scout."
+        prefix_len = len(prefix)
+        for key, value in app.config.items():
+            if key.startswith(prefix) and len(key) > prefix_len:
+                scout_key = key[prefix_len:]
+                bottle_configs[scout_key] = value
         scout_config.set(**bottle_configs)
 
     def setup(self, app):
