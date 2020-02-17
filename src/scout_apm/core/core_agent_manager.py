@@ -151,8 +151,9 @@ class CoreAgentDownloader(object):
         self.obtain_download_lock()
         if self.download_lock_fd is not None:
             try:
-                self.download_package()
-                self.untar()
+                downloaded = self.download_package()
+                if downloaded:
+                    self.untar()
             except OSError:
                 logger.exception("Exception raised while downloading Core Agent")
             finally:
@@ -197,13 +198,18 @@ class CoreAgentDownloader(object):
         full_url = self.full_url()
         logger.debug("Downloading: %s to %s", full_url, self.package_location)
         http = urllib3_cert_pool_manager()
-        response = http.request("GET", full_url, preload_content=False)
+        response = http.request(
+            "GET", full_url, preload_content=False, timeout=10.0, retries=3
+        )
         try:
+            if response.status != 200:
+                return False
             with open(self.package_location, "wb") as fp:
-                for chunk in response.stream(1024 * 1000):
+                for chunk in response.stream():
                     fp.write(chunk)
         finally:
             response.release_conn()
+        return True
 
     def untar(self):
         t = tarfile.open(self.package_location, "r")
