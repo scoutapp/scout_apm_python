@@ -69,3 +69,16 @@ def test_wait_until_drained_one_item(socket):
 
     empty = CoreAgentSocketThread.wait_until_drained(timeout_seconds=0.1)
     assert empty
+
+
+def test_wait_until_drained_one_slow(socket):
+    class SlowCommand(object):
+        def message(self):
+            time.sleep(0.05)
+            return {}
+
+    for _ in range(10):
+        CoreAgentSocketThread.send(SlowCommand())
+
+    empty = CoreAgentSocketThread.wait_until_drained(timeout_seconds=0.05)
+    assert not empty
