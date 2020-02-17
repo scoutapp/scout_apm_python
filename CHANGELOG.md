@@ -12,6 +12,11 @@
   ([PR #460](https://github.com/scoutapp/scout_apm_python/pull/460)).
 - Limit size of recorded tracebacks to reduce memory usage
   ([PR #467](https://github.com/scoutapp/scout_apm_python/pull/467)).
+- Scout now flushes any queued commands to the core agent at shutdown, with a
+  configurable timeout `shutdown_timeout_seconds`, defaulting to 2 seconds.
+  This ensures that all traces are recorded, rather than lost, especially
+  useful for single-run background commands.
+  ([Issue # 473](https://github.com/scoutapp/scout_apm_python/issues/473)).
 
 ### Fixed
 
