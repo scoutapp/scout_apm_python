@@ -221,7 +221,7 @@ class Defaults(object):
             "name": "",
             "revision_sha": self._git_revision_sha(),
             "scm_subdirectory": "",
-            "shutdown_timeout_seconds": 2,
+            "shutdown_timeout_seconds": 2.0,
             "uri_reporting": "filtered_params",
         }
 
@@ -260,11 +260,11 @@ def convert_to_bool(value):
     return False
 
 
-def convert_to_int(value):
+def convert_to_float(value):
     try:
-        return int(value)
+        return float(value)
     except ValueError:
-        return 0
+        return 0.0
 
 
 def convert_to_list(value):
@@ -285,7 +285,7 @@ CONVERSIONS = {
     "disabled_instruments": convert_to_list,
     "ignore": convert_to_list,
     "monitor": convert_to_bool,
-    "shutdown_timeout_seconds": convert_to_int,
+    "shutdown_timeout_seconds": convert_to_float,
 }
 
 
