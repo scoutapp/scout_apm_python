@@ -20,7 +20,8 @@
 - Move from **requests** to underlying **urllib3** for downloads to reduce
   dependency footprint
   ([PR #480](https://github.com/scoutapp/scout_apm_python/pull/480)).
-- Retry downloading the core agent a few times
+- Retry downloading the core agent a few times, and use a timeout to prevent
+  startup hangs
   ([PR #480](https://github.com/scoutapp/scout_apm_python/pull/480)).
 
 ### Fixed
