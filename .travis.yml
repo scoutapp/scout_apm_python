@@ -40,9 +40,9 @@ jobs:
       env:
         - CIBW_SKIP="cp33-*"
         - TWINE_NON_INTERACTIVE=1
-        - TWINE_USERNAME=scout
+        - TWINE_USERNAME=__token__
         # TWINE_PASSWORD:
-        - secure: "ohvspT59/b71SdnIFf/HA5552tGaYWLYTUV2IQ/ZNxrTiJd/hcm5eBbfAkOUiC6l2cxdHt+cAyRh27us32z7F29qzlSzrWkTD18pvFKjSGtaa2X0aBTiollfiGgiXpdT5wiDoyjyGWti3q4CpwOZjrpB/rZx0DUxdRejf0cQfs/6W8xqei/PeSTAY+58eRxKUo9JOsEObDgpjJFSWTHVip6Rm0C8zG5fEal6OEMozP+LncSzxIPZiaA0x82nYSMSBQiJXqgX6x1iNDUVl9W1wwghPjCxhz1n6kUtoKOnLcz2VhtmzR+rFDXcdgIr3l9HsSaj8t/jRIPwyUuB1DDamKWuEC0dFrqeTraOKz/t7eZkSpKa+jRaNUC4RLPSSNJVC3hEH8WlNIAyCGyvYv0RAGEYzrWcl0QZQgn1s205uIVKF8v3bepAV4oPUOEjhAk3+kVhBDLrUHWnDtLzQxPJOcC/PpMIkXx5+ZCADJrkmppEAtv+gAbHIE5gcodvyGgUc1ynp/Ul2LQxUX7KUopZBkBtFomRJWOXli5rV9tc8It+m91Xua6+jRB8UePyHw2KLGoABulNNoGSvr+uRdH8Ph/4des33iikTEnEDBk740NAsMW1pExMMlXAdaYScpBjCu7z3MrSCs4oraCVJ1g9nqbc7ugxVqMPC97fu7XKpe8="
+        - secure: "M4qjfKwZzEEGFLnOOuxcWzL7QibJmbg28uHw0puN2UzwUHBMLmgIMHcBVExMF8GmzFy3Wd1CFPukBRSvgAnxI8q42SlGXczs6GzAEPuNs9f+DkUEq2QC4msPTTyEyPVxHPwSJAvbg9kBOR+ELtQnaZg+xOlS4RAsqCqOS6bNMFMLf7jop44r7w441ZCaOLs4doI9T1hqq3XWRJ9YyP3KEPy3kMs343r9oURE+z7lqzJ3OYXLCml/ZdsHjDQI3kQja3q3PIotJK3brUMXBF+p9ECrVQwtolU2TNh4rO93m2O9EvMacEunlXoW6JB9/tXi/9K0Gee5KXtOfGu4I11GbWlj7FcExxLy+axI3i1r22mF1eer7aalid+6xFP7/UTJivvLaYpxPyMGBF7muUnqflhyQA1UpWc0z7jmY+IjjvBwJ/HGGkK1Du6xP9tP0Ksw97n7Fqo1XHNIm2IevJl2Jqp5hgl/FjcpJRMhYerITcbiYnj9MwlwvRYL6bvRIca29PoC7CwBXGzc6xBQwwnsq2RWbUnENmvjjJFvYX+nteuPUEeDHhQApPngXG4Nqf+dszouNlyIcDl4r1tRnLjBernDealGhmbR6fpW+eBt17LA3WKUKqRnTyeQN7ckIW+nOCCOsizH59dooOTtFu+P26KnmokpP9M3YcA8c9rk1tA="
       script:
         - python setup.py sdist
         - pip install --upgrade cibuildwheel twine
