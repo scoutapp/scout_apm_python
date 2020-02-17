@@ -159,9 +159,13 @@ def short_timeouts():
 
 
 @pytest.fixture(autouse=True)
-def auto_stop_core_agent_socket():
+def stop_and_empty_core_agent_socket():
     yield
     CoreAgentSocketThread.ensure_stopped()
+    command_queue = CoreAgentSocketThread._command_queue
+    while not command_queue.empty():
+        command_queue.get()
+        command_queue.task_done()
 
 
 @pytest.fixture
