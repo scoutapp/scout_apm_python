@@ -5,8 +5,10 @@ import logging
 import os
 
 from scout_apm.api import Config
-from scout_apm.core import install
+from scout_apm.core import install, shutdown
+from scout_apm.core.config import scout_config
 from scout_apm.core.core_agent_manager import CoreAgentManager
+from scout_apm.core.metadata import report_app_metadata
 from tests.compat import mock
 
 
@@ -52,3 +54,16 @@ def test_install_success(caplog):
         logging.DEBUG,
         "APM Launching on PID: %s" % os.getpid(),
     ) in caplog.record_tuples
+
+
+def test_shutdown(capsys):
+    report_app_metadata()  # queued but thread not running
+    try:
+        scout_config.set(shutdown_timeout_seconds=0.1)
+
+        shutdown()
+    finally:
+        Config.reset_all()
+
+    captured = capsys.readouterr()
+    assert "Scout draining" in captured.err
