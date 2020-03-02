@@ -13,6 +13,18 @@ string_type = str if sys.version_info[0] >= 3 else basestring  # noqa: F821
 text_type = str if sys.version_info[0] >= 3 else unicode  # noqa: F821
 string_types = tuple({string_type, text_type})
 
+if sys.version_info >= (3,):
+
+    def iteritems(dictionary):
+        return dictionary.items()
+
+
+else:
+
+    def iteritems(dictionary):
+        return dictionary.iteritems()  # noqa: B301
+
+
 if sys.version_info >= (3, 2):
     from contextlib import ContextDecorator
 else:

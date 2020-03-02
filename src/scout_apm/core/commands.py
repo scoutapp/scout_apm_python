@@ -3,6 +3,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 
+from scout_apm.compat import iteritems
+
 logger = logging.getLogger(__name__)
 
 
@@ -184,13 +186,13 @@ class BatchCommand(object):
         commands.append(
             StartRequest(timestamp=request.start_time, request_id=request.request_id)
         )
-        for key in request.tags:
+        for key, value in iteritems(request.tags):
             commands.append(
                 TagRequest(
                     timestamp=request.start_time,
                     request_id=request.request_id,
                     tag=key,
-                    value=request.tags[key],
+                    value=value,
                 )
             )
 
@@ -205,14 +207,14 @@ class BatchCommand(object):
                 )
             )
 
-            for key in span.tags:
+            for key, value in iteritems(span.tags):
                 commands.append(
                     TagSpan(
                         timestamp=span.start_time,
                         request_id=request.request_id,
                         span_id=span.span_id,
                         tag=key,
-                        value=span.tags[key],
+                        value=value,
                     )
                 )
 
