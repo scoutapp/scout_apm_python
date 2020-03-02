@@ -1,6 +1,7 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import datetime as dt
 import time
 
 from scout_apm.compat import datetime_to_timestamp, parse_qsl, urlencode
@@ -146,9 +147,8 @@ def track_amazon_request_queue_time(header_value, tracked_request):
     return True
 
 
-# Cutoff epoch is used for determining ambiguous timestamp boundaries, and is
-# just over 10 years ago at time of writing
-CUTOFF_EPOCH_S = time.mktime((2009, 6, 1, 0, 0, 0, 0, 0, 0))
+# Cutoff epoch is used for determining ambiguous timestamp boundaries
+CUTOFF_EPOCH_S = time.mktime((dt.date.today().year - 10, 1, 1, 0, 0, 0, 0, 0, 0))
 CUTOFF_EPOCH_MS = CUTOFF_EPOCH_S * 1000.0
 CUTOFF_EPOCH_US = CUTOFF_EPOCH_S * 1000000.0
 CUTOFF_EPOCH_NS = CUTOFF_EPOCH_S * 1000000000.0
