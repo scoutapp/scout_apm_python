@@ -4,6 +4,16 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import sys
 
 if sys.version_info >= (3, 0):
+    from types import SimpleNamespace
+else:
+
+    class SimpleNamespace(object):
+        def __init__(self, **kwargs):
+            for key, value in kwargs.items():
+                setattr(self, key, value)
+
+
+if sys.version_info >= (3, 0):
     from unittest import mock
 else:
     import mock
