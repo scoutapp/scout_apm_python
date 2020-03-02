@@ -7,6 +7,8 @@
 - Made installation of the objtrace C extension optional, so that if it fails
   due to your C compiler being old, Scout can still install
   ([Issue #488](https://github.com/scoutapp/scout_apm_python/issues/488)).
+- Removed warning for setting the `SCOUT_LOG_LEVEL` setting, since this is set
+  by default by the Heroku add-on.
 
 ## [2.11.0] 2020-02-17
 
