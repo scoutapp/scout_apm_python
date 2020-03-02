@@ -2,6 +2,13 @@
 
 ## Pending
 
+### Added
+
+- Added ability to read configuration from your Celery app. This can help share
+  configuration between Django and Celery. Pass your application as `app` to
+  have the configuration copied: `scout_apm.celery.install(app=app)`
+  ([Issue #477](https://github.com/scoutapp/scout_apm_python/issues/477)).
+
 ### Fixed
 
 - Made installation of the objtrace C extension optional, so that if it fails

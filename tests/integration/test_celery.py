@@ -10,6 +10,8 @@ from celery.signals import setup_logging
 import scout_apm.celery
 from scout_apm.api import Config
 from scout_apm.compat import kwargs_only
+from scout_apm.core.config import scout_config
+from tests.compat import SimpleNamespace
 
 # http://docs.celeryproject.org/en/latest/userguide/testing.html#py-test
 skip_unless_celery_4_plus = pytest.mark.skipif(
@@ -27,12 +29,15 @@ def do_nothing(**kwargs):
 
 @contextmanager
 @kwargs_only
-def app_with_scout(app=None, config=None):
+def app_with_scout(celery_config=None, app=None, config=None):
     """
     Context manager that configures a Celery app with Scout installed.
     """
     if app is None:
         app = celery.Celery("tasks", broker="memory://")
+
+    if celery_config is not None:
+        app.config_from_object(celery_config)
 
     # Enable Scout by default in tests.
     if config is None:
@@ -47,7 +52,7 @@ def app_with_scout(app=None, config=None):
 
     # Setup according to https://docs.scoutapm.com/#celery
     Config.set(**config)
-    scout_apm.celery.install()
+    scout_apm.celery.install(app)
 
     try:
         yield app
@@ -55,6 +60,12 @@ def app_with_scout(app=None, config=None):
         scout_apm.celery.uninstall()
         # Reset Scout configuration.
         Config.reset_all()
+
+
+def test_configuration_copied():
+    celery_config = SimpleNamespace(SCOUT_IGNORE=["/foobar/"])
+    with app_with_scout(celery_config=celery_config):
+        assert scout_config.value("ignore") == ["/foobar/"]
 
 
 def test_hello_eager(tracked_requests):
