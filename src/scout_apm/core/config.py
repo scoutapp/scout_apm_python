@@ -218,7 +218,7 @@ class Defaults(object):
             "hostname": None,
             "key": "",
             "monitor": False,
-            "name": "",
+            "name": "Python App",
             "revision_sha": self._git_revision_sha(),
             "scm_subdirectory": "",
             "shutdown_timeout_seconds": 2.0,
