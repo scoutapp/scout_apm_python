@@ -8,7 +8,6 @@ import os
 import subprocess
 import tarfile
 import time
-import warnings
 
 from urllib3.exceptions import HTTPError
 
@@ -89,15 +88,7 @@ class CoreAgentManager(object):
     def log_level(self):
         # Old deprecated name "log_level"
         log_level = scout_config.value("log_level")
-        if log_level is not None:
-            warnings.warn(
-                "The config name 'log_level' is deprecated - "
-                + "please use the new name 'core_agent_log_level' instead. "
-                + "This might be configured in your environment variables or "
-                + "framework settings as SCOUT_LOG_LEVEL.",
-                DeprecationWarning,
-            )
-        else:
+        if log_level is None:
             log_level = scout_config.value("core_agent_log_level")
         return ["--log-level", log_level]
 
