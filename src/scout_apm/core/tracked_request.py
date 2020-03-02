@@ -32,7 +32,11 @@ class TrackedRequest(object):
         "is_real_request",
         "_memory_start",
         "n_plus_one_tracker",
+        "hit_max",
     )
+
+    # Stop adding new spans at this point, to avoid exhausting memory
+    MAX_COMPLETE_SPANS = 1500
 
     @classmethod
     def instance(cls):
@@ -50,6 +54,7 @@ class TrackedRequest(object):
         self.is_real_request = False
         self._memory_start = get_rss_in_mb()
         self.n_plus_one_tracker = NPlusOneTracker()
+        self.hit_max = False
         logger.debug("Starting request: %s", self.request_id)
 
     def __repr__(self):
@@ -82,6 +87,15 @@ class TrackedRequest(object):
                 ignore_children = True
         else:
             parent_id = None
+
+        if len(self.complete_spans) >= self.MAX_COMPLETE_SPANS:
+            if not self.hit_max:
+                logger.warning(
+                    "Hit the maximum number of spans, this trace will be incomplete."
+                )
+                self.hit_max = True
+            ignore = True
+            ignore_children = True
 
         new_span = Span(
             request_id=self.request_id,
