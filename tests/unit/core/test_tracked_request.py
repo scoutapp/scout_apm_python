@@ -2,10 +2,12 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import datetime as dt
+import logging
 import sys
 
 from scout_apm.core import objtrace
 from scout_apm.core.tracked_request import TrackedRequest
+from tests.compat import mock
 from tests.tools import skip_if_objtrace_is_extension, skip_if_objtrace_not_extension
 
 
@@ -119,6 +121,24 @@ def test_start_span_ignores_children(tracked_request):
     tracked_request.stop_span()
     assert 1 == len(tracked_request.complete_spans)
     assert "parent" == tracked_request.complete_spans[0].operation
+
+
+@mock.patch("scout_apm.core.tracked_request.TrackedRequest.MAX_COMPLETE_SPANS", new=1)
+def test_start_span_at_max_ignores_span(caplog, tracked_request):
+    tracked_request.start_span(operation="parent")
+    tracked_request.start_span(operation="child1")
+    tracked_request.stop_span()
+    child2 = tracked_request.start_span(operation="child2")
+
+    assert child2.ignore
+    assert child2.ignore_children
+    assert caplog.record_tuples == [
+        (
+            "scout_apm.core.tracked_request",
+            logging.WARNING,
+            "Hit the maximum number of spans, this trace will be incomplete.",
+        )
+    ]
 
 
 def test_span_captures_backtrace(tracked_request):

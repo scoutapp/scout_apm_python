@@ -8,6 +8,9 @@
   configuration between Django and Celery. Pass your application as `app` to
   have the configuration copied: `scout_apm.celery.install(app=app)`
   ([Issue #477](https://github.com/scoutapp/scout_apm_python/issues/477)).
+- Added maximum span limit of 1500. This prevents memory exhaustion when
+  tracing long running tasks as Scout no longer tries to record everything
+  ([Issue #472](https://github.com/scoutapp/scout_apm_python/issues/472)).
 
 ### Fixed
 
