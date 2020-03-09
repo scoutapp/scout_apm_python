@@ -22,11 +22,7 @@ def test_ensure_installed_twice(caplog):
     ensure_installed()
 
     assert caplog.record_tuples == 2 * [
-        (
-            "scout_apm.instruments.urllib3",
-            logging.INFO,
-            "Ensuring urllib3 instrumentation is installed.",
-        )
+        ("scout_apm.instruments.urllib3", logging.DEBUG, "Instrumenting urllib3.",)
     ]
 
 
@@ -38,15 +34,11 @@ def test_install_fail_no_httpconnectionpool(caplog):
         ensure_installed()
 
     assert caplog.record_tuples == [
+        ("scout_apm.instruments.urllib3", logging.DEBUG, "Instrumenting urllib3.",),
         (
             "scout_apm.instruments.urllib3",
-            logging.INFO,
-            "Ensuring urllib3 instrumentation is installed.",
-        ),
-        (
-            "scout_apm.instruments.urllib3",
-            logging.INFO,
-            "Unable to import urllib3.HTTPConnectionPool",
+            logging.DEBUG,
+            "Couldn't import urllib3.HTTPConnectionPool - probably not installed.",
         ),
     ]
 
@@ -62,14 +54,14 @@ def test_install_fail_no_urlopen_attribute(caplog):
     assert len(caplog.record_tuples) == 2
     assert caplog.record_tuples[0] == (
         "scout_apm.instruments.urllib3",
-        logging.INFO,
-        "Ensuring urllib3 instrumentation is installed.",
+        logging.DEBUG,
+        "Instrumenting urllib3.",
     )
     logger, level, message = caplog.record_tuples[1]
     assert logger == "scout_apm.instruments.urllib3"
     assert level == logging.WARNING
     assert message.startswith(
-        "Unable to instrument for Urllib3 HTTPConnectionPool.urlopen: AttributeError"
+        "Failed to instrument for Urllib3 HTTPConnectionPool.urlopen: AttributeError"
     )
 
 

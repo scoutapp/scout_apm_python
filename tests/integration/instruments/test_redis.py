@@ -25,11 +25,7 @@ def test_ensure_installed_twice(caplog):
     ensure_installed()
 
     assert caplog.record_tuples == 2 * [
-        (
-            "scout_apm.instruments.redis",
-            logging.INFO,
-            "Ensuring redis instrumentation is installed.",
-        )
+        ("scout_apm.instruments.redis", logging.DEBUG, "Instrumenting redis.",)
     ]
 
 
@@ -39,12 +35,12 @@ def test_install_fail_no_redis(caplog):
         ensure_installed()
 
     assert caplog.record_tuples == [
+        ("scout_apm.instruments.redis", logging.DEBUG, "Instrumenting redis.",),
         (
             "scout_apm.instruments.redis",
-            logging.INFO,
-            "Ensuring redis instrumentation is installed.",
+            logging.DEBUG,
+            "Couldn't import redis - probably not installed.",
         ),
-        ("scout_apm.instruments.redis", logging.INFO, "Unable to import redis"),
     ]
 
 
@@ -61,14 +57,14 @@ def test_ensure_installed_fail_no_redis_execute_command(caplog):
     assert len(caplog.record_tuples) == 2
     assert caplog.record_tuples[0] == (
         "scout_apm.instruments.redis",
-        logging.INFO,
-        "Ensuring redis instrumentation is installed.",
+        logging.DEBUG,
+        "Instrumenting redis.",
     )
     logger, level, message = caplog.record_tuples[1]
     assert logger == "scout_apm.instruments.redis"
     assert level == logging.WARNING
     assert message.startswith(
-        "Unable to instrument redis.Redis.execute_command: AttributeError"
+        "Failed to instrument redis.Redis.execute_command: AttributeError"
     )
 
 
@@ -85,14 +81,14 @@ def test_ensure_installed_fail_no_pipeline_execute(caplog):
     assert len(caplog.record_tuples) == 2
     assert caplog.record_tuples[0] == (
         "scout_apm.instruments.redis",
-        logging.INFO,
-        "Ensuring redis instrumentation is installed.",
+        logging.DEBUG,
+        "Instrumenting redis.",
     )
     logger, level, message = caplog.record_tuples[1]
     assert logger == "scout_apm.instruments.redis"
     assert level == logging.WARNING
     assert message.startswith(
-        "Unable to instrument redis.Pipeline.execute: AttributeError"
+        "Failed to instrument redis.Pipeline.execute: AttributeError"
     )
 
 

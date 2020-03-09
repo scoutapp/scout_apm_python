@@ -37,10 +37,10 @@ def ensure_installed():
     global have_patched_environment_init
     global have_patched_template_render
 
-    logger.info("Ensuring Jinja2 instrumentation is installed.")
+    logger.debug("Instrumenting Jinja2.")
 
     if Template is None:
-        logger.info("Unable to import jinja2.Template")
+        logger.debug("Couldn't import jinja2.Template - probably not installed.")
         return
 
     if not have_patched_environment_init:
@@ -48,7 +48,7 @@ def ensure_installed():
             Environment.__init__ = wrapped_environment_init(Environment.__init__)
         except Exception as exc:
             logger.warning(
-                "Unable to instrument jinja2.Environment.__init__: %r",
+                "Failed to instrument jinja2.Environment.__init__: %r",
                 exc,
                 exc_info=exc,
             )
@@ -60,7 +60,7 @@ def ensure_installed():
             Template.render = wrapped_render(Template.render)
         except Exception as exc:
             logger.warning(
-                "Unable to instrument jinja2.Template.render: %r", exc, exc_info=exc
+                "Failed to instrument jinja2.Template.render: %r", exc, exc_info=exc
             )
         else:
             have_patched_template_render = True
@@ -97,7 +97,7 @@ def wrapped_environment_init(wrapped, instance, args, kwargs):
             Template.render_async = wrapped_render_async(Template.render_async)
         except Exception as exc:
             logger.warning(
-                "Unable to instrument jinja2.Template.render_async: %r",
+                "Failed to instrument jinja2.Template.render_async: %r",
                 exc,
                 exc_info=exc,
             )

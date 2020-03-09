@@ -20,10 +20,10 @@ have_patched_collection = False
 def ensure_installed():
     global have_patched_collection
 
-    logger.info("Ensuring pymongo instrumentation is installed.")
+    logger.debug("Instrumenting pymongo.")
 
     if Collection is None:
-        logger.info("Unable to import pymongo.Collection")
+        logger.debug("Couldn't import pymongo.Collection - probably not installed.")
     elif not have_patched_collection:
         for name in COLLECTION_METHODS:
             try:
@@ -32,7 +32,7 @@ def ensure_installed():
                 )
             except Exception as exc:
                 logger.warning(
-                    "Unable to instrument pymongo.Collection.%s: %r",
+                    "Failed to instrument pymongo.Collection.%s: %r",
                     name,
                     exc,
                     exc_info=exc,

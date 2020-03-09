@@ -19,10 +19,12 @@ logger = logging.getLogger(__name__)
 
 
 def ensure_installed():
-    logger.info("Ensuring elasticsearch instrumentation is installed.")
+    logger.debug("Instrumenting elasticsearch.")
 
     if Elasticsearch is None:
-        logger.info("Unable to import elasticsearch.Elasticsearch")
+        logger.debug(
+            "Couldn't import elasticsearch.Elasticsearch - probably not installed."
+        )
     else:
         ensure_client_instrumented()
         ensure_transport_instrumented()
@@ -87,7 +89,7 @@ def ensure_client_instrumented():
                 setattr(Elasticsearch, name, wrapped)
             except Exception as exc:
                 logger.warning(
-                    "Unable to instrument elasticsearch.Elasticsearch.%s: %r",
+                    "Failed to instrument elasticsearch.Elasticsearch.%s: %r",
                     name,
                     exc,
                     exc_info=exc,
@@ -161,7 +163,7 @@ def ensure_transport_instrumented():
             )
         except Exception as exc:
             logger.warning(
-                "Unable to instrument elasticsearch.Transport.perform_request: %r",
+                "Failed to instrument elasticsearch.Transport.perform_request: %r",
                 exc,
                 exc_info=exc,
             )

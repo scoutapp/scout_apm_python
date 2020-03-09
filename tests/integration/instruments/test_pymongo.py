@@ -58,11 +58,7 @@ def test_ensure_installed_twice(caplog):
     ensure_installed()
 
     assert caplog.record_tuples == 2 * [
-        (
-            "scout_apm.instruments.pymongo",
-            logging.INFO,
-            "Ensuring pymongo instrumentation is installed.",
-        )
+        ("scout_apm.instruments.pymongo", logging.DEBUG, "Instrumenting pymongo.",)
     ]
 
 
@@ -74,15 +70,11 @@ def test_ensure_installed_fail_no_collection(caplog):
         ensure_installed()
 
     assert caplog.record_tuples == [
+        ("scout_apm.instruments.pymongo", logging.DEBUG, "Instrumenting pymongo.",),
         (
             "scout_apm.instruments.pymongo",
-            logging.INFO,
-            "Ensuring pymongo instrumentation is installed.",
-        ),
-        (
-            "scout_apm.instruments.pymongo",
-            logging.INFO,
-            "Unable to import pymongo.Collection",
+            logging.DEBUG,
+            "Couldn't import pymongo.Collection - probably not installed.",
         ),
     ]
 
@@ -100,14 +92,14 @@ def test_ensure_installed_fail_no_collection_aggregate(caplog):
     assert len(caplog.record_tuples) == 2
     assert caplog.record_tuples[0] == (
         "scout_apm.instruments.pymongo",
-        logging.INFO,
-        "Ensuring pymongo instrumentation is installed.",
+        logging.DEBUG,
+        "Instrumenting pymongo.",
     )
     logger, level, message = caplog.record_tuples[1]
     assert logger == "scout_apm.instruments.pymongo"
     assert level == logging.WARNING
     assert message.startswith(
-        "Unable to instrument pymongo.Collection.aggregate: AttributeError"
+        "Failed to instrument pymongo.Collection.aggregate: AttributeError"
     )
 
 

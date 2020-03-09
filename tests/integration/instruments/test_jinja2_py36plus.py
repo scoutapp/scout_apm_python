@@ -21,11 +21,7 @@ def test_ensure_installed_fail_no_render_async_attribute(caplog):
         jinja2.Environment()
 
     assert caplog.record_tuples == [
-        (
-            "scout_apm.instruments.jinja2",
-            logging.INFO,
-            "Ensuring Jinja2 instrumentation is installed.",
-        )
+        ("scout_apm.instruments.jinja2", logging.DEBUG, "Instrumenting Jinja2.",)
     ]
 
 
