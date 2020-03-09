@@ -100,6 +100,22 @@ def test_launch_error(caplog, core_agent_manager):
     assert caplog.records[0].exc_info[1] is exception
 
 
+def test_socket_path(core_agent_manager):
+    scout_config.set(core_agent_socket_path="foo")
+
+    result = core_agent_manager.socket_path()
+
+    assert result == ["--socket", "foo"]
+
+
+def test_socket_path_old_name_takes_precedence(core_agent_manager):
+    scout_config.set(socket_path="foo", core_agent_socket_path="bar")
+
+    result = core_agent_manager.socket_path()
+
+    assert result == ["--socket", "foo"]
+
+
 def test_log_level(core_agent_manager):
     scout_config.set(core_agent_log_level="foo")
 
@@ -114,3 +130,35 @@ def test_log_level_old_name_takes_precedence(core_agent_manager):
     result = core_agent_manager.log_level()
 
     assert result == ["--log-level", "foo"]
+
+
+def test_log_file(core_agent_manager):
+    scout_config.set(core_agent_log_file="foo")
+
+    result = core_agent_manager.log_file()
+
+    assert result == ["--log-file", "foo"]
+
+
+def test_log_file_old_name_takes_precedence(core_agent_manager):
+    scout_config.set(log_file="foo", core_agent_log_file="bar")
+
+    result = core_agent_manager.log_file()
+
+    assert result == ["--log-file", "foo"]
+
+
+def test_config_file(core_agent_manager):
+    scout_config.set(core_agent_config_file="foo")
+
+    result = core_agent_manager.config_file()
+
+    assert result == ["--config-file", "foo"]
+
+
+def test_config_file_old_name_takes_precedence(core_agent_manager):
+    scout_config.set(config_file="foo", core_agent_config_file="bar")
+
+    result = core_agent_manager.config_file()
+
+    assert result == ["--config-file", "foo"]

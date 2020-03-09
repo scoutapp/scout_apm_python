@@ -6,8 +6,13 @@
 
 - Added config value `shutdown_message_enabled` /
   `SCOUT_SHUTDOWN_MESSAGE_ENABLED` which can be set to "false" to disable the
-  shutdown message "Scout draining N events..."that was added in version 2.11.0
-  ([Issue #498](https://github.com/scoutapp/scout_apm_python/issues/498)).
+  shutdown message "Scout draining N events..."that was added in version
+  2.11.0.
+  ([Issue #498](https://github.com/scoutapp/scout_apm_python/issues/498))
+- Renamed `config_file`, `log_file`, and `socket_path` to have the
+  `core_agent_` prefix. This is to clarify that they apply only to the core
+  agent process. The old names continue to work as aliases.
+  ([Issue #497](https://github.com/scoutapp/scout_apm_python/issues/497))
 
 ## [2.12.0] 2020-03-03
 
