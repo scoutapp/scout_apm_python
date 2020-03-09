@@ -29,17 +29,17 @@ have_patched_pipeline_execute = False
 def ensure_installed():
     global have_patched_redis_execute_command, have_patched_pipeline_execute
 
-    logger.info("Ensuring redis instrumentation is installed.")
+    logger.debug("Instrumenting redis.")
 
     if redis is None:
-        logger.info("Unable to import redis")
+        logger.debug("Couldn't import redis - probably not installed.")
     else:
         if not have_patched_redis_execute_command:
             try:
                 Redis.execute_command = wrapped_execute_command(Redis.execute_command)
             except Exception as exc:
                 logger.warning(
-                    "Unable to instrument redis.Redis.execute_command: %r",
+                    "Failed to instrument redis.Redis.execute_command: %r",
                     exc,
                     exc_info=exc,
                 )
@@ -51,7 +51,7 @@ def ensure_installed():
                 Pipeline.execute = wrapped_execute(Pipeline.execute)
             except Exception as exc:
                 logger.warning(
-                    "Unable to instrument redis.Pipeline.execute: %r", exc, exc_info=exc
+                    "Failed to instrument redis.Pipeline.execute: %r", exc, exc_info=exc
                 )
             else:
                 have_patched_pipeline_execute = True

@@ -21,17 +21,19 @@ have_patched_pool_urlopen = False
 def ensure_installed():
     global have_patched_pool_urlopen
 
-    logger.info("Ensuring urllib3 instrumentation is installed.")
+    logger.debug("Instrumenting urllib3.")
 
     if HTTPConnectionPool is None:
-        logger.info("Unable to import urllib3.HTTPConnectionPool")
+        logger.debug(
+            "Couldn't import urllib3.HTTPConnectionPool - probably not installed."
+        )
         return False
     elif not have_patched_pool_urlopen:
         try:
             HTTPConnectionPool.urlopen = wrapped_urlopen(HTTPConnectionPool.urlopen)
         except Exception as exc:
             logger.warning(
-                "Unable to instrument for Urllib3 HTTPConnectionPool.urlopen: %r",
+                "Failed to instrument for Urllib3 HTTPConnectionPool.urlopen: %r",
                 exc,
                 exc_info=exc,
             )

@@ -30,11 +30,7 @@ def test_ensure_installed_twice(caplog):
     ensure_installed()
 
     assert caplog.record_tuples == 2 * [
-        (
-            "scout_apm.instruments.jinja2",
-            logging.INFO,
-            "Ensuring Jinja2 instrumentation is installed.",
-        )
+        ("scout_apm.instruments.jinja2", logging.DEBUG, "Instrumenting Jinja2.",)
     ]
 
 
@@ -44,15 +40,11 @@ def test_ensure_installed_fail_no_template(caplog):
         ensure_installed()
 
     assert caplog.record_tuples == [
+        ("scout_apm.instruments.jinja2", logging.DEBUG, "Instrumenting Jinja2.",),
         (
             "scout_apm.instruments.jinja2",
-            logging.INFO,
-            "Ensuring Jinja2 instrumentation is installed.",
-        ),
-        (
-            "scout_apm.instruments.jinja2",
-            logging.INFO,
-            "Unable to import jinja2.Template",
+            logging.DEBUG,
+            "Couldn't import jinja2.Template - probably not installed.",
         ),
     ]
 
@@ -68,14 +60,14 @@ def test_ensure_installed_fail_no_render_attribute(caplog):
     assert len(caplog.record_tuples) == 2
     assert caplog.record_tuples[0] == (
         "scout_apm.instruments.jinja2",
-        logging.INFO,
-        "Ensuring Jinja2 instrumentation is installed.",
+        logging.DEBUG,
+        "Instrumenting Jinja2.",
     )
     logger, level, message = caplog.record_tuples[1]
     assert logger == "scout_apm.instruments.jinja2"
     assert level == logging.WARNING
     assert message.startswith(
-        "Unable to instrument jinja2.Template.render: AttributeError"
+        "Failed to instrument jinja2.Template.render: AttributeError"
     )
 
 

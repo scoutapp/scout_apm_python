@@ -60,8 +60,8 @@ def test_ensure_installed_twice(caplog):
     assert caplog.record_tuples == 2 * [
         (
             "scout_apm.instruments.elasticsearch",
-            logging.INFO,
-            "Ensuring elasticsearch instrumentation is installed.",
+            logging.DEBUG,
+            "Instrumenting elasticsearch.",
         )
     ]
 
@@ -76,13 +76,13 @@ def test_ensure_installed_fail_no_client(caplog):
     assert caplog.record_tuples == [
         (
             "scout_apm.instruments.elasticsearch",
-            logging.INFO,
-            "Ensuring elasticsearch instrumentation is installed.",
+            logging.DEBUG,
+            "Instrumenting elasticsearch.",
         ),
         (
             "scout_apm.instruments.elasticsearch",
-            logging.INFO,
-            "Unable to import elasticsearch.Elasticsearch",
+            logging.DEBUG,
+            "Couldn't import elasticsearch.Elasticsearch - probably not installed.",
         ),
     ]
 
@@ -98,14 +98,14 @@ def test_ensure_installed_fail_no_client_bulk(caplog):
     assert len(caplog.record_tuples) == 2
     assert caplog.record_tuples[0] == (
         "scout_apm.instruments.elasticsearch",
-        logging.INFO,
-        "Ensuring elasticsearch instrumentation is installed.",
+        logging.DEBUG,
+        "Instrumenting elasticsearch.",
     )
     logger, level, message = caplog.record_tuples[1]
     assert logger == "scout_apm.instruments.elasticsearch"
     assert level == logging.WARNING
     assert message.startswith(
-        "Unable to instrument elasticsearch.Elasticsearch.bulk: AttributeError"
+        "Failed to instrument elasticsearch.Elasticsearch.bulk: AttributeError"
     )
 
 
@@ -122,14 +122,14 @@ def test_ensure_installed_fail_no_transport_perform_request(caplog):
     assert len(caplog.record_tuples) == 2
     assert caplog.record_tuples[0] == (
         "scout_apm.instruments.elasticsearch",
-        logging.INFO,
-        "Ensuring elasticsearch instrumentation is installed.",
+        logging.DEBUG,
+        "Instrumenting elasticsearch.",
     )
     logger, level, message = caplog.record_tuples[1]
     assert logger == "scout_apm.instruments.elasticsearch"
     assert level == logging.WARNING
     assert message.startswith(
-        "Unable to instrument elasticsearch.Transport.perform_request: AttributeError"
+        "Failed to instrument elasticsearch.Transport.perform_request: AttributeError"
     )
 
 

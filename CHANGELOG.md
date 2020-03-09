@@ -13,6 +13,8 @@
   `core_agent_` prefix. This is to clarify that they apply only to the core
   agent process. The old names continue to work as aliases.
   ([Issue #497](https://github.com/scoutapp/scout_apm_python/issues/497))
+- Improved some log messages and levels around instrumentation.
+  ([Issue #502](https://github.com/scoutapp/scout_apm_python/pull/502))
 
 ## [2.12.0] 2020-03-03
 
