@@ -45,7 +45,7 @@ def test_get_derived_config_value():
             r"-(x86_64|i686|unknown)"
             r"-(unknown-linux-gnu|apple-darwin|unknown)"
             r"/scout-agent\.sock",
-            config.value("socket_path"),
+            config.value("core_agent_socket_path"),
         )
     finally:
         ScoutConfig.reset_all()

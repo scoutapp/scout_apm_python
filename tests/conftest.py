@@ -120,7 +120,7 @@ def core_agent_manager(core_agent_dir):
     #   Error opening listener on socket: Custom { kind: InvalidInput,
     #   error: StringError("path must be shorter than SUN_LEN") }
     socket_path = "{}/test.sock".format(core_agent_dir)
-    scout_config.set(core_agent_dir=core_agent_dir, socket_path=socket_path)
+    scout_config.set(core_agent_dir=core_agent_dir, core_agent_socket_path=socket_path)
     core_agent_manager = CoreAgentManager()
     try:
         yield core_agent_manager

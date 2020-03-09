@@ -55,11 +55,14 @@ class ScoutConfig(object):
         return [
             "app_server",
             "application_root",
+            "core_agent_config_file",
             "core_agent_dir",
             "core_agent_download",
             "core_agent_launch",
+            "core_agent_log_file",
             "core_agent_log_level",
             "core_agent_permissions",
+            "core_agent_socket_path",
             "core_agent_version",
             "disabled_instruments",
             "download_url",
@@ -75,7 +78,6 @@ class ScoutConfig(object):
             "scm_subdirectory",
             "shutdown_message_enabled",
             "shutdown_timeout_seconds",
-            "socket_path",
         ]
 
     def core_agent_permissions(self):
@@ -177,7 +179,7 @@ class Derived(object):
         func_name = "derive_" + key
         return getattr(self, func_name, None)
 
-    def derive_socket_path(self):
+    def derive_core_agent_socket_path(self):
         return "{}/{}/scout-agent.sock".format(
             self.config.value("core_agent_dir"),
             self.config.value("core_agent_full_name"),

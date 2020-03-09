@@ -65,7 +65,11 @@ class CoreAgentSocketThread(SingletonThread):
         return queue_empty
 
     def run(self):
-        self.socket_path = scout_config.value("socket_path")
+        # Old deprecated name "socket_path"
+        socket_path = scout_config.value("socket_path")
+        if socket_path is None:
+            socket_path = scout_config.value("core_agent_socket_path")
+        self.socket_path = socket_path
         self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 
         try:

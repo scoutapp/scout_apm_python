@@ -82,7 +82,10 @@ class CoreAgentManager(object):
         return ["--daemonize", "true"]
 
     def socket_path(self):
+        # Old deprecated name "socket_path"
         socket_path = scout_config.value("socket_path")
+        if socket_path is None:
+            socket_path = scout_config.value("core_agent_socket_path")
         return ["--socket", socket_path]
 
     def log_level(self):
@@ -93,14 +96,22 @@ class CoreAgentManager(object):
         return ["--log-level", log_level]
 
     def log_file(self):
+        # Old deprecated name "log_file"
         path = scout_config.value("log_file")
+        if path is None:
+            path = scout_config.value("core_agent_log_file")
+
         if path is not None:
             return ["--log-file", path]
         else:
             return []
 
     def config_file(self):
+        # Old deprecated name "config_file"
         path = scout_config.value("config_file")
+        if path is None:
+            path = scout_config.value("core_agent_config_file")
+
         if path is not None:
             return ["--config-file", path]
         else:
