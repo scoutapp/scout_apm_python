@@ -73,6 +73,7 @@ class ScoutConfig(object):
             "name",
             "revision_sha",
             "scm_subdirectory",
+            "shutdown_message_enabled",
             "shutdown_timeout_seconds",
             "socket_path",
         ]
@@ -221,6 +222,7 @@ class Defaults(object):
             "name": "Python App",
             "revision_sha": self._git_revision_sha(),
             "scm_subdirectory": "",
+            "shutdown_message_enabled": True,
             "shutdown_timeout_seconds": 2.0,
             "uri_reporting": "filtered_params",
         }
@@ -285,6 +287,7 @@ CONVERSIONS = {
     "disabled_instruments": convert_to_list,
     "ignore": convert_to_list,
     "monitor": convert_to_bool,
+    "shutdown_message_enabled": convert_to_bool,
     "shutdown_timeout_seconds": convert_to_float,
 }
 

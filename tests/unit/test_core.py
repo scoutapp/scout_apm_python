@@ -57,6 +57,7 @@ def test_install_success(caplog):
 
 
 def test_shutdown(capsys):
+    scout_config
     report_app_metadata()  # queued but thread not running
     try:
         scout_config.set(shutdown_timeout_seconds=0.1)
@@ -67,3 +68,16 @@ def test_shutdown(capsys):
 
     captured = capsys.readouterr()
     assert "Scout draining" in captured.err
+
+
+def test_shutdown_message_disabled(capsys):
+    report_app_metadata()  # queued but thread not running
+    try:
+        scout_config.set(shutdown_timeout_seconds=0.1, shutdown_message_enabled=False)
+
+        shutdown()
+    finally:
+        Config.reset_all()
+
+    captured = capsys.readouterr()
+    assert not captured.err

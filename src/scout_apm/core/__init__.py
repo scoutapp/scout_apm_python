@@ -62,17 +62,18 @@ def shutdown():
     timeout_seconds = scout_config.value("shutdown_timeout_seconds")
 
     def callback(queue_size):
-        print(  # noqa: T001
-            (
-                "Scout draining {queue_size} event{s} for up to"
-                + " {timeout_seconds} seconds"
-            ).format(
-                queue_size=queue_size,
-                s=("" if queue_size == 1 else "s"),
-                timeout_seconds=timeout_seconds,
-            ),
-            file=sys.stderr,
-        )
+        if scout_config.value("shutdown_message_enabled"):
+            print(  # noqa: T001
+                (
+                    "Scout draining {queue_size} event{s} for up to"
+                    + " {timeout_seconds} seconds"
+                ).format(
+                    queue_size=queue_size,
+                    s=("" if queue_size == 1 else "s"),
+                    timeout_seconds=timeout_seconds,
+                ),
+                file=sys.stderr,
+            )
 
     CoreAgentSocketThread.wait_until_drained(
         timeout_seconds=timeout_seconds, callback=callback
