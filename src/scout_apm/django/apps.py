@@ -38,8 +38,10 @@ class ScoutApmDjangoConfig(AppConfig):
             self.on_setting_changed(name)
 
     def on_setting_changed(self, setting, **kwargs):
+        cast = None
         if setting == "BASE_DIR":
             scout_name = "application_root"
+            cast = str
         elif setting.startswith("SCOUT_"):
             scout_name = setting.replace("SCOUT_", "").lower()
         else:
@@ -51,6 +53,8 @@ class ScoutApmDjangoConfig(AppConfig):
             # It was removed
             scout_config.unset(scout_name)
         else:
+            if cast is not None:
+                value = cast(value)
             scout_config.set(**{scout_name: value})
 
     def install_middleware(self):

@@ -40,6 +40,12 @@ except ImportError:
     from django.core.urlresolvers import resolve
 
 
+if sys.version_info >= (3,):
+    from pathlib import Path
+else:
+    Path = None
+
+
 skip_unless_new_style_middleware = pytest.mark.skipif(
     django.VERSION < (1, 10), reason="new-style middleware was added in Django 1.10"
 )
@@ -109,6 +115,15 @@ def test_instruments_idempotent(func):
 def test_on_setting_changed_application_root():
     with app_with_scout(BASE_DIR="/tmp/foobar"):
         assert scout_config.value("application_root") == "/tmp/foobar"
+    assert scout_config.value("application_root") == ""
+
+
+@skip_if_python_2
+def test_on_setting_changed_application_root_pathlib():
+    with app_with_scout(BASE_DIR=Path("/tmp/foobar")):
+        value = scout_config.value("application_root")
+        assert isinstance(value, str)
+        assert value == "/tmp/foobar"
     assert scout_config.value("application_root") == ""
 
 
