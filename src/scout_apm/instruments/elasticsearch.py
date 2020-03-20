@@ -47,6 +47,8 @@ CLIENT_METHODS = [
     ClientMethod("field_caps", True),
     ClientMethod("get", True),
     ClientMethod("get_script", False),
+    ClientMethod("get_script_context", False),
+    ClientMethod("get_script_languages", False),
     ClientMethod("get_source", True),
     ClientMethod("index", True),
     ClientMethod("info", False),
