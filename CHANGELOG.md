@@ -8,6 +8,8 @@
 - Instrument new Elasticsearch methods `get_script_context()` and
   `get_script_languages()`.
   ([PR #507](https://github.com/scoutapp/scout_apm_python/pull/507))
+- Prevent output from the core agent when starting it.
+  ([Issue #510](https://github.com/scoutapp/scout_apm_python/issues/510))
 
 ## [2.13.0] 2020-03-09
 
