@@ -58,17 +58,19 @@ class CoreAgentManager(object):
 
     def run(self):
         try:
-            subprocess.check_call(
-                (
-                    self.agent_binary()
-                    + self.daemonize_flag()
-                    + self.log_level()
-                    + self.log_file()
-                    + self.config_file()
-                    + self.socket_path()
-                ),
-                close_fds=True,
-            )
+            with open(os.devnull) as devnull:
+                subprocess.check_call(
+                    (
+                        self.agent_binary()
+                        + self.daemonize_flag()
+                        + self.log_level()
+                        + self.log_file()
+                        + self.config_file()
+                        + self.socket_path()
+                    ),
+                    close_fds=True,
+                    stdout=devnull,
+                )
         except Exception:
             # TODO detect failure of launch properly
             logger.exception("Error running Core Agent")
