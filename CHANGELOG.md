@@ -1,5 +1,7 @@
 # Changelog
 
+## [2.14.0] 2020-04-08
+
 ## Fixed
 
 - Support Django's `BASE_DIR` setting being a `pathlib.Path`, as the default
