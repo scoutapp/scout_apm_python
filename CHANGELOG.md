@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.14.1] 2020-04-28
+
+## Fixed
+
+- Update Core Agent to version 1.2.9, fixing several bugs.
+  ([Issue #516](https://github.com/scoutapp/scout_apm_python/issues/516))
+
+
 ## [2.14.0] 2020-04-08
 
 ## Fixed
