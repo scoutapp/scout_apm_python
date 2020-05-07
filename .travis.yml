@@ -1,4 +1,6 @@
+os: linux
 dist: xenial
+
 env:
   global:
     - ELASTICSEARCH_URL="http://localhost:9200/"
@@ -8,8 +10,7 @@ services:
   - docker
   - elasticsearch
   - mongodb
-  - redis-server
-sudo: required
+  - redis
 
 language: python
 
