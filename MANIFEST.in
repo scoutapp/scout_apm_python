@@ -1,3 +1,4 @@
+prune tests
 include LICENSE
 include *.md
 exclude .pre-commit-config.yaml
