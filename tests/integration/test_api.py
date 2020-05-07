@@ -34,6 +34,47 @@ def test_instrument_decorator(tracked_request):
     assert tracked_request.complete_spans[0].operation == "Custom/Test Decorator"
 
 
+def test_instrument_decorator_method(tracked_request):
+    class Example(object):
+        @instrument("Test Decorator")
+        def method(self):
+            pass
+
+    Example().method()
+
+    assert len(tracked_request.active_spans) == 0
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.complete_spans[0].operation == "Custom/Test Decorator"
+
+
+def test_instrument_decorator_classmethod(tracked_request):
+    class Example(object):
+        @classmethod
+        @instrument("Test Decorator")
+        def method(cls):
+            pass
+
+    Example.method()
+
+    assert len(tracked_request.active_spans) == 0
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.complete_spans[0].operation == "Custom/Test Decorator"
+
+
+def test_instrument_decorator_staticmethod(tracked_request):
+    class Example(object):
+        @staticmethod
+        @instrument("Test Decorator")
+        def method():
+            pass
+
+    Example.method()
+
+    assert len(tracked_request.active_spans) == 0
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.complete_spans[0].operation == "Custom/Test Decorator"
+
+
 def test_instrument_context_manager_with_kind(tracked_request):
     with instrument("Get", kind="Redis") as inst:
         inst.tag("foo", "bar")
