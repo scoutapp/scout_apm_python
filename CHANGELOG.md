@@ -1,16 +1,23 @@
 # Changelog
 
+## Pending
+
+### Fixed
+
+- Fix crash when scanning packages that have a Name or Version that is
+  `None`.
+  ([Issue #522](https://github.com/scoutapp/scout_apm_python/issues/522))
+
 ## [2.14.1] 2020-04-28
 
-## Fixed
+### Fixed
 
 - Update Core Agent to version 1.2.9, fixing several bugs.
   ([Issue #516](https://github.com/scoutapp/scout_apm_python/issues/516))
 
-
 ## [2.14.0] 2020-04-08
 
-## Fixed
+### Fixed
 
 - Support Django's `BASE_DIR` setting being a `pathlib.Path`, as the default
   template in Django 3.1 will set.
