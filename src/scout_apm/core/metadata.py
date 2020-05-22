@@ -55,15 +55,16 @@ def get_python_packages_versions():
         # For some reason it is unavailable
         return []
 
-    names_values = [
-        (distribution.metadata["Name"], distribution.metadata["Version"])
+    return sorted(
+        (
+            distribution.metadata["Name"],
+            (distribution.metadata["Version"] or "Unknown"),
+        )
         for distribution in distributions()
-    ]
-    # Filter out distributions wtih None for name or value. This can be the
-    # case for packages without a METADATA or PKG-INFO file in their relevant
-    # distribution directory. According to comments in importlib.metadata
-    # internals this is possible for certain old packages, but I could only
-    # recreate it by deliberately deleting said files.
-    names_values = [(n, v) for n, v in names_values if n is not None and v is not None]
-    names_values.sort()
-    return names_values
+        # Filter out distributions wtih None for name or value. This can be the
+        # case for packages without a METADATA or PKG-INFO file in their relevant
+        # distribution directory. According to comments in importlib.metadata
+        # internals this is possible for certain old packages, but I could only
+        # recreate it by deliberately deleting said files.
+        if distribution.metadata["Name"]
+    )

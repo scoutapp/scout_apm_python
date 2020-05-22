@@ -58,4 +58,4 @@ def test_get_python_packages_versions_None_package():
     with mock.patch(target, new=yielding_nones):
         packages = get_python_packages_versions()
 
-    assert packages == [("first-package", "1.0.0")]
+    assert packages == [("first-package", "1.0.0"), ("second-package", "Unknown")]
