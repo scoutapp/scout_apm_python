@@ -5,8 +5,8 @@ import sys
 
 import pytest
 
-from scout_apm.core.metadata import report_app_metadata
-from tests.compat import mock
+from scout_apm.core.metadata import get_python_packages_versions, report_app_metadata
+from tests.compat import SimpleNamespace, mock
 from tests.tools import pretend_package_unavailable
 
 
@@ -42,3 +42,20 @@ def test_report_app_metadata_no_importlib_metadata(send):
     message = command.message()
     assert message["ApplicationEvent"]["event_type"] == "scout.metadata"
     assert message["ApplicationEvent"]["event_value"]["libraries"] == []
+
+
+def test_get_python_packages_versions_None_package():
+    if sys.version_info >= (3, 8):
+        target = "importlib.metadata.distributions"
+    else:
+        target = "importlib_metadata.distributions"
+
+    def yielding_nones():
+        yield SimpleNamespace(metadata={"Name": "first-package", "Version": "1.0.0"})
+        yield SimpleNamespace(metadata={"Name": "second-package", "Version": None})
+        yield SimpleNamespace(metadata={"Name": None, "Version": "3.0.0"})
+
+    with mock.patch(target, new=yielding_nones):
+        packages = get_python_packages_versions()
+
+    assert packages == [("first-package", "1.0.0"), ("second-package", "Unknown")]

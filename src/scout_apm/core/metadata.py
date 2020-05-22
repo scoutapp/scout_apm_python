@@ -56,6 +56,15 @@ def get_python_packages_versions():
         return []
 
     return sorted(
-        (distribution.metadata["Name"], distribution.metadata["Version"])
+        (
+            distribution.metadata["Name"],
+            (distribution.metadata["Version"] or "Unknown"),
+        )
         for distribution in distributions()
+        # Filter out distributions wtih None for name or value. This can be the
+        # case for packages without a METADATA or PKG-INFO file in their relevant
+        # distribution directory. According to comments in importlib.metadata
+        # internals this is possible for certain old packages, but I could only
+        # recreate it by deliberately deleting said files.
+        if distribution.metadata["Name"]
     )
