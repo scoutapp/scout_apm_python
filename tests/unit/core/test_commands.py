@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import datetime as dt
+import logging
 
 import pytest
 
@@ -23,21 +24,61 @@ END_TIME = dt.datetime(2018, 12, 1, 17, 4, 34, 641403)
 END_TIME_STR = "2018-12-01T17:04:34.641403Z"
 
 
+def test_register_message_good_key(caplog):
+    command = commands.Register(
+        app="test_app", key="abcdefghijabcdef", hostname="test_host"
+    )
+
+    assert command.message() == {
+        "Register": {
+            "app": "test_app",
+            "key": "abcdefghijabcdef",
+            "host": "test_host",
+            "language": "python",
+            "api_version": "1.0",
+        }
+    }
+    assert caplog.record_tuples == [
+        (
+            "scout_apm.core.commands",
+            logging.INFO,
+            (
+                "Registering with app='test_app' key_prefix='abc'"
+                + " key_format_validated=True host=test_host"
+            ),
+        )
+    ]
+
+
+def test_register_message_bad_key(caplog):
+    command = commands.Register(
+        app="test_app", key="whoops-pasted-it-in-wrong", hostname="test_host"
+    )
+
+    assert command.message() == {
+        "Register": {
+            "app": "test_app",
+            "key": "whoops-pasted-it-in-wrong",
+            "host": "test_host",
+            "language": "python",
+            "api_version": "1.0",
+        }
+    }
+    assert caplog.record_tuples == [
+        (
+            "scout_apm.core.commands",
+            logging.INFO,
+            (
+                "Registering with app='test_app' key_prefix='who'"
+                + " key_format_validated=False host=test_host"
+            ),
+        )
+    ]
+
+
 @pytest.mark.parametrize(
     "command, message",
     [
-        (
-            commands.Register(app="test_app", key="test_key", hostname="test_host"),
-            {
-                "Register": {
-                    "app": "test_app",
-                    "key": "test_key",
-                    "host": "test_host",
-                    "language": "python",
-                    "api_version": "1.0",
-                }
-            },
-        ),
         (
             commands.StartSpan(
                 timestamp=TIMESTAMP,

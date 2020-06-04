@@ -2,10 +2,13 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
+import re
 
 from scout_apm.compat import iteritems
 
 logger = logging.getLogger(__name__)
+
+key_regex = re.compile(r"^[a-zA-Z0-9]{16}$")
 
 
 class Register(object):
@@ -17,7 +20,12 @@ class Register(object):
         self.hostname = hostname
 
     def message(self):
-        logger.info("Registering with app=%r host=%s" % (self.app, self.hostname))
+        key_prefix = self.key[:3]
+        key_matches_regex = bool(key_regex.match(self.key))
+        logger.info(
+            "Registering with app=%r key_prefix=%r key_format_validated=%s host=%s"
+            % (self.app, key_prefix, key_matches_regex, self.hostname)
+        )
         return {
             "Register": {
                 "app": self.app,

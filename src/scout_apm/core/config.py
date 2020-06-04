@@ -3,12 +3,15 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 import os
+import re
 import warnings
 
 from scout_apm.compat import string_type
 from scout_apm.core import platform_detection
 
 logger = logging.getLogger(__name__)
+
+key_regex = re.compile(r"[a-zA-Z0-9]{16}")
 
 
 class ScoutConfig(object):
