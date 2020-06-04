@@ -23,7 +23,7 @@ class Register(object):
         key_prefix = self.key[:3]
         key_matches_regex = bool(key_regex.match(self.key))
         logger.info(
-            "Registering with app=%r key_prefix=%r key_format_validated=%s host=%s"
+            "Registering with app=%s key_prefix=%s key_format_validated=%s host=%s"
             % (self.app, key_prefix, key_matches_regex, self.hostname)
         )
         return {

@@ -43,7 +43,7 @@ def test_register_message_good_key(caplog):
             "scout_apm.core.commands",
             logging.INFO,
             (
-                "Registering with app='test_app' key_prefix='abc'"
+                "Registering with app=test_app key_prefix=abc"
                 + " key_format_validated=True host=test_host"
             ),
         )
@@ -69,7 +69,7 @@ def test_register_message_bad_key(caplog):
             "scout_apm.core.commands",
             logging.INFO,
             (
-                "Registering with app='test_app' key_prefix='who'"
+                "Registering with app=test_app key_prefix=who"
                 + " key_format_validated=False host=test_host"
             ),
         )
