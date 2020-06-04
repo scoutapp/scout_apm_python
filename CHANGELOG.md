@@ -1,5 +1,12 @@
 # Changelog
 
+## Pending Release
+
+### Fixed
+
+- Don't log the Scout key during startup.
+  ([Issue #297](https://github.com/scoutapp/scout_apm_python/issues/297))
+
 ## [2.14.2] 2020-05-22
 
 ### Fixed

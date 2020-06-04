@@ -45,40 +45,44 @@ class ScoutConfig(object):
 
     def log(self):
         logger.debug("Configuration Loaded:")
-        for key in self.known_keys():
+        for key in self.known_keys:
+            if key in self.secret_keys:
+                continue
+
             layer = self.locate_layer_for_key(key)
             logger.debug(
-                "%-9s: %s = %s", layer.__class__.__name__, key, layer.value(key)
+                "%-9s: %s = %s", layer.__class__.__name__, key, layer.value(key),
             )
 
-    def known_keys(self):
-        return [
-            "app_server",
-            "application_root",
-            "core_agent_config_file",
-            "core_agent_dir",
-            "core_agent_download",
-            "core_agent_launch",
-            "core_agent_log_file",
-            "core_agent_log_level",
-            "core_agent_permissions",
-            "core_agent_socket_path",
-            "core_agent_version",
-            "disabled_instruments",
-            "download_url",
-            "framework",
-            "framework_version",
-            "hostname",
-            "ignore",
-            "key",
-            "log_level",
-            "monitor",
-            "name",
-            "revision_sha",
-            "scm_subdirectory",
-            "shutdown_message_enabled",
-            "shutdown_timeout_seconds",
-        ]
+    known_keys = [
+        "app_server",
+        "application_root",
+        "core_agent_config_file",
+        "core_agent_dir",
+        "core_agent_download",
+        "core_agent_launch",
+        "core_agent_log_file",
+        "core_agent_log_level",
+        "core_agent_permissions",
+        "core_agent_socket_path",
+        "core_agent_version",
+        "disabled_instruments",
+        "download_url",
+        "framework",
+        "framework_version",
+        "hostname",
+        "ignore",
+        "key",
+        "log_level",
+        "monitor",
+        "name",
+        "revision_sha",
+        "scm_subdirectory",
+        "shutdown_message_enabled",
+        "shutdown_timeout_seconds",
+    ]
+
+    secret_keys = {"key"}
 
     def core_agent_permissions(self):
         try:
