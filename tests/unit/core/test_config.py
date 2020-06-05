@@ -1,7 +1,9 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import logging
 import os
+import pprint
 import re
 import sys
 
@@ -116,10 +118,10 @@ def test_env_outranks_python():
         ScoutConfig.reset_all()
 
 
-def test_log_config():
+def test_log_config(caplog):
     # Include configs in various layers to exercise all code paths.
     os.environ["SCOUT_CORE_AGENT_DOWNLOAD"] = "False"
-    ScoutConfig.set(core_agent_launch=False)
+    ScoutConfig.set(core_agent_launch=False, key="abcdefghij")
     config = ScoutConfig()
     try:
         # Logging the config doesn't crash.
@@ -127,6 +129,18 @@ def test_log_config():
     finally:
         del os.environ["SCOUT_CORE_AGENT_DOWNLOAD"]
         ScoutConfig.reset_all()
+
+    assert caplog.record_tuples[0] == (
+        "scout_apm.core.config",
+        logging.DEBUG,
+        "Configuration Loaded:",
+    )
+    assert (
+        "scout_apm.core.config",
+        logging.DEBUG,
+        "Python   : core_agent_launch = False",
+    ) in caplog.record_tuples
+    assert "abcdefghij" not in pprint.pformat(caplog.record_tuples)
 
 
 def test_core_agent_permissions_default():
