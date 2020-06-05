@@ -1,6 +1,6 @@
 # Changelog
 
-## Pending Release
+## [2.14.3] 2020-06-05
 
 ### Fixed
 
