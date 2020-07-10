@@ -7,6 +7,7 @@ import wrapt
 from rq import SimpleWorker as RqSimpleWorker
 from rq import Worker as RqWorker
 from rq.job import Job
+from rq.worker import HerokuWorker as RqHerokuWorker
 
 import scout_apm.core
 from scout_apm.core.tracked_request import TrackedRequest
@@ -37,6 +38,10 @@ class Worker(WorkerMixin, RqWorker):
 
 
 class SimpleWorker(WorkerMixin, RqSimpleWorker):
+    pass
+
+
+class HerokuWorker(WorkerMixin, RqHerokuWorker):
     pass
 
 
