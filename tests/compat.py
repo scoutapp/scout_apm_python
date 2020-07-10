@@ -22,8 +22,8 @@ if sys.version_info >= (3, 2):
     from tempfile import TemporaryDirectory
 else:
     from contextlib import contextmanager
-    from tempfile import mkdtemp
     from shutil import rmtree
+    from tempfile import mkdtemp
 
     @contextmanager
     def TemporaryDirectory():
