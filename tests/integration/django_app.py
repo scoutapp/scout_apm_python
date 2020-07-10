@@ -164,9 +164,7 @@ def drf_router():
     can't be done until after django.setup()
     """
     from django.contrib.auth.models import User
-    from rest_framework import routers
-    from rest_framework import serializers
-    from rest_framework import viewsets
+    from rest_framework import routers, serializers, viewsets
 
     class UserSerializer(serializers.Serializer):
         id = serializers.IntegerField(label="ID", read_only=True)
