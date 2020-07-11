@@ -35,6 +35,7 @@ ClientMethod = namedtuple("ClientMethod", ["name", "takes_index_argument"])
 CLIENT_METHODS = [
     ClientMethod("bulk", True),
     ClientMethod("clear_scroll", False),
+    ClientMethod("close", False),
     ClientMethod("count", True),
     ClientMethod("create", True),
     ClientMethod("delete", True),
