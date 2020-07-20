@@ -29,6 +29,9 @@ jobs:
     - name: Upgrade packaging tools
       run: python -m pip install --upgrade pip setuptools virtualenv
     - name: Install dependencies
-      run: python -m pip install --upgrade tox tox-gh-actions
+      run: python -m pip install --upgrade tox
     - name: Run tox targets for ${{ matrix.python-version }}
-      run: python -m tox
+      run: TOXENV=$(tox --listenvs | grep "py${${{ matrix.python-version }}/./}-" | tr '\n' ',') python -m tox
+    - name: Run checks
+      if: matrix.python-version == '3.8'
+      run: python -m tox -e check
