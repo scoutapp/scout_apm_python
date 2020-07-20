@@ -122,18 +122,19 @@ def track_request_view_data(request, tracked_request):
     if ignore_path(path):
         tracked_request.tag("ignore_transaction", True)
 
-    try:
-        # Determine a remote IP to associate with the request. The value is
-        # spoofable by the requester so this is not suitable to use in any
-        # security sensitive context.
-        user_ip = (
-            request.META.get("HTTP_X_FORWARDED_FOR", "").split(",")[0]
-            or request.META.get("HTTP_CLIENT_IP", "").split(",")[0]
-            or request.META.get("REMOTE_ADDR", None)
-        )
-        tracked_request.tag("user_ip", user_ip)
-    except Exception:
-        pass
+    if scout_config.value("collect_remote_ip"):
+        try:
+            # Determine a remote IP to associate with the request. The value is
+            # spoofable by the requester so this is not suitable to use in any
+            # security sensitive context.
+            user_ip = (
+                request.META.get("HTTP_X_FORWARDED_FOR", "").split(",")[0]
+                or request.META.get("HTTP_CLIENT_IP", "").split(",")[0]
+                or request.META.get("REMOTE_ADDR", None)
+            )
+            tracked_request.tag("user_ip", user_ip)
+        except Exception:
+            pass
 
     user = getattr(request, "user", None)
     if user is not None:

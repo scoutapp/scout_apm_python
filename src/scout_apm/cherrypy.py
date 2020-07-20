@@ -7,6 +7,7 @@ from cherrypy.process import plugins
 
 import scout_apm.core
 from scout_apm.compat import parse_qsl
+from scout_apm.core.config import scout_config
 from scout_apm.core.tracked_request import TrackedRequest
 from scout_apm.core.web_requests import (
     create_filtered_path,
@@ -57,15 +58,16 @@ class ScoutPlugin(plugins.SimplePlugin):
         if ignore_path(path):
             tracked_request.tag("ignore_transaction", True)
 
-        # Determine a remote IP to associate with the request. The value is
-        # spoofable by the requester so this is not suitable to use in any
-        # security sensitive context.
-        user_ip = (
-            request.headers.get("x-forwarded-for", "").split(",")[0]
-            or request.headers.get("client-ip", "").split(",")[0]
-            or (request.remote.ip or None)
-        )
-        tracked_request.tag("user_ip", user_ip)
+        if scout_config.value("collect_remote_ip"):
+            # Determine a remote IP to associate with the request. The value is
+            # spoofable by the requester so this is not suitable to use in any
+            # security sensitive context.
+            user_ip = (
+                request.headers.get("x-forwarded-for", "").split(",")[0]
+                or request.headers.get("client-ip", "").split(",")[0]
+                or (request.remote.ip or None)
+            )
+            tracked_request.tag("user_ip", user_ip)
 
         queue_time = request.headers.get("x-queue-start", "") or request.headers.get(
             "x-request-start", ""

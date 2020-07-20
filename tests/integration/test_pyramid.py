@@ -27,8 +27,9 @@ def app_with_scout(config=None):
     """
     # Enable Scout by default in tests.
     if config is None:
-        config = {"SCOUT_MONITOR": True}
+        config = {}
 
+    config.setdefault("SCOUT_MONITOR", True)
     # Disable running the agent.
     config["SCOUT_CORE_AGENT_LAUNCH"] = False
 
@@ -106,6 +107,16 @@ def test_user_ip(headers, client_address, expected, tracked_requests):
     assert tracked_request.tags["user_ip"] == expected
 
 
+def test_user_ip_collection_disabled(tracked_requests):
+    with app_with_scout(config={"SCOUT_COLLECT_REMOTE_IP": False}) as app:
+        TestApp(app).get(
+            "/", extra_environ={str("REMOTE_ADDR"): str("1.1.1.1")},
+        )
+
+    tracked_request = tracked_requests[0]
+    assert "user_ip" not in tracked_request.tags
+
+
 @parametrize_queue_time_header_name
 def test_queue_time(header_name, tracked_requests):
     # Not testing floats due to Python 2/3 rounding differences
@@ -140,7 +151,7 @@ def test_amazon_queue_time(tracked_requests):
 
 
 def test_home_ignored(tracked_requests):
-    with app_with_scout(config={"SCOUT_MONITOR": True, "SCOUT_IGNORE": ["/"]}) as app:
+    with app_with_scout(config={"SCOUT_IGNORE": ["/"]}) as app:
         response = TestApp(app).get("/")
 
     assert response.status_int == 200
@@ -200,8 +211,7 @@ def test_return_error(tracked_requests):
 
 
 def test_no_monitor(tracked_requests):
-    # With an empty config, "SCOUT_MONITOR" defaults to False.
-    with app_with_scout(config={}) as app:
+    with app_with_scout(config={"SCOUT_MONITOR": False}) as app:
         response = TestApp(app).get("/hello/")
 
     assert response.status_int == 200

@@ -187,12 +187,13 @@ def asgi_track_request_data(scope, tracked_request):
     # a plain dict rather than a multi-value dict
     headers = {k.lower(): v for k, v in scope.get("headers", ())}
 
-    user_ip = (
-        headers.get(b"x-forwarded-for", b"").decode("latin1").split(",")[0]
-        or headers.get(b"client-ip", b"").decode("latin1").split(",")[0]
-        or scope.get("client", ("",))[0]
-    )
-    tracked_request.tag("user_ip", user_ip)
+    if scout_config.value("collect_remote_ip"):
+        user_ip = (
+            headers.get(b"x-forwarded-for", b"").decode("latin1").split(",")[0]
+            or headers.get(b"client-ip", b"").decode("latin1").split(",")[0]
+            or scope.get("client", ("",))[0]
+        )
+        tracked_request.tag("user_ip", user_ip)
 
     queue_time = headers.get(b"x-queue-start", b"") or headers.get(
         b"x-request-start", b""
@@ -219,15 +220,16 @@ def werkzeug_track_request_data(werkzeug_request, tracked_request):
     if ignore_path(path):
         tracked_request.tag("ignore_transaction", True)
 
-    # Determine a remote IP to associate with the request. The value is
-    # spoofable by the requester so this is not suitable to use in any
-    # security sensitive context.
-    user_ip = (
-        werkzeug_request.headers.get("x-forwarded-for", default="").split(",")[0]
-        or werkzeug_request.headers.get("client-ip", default="").split(",")[0]
-        or werkzeug_request.remote_addr
-    )
-    tracked_request.tag("user_ip", user_ip)
+    if scout_config.value("collect_remote_ip"):
+        # Determine a remote IP to associate with the request. The value is
+        # spoofable by the requester so this is not suitable to use in any
+        # security sensitive context.
+        user_ip = (
+            werkzeug_request.headers.get("x-forwarded-for", default="").split(",")[0]
+            or werkzeug_request.headers.get("client-ip", default="").split(",")[0]
+            or werkzeug_request.remote_addr
+        )
+        tracked_request.tag("user_ip", user_ip)
 
     queue_time = werkzeug_request.headers.get(
         "x-queue-start", default=""

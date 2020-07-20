@@ -172,6 +172,16 @@ def test_user_ip(headers, client_address, expected, tracked_requests):
     assert tracked_requests[0].tags["user_ip"] == expected
 
 
+def test_user_ip_collection_disabled(tracked_requests):
+    with app_with_scout(config={"collect_remote_ip": False}) as app:
+        TestApp(app).get(
+            "/", extra_environ={str("REMOTE_ADDR"): str("1.1.1.1")},
+        )
+
+    tracked_request = tracked_requests[0]
+    assert "user_ip" not in tracked_request.tags
+
+
 def test_home_suffixed(tracked_requests):
     with app_with_scout() as app:
         response = TestApp(app).get("/suffixed")
