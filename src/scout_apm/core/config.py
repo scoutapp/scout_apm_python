@@ -60,6 +60,7 @@ class ScoutConfig(object):
     known_keys = [
         "app_server",
         "application_root",
+        "collect_remote_ip",
         "core_agent_config_file",
         "core_agent_dir",
         "core_agent_download",
@@ -215,6 +216,7 @@ class Defaults(object):
         self.defaults = {
             "app_server": "",
             "application_root": "",
+            "collect_remote_ip": True,
             "core_agent_dir": "/tmp/scout_apm_core",
             "core_agent_download": True,
             "core_agent_launch": True,

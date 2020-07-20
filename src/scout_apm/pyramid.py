@@ -43,15 +43,16 @@ def instruments(handler, registry):
             if ignore_path(path):
                 tracked_request.tag("ignore_transaction", True)
 
-            # Determine a remote IP to associate with the request. The value is
-            # spoofable by the requester so this is not suitable to use in any
-            # security sensitive context.
-            user_ip = (
-                request.headers.get("x-forwarded-for", default="").split(",")[0]
-                or request.headers.get("client-ip", default="").split(",")[0]
-                or request.remote_addr
-            )
-            tracked_request.tag("user_ip", user_ip)
+            if scout_config.value("collect_remote_ip"):
+                # Determine a remote IP to associate with the request. The value is
+                # spoofable by the requester so this is not suitable to use in any
+                # security sensitive context.
+                user_ip = (
+                    request.headers.get("x-forwarded-for", default="").split(",")[0]
+                    or request.headers.get("client-ip", default="").split(",")[0]
+                    or request.remote_addr
+                )
+                tracked_request.tag("user_ip", user_ip)
 
             tracked_queue_time = False
             queue_time = request.headers.get(

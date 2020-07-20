@@ -7,6 +7,7 @@ import warnings
 import falcon
 
 from scout_apm.api import install
+from scout_apm.core.config import scout_config
 from scout_apm.core.tracked_request import TrackedRequest
 from scout_apm.core.web_requests import (
     create_filtered_path,
@@ -60,15 +61,16 @@ class ScoutMiddleware(object):
         if ignore_path(path):
             tracked_request.tag("ignore_transaction", True)
 
-        # Determine a remote IP to associate with the request. The value is
-        # spoofable by the requester so this is not suitable to use in any
-        # security sensitive context.
-        user_ip = (
-            req.get_header("x-forwarded-for", default="").split(",")[0]
-            or req.get_header("client-ip", default="").split(",")[0]
-            or req.remote_addr
-        )
-        tracked_request.tag("user_ip", user_ip)
+        if scout_config.value("collect_remote_ip"):
+            # Determine a remote IP to associate with the request. The value is
+            # spoofable by the requester so this is not suitable to use in any
+            # security sensitive context.
+            user_ip = (
+                req.get_header("x-forwarded-for", default="").split(",")[0]
+                or req.get_header("client-ip", default="").split(",")[0]
+                or req.remote_addr
+            )
+            tracked_request.tag("user_ip", user_ip)
 
         queue_time = req.get_header("x-queue-start", default="") or req.get_header(
             "x-request-start", default=""

@@ -7,6 +7,9 @@
 - Extended RQ integration with `HerokuWorker` class for use in the RQ Heroku
   pattern.
   ([Issue #529](https://github.com/scoutapp/scout_apm_python/issues/529))
+- Added the `collect_remote_ip` / `SCOUT_COLLECT_REMOTE_IP` setting which can
+  be set to `False` to disable storing user IP addresses in Scout traces.
+  ([Issue #535](https://github.com/scoutapp/scout_apm_python/issues/535))
 
 ## [2.14.3] 2020-06-05
 

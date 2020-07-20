@@ -267,6 +267,20 @@ async def test_user_ip(headers, client_address, expected, tracked_requests):
     assert tracked_requests[0].tags["user_ip"] == expected
 
 
+@async_test
+async def test_user_ip_collection_disabled(tracked_requests):
+    with app_with_scout(scout_config={"collect_remote_ip": False}) as app:
+        communicator = ApplicationCommunicator(
+            app, asgi_http_scope(path="/", client=("1.1.1.1", None))
+        )
+        await communicator.send_input({"type": "http.request"})
+        await communicator.receive_output()
+        await communicator.receive_output()
+
+    tracked_request = tracked_requests[0]
+    assert "user_ip" not in tracked_request.tags
+
+
 @parametrize_queue_time_header_name
 @async_test
 async def test_queue_time(header_name, tracked_requests):
