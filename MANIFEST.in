@@ -1,4 +1,11 @@
+global-exclude *.py[cod]
+prune __pycache__
 prune tests
+include CHANGELOG.md
+include DEVELOPMENT.md
 include LICENSE
-include *.md
+include README.md
 exclude .pre-commit-config.yaml
+exclude .python-version
+exclude pytest.ini
+exclude tox.ini
