@@ -21,11 +21,11 @@ If you run `tox` with no arguments, it will test all environments. There are a
 lot of environments so this can take some time. It's best to only let CI do
 this when you create a pull request.
 
-**Fourth,** run the code style checks with `tox -e check`. Everything should
-pass.
+**Fourth,** run the code style checks with `tox -e py38-codestyle`. Everything
+should pass.
 
 **Fifth,** install the pre-commit code style checks hook with
-`.tox/check/bin/pre-commit install`. This will use
+`.tox/py38-codestyle/bin/pre-commit install`. This will use
 [pre-commit](https://pre-commit.com/) inside the virtual environment that tox
 made to run the checks every time you commit.
 

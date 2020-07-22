@@ -1,43 +1,18 @@
 os: linux
 dist: xenial
 
-env:
-  global:
-    - ELASTICSEARCH_URL="http://localhost:9200/"
-    - MONGODB_URL="mongodb://localhost:27017/"
-    - REDIS_URL="redis://localhost:6379/0"
 services:
   - docker
-  - elasticsearch
-  - mongodb
-  - redis
 
 language: python
 
 python:
-  - "2.7"
-  - "3.4"
-  - "3.5"
-  - "3.6"
   - "3.7"
-  - "3.8"
-
-script:
-  - pip install --upgrade tox
-  # Only run tox environments matching the current python version.
-  - TOXENV=`tox --listenvs | grep "py${TRAVIS_PYTHON_VERSION/./}-" | tr '\n' ','` tox
 
 jobs:
   include:
-    - stage: test
-      name: "Check code style"
-      python: "3.8"  # prevent matrix expansion
-      script:
-        - pip install --upgrade tox
-        - tox -e check
     - stage: build
       name: "Build and upload distributions"
-      python: "3.7"  # prevent matrix expansion
       env:
         - CIBW_SKIP="cp33-*"
         - TWINE_NON_INTERACTIVE=1
