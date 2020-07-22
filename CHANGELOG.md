@@ -1,5 +1,12 @@
 # Changelog
 
+## Pending
+
+### Fixed
+
+- Always convert `collect_remote_ip` to boolean.
+  ([Issue #542](https://github.com/scoutapp/scout_apm_python/issues/542))
+
 ## [2.15.0] 2020-07-22
 
 ### Added
