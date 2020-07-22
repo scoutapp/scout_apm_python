@@ -293,6 +293,7 @@ def convert_to_list(value):
 
 
 CONVERSIONS = {
+    "collect_remote_ip": convert_to_bool,
     "core_agent_download": convert_to_bool,
     "core_agent_launch": convert_to_bool,
     "disabled_instruments": convert_to_list,
