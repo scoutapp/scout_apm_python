@@ -5,6 +5,7 @@ include CHANGELOG.md
 include DEVELOPMENT.md
 include LICENSE
 include README.md
+include pyproject.toml
 exclude .pre-commit-config.yaml
 exclude .python-version
 exclude pytest.ini
