@@ -34,6 +34,3 @@ jobs:
       run: |
         ENV_PREFIX=$(tr -d "." <<< "py${{ matrix.python-version }}-")
         TOXENV=$(tox --listenvs | grep $ENV_PREFIX | tr '\n' ',') python -m tox
-    - name: Run checks
-      if: matrix.python-version == '3.8'
-      run: python -m tox -e check
