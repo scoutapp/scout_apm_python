@@ -1,0 +1,31 @@
+name: Release
+
+on:
+  push:
+    branches:
+    - master
+    tags:
+    - 'v*'
+  pull_request:
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-18.04
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2.1.1
+      with:
+        python-version: 3.7
+    - name: Install packaging tools
+      run: python -m pip install --upgrade cibuildwheel pip setuptools twine wheel
+    - name: Build
+      run: |
+        python setup.py sdist
+        cibuildwheel
+        twine check dist/* wheelhouse/*
+        ls -al dist wheelhouse
+    # - name: Publish
+    #   if: ${{ github.event_name == 'tag' && github.ref.startsWith('v') }}
+    #   run: echo "do the release"
