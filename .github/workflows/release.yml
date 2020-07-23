@@ -1,4 +1,4 @@
-name: Release
+name: Build release
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
 
 jobs:
   release:
-    name: Release
+    name: Build release
     runs-on: ubuntu-18.04
 
     steps:
@@ -21,11 +21,18 @@ jobs:
     - name: Install packaging tools
       run: python -m pip install --upgrade cibuildwheel pip setuptools twine wheel
     - name: Build
+      env:
+        CIBW_SKIP: "cp33-*"
       run: |
         python setup.py sdist
         cibuildwheel
         twine check dist/* wheelhouse/*
         ls -al dist wheelhouse
-    # - name: Publish
-    #   if: ${{ github.event_name == 'tag' && github.ref.startsWith('v') }}
-    #   run: echo "do the release"
+    - name: Release
+      if: ${{ github.event_name == 'tag' && github.ref.startsWith('v') }}
+      run: "echo publish"
+      # env:
+      #   TWINE_NON_INTERACTIVE: 1
+      #   TWINE_USERNAME: __token__
+      #   TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+      # run: twine upload --skip-existing dist/* wheelhouse/*
