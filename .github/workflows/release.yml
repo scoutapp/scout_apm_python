@@ -31,7 +31,7 @@ jobs:
     - name: List files
       run: ls -al dist wheelhouse
     - name: Release
-      if: ${{ github.event_name == 'tag' && startsWith(github.ref, 'v') }}
+      if: github.event_name == 'tag' && startsWith(github.ref, 'refs/tags')
       env:
         TWINE_NON_INTERACTIVE: 1
         TWINE_USERNAME: __token__
