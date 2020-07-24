@@ -1,5 +1,14 @@
 # Changelog
 
+## Pending
+
+### Fixed
+
+- On Django, only track the current user ID if `request.user` was accessed by
+  application code. This stops a `Vary: Cookie` header being injected due to
+  session data access.
+  ([Issue #544](https://github.com/scoutapp/scout_apm_python/issues/544)).
+
 ## [2.15.1] 2020-07-23
 
 ### Fixed

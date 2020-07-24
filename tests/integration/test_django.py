@@ -553,101 +553,61 @@ def test_no_monitor_server_error(tracked_requests):
     assert tracked_requests == []
 
 
-def fake_authentication_middleware(get_response):
-    def middleware(request):
-        # Mock the User instance to avoid a dependency on django.contrib.auth.
-        request.user = mock.Mock()
-        request.user.get_username.return_value = "scout"
-        return get_response(request)
-
-    return middleware
-
-
-@skip_unless_new_style_middleware
-def test_username(tracked_requests):
-    new_middleware = (
-        settings.MIDDLEWARE[:-1]
-        + [__name__ + ".fake_authentication_middleware"]
-        + settings.MIDDLEWARE[-1:]
-    )
-    with app_with_scout(MIDDLEWARE=new_middleware) as app:
-        response = TestApp(app).get("/hello/")
+def test_username_anonymous(tracked_request):
+    with app_with_scout() as app:
+        response = TestApp(app).get("/get-username/")
 
     assert response.status_int == 200
-    assert len(tracked_requests) == 1
-    tracked_request = tracked_requests[0]
-    assert tracked_request.tags["username"] == "scout"
+    assert tracked_request.tags["username"] == ""
+    # The view touched request.user, which touched request.session, causing
+    # SessionMiddleware to insert the Vary header
+    assert response.headers["Vary"] == "Cookie"
 
 
-def crashy_authentication_middleware(get_response):
-    def middleware(request):
-        # Mock the User instance to avoid a dependency on django.contrib.auth.
-        request.user = mock.Mock()
-        request.user.get_username.side_effect = ValueError
-        return get_response(request)
+def test_username_logged_in(tracked_requests):
+    with app_with_scout() as app:
+        admin_user = make_admin_user()
+        test_app = TestApp(app)
 
-    return middleware
+        # Log in via admin form
+        login_response = test_app.get("/admin/login/")
+        assert login_response.status_int == 200
+        form = login_response.form
+        form["username"] = admin_user.username
+        form["password"] = admin_user.testing_password
+        form.submit()
+
+        response = test_app.get("/get-username/")
+
+    assert response.status_int == 200
+    assert len(tracked_requests) == 3
+    tracked_request = tracked_requests[-1]
+    assert tracked_request.tags["username"] == admin_user.username
+    # The view touched request.user, which touched request.session, causing
+    # SessionMiddleware to insert the Vary header
+    assert response.headers["Vary"] == "Cookie"
 
 
-@skip_unless_new_style_middleware
-def test_username_exception(tracked_requests):
-    new_middleware = (
-        settings.MIDDLEWARE[:-1]
-        + [__name__ + ".crashy_authentication_middleware"]
-        + settings.MIDDLEWARE[-1:]
-    )
-    with app_with_scout(MIDDLEWARE=new_middleware) as app:
+def test_username_not_tagged_when_user_not_accessed(tracked_request):
+    with app_with_scout() as app:
         response = TestApp(app).get("/")
 
-    assert response.status_int == 200
-    assert len(tracked_requests) == 1
-    tracked_request = tracked_requests[0]
+    assert "Vary" not in response.headers
     assert "username" not in tracked_request.tags
 
 
-class FakeAuthenticationMiddleware(object):
-    def process_request(self, request):
-        # Mock the User instance to avoid a dependency on django.contrib.auth.
-        request.user = mock.Mock()
-        request.user.get_username.return_value = "scout"
+def test_username_exception(tracked_request):
+    with app_with_scout() as app:
+        from django.contrib.auth.models import AnonymousUser
 
-
-@skip_unless_old_style_middleware
-def test_old_style_username(tracked_requests):
-    new_middleware = (
-        settings.MIDDLEWARE_CLASSES[:-1]
-        + [__name__ + ".FakeAuthenticationMiddleware"]
-        + settings.MIDDLEWARE_CLASSES[-1:]
-    )
-    with app_with_scout(MIDDLEWARE_CLASSES=new_middleware) as app:
-        response = TestApp(app).get("/")
+        with mock.patch.object(
+            AnonymousUser,
+            "get_username",
+            mock.Mock(side_effect=ValueError("Test Exception")),
+        ):
+            response = TestApp(app).get("/get-username/")
 
     assert response.status_int == 200
-    assert len(tracked_requests) == 1
-    tracked_request = tracked_requests[0]
-    assert tracked_request.tags["username"] == "scout"
-
-
-class CrashyAuthenticationMiddleware(object):
-    def process_request(self, request):
-        # Mock the User instance to avoid a dependency on django.contrib.auth.
-        request.user = mock.Mock()
-        request.user.get_username.side_effect = ValueError
-
-
-@skip_unless_old_style_middleware
-def test_old_style_username_exception(tracked_requests):
-    new_middleware = (
-        settings.MIDDLEWARE_CLASSES[:-1]
-        + [__name__ + ".CrashyAuthenticationMiddleware"]
-        + settings.MIDDLEWARE_CLASSES[-1:]
-    )
-    with app_with_scout(MIDDLEWARE_CLASSES=new_middleware) as app:
-        response = TestApp(app).get("/")
-
-    assert response.status_int == 200
-    assert len(tracked_requests) == 1
-    tracked_request = tracked_requests[0]
     assert "username" not in tracked_request.tags
 
 

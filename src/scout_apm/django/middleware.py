@@ -136,7 +136,11 @@ def track_request_view_data(request, tracked_request):
         except Exception:
             pass
 
-    user = getattr(request, "user", None)
+    # Django's request.user caches in this attribute on first access. We only
+    # want to track the user if the application code has touched request.user
+    # because touching it causes session access, which adds "Cookie" to the
+    # "Vary" header.
+    user = getattr(request, "_cached_user", None)
     if user is not None:
         try:
             tracked_request.tag("username", user.get_username())
@@ -209,6 +213,7 @@ class ViewTimingMiddleware(object):
         tracked_request.start_span(operation="Unknown", should_capture_backtrace=False)
         try:
             response = self.get_response(request)
+            track_request_view_data(request, tracked_request)
             if 500 <= response.status_code <= 599:
                 tracked_request.tag("error", "true")
             return response
@@ -223,8 +228,6 @@ class ViewTimingMiddleware(object):
             return
         tracked_request = TrackedRequest.instance()
         tracked_request.is_real_request = True
-
-        track_request_view_data(request, tracked_request)
 
         span = tracked_request.current_span()
         if span is not None:
@@ -288,8 +291,6 @@ class OldStyleViewMiddleware(object):
 
         tracked_request.is_real_request = True
 
-        track_request_view_data(request, tracked_request)
-
         span = tracked_request.start_span(
             operation=get_operation_name(request), should_capture_backtrace=False
         )
@@ -303,6 +304,8 @@ class OldStyleViewMiddleware(object):
             # Looks like OldStyleMiddlewareTimingMiddleware didn't run, so
             # don't do anything
             return response
+
+        track_request_view_data(request, tracked_request)
 
         # Only stop span if we started, but presume we are balanced, i.e. that
         # custom instrumentation within the application is not causing errors
