@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-18.04
 
     strategy:
+      fail-fast: false
       matrix:
         python-version:
         - 2.7
