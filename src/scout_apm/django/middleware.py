@@ -136,8 +136,8 @@ def track_request_view_data(request, tracked_request):
         except Exception:
             pass
 
-    user = getattr(request, "user", None)
-    if user is not None:
+    if request and hasattr(request, '_cached_user'):
+        user = request._cached_user
         try:
             tracked_request.tag("username", user.get_username())
         except Exception:
