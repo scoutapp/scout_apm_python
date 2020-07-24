@@ -558,7 +558,7 @@ def test_username_anonymous(tracked_request):
         response = TestApp(app).get("/get-username/")
 
     assert response.status_int == 200
-    assert "username" not in tracked_request.tags
+    assert tracked_request.tags["username"] == ""
     # The view touched request.user, which touched request.session, causing
     # SessionMiddleware to insert the Vary header
     assert response.headers["Vary"] == "Cookie"
