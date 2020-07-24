@@ -1,6 +1,6 @@
 # Changelog
 
-## Pending
+## [2.15.2] 2020-07-24
 
 ### Fixed
 
