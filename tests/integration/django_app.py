@@ -91,6 +91,10 @@ class CbvView(View):
         return HttpResponse("Hello getter")
 
 
+def get_username(request):
+    return HttpResponse(request.user.username)
+
+
 def sql(request):
     with connection.cursor() as cursor:
         cursor.execute("CREATE TABLE IF NOT EXISTS test(item)")
@@ -218,6 +222,7 @@ def urlpatterns():
             path("crash/", crash),
             path("return-error/", return_error),
             path("cbv/", CbvView.as_view()),
+            path("get-username/", get_username),
             path("sql/", sql),
             path("sql-kwargs/", sql_kwargs),
             path("sql-type-errors/", sql_type_errors),
@@ -239,6 +244,7 @@ def urlpatterns():
             url(r"^crash/$", crash),
             url(r"^return-error/$", return_error),
             url(r"^cbv/$", CbvView.as_view()),
+            url(r"^get-username/$", get_username),
             url(r"^sql/$", sql),
             url(r"^sql-kwargs/$", sql_kwargs),
             url(r"^sql-type-errors/$", sql_type_errors),
