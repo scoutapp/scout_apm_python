@@ -19,6 +19,11 @@ else:
         from redis import StrictRedis as Redis
         from redis.client import BasePipeline as Pipeline
 
+try:
+    from scout_apm.async_.instruments.redis import ensure_async_installed
+except ImportError:
+    ensure_async_installed = None
+
 logger = logging.getLogger(__name__)
 
 
@@ -55,6 +60,9 @@ def ensure_installed():
                 )
             else:
                 have_patched_pipeline_execute = True
+
+    if ensure_async_installed is not None:
+        ensure_async_installed()
 
     return True
 
