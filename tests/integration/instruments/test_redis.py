@@ -7,7 +7,7 @@ import os
 import pytest
 import redis
 
-from scout_apm.instruments.redis import ensure_installed
+from scout_apm.instruments.redis import ensure_async_installed, ensure_installed
 from tests.compat import mock
 
 
@@ -24,9 +24,13 @@ def test_ensure_installed_twice(caplog):
     ensure_installed()
     ensure_installed()
 
-    assert caplog.record_tuples == 2 * [
-        ("scout_apm.instruments.redis", logging.DEBUG, "Instrumenting redis.",)
-    ]
+    log_lines = (
+        "scout_apm.instruments.redis",
+        logging.DEBUG,
+        "Instrumenting redis.",
+    )
+
+    assert caplog.record_tuples.count(log_lines) == 2
 
 
 def test_install_fail_no_redis(caplog):
@@ -34,7 +38,7 @@ def test_install_fail_no_redis(caplog):
     with mock_no_redis:
         ensure_installed()
 
-    assert caplog.record_tuples == [
+    assert caplog.record_tuples[:2] == [
         ("scout_apm.instruments.redis", logging.DEBUG, "Instrumenting redis.",),
         (
             "scout_apm.instruments.redis",
@@ -54,7 +58,11 @@ def test_ensure_installed_fail_no_redis_execute_command(caplog):
 
         ensure_installed()
 
-    assert len(caplog.record_tuples) == 2
+    if ensure_async_installed is None:
+        assert len(caplog.record_tuples) == 2
+    else:
+        assert len(caplog.record_tuples) == 3
+
     assert caplog.record_tuples[0] == (
         "scout_apm.instruments.redis",
         logging.DEBUG,
@@ -78,7 +86,11 @@ def test_ensure_installed_fail_no_pipeline_execute(caplog):
 
         ensure_installed()
 
-    assert len(caplog.record_tuples) == 2
+    if ensure_async_installed is None:
+        assert len(caplog.record_tuples) == 2
+    else:
+        assert len(caplog.record_tuples) == 3
+
     assert caplog.record_tuples[0] == (
         "scout_apm.instruments.redis",
         logging.DEBUG,
