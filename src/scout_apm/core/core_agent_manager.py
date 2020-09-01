@@ -1,6 +1,8 @@
 # coding=utf-8
+# coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import errno
 import hashlib
 import json
 import logging
@@ -11,7 +13,7 @@ import time
 
 from urllib3.exceptions import HTTPError
 
-from scout_apm.compat import urllib3_cert_pool_manager
+from scout_apm.compat import CouldNotOpenFile, text_type, urllib3_cert_pool_manager
 from scout_apm.core.config import scout_config
 
 logger = logging.getLogger(__name__)
@@ -120,8 +122,8 @@ class CoreAgentManager(object):
             return []
 
     def verify(self):
-        manifest = CoreAgentManifest(self.core_agent_dir + "/manifest.json")
-        if not manifest.is_valid():
+        manifest = parse_manifest(self.core_agent_dir + "/manifest.json")
+        if manifest is None:
             logger.debug(
                 "Core Agent verification failed: CoreAgentManifest is not valid."
             )
@@ -129,7 +131,7 @@ class CoreAgentManager(object):
             self.core_agent_bin_version = None
             return False
 
-        bin_path = self.core_agent_dir + "/" + manifest.bin_name
+        bin_path = os.path.join(self.core_agent_dir, manifest.bin_name)
         if sha256_digest(bin_path) == manifest.sha256:
             self.core_agent_bin_path = bin_path
             self.core_agent_bin_version = manifest.bin_version
@@ -230,33 +232,50 @@ class CoreAgentDownloader(object):
         return scout_config.value("download_url")
 
 
+def parse_manifest(path):
+    try:
+        manifest_file = open(path)
+    except CouldNotOpenFile as exc:
+        if exc.errno == errno.ENOENT:
+            logger.debug("Core Agent Manifest does not exist at %s", path)
+        else:
+            logger.debug("Error opening Core Agent Manifest at %s", path, exc_info=exc)
+        return None
+
+    try:
+        with manifest_file:
+            data = json.load(manifest_file)
+            logger.debug("Core Agent manifest json: %s", data)
+
+            bin_name = data["core_agent_binary"]
+            if not isinstance(bin_name, text_type):
+                raise TypeError("core_agent_binary should be a string.")
+            bin_version = data["core_agent_version"]
+            if not isinstance(bin_version, text_type):
+                raise TypeError("core_agent_version should be a string.")
+            sha256 = data["core_agent_binary_sha256"]
+            if not isinstance(sha256, text_type):
+                raise TypeError("core_agent_binary_sha256 should be a string.")
+
+            return CoreAgentManifest(
+                bin_name=bin_name,
+                bin_version=bin_version,
+                sha256=sha256,
+            )
+
+    # IOError => OSError on Python 3
+    except (KeyError, ValueError, TypeError, OSError, IOError) as exc:  # noqa: B014
+        logger.debug("Error parsing Core Agent Manifest", exc_info=exc)
+        return None
+
+
 class CoreAgentManifest(object):
-    def __init__(self, path):
-        self.manifest_path = path
-        self.bin_name = None
-        self.bin_version = None
-        self.sha256 = None
-        self.valid = False
-        try:
-            self.parse()
-        # noqa for this issue: https://github.com/PyCQA/flake8-bugbear/issues/110
-        except (ValueError, TypeError, OSError, IOError) as exc:  # noqa: B014
-            logger.debug("Error parsing Core Agent Manifest", exc_info=exc)
+    __slots__ = ("bin_name", "bin_version", "sha256")
 
-    def parse(self):
-        logger.debug("Parsing Core Agent manifest path: %s", self.manifest_path)
-        with open(self.manifest_path) as manifest_file:
-            self.raw = manifest_file.read()
-            self.json = json.loads(self.raw)
-            self.version = self.json["version"]
-            self.bin_version = self.json["core_agent_version"]
-            self.bin_name = self.json["core_agent_binary"]
-            self.sha256 = self.json["core_agent_binary_sha256"]
-            self.valid = True
-            logger.debug("Core Agent manifest json: %s", self.json)
-
-    def is_valid(self):
-        return self.valid
+    def __init__(self, bin_name, bin_version, sha256):
+        self.bin_name = bin_name
+        self.bin_version = bin_version
+        self.sha256 = sha256
 
 
 def sha256_digest(filename, block_size=65536):
