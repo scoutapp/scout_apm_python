@@ -6,6 +6,8 @@
 
 - Fixed validation check on length of key.
   ([Issue #563](https://github.com/scoutapp/scout_apm_python/issues/563))
+- Update Core Agent to version 1.2.10, fixing several bugs.
+  ([Issue #567](https://github.com/scoutapp/scout_apm_python/issues/567))
 
 ## [2.15.2] 2020-07-24
 
