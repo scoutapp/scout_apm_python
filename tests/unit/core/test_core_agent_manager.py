@@ -30,8 +30,13 @@ class TestParseManifest(object):
             error = IOError("Woops", errno.EACCES)
         else:
             error = OSError(errno.EACCES)
+        mock_open = mock.patch(
+            "scout_apm.core.core_agent_manager.open",
+            create=True,
+            side_effect=error,
+        )
 
-        with mock.patch("scout_apm.core.core_agent_manager.open", side_effect=error):
+        with mock_open:
             result = parse_manifest(filename)
 
         assert result is None
