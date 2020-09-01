@@ -1,4 +1,5 @@
 # coding=utf-8
+# coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import errno
@@ -261,7 +262,9 @@ def parse_manifest(path):
                 bin_version=bin_version,
                 sha256=sha256,
             )
-    except (KeyError, ValueError, TypeError, OSError, IOError) as exc:
+
+    # IOError => OSError on Python 3
+    except (KeyError, ValueError, TypeError, OSError, IOError) as exc:  # noqa: B014
         logger.debug("Error parsing Core Agent Manifest", exc_info=exc)
         return None
 
