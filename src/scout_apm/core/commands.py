@@ -8,7 +8,7 @@ from scout_apm.compat import iteritems
 
 logger = logging.getLogger(__name__)
 
-key_regex = re.compile(r"^[a-zA-Z0-9]{16}$")
+key_regex = re.compile(r"^[a-zA-Z0-9]{20}$")
 
 
 class Register(object):

@@ -26,13 +26,13 @@ END_TIME_STR = "2018-12-01T17:04:34.641403Z"
 
 def test_register_message_good_key(caplog):
     command = commands.Register(
-        app="test_app", key="abcdefghijabcdef", hostname="test_host"
+        app="test_app", key="abcdefghijabcdefghij", hostname="test_host"
     )
 
     assert command.message() == {
         "Register": {
             "app": "test_app",
-            "key": "abcdefghijabcdef",
+            "key": "abcdefghijabcdefghij",
             "host": "test_host",
             "language": "python",
             "api_version": "1.0",

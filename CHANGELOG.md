@@ -1,5 +1,12 @@
 # Changelog
 
+## Pending
+
+### Fixed
+
+- Fixed validation check on length of key.
+  ([Issue #563](https://github.com/scoutapp/scout_apm_python/issues/563))
+
 ## [2.15.2] 2020-07-24
 
 ### Fixed
@@ -7,7 +14,7 @@
 - On Django, only track the current user ID if `request.user` was accessed by
   application code. This stops a `Vary: Cookie` header being injected due to
   session data access.
-  ([Issue #544](https://github.com/scoutapp/scout_apm_python/issues/544)).
+  ([Issue #544](https://github.com/scoutapp/scout_apm_python/issues/544))
 
 ## [2.15.1] 2020-07-23
 
