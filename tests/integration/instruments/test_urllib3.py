@@ -22,7 +22,11 @@ def test_ensure_installed_twice(caplog):
     ensure_installed()
 
     assert caplog.record_tuples == 2 * [
-        ("scout_apm.instruments.urllib3", logging.DEBUG, "Instrumenting urllib3.",)
+        (
+            "scout_apm.instruments.urllib3",
+            logging.DEBUG,
+            "Instrumenting urllib3.",
+        )
     ]
 
 
@@ -34,7 +38,11 @@ def test_install_fail_no_httpconnectionpool(caplog):
         ensure_installed()
 
     assert caplog.record_tuples == [
-        ("scout_apm.instruments.urllib3", logging.DEBUG, "Instrumenting urllib3.",),
+        (
+            "scout_apm.instruments.urllib3",
+            logging.DEBUG,
+            "Instrumenting urllib3.",
+        ),
         (
             "scout_apm.instruments.urllib3",
             logging.DEBUG,

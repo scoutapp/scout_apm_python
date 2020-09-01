@@ -54,7 +54,10 @@ class ScoutConfig(object):
 
             layer = self.locate_layer_for_key(key)
             logger.debug(
-                "%-9s: %s = %s", layer.__class__.__name__, key, layer.value(key),
+                "%-9s: %s = %s",
+                layer.__class__.__name__,
+                key,
+                layer.value(key),
             )
 
     known_keys = [

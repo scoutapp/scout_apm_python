@@ -35,6 +35,7 @@ class ScoutMiddleware(FalconMiddleware):
 def integrate_scout(hug_module_name, config):
     http_interface = hug.API(hug_module_name).http
     scout_middleware = ScoutMiddleware(
-        config=config, hug_http_interface=http_interface,
+        config=config,
+        hug_http_interface=http_interface,
     )
     http_interface.add_middleware(scout_middleware)

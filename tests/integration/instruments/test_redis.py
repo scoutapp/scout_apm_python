@@ -25,7 +25,11 @@ def test_ensure_installed_twice(caplog):
     ensure_installed()
 
     assert caplog.record_tuples == 2 * [
-        ("scout_apm.instruments.redis", logging.DEBUG, "Instrumenting redis.",)
+        (
+            "scout_apm.instruments.redis",
+            logging.DEBUG,
+            "Instrumenting redis.",
+        )
     ]
 
 
@@ -35,7 +39,11 @@ def test_install_fail_no_redis(caplog):
         ensure_installed()
 
     assert caplog.record_tuples == [
-        ("scout_apm.instruments.redis", logging.DEBUG, "Instrumenting redis.",),
+        (
+            "scout_apm.instruments.redis",
+            logging.DEBUG,
+            "Instrumenting redis.",
+        ),
         (
             "scout_apm.instruments.redis",
             logging.DEBUG,
