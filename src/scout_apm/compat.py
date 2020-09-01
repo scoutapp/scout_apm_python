@@ -25,6 +25,12 @@ else:
         return dictionary.iteritems()  # noqa: B301
 
 
+# open() raises OSError, or a specific subclass, on Python 3+
+if sys.version_info >= (3, 3):
+    CouldNotOpenFile = OSError
+else:
+    CouldNotOpenFile = IOError
+
 if sys.version_info >= (3, 2):
     from contextlib import ContextDecorator
 else:
