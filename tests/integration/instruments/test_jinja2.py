@@ -30,7 +30,11 @@ def test_ensure_installed_twice(caplog):
     ensure_installed()
 
     assert caplog.record_tuples == 2 * [
-        ("scout_apm.instruments.jinja2", logging.DEBUG, "Instrumenting Jinja2.",)
+        (
+            "scout_apm.instruments.jinja2",
+            logging.DEBUG,
+            "Instrumenting Jinja2.",
+        )
     ]
 
 
@@ -40,7 +44,11 @@ def test_ensure_installed_fail_no_template(caplog):
         ensure_installed()
 
     assert caplog.record_tuples == [
-        ("scout_apm.instruments.jinja2", logging.DEBUG, "Instrumenting Jinja2.",),
+        (
+            "scout_apm.instruments.jinja2",
+            logging.DEBUG,
+            "Instrumenting Jinja2.",
+        ),
         (
             "scout_apm.instruments.jinja2",
             logging.DEBUG,

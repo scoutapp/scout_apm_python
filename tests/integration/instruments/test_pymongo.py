@@ -58,7 +58,11 @@ def test_ensure_installed_twice(caplog):
     ensure_installed()
 
     assert caplog.record_tuples == 2 * [
-        ("scout_apm.instruments.pymongo", logging.DEBUG, "Instrumenting pymongo.",)
+        (
+            "scout_apm.instruments.pymongo",
+            logging.DEBUG,
+            "Instrumenting pymongo.",
+        )
     ]
 
 
@@ -70,7 +74,11 @@ def test_ensure_installed_fail_no_collection(caplog):
         ensure_installed()
 
     assert caplog.record_tuples == [
-        ("scout_apm.instruments.pymongo", logging.DEBUG, "Instrumenting pymongo.",),
+        (
+            "scout_apm.instruments.pymongo",
+            logging.DEBUG,
+            "Instrumenting pymongo.",
+        ),
         (
             "scout_apm.instruments.pymongo",
             logging.DEBUG,

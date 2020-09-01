@@ -114,7 +114,8 @@ def test_user_ip(headers, client_address, expected, tracked_requests):
 def test_user_ip_collection_disabled(tracked_requests):
     with app_with_scout(config={"SCOUT_COLLECT_REMOTE_IP": False}) as app:
         TestApp(app).get(
-            "/", extra_environ={str("REMOTE_ADDR"): str("1.1.1.1")},
+            "/",
+            extra_environ={str("REMOTE_ADDR"): str("1.1.1.1")},
         )
 
     tracked_request = tracked_requests[0]

@@ -209,7 +209,8 @@ def test_float_conversion_from_env():
 
 
 @pytest.mark.parametrize(
-    "original, converted", [("0", 0.0), ("2", 2.0), ("x", 0.0)],
+    "original, converted",
+    [("0", 0.0), ("2", 2.0), ("x", 0.0)],
 )
 def test_float_conversion_from_python(original, converted):
     ScoutConfig.set(shutdown_timeout_seconds=original)
