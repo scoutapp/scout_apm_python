@@ -174,4 +174,3 @@ PyInit__objtrace(void)
     PyModule_AddObject(m, "__version__", version);
     return m;
 }
-
