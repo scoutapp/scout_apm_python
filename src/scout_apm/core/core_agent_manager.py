@@ -290,7 +290,7 @@ def sha256_digest(filename, block_size=65536):
         return None
 
 
-class SocketPath(str):
+class SocketPath(text_type):
     @property
     def is_tcp(self):
         return self.startswith("tcp://")
