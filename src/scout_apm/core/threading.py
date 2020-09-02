@@ -23,7 +23,6 @@ class SingletonThread(threading.Thread):
             if cls._instance is None or not cls._instance.is_alive():
                 cls._instance = cls()
                 cls._instance.start()
-            return
 
     @classmethod
     def ensure_stopped(cls):
