@@ -88,7 +88,7 @@ class CoreAgentManager(object):
     def socket_path(self):
         path = get_socket_path()
         if path.is_tcp:
-            return ["--tcp", path]
+            return ["--tcp", path.tcp_address]
         else:
             return ["--socket", path]
 
@@ -294,6 +294,10 @@ class SocketPath(text_type):
     @property
     def is_tcp(self):
         return self.startswith("tcp://")
+
+    @property
+    def tcp_address(self):
+        return self[len("tcp://") :]
 
 
 def get_socket_path():
