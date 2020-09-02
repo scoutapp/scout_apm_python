@@ -5,7 +5,8 @@ import errno
 import logging
 import sys
 
-from scout_apm.core.core_agent_manager import parse_manifest
+from scout_apm.core.config import scout_config
+from scout_apm.core.core_agent_manager import get_socket_path, parse_manifest
 from tests.compat import mock
 
 
@@ -109,3 +110,26 @@ class TestParseManifest(object):
         assert logger == "scout_apm.core.core_agent_manager"
         assert level == logging.DEBUG
         assert message.startswith("Core Agent manifest json: ")
+
+
+class TestGetSocketPath(object):
+    def test_from_socket_path(self):
+        scout_config.set(socket_path="/tmp/my.sock")
+        try:
+            assert get_socket_path() == "/tmp/my.sock"
+        finally:
+            scout_config.reset_all()
+
+    def test_from_core_agent_socket_path(self):
+        scout_config.set(core_agent_socket_path="/tmp/that.sock")
+        try:
+            assert get_socket_path() == "/tmp/that.sock"
+        finally:
+            scout_config.reset_all()
+
+    def test_derived(self):
+        scout_config.set(core_agent_dir="/tmp/mydir", core_agent_full_name="my-agent")
+        try:
+            assert get_socket_path() == "/tmp/mydir/my-agent/scout-agent.sock"
+        finally:
+            scout_config.reset_all()

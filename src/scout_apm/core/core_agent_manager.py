@@ -86,11 +86,7 @@ class CoreAgentManager(object):
         return ["--daemonize", "true"]
 
     def socket_path(self):
-        # Old deprecated name "socket_path"
-        socket_path = scout_config.value("socket_path")
-        if socket_path is None:
-            socket_path = scout_config.value("core_agent_socket_path")
-        return ["--socket", socket_path]
+        return ["--socket", get_socket_path()]
 
     def log_level(self):
         # Old deprecated name "log_level"
@@ -288,3 +284,18 @@ def sha256_digest(filename, block_size=65536):
     except OSError as exc:
         logger.debug("Error on digest", exc_info=exc)
         return None
+
+
+def get_socket_path():
+    # Old deprecated name "socket_path"
+    socket_path = scout_config.value("socket_path")
+    # New name, but not set with any default so it can be derived
+    if socket_path is None:
+        socket_path = scout_config.value("core_agent_socket_path")
+    if socket_path is None:
+        # Derive it
+        socket_path = "{}/{}/scout-agent.sock".format(
+            scout_config.value("core_agent_dir"),
+            scout_config.value("core_agent_full_name"),
+        )
+    return socket_path

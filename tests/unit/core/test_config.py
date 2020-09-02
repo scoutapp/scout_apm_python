@@ -4,7 +4,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 import os
 import pprint
-import re
 import sys
 
 import pytest
@@ -35,22 +34,6 @@ def test_unset_config_value_from_python():
     ScoutConfig.set(revision_sha="foobar")
     ScoutConfig.unset("revision_sha")
     assert ScoutConfig().value("revision_sha") == ""  # from defaults
-
-
-def test_get_derived_config_value():
-    ScoutConfig.set(core_agent_version="v1.1.8")
-    config = ScoutConfig()
-    try:
-        assert re.match(
-            r"/tmp/scout_apm_core/scout_apm_core"
-            r"-v1\.1\.8"
-            r"-(x86_64|i686|unknown)"
-            r"-(unknown-linux-gnu|apple-darwin|unknown)"
-            r"/scout-agent\.sock",
-            config.value("core_agent_socket_path"),
-        )
-    finally:
-        ScoutConfig.reset_all()
 
 
 def test_override_triple(caplog):
