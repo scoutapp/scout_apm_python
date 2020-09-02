@@ -33,7 +33,7 @@ class TestCoreAgentManager(object):
         finally:
             scout_config.reset_all()
 
-        assert result == ["--tcp", "tcp://127.0.0.1:7894"]
+        assert result == ["--tcp", "127.0.0.1:7894"]
 
     def test_log_level(self):
         scout_config.set(core_agent_log_level="foo")
