@@ -26,8 +26,8 @@ else:
     from tempfile import mkdtemp
 
     @contextmanager
-    def TemporaryDirectory():
-        tempdir = mkdtemp()
+    def TemporaryDirectory(*args, **kwargs):
+        tempdir = mkdtemp(*args, **kwargs)
         try:
             yield tempdir
         finally:
