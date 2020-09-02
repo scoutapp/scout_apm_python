@@ -9,7 +9,7 @@ import pytest
 from scout_apm.core.config import scout_config
 from scout_apm.core.core_agent_manager import CoreAgentManager
 from tests.compat import mock
-from tests.conftest import core_agent_is_running, shutdown
+from tests.conftest import core_agent_is_running, terminate_core_agent_processes
 
 # Tests must execute in the order in which they are defined.
 
@@ -60,8 +60,8 @@ def test_no_verify(caplog, core_agent_manager):
     "path",
     [
         None,
-        # "tcp://127.0.0.1:5678",
-        # "/tmp/scout-tests.sock",
+        "tcp://127.0.0.1:5678",
+        "/tmp/scout-tests.sock",
     ],
 )
 def test_download_and_launch(path, core_agent_manager):
@@ -81,7 +81,7 @@ def test_download_and_launch(path, core_agent_manager):
         else:
             raise AssertionError("Could not find core agent running")
 
-        shutdown(core_agent_manager)
+        terminate_core_agent_processes()
     finally:
         scout_config.reset_all()
 

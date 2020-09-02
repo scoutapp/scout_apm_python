@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 import os
-import subprocess
 import sys
 
 import psutil
@@ -108,10 +107,8 @@ def isolate_global_state():
 
 
 @pytest.fixture(autouse=True, scope="session")
-def terminate_running_core_agents():
-    for process in psutil.process_iter(["name"]):
-        if process.name() == "core-agent":
-            process.terminate()
+def terminate_core_agent_processes_at_start_of_tests():
+    terminate_core_agent_processes()
     yield
 
 
@@ -141,8 +138,10 @@ def core_agent_is_running():
     return any(p.name() == "core-agent" for p in psutil.process_iter(["name"]))
 
 
-def shutdown(core_agent_manager):
-    subprocess.check_call([core_agent_manager.core_agent_bin_path, "shutdown"])
+def terminate_core_agent_processes():
+    for process in psutil.process_iter(["name"]):
+        if process.name() == "core-agent":
+            process.terminate()
 
 
 # Make all timeouts shorter so that tests exercising them run faster.
