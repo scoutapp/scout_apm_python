@@ -86,7 +86,11 @@ class CoreAgentManager(object):
         return ["--daemonize", "true"]
 
     def socket_path(self):
-        return ["--socket", get_socket_path()]
+        path = get_socket_path()
+        if path.is_tcp:
+            return ["--tcp", path]
+        else:
+            return ["--socket", path]
 
     def log_level(self):
         # Old deprecated name "log_level"
@@ -286,16 +290,15 @@ def sha256_digest(filename, block_size=65536):
         return None
 
 
+class SocketPath(str):
+    @property
+    def is_tcp(self):
+        return self.startswith("tcp://")
+
+
 def get_socket_path():
     # Old deprecated name "socket_path"
     socket_path = scout_config.value("socket_path")
-    # New name, but not set with any default so it can be derived
     if socket_path is None:
         socket_path = scout_config.value("core_agent_socket_path")
-    if socket_path is None:
-        # Derive it
-        socket_path = "{}/{}/scout-agent.sock".format(
-            scout_config.value("core_agent_dir"),
-            scout_config.value("core_agent_full_name"),
-        )
-    return socket_path
+    return SocketPath(socket_path)

@@ -127,9 +127,16 @@ class TestGetSocketPath(object):
         finally:
             scout_config.reset_all()
 
-    def test_derived(self):
-        scout_config.set(core_agent_dir="/tmp/mydir", core_agent_full_name="my-agent")
+    def test_not_tcp(self):
+        scout_config.set(core_agent_socket_path="/tmp/that.sock")
         try:
-            assert get_socket_path() == "/tmp/mydir/my-agent/scout-agent.sock"
+            assert not get_socket_path().is_tcp
+        finally:
+            scout_config.reset_all()
+
+    def test_tcp(self):
+        scout_config.set(core_agent_socket_path="tcp://127.0.0.1:1234")
+        try:
+            assert get_socket_path().is_tcp
         finally:
             scout_config.reset_all()
