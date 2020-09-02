@@ -190,12 +190,6 @@ class Derived(object):
         func_name = "derive_" + key
         return getattr(self, func_name, None)
 
-    def derive_core_agent_socket_path(self):
-        return "{}/{}/scout-agent.sock".format(
-            self.config.value("core_agent_dir"),
-            self.config.value("core_agent_full_name"),
-        )
-
     def derive_core_agent_full_name(self):
         triple = self.config.value("core_agent_triple")
         if not platform_detection.is_valid_triple(triple):

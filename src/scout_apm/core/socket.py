@@ -12,6 +12,7 @@ import time
 from scout_apm.compat import queue
 from scout_apm.core.commands import Register
 from scout_apm.core.config import scout_config
+from scout_apm.core.core_agent_manager import get_socket_path
 from scout_apm.core.threading import SingletonThread
 
 # Time unit - monkey-patched in tests to make them run faster
@@ -65,11 +66,7 @@ class CoreAgentSocketThread(SingletonThread):
         return queue_empty
 
     def run(self):
-        # Old deprecated name "socket_path"
-        socket_path = scout_config.value("socket_path")
-        if socket_path is None:
-            socket_path = scout_config.value("core_agent_socket_path")
-        self.socket_path = socket_path
+        self.socket_path = get_socket_path()
         self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 
         try:
