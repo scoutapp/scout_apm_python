@@ -133,14 +133,11 @@ def core_agent_manager(core_agent_dir):
     try:
         yield core_agent_manager
     finally:
-        assert not is_running(core_agent_manager)
+        assert not core_agent_is_running()
         scout_config.reset_all()
 
 
-def is_running(core_agent_manager):
-    if core_agent_manager.core_agent_bin_path is None:
-        return False
-
+def core_agent_is_running():
     return any(p.name() == "core-agent" for p in psutil.process_iter(["name"]))
 
 

@@ -7,20 +7,20 @@ import pytest
 
 from scout_apm.core.socket import CoreAgentSocketThread
 from tests.compat import mock
-from tests.conftest import is_running, shutdown
+from tests.conftest import core_agent_is_running, shutdown
 
 
 @pytest.fixture
 def running_agent(core_agent_manager):
-    assert not is_running(core_agent_manager)
+    assert not core_agent_is_running()
     assert core_agent_manager.launch()
     time.sleep(0.01)  # wait for agent to start running
-    assert is_running(core_agent_manager)
+    assert core_agent_is_running()
     try:
         yield
     finally:
         shutdown(core_agent_manager)
-        assert not is_running(core_agent_manager)
+        assert not core_agent_is_running()
 
 
 @pytest.fixture
