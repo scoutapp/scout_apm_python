@@ -16,20 +16,12 @@ async def wrapped_redis_execute(wrapped, instance, args, kwargs):
         op = "Unknown"
 
     tracked_request = TrackedRequest.instance()
-    tracked_request.start_span(operation="Redis/{}".format(op))
-
-    try:
+    with tracked_request.span(operation="Redis/{}".format(op)):
         return await wrapped(*args, **kwargs)
-    finally:
-        tracked_request.stop_span()
 
 
 @wrapt.decorator
 async def wrapped_pipeline_execute(wrapped, instance, args, kwargs):
     tracked_request = TrackedRequest.instance()
-    tracked_request.start_span(operation="Redis/MULTI")
-
-    try:
+    with tracked_request.span(operation="Redis/MULTI"):
         return await wrapped(*args, **kwargs)
-    finally:
-        tracked_request.stop_span()
