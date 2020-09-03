@@ -6,6 +6,7 @@ import logging
 import os
 import socket
 import struct
+import sys
 import threading
 import time
 
@@ -67,7 +68,7 @@ class CoreAgentSocketThread(SingletonThread):
 
     def run(self):
         self.socket_path = get_socket_path()
-        self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self.socket = self.make_socket()
 
         try:
             self._connect()
@@ -174,7 +175,7 @@ class CoreAgentSocketThread(SingletonThread):
                 threading.current_thread(),
             )
             try:
-                self.socket.connect(self.socket_path)
+                self.socket.connect(self.get_socket_address())
                 self.socket.settimeout(3 * SECOND)
                 logger.debug("CoreAgentSocketThread connected")
                 return True
@@ -196,4 +197,19 @@ class CoreAgentSocketThread(SingletonThread):
                 "CoreAgentSocketThread exception on disconnect: %r", exc, exc_info=exc
             )
         finally:
-            self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            self.socket = self.make_socket()
+
+    def make_socket(self):
+        if self.socket_path.is_tcp:
+            family = socket.AF_INET
+        else:
+            family = socket.AF_UNIX
+        return socket.socket(family, socket.SOCK_STREAM)
+
+    def get_socket_address(self):
+        if self.socket_path.is_tcp:
+            host, _, port = self.socket_path.tcp_address.partition(":")
+            if sys.version_info[0] == 2:
+                host = bytes(host)
+            return host, int(port)
+        return self.socket_path

@@ -7,20 +7,27 @@ import pytest
 
 from scout_apm.core.socket import CoreAgentSocketThread
 from tests.compat import mock
-from tests.conftest import is_running, shutdown
+from tests.conftest import core_agent_is_running, terminate_core_agent_processes
 
 
 @pytest.fixture
 def running_agent(core_agent_manager):
-    assert not is_running(core_agent_manager)
+    assert not core_agent_is_running()
     assert core_agent_manager.launch()
-    time.sleep(0.01)  # wait for agent to start running
-    assert is_running(core_agent_manager)
+
+    # Wait for agent to start running
+    for _ in range(400):
+        if core_agent_is_running():
+            break
+        time.sleep(0.01)
+    else:
+        raise AssertionError("Core agent did not start in 4 second")
+
     try:
         yield
     finally:
-        shutdown(core_agent_manager)
-        assert not is_running(core_agent_manager)
+        terminate_core_agent_processes()
+        assert not core_agent_is_running()
 
 
 @pytest.fixture
@@ -58,8 +65,6 @@ def test_send_network_error(sendall, socket):
 
 
 def test_wait_until_drained_empty(socket):
-    CoreAgentSocketThread.ensure_stopped()
-
     empty = CoreAgentSocketThread.wait_until_drained()
     assert empty
 
@@ -67,7 +72,7 @@ def test_wait_until_drained_empty(socket):
 def test_wait_until_drained_one_item(socket):
     CoreAgentSocketThread._command_queue.put(Command(), False)
 
-    empty = CoreAgentSocketThread.wait_until_drained(timeout_seconds=0.1)
+    empty = CoreAgentSocketThread.wait_until_drained()
     assert empty
 
 

@@ -3,9 +3,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 import os
-import subprocess
 import sys
 
+import psutil
 import pytest
 import wrapt
 from webtest import TestApp
@@ -106,46 +106,42 @@ def isolate_global_state():
                 )
 
 
+@pytest.fixture(autouse=True, scope="session")
+def terminate_core_agent_processes_at_start_of_tests():
+    terminate_core_agent_processes()
+    yield
+
+
 # Create a temporary directory for isolation between test sessions.
 # Do it once per test session to avoid downloading the core agent repeatedly.
 @pytest.fixture(autouse=True, scope="session")
 def core_agent_dir():
-    with TemporaryDirectory() as temp_dir:
+    # Use /tmp/ to avoid core agent startup error:
+    #   [socket::server][ERROR] Error opening listener on socket: Custom
+    #   { kind: InvalidInput, error: "path must be shorter than SUN_LEN" }
+    with TemporaryDirectory(dir="/tmp/") as temp_dir:
         yield temp_dir
 
 
 @pytest.fixture
 def core_agent_manager(core_agent_dir):
-    # Shorten path to socket to prevent core-agent from failing with:
-    #   Error opening listener on socket: Custom { kind: InvalidInput,
-    #   error: StringError("path must be shorter than SUN_LEN") }
-    socket_path = "{}/test.sock".format(core_agent_dir)
-    scout_config.set(core_agent_dir=core_agent_dir, core_agent_socket_path=socket_path)
+    scout_config.set(core_agent_dir=core_agent_dir)
     core_agent_manager = CoreAgentManager()
     try:
         yield core_agent_manager
     finally:
-        assert not is_running(core_agent_manager)
+        assert not core_agent_is_running()
         scout_config.reset_all()
 
 
-def is_running(core_agent_manager):
-    if core_agent_manager.core_agent_bin_path is None:
-        return False
-    agent_binary = [core_agent_manager.core_agent_bin_path, "probe"]
-    socket_path = core_agent_manager.socket_path()
-    probe = subprocess.check_output(agent_binary + socket_path)
-    if b"Agent found" in probe:
-        return True
-    if b"Agent Not Running" in probe:
-        return False
-    raise AssertionError("cannot tell if the core agent is running")
+def core_agent_is_running():
+    return any(p.name() == "core-agent" for p in psutil.process_iter(["name"]))
 
 
-def shutdown(core_agent_manager):
-    agent_binary = [core_agent_manager.core_agent_bin_path, "shutdown"]
-    socket_path = core_agent_manager.socket_path()
-    subprocess.check_call(agent_binary + socket_path)
+def terminate_core_agent_processes():
+    for process in psutil.process_iter(["name"]):
+        if process.name() == "core-agent":
+            process.terminate()
 
 
 # Make all timeouts shorter so that tests exercising them run faster.

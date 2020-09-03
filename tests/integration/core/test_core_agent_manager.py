@@ -4,9 +4,12 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 import time
 
+import pytest
+
 from scout_apm.core.config import scout_config
+from scout_apm.core.core_agent_manager import CoreAgentManager
 from tests.compat import mock
-from tests.conftest import is_running, shutdown
+from tests.conftest import core_agent_is_running, terminate_core_agent_processes
 
 # Tests must execute in the order in which they are defined.
 
@@ -20,7 +23,7 @@ def test_no_launch(caplog, core_agent_manager):
         scout_config.set(core_agent_launch=True)
 
     assert not result
-    assert not is_running(core_agent_manager)
+    assert not core_agent_is_running()
     assert caplog.record_tuples == [
         (
             "scout_apm.core.core_agent_manager",
@@ -42,7 +45,7 @@ def test_no_verify(caplog, core_agent_manager):
         scout_config.set(core_agent_download=True)
 
     assert not result
-    assert not is_running(core_agent_manager)
+    assert not core_agent_is_running()
     assert (
         "scout_apm.core.core_agent_manager",
         logging.DEBUG,
@@ -53,11 +56,34 @@ def test_no_verify(caplog, core_agent_manager):
     ) in caplog.record_tuples
 
 
-def test_download_and_launch(core_agent_manager):
-    assert core_agent_manager.launch()
-    time.sleep(0.01)  # wait for agent to start running
-    assert is_running(core_agent_manager)
-    shutdown(core_agent_manager)
+@pytest.mark.parametrize(
+    "path",
+    [
+        None,
+        "tcp://127.0.0.1:5678",
+        "/tmp/scout-tests.sock",
+    ],
+)
+def test_download_and_launch(path, core_agent_manager):
+    if path is not None:
+        scout_config.set(core_agent_socket_path=path)
+
+    try:
+        result = core_agent_manager.launch()
+
+        assert result is True
+
+        time.sleep(0.10)  # wait for agent to start running
+        for _ in range(10):
+            if core_agent_is_running():
+                break
+            time.sleep(0.1)
+        else:
+            raise AssertionError("Could not find core agent running")
+
+        terminate_core_agent_processes()
+    finally:
+        scout_config.reset_all()
 
 
 def test_verify_error(caplog, core_agent_manager):
@@ -75,7 +101,7 @@ def test_verify_error(caplog, core_agent_manager):
         result = core_agent_manager.launch()
 
     assert not result
-    assert not is_running(core_agent_manager)
+    assert not core_agent_is_running()
     assert (
         "scout_apm.core.core_agent_manager",
         logging.DEBUG,
@@ -86,79 +112,16 @@ def test_verify_error(caplog, core_agent_manager):
 def test_launch_error(caplog, core_agent_manager):
     caplog.set_level(logging.ERROR)
     exception = ValueError("Hello Fail")
-    with mock.patch(
-        "scout_apm.core.core_agent_manager.CoreAgentManager.agent_binary",
+    with mock.patch.object(
+        CoreAgentManager,
+        "agent_binary",
         side_effect=exception,
     ):
         result = core_agent_manager.launch()
 
     assert not result
-    assert not is_running(core_agent_manager)
+    assert not core_agent_is_running()
     assert caplog.record_tuples == [
         ("scout_apm.core.core_agent_manager", logging.ERROR, "Error running Core Agent")
     ]
     assert caplog.records[0].exc_info[1] is exception
-
-
-def test_socket_path(core_agent_manager):
-    scout_config.set(core_agent_socket_path="foo")
-
-    result = core_agent_manager.socket_path()
-
-    assert result == ["--socket", "foo"]
-
-
-def test_socket_path_old_name_takes_precedence(core_agent_manager):
-    scout_config.set(socket_path="foo", core_agent_socket_path="bar")
-
-    result = core_agent_manager.socket_path()
-
-    assert result == ["--socket", "foo"]
-
-
-def test_log_level(core_agent_manager):
-    scout_config.set(core_agent_log_level="foo")
-
-    result = core_agent_manager.log_level()
-
-    assert result == ["--log-level", "foo"]
-
-
-def test_log_level_old_name_takes_precedence(core_agent_manager):
-    scout_config.set(log_level="foo", core_agent_log_level="bar")
-
-    result = core_agent_manager.log_level()
-
-    assert result == ["--log-level", "foo"]
-
-
-def test_log_file(core_agent_manager):
-    scout_config.set(core_agent_log_file="foo")
-
-    result = core_agent_manager.log_file()
-
-    assert result == ["--log-file", "foo"]
-
-
-def test_log_file_old_name_takes_precedence(core_agent_manager):
-    scout_config.set(log_file="foo", core_agent_log_file="bar")
-
-    result = core_agent_manager.log_file()
-
-    assert result == ["--log-file", "foo"]
-
-
-def test_config_file(core_agent_manager):
-    scout_config.set(core_agent_config_file="foo")
-
-    result = core_agent_manager.config_file()
-
-    assert result == ["--config-file", "foo"]
-
-
-def test_config_file_old_name_takes_precedence(core_agent_manager):
-    scout_config.set(config_file="foo", core_agent_config_file="bar")
-
-    result = core_agent_manager.config_file()
-
-    assert result == ["--config-file", "foo"]

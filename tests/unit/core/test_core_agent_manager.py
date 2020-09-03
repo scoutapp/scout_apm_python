@@ -6,8 +6,94 @@ import logging
 import sys
 
 from scout_apm.core.config import scout_config
-from scout_apm.core.core_agent_manager import get_socket_path, parse_manifest
+from scout_apm.core.core_agent_manager import (
+    CoreAgentManager,
+    get_socket_path,
+    parse_manifest,
+)
 from tests.compat import mock
+
+
+class TestCoreAgentManager(object):
+    def test_socket_path_path(self):
+        scout_config.set(core_agent_socket_path="/tmp/foo.sock")
+
+        try:
+            result = CoreAgentManager().socket_path()
+        finally:
+            scout_config.reset_all()
+
+        assert result == ["--socket", "/tmp/foo.sock"]
+
+    def test_socket_path_tcp(self):
+        scout_config.set(core_agent_socket_path="tcp://127.0.0.1:7894")
+
+        try:
+            result = CoreAgentManager().socket_path()
+        finally:
+            scout_config.reset_all()
+
+        assert result == ["--tcp", "127.0.0.1:7894"]
+
+    def test_log_level(self):
+        scout_config.set(core_agent_log_level="foo")
+
+        try:
+            result = CoreAgentManager().log_level()
+        finally:
+            scout_config.reset_all()
+
+        assert result == ["--log-level", "foo"]
+
+    def test_log_level_old_name_takes_precedence(self):
+        scout_config.set(log_level="foo", core_agent_log_level="bar")
+
+        try:
+            result = CoreAgentManager().log_level()
+        finally:
+            scout_config.reset_all()
+
+        assert result == ["--log-level", "foo"]
+
+    def test_log_file(self):
+        scout_config.set(core_agent_log_file="foo")
+
+        try:
+            result = CoreAgentManager().log_file()
+        finally:
+            scout_config.reset_all()
+
+        assert result == ["--log-file", "foo"]
+
+    def test_log_file_old_name_takes_precedence(self):
+        scout_config.set(log_file="foo", core_agent_log_file="bar")
+
+        try:
+            result = CoreAgentManager().log_file()
+        finally:
+            scout_config.reset_all()
+
+        assert result == ["--log-file", "foo"]
+
+    def test_config_file(self):
+        scout_config.set(core_agent_config_file="foo")
+
+        try:
+            result = CoreAgentManager().config_file()
+        finally:
+            scout_config.reset_all()
+
+        assert result == ["--config-file", "foo"]
+
+    def test_config_file_old_name_takes_precedence(self):
+        scout_config.set(config_file="foo", core_agent_config_file="bar")
+
+        try:
+            result = CoreAgentManager().config_file()
+        finally:
+            scout_config.reset_all()
+
+        assert result == ["--config-file", "foo"]
 
 
 class TestParseManifest(object):
@@ -127,9 +213,16 @@ class TestGetSocketPath(object):
         finally:
             scout_config.reset_all()
 
-    def test_derived(self):
-        scout_config.set(core_agent_dir="/tmp/mydir", core_agent_full_name="my-agent")
+    def test_not_tcp(self):
+        scout_config.set(core_agent_socket_path="/tmp/that.sock")
         try:
-            assert get_socket_path() == "/tmp/mydir/my-agent/scout-agent.sock"
+            assert not get_socket_path().is_tcp
+        finally:
+            scout_config.reset_all()
+
+    def test_tcp(self):
+        scout_config.set(core_agent_socket_path="tcp://127.0.0.1:1234")
+        try:
+            assert get_socket_path().is_tcp
         finally:
             scout_config.reset_all()
