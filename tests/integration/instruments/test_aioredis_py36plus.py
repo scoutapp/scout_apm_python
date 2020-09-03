@@ -77,7 +77,10 @@ def test_ensure_installed_fail_no_wrapped_redis_execute(caplog):
     assert caplog.record_tuples[1] == (
         "scout_apm.instruments.aioredis",
         logging.DEBUG,
-        "Couldn't import scout_apm.async_.instruments.aioredis - probably using Python < 3.6.",
+        (
+            "Couldn't import scout_apm.async_.instruments.aioredis - probably"
+            + " using Python < 3.6."
+        ),
     )
 
 
@@ -124,7 +127,10 @@ def test_ensure_installed_fail_no_wrapped_pipeline_execute(caplog):
     assert caplog.record_tuples[1] == (
         "scout_apm.instruments.aioredis",
         logging.DEBUG,
-        "Couldn't import scout_apm.async_.instruments.aioredis - probably using Python < 3.6.",
+        (
+            "Couldn't import scout_apm.async_.instruments.aioredis -"
+            + " probably using Python < 3.6."
+        ),
     )
 
 

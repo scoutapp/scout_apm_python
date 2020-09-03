@@ -16,8 +16,8 @@ except ImportError:
 # The async_ module can only be shipped on Python 3.6+
 try:
     from scout_apm.async_.instruments.aioredis import (
-        wrapped_redis_execute,
         wrapped_pipeline_execute,
+        wrapped_redis_execute,
     )
 except ImportError:
     wrapped_redis_execute = None
@@ -38,7 +38,8 @@ def ensure_installed():
         logger.debug("Couldn't import aioredis.Redis - probably not installed.")
     elif wrapped_redis_execute is None:
         logger.debug(
-            "Couldn't import scout_apm.async_.instruments.aioredis - probably using Python < 3.6."
+            "Couldn't import scout_apm.async_.instruments.aioredis -"
+            + " probably using Python < 3.6."
         )
     elif not have_patched_redis_execute:
         try:
@@ -58,7 +59,8 @@ def ensure_installed():
         )
     elif wrapped_pipeline_execute is None:
         logger.debug(
-            "Couldn't import scout_apm.async_.instruments.aioredis - probably using Python < 3.6."
+            "Couldn't import scout_apm.async_.instruments.aioredis -"
+            + " probably using Python < 3.6."
         )
     elif not have_patched_pipeline_execute:
         try:
