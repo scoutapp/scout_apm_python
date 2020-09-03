@@ -81,14 +81,12 @@ def install_background_instrumentation():
     async def wrapped_background_call(wrapped, instance, args, kwargs):
         tracked_request = TrackedRequest.instance()
         tracked_request.is_real_request = True
-        tracked_request.start_span(
+
+        with tracked_request.span(
             operation="Job/{}.{}".format(
                 instance.func.__module__, instance.func.__qualname__
             )
-        )
-        try:
+        ):
             return await wrapped(*args, **kwargs)
-        finally:
-            tracked_request.stop_span()
 
     BackgroundTask.__call__ = wrapped_background_call(BackgroundTask.__call__)

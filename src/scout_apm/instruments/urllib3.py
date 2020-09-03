@@ -58,10 +58,6 @@ def wrapped_urlopen(wrapped, instance, args, kwargs):
         url = "Unknown"
 
     tracked_request = TrackedRequest.instance()
-    span = tracked_request.start_span(operation="HTTP/{}".format(method))
-    span.tag("url", text_type(url))
-
-    try:
+    with tracked_request.span(operation="HTTP/{}".format(method)) as span:
+        span.tag("url", text_type(url))
         return wrapped(*args, **kwargs)
-    finally:
-        tracked_request.stop_span()

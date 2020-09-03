@@ -60,9 +60,6 @@ def wrap_callback(wrapped, instance, args, kwargs):
         controller_name = "/home"
     if not controller_name.startswith("/"):
         controller_name = "/" + controller_name
-    tracked_request.start_span(
-        operation="Controller{}".format(controller_name), should_capture_backtrace=False
-    )
 
     if scout_config.value("collect_remote_ip"):
         # Determine a remote IP to associate with the request. The
@@ -84,14 +81,15 @@ def wrap_callback(wrapped, instance, args, kwargs):
         amazon_queue_time = request.headers.get("x-amzn-trace-id", "")
         track_amazon_request_queue_time(amazon_queue_time, tracked_request)
 
-    try:
-        value = wrapped(*args, **kwargs)
-    except Exception:
-        tracked_request.tag("error", "true")
-        raise
-    else:
-        if 500 <= response.status_code <= 599:
+    with tracked_request.span(
+        operation="Controller{}".format(controller_name), should_capture_backtrace=False
+    ):
+        try:
+            value = wrapped(*args, **kwargs)
+        except Exception:
             tracked_request.tag("error", "true")
-        return value
-    finally:
-        tracked_request.stop_span()
+            raise
+        else:
+            if 500 <= response.status_code <= 599:
+                tracked_request.tag("error", "true")
+            return value

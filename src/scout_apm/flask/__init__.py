@@ -44,24 +44,23 @@ class ScoutApm(object):
         tracked_request = TrackedRequest.instance()
         tracked_request.is_real_request = True
         request._scout_tracked_request = tracked_request
-        span = tracked_request.start_span(
-            operation=operation, should_capture_backtrace=False
-        )
-        request._scout_view_span = span
 
         werkzeug_track_request_data(request, tracked_request)
 
-        try:
-            response = wrapped(*args, **kwargs)
-        except Exception as exc:
-            tracked_request.tag("error", "true")
-            raise exc
-        else:
-            if 500 <= response.status_code <= 599:
+        with tracked_request.span(
+            operation=operation, should_capture_backtrace=False
+        ) as span:
+            request._scout_view_span = span
+
+            try:
+                response = wrapped(*args, **kwargs)
+            except Exception as exc:
                 tracked_request.tag("error", "true")
-            return response
-        finally:
-            tracked_request.stop_span()
+                raise exc
+            else:
+                if 500 <= response.status_code <= 599:
+                    tracked_request.tag("error", "true")
+                return response
 
     @wrapt.decorator
     def wrapped_preprocess_request(self, wrapped, instance, args, kwargs):
@@ -78,11 +77,8 @@ class ScoutApm(object):
         if not have_before_request_funcs:
             return wrapped(*args, **kwargs)
 
-        tracked_request.start_span("PreprocessRequest", should_capture_backtrace=False)
-        try:
+        with tracked_request.span("PreprocessRequest", should_capture_backtrace=False):
             return wrapped(*args, **kwargs)
-        finally:
-            tracked_request.stop_span()
 
     def extract_flask_settings(self):
         """

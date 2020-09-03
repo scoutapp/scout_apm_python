@@ -69,12 +69,9 @@ def ensure_installed():
 @wrapt.decorator
 def wrapped_render(wrapped, instance, args, kwargs):
     tracked_request = TrackedRequest.instance()
-    span = tracked_request.start_span(operation="Template/Render")
-    span.tag("name", instance.name)
-    try:
+    with tracked_request.span(operation="Template/Render") as span:
+        span.tag("name", instance.name)
         return wrapped(*args, **kwargs)
-    finally:
-        tracked_request.stop_span()
 
 
 @wrapt.decorator
