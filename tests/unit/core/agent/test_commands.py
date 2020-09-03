@@ -6,7 +6,7 @@ import logging
 
 import pytest
 
-from scout_apm.core import commands
+from scout_apm.core.agent import commands
 from scout_apm.core.tracked_request import TrackedRequest
 from tests.tools import skip_if_objtrace_not_extension
 
@@ -40,7 +40,7 @@ def test_register_message_good_key(caplog):
     }
     assert caplog.record_tuples == [
         (
-            "scout_apm.core.commands",
+            "scout_apm.core.agent.commands",
             logging.INFO,
             (
                 "Registering with app=test_app key_prefix=abc"
@@ -66,7 +66,7 @@ def test_register_message_bad_key(caplog):
     }
     assert caplog.record_tuples == [
         (
-            "scout_apm.core.commands",
+            "scout_apm.core.agent.commands",
             logging.INFO,
             (
                 "Registering with app=test_app key_prefix=who"

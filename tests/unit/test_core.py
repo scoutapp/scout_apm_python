@@ -6,8 +6,8 @@ import os
 
 from scout_apm.api import Config
 from scout_apm.core import install, shutdown
+from scout_apm.core.agent.manager import CoreAgentManager
 from scout_apm.core.config import scout_config
-from scout_apm.core.core_agent_manager import CoreAgentManager
 from scout_apm.core.metadata import report_app_metadata
 from tests.compat import mock
 

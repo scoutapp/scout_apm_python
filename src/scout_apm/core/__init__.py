@@ -9,10 +9,10 @@ import sys
 from scout_apm import instruments
 from scout_apm.compat import kwargs_only
 from scout_apm.core import objtrace
+from scout_apm.core.agent.manager import CoreAgentManager
+from scout_apm.core.agent.socket import CoreAgentSocketThread
 from scout_apm.core.config import scout_config
-from scout_apm.core.core_agent_manager import CoreAgentManager
 from scout_apm.core.metadata import report_app_metadata
-from scout_apm.core.socket import CoreAgentSocketThread
 
 logger = logging.getLogger(__name__)
 

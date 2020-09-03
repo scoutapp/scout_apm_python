@@ -10,10 +10,9 @@ import pytest
 import wrapt
 from webtest import TestApp
 
-from scout_apm.core import socket as scout_apm_core_socket
+from scout_apm.core.agent import socket as scout_apm_core_socket
+from scout_apm.core.agent.manager import CoreAgentManager
 from scout_apm.core.config import SCOUT_PYTHON_VALUES, scout_config
-from scout_apm.core.core_agent_manager import CoreAgentManager
-from scout_apm.core.socket import CoreAgentSocketThread
 from scout_apm.core.tracked_request import TrackedRequest
 from tests.compat import TemporaryDirectory
 
@@ -157,8 +156,8 @@ def short_timeouts():
 @pytest.fixture(autouse=True)
 def stop_and_empty_core_agent_socket():
     yield
-    CoreAgentSocketThread.ensure_stopped()
-    command_queue = CoreAgentSocketThread._command_queue
+    scout_apm_core_socket.CoreAgentSocketThread.ensure_stopped()
+    command_queue = scout_apm_core_socket.CoreAgentSocketThread._command_queue
     while not command_queue.empty():
         command_queue.get()
         command_queue.task_done()

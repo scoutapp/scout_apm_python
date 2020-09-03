@@ -6,10 +6,10 @@ import logging
 import os
 import threading
 
-from scout_apm.core.commands import ApplicationEvent
+from scout_apm.core.agent.commands import ApplicationEvent
+from scout_apm.core.agent.socket import CoreAgentSocketThread
 from scout_apm.core.samplers.cpu import Cpu
 from scout_apm.core.samplers.memory import Memory
-from scout_apm.core.socket import CoreAgentSocketThread
 from scout_apm.core.threading import SingletonThread
 
 logger = logging.getLogger(__name__)

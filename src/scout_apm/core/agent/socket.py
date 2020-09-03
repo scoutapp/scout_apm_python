@@ -11,9 +11,9 @@ import threading
 import time
 
 from scout_apm.compat import queue
-from scout_apm.core.commands import Register
+from scout_apm.core.agent.commands import Register
+from scout_apm.core.agent.manager import get_socket_path
 from scout_apm.core.config import scout_config
-from scout_apm.core.core_agent_manager import get_socket_path
 from scout_apm.core.threading import SingletonThread
 
 # Time unit - monkey-patched in tests to make them run faster
