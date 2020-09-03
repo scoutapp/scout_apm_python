@@ -165,9 +165,6 @@ class MiddlewareTimingMiddleware(object):
 
         tracked_request = TrackedRequest.instance()
 
-        tracked_request.start_span(
-            operation="Middleware", should_capture_backtrace=False
-        )
         queue_time = request.META.get("HTTP_X_QUEUE_START") or request.META.get(
             "HTTP_X_REQUEST_START", ""
         )
@@ -177,10 +174,11 @@ class MiddlewareTimingMiddleware(object):
                 request.META.get("HTTP_X_AMZN_TRACE_ID", ""), tracked_request
             )
 
-        try:
+        with tracked_request.span(
+            operation="Middleware",
+            should_capture_backtrace=False,
+        ):
             return self.get_response(request)
-        finally:
-            tracked_request.stop_span()
 
 
 class ViewTimingMiddleware(object):
@@ -210,15 +208,12 @@ class ViewTimingMiddleware(object):
 
         # This operation name won't be recorded unless changed later in
         # process_view
-        tracked_request.start_span(operation="Unknown", should_capture_backtrace=False)
-        try:
+        with tracked_request.span(operation="Unknown", should_capture_backtrace=False):
             response = self.get_response(request)
             track_request_view_data(request, tracked_request)
             if 500 <= response.status_code <= 599:
                 tracked_request.tag("error", "true")
             return response
-        finally:
-            tracked_request.stop_span()
 
     def process_view(self, request, view_func, view_args, view_kwargs):
         """

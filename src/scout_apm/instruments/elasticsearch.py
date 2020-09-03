@@ -132,12 +132,8 @@ def wrap_client_index_method(wrapped, instance, args, kwargs):
     camel_name = "".join(c.title() for c in wrapped.__name__.split("_"))
     operation = "Elasticsearch/{}/{}".format(index, camel_name)
     tracked_request = TrackedRequest.instance()
-    tracked_request.start_span(operation=operation, ignore_children=True)
-
-    try:
+    with tracked_request.span(operation=operation, ignore_children=True):
         return wrapped(*args, **kwargs)
-    finally:
-        tracked_request.stop_span()
 
 
 @wrapt.decorator
@@ -145,12 +141,8 @@ def wrap_client_method(wrapped, instance, args, kwargs):
     camel_name = "".join(c.title() for c in wrapped.__name__.split("_"))
     operation = "Elasticsearch/{}".format(camel_name)
     tracked_request = TrackedRequest.instance()
-    tracked_request.start_span(operation=operation, ignore_children=True)
-
-    try:
+    with tracked_request.span(operation=operation, ignore_children=True):
         return wrapped(*args, **kwargs)
-    finally:
-        tracked_request.stop_span()
 
 
 have_patched_transport = False
@@ -217,11 +209,8 @@ def wrapped_perform_request(wrapped, instance, args, kwargs):
         op = "Unknown"
 
     tracked_request = TrackedRequest.instance()
-    tracked_request.start_span(
-        operation="Elasticsearch/{}".format(op), ignore_children=True
-    )
-
-    try:
+    with tracked_request.span(
+        operation="Elasticsearch/{}".format(op),
+        ignore_children=True,
+    ):
         return wrapped(*args, **kwargs)
-    finally:
-        tracked_request.stop_span()

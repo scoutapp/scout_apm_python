@@ -54,9 +54,8 @@ def test_span_repr(tracked_request):
 
 
 def test_tag_span(tracked_request):
-    span = tracked_request.start_span(operation="myoperation")
-    span.tag("foo", "bar")
-    tracked_request.stop_span()
+    with tracked_request.span(operation="myoperation") as span:
+        span.tag("foo", "bar")
 
     assert tracked_request.complete_spans[0].tags["foo"] == "bar"
 
@@ -94,16 +93,15 @@ def test_tags_allocations_for_spans_no_objtrace_extension(tracked_request):
 
 
 def test_start_span_does_not_ignore_children(tracked_request):
-    tracked_request.start_span(operation="parent")
-    child1 = tracked_request.start_span(operation="myoperation")
+    with tracked_request.span(operation="parent"):
+        with tracked_request.span(operation="myoperation") as child1:
+            with tracked_request.span(operation="myoperation") as child2:
+                pass
+
     assert not child1.ignore
     assert not child1.ignore_children
-    child2 = tracked_request.start_span(operation="myoperation")
     assert not child2.ignore
     assert not child2.ignore_children
-    tracked_request.stop_span()
-    tracked_request.stop_span()
-    tracked_request.stop_span()
     assert len(tracked_request.complete_spans) == 3
     assert tracked_request.complete_spans[2].operation == "parent"
 

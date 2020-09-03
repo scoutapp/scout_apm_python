@@ -29,11 +29,10 @@ def includeme(config):
 def instruments(handler, registry):
     def scout_tween(request):
         tracked_request = TrackedRequest.instance()
-        span = tracked_request.start_span(
-            operation="Controller/Pyramid", should_capture_backtrace=False
-        )
 
-        try:
+        with tracked_request.span(
+            operation="Controller/Pyramid", should_capture_backtrace=False
+        ) as span:
             path = request.path
             # mixed() returns values as *either* single items or lists
             url_params = [
@@ -78,8 +77,6 @@ def instruments(handler, registry):
 
             if 500 <= response.status_code <= 599:
                 tracked_request.tag("error", "true")
-        finally:
-            tracked_request.stop_span()
 
         return response
 

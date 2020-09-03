@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import datetime as dt
 import logging
+from contextlib import contextmanager
 from uuid import uuid4
 
 from scout_apm.core import backtrace, objtrace
@@ -121,6 +122,14 @@ class TrackedRequest(object):
 
         if len(self.active_spans) == 0:
             self.finish()
+
+    @contextmanager
+    def span(self, *args, **kwargs):
+        span = self.start_span(*args, **kwargs)
+        try:
+            yield span
+        finally:
+            self.stop_span()
 
     def current_span(self):
         if self.active_spans:

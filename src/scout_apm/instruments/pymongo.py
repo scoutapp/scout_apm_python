@@ -88,10 +88,6 @@ def wrap_collection_method(wrapped, instance, args, kwargs):
     tracked_request = TrackedRequest.instance()
     camel_name = "".join(c.title() for c in wrapped.__name__.split("_"))
     operation = "MongoDB/{}.{}".format(instance.name, camel_name)
-    span = tracked_request.start_span(operation=operation, ignore_children=True)
-    span.tag("name", instance.name)
-
-    try:
+    with tracked_request.span(operation=operation, ignore_children=True) as span:
+        span.tag("name", instance.name)
         return wrapped(*args, **kwargs)
-    finally:
-        tracked_request.stop_span()

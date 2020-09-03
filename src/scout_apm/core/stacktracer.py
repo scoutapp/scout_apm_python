@@ -18,14 +18,11 @@ def trace_method(cls, method_name=None):
                 operation = operation + "/" + detail["name"]
 
             tracked_request = TrackedRequest.instance()
-            span = tracked_request.start_span(operation=operation)
-            for key, value in detail.items():
-                span.tag(key, value)
+            with tracked_request.span(operation=operation) as span:
+                for key, value in detail.items():
+                    span.tag(key, value)
 
-            try:
                 return wrapped(*args, **kwargs)
-            finally:
-                tracked_request.stop_span()
 
         setattr(cls, method_to_patch, wrapper(getattr(cls, method_to_patch)))
 
