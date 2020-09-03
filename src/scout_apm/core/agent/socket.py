@@ -178,14 +178,14 @@ class CoreAgentSocketThread(SingletonThread):
                 self.socket.connect(self.get_socket_address())
                 self.socket.settimeout(3 * SECOND)
                 logger.debug("CoreAgentSocketThread connected")
-                return True
+                return
             except socket.error as exc:
                 logger.debug(
                     "CoreAgentSocketThread connection error: %r", exc, exc_info=exc
                 )
                 # Return without waiting when reaching the maximum number of attempts.
-                if attempt >= connect_attempts:
-                    return False
+                if attempt == connect_attempts:
+                    raise
                 time.sleep(retry_wait_secs * SECOND)
 
     def _disconnect(self):
