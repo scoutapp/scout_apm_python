@@ -5,7 +5,7 @@ import time
 
 import pytest
 
-from scout_apm.core.socket import CoreAgentSocketThread
+from scout_apm.core.agent.socket import CoreAgentSocketThread
 from tests.compat import mock
 from tests.conftest import core_agent_is_running, terminate_core_agent_processes
 

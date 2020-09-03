@@ -6,11 +6,11 @@ import logging
 from uuid import uuid4
 
 from scout_apm.core import backtrace, objtrace
-from scout_apm.core.commands import BatchCommand
+from scout_apm.core.agent.commands import BatchCommand
+from scout_apm.core.agent.socket import CoreAgentSocketThread
 from scout_apm.core.n_plus_one_tracker import NPlusOneTracker
 from scout_apm.core.samplers.memory import get_rss_in_mb
 from scout_apm.core.samplers.thread import SamplersThread
-from scout_apm.core.socket import CoreAgentSocketThread
 
 logger = logging.getLogger(__name__)
 

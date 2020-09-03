@@ -6,8 +6,8 @@ import time
 
 import pytest
 
+from scout_apm.core.agent import manager
 from scout_apm.core.config import scout_config
-from scout_apm.core.core_agent_manager import CoreAgentManager
 from tests.compat import mock
 from tests.conftest import core_agent_is_running, terminate_core_agent_processes
 
@@ -26,7 +26,7 @@ def test_no_launch(caplog, core_agent_manager):
     assert not core_agent_is_running()
     assert caplog.record_tuples == [
         (
-            "scout_apm.core.core_agent_manager",
+            "scout_apm.core.agent.manager",
             logging.DEBUG,
             (
                 "Not attempting to launch Core Agent due to 'core_agent_launch' "
@@ -47,7 +47,7 @@ def test_no_verify(caplog, core_agent_manager):
     assert not result
     assert not core_agent_is_running()
     assert (
-        "scout_apm.core.core_agent_manager",
+        "scout_apm.core.agent.manager",
         logging.DEBUG,
         (
             "Not attempting to download Core Agent due to "
@@ -87,15 +87,14 @@ def test_download_and_launch(path, core_agent_manager):
 
 
 def test_verify_error(caplog, core_agent_manager):
-    digest_patcher = mock.patch(
-        "scout_apm.core.core_agent_manager.sha256_digest",
+    digest_patcher = mock.patch.object(
+        manager,
+        "sha256_digest",
         return_value="not the expected digest",
     )
     # Patch out the download() method to avoid downloading again the agent and
     # not make the tests slower than necessary.
-    download_patcher = mock.patch(
-        "scout_apm.core.core_agent_manager.CoreAgentManager.download"
-    )
+    download_patcher = mock.patch.object(manager.CoreAgentManager, "download")
 
     with digest_patcher, download_patcher:
         result = core_agent_manager.launch()
@@ -103,7 +102,7 @@ def test_verify_error(caplog, core_agent_manager):
     assert not result
     assert not core_agent_is_running()
     assert (
-        "scout_apm.core.core_agent_manager",
+        "scout_apm.core.agent.manager",
         logging.DEBUG,
         "Failed to verify Core Agent. Not launching Core Agent.",
     ) in caplog.record_tuples
@@ -113,7 +112,7 @@ def test_launch_error(caplog, core_agent_manager):
     caplog.set_level(logging.ERROR)
     exception = ValueError("Hello Fail")
     with mock.patch.object(
-        CoreAgentManager,
+        manager.CoreAgentManager,
         "agent_binary",
         side_effect=exception,
     ):
@@ -122,6 +121,6 @@ def test_launch_error(caplog, core_agent_manager):
     assert not result
     assert not core_agent_is_running()
     assert caplog.record_tuples == [
-        ("scout_apm.core.core_agent_manager", logging.ERROR, "Error running Core Agent")
+        ("scout_apm.core.agent.manager", logging.ERROR, "Error running Core Agent")
     ]
     assert caplog.records[0].exc_info[1] is exception

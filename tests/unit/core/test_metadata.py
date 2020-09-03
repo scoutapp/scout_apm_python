@@ -5,17 +5,18 @@ import sys
 
 import pytest
 
+from scout_apm.core.agent.socket import CoreAgentSocketThread
 from scout_apm.core.metadata import get_python_packages_versions, report_app_metadata
 from tests.compat import SimpleNamespace, mock
 from tests.tools import pretend_package_unavailable
 
 
-@mock.patch("scout_apm.core.socket.CoreAgentSocketThread.send")
-def test_report_app_metadata(send):
+@mock.patch.object(CoreAgentSocketThread, "send")
+def test_report_app_metadata(mock_send):
     report_app_metadata()
 
-    assert send.call_count == 1
-    (command,), kwargs = send.call_args
+    assert mock_send.call_count == 1
+    (command,), kwargs = mock_send.call_args
     assert kwargs == {}
 
     message = command.message()
@@ -26,8 +27,8 @@ def test_report_app_metadata(send):
     assert ("pytest", pytest.__version__) in data["libraries"]
 
 
-@mock.patch("scout_apm.core.socket.CoreAgentSocketThread.send")
-def test_report_app_metadata_no_importlib_metadata(send):
+@mock.patch.object(CoreAgentSocketThread, "send")
+def test_report_app_metadata_no_importlib_metadata(mock_send):
     if sys.version_info >= (3, 8):
         module_name = "importlib"
     else:
@@ -35,8 +36,8 @@ def test_report_app_metadata_no_importlib_metadata(send):
     with pretend_package_unavailable(module_name):
         report_app_metadata()
 
-    assert send.call_count == 1
-    (command,), kwargs = send.call_args
+    assert mock_send.call_count == 1
+    (command,), kwargs = mock_send.call_args
     assert kwargs == {}
 
     message = command.message()

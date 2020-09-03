@@ -5,12 +5,12 @@ import errno
 import logging
 import sys
 
-from scout_apm.core.config import scout_config
-from scout_apm.core.core_agent_manager import (
+from scout_apm.core.agent.manager import (
     CoreAgentManager,
     get_socket_path,
     parse_manifest,
 )
+from scout_apm.core.config import scout_config
 from tests.compat import mock
 
 
@@ -105,7 +105,7 @@ class TestParseManifest(object):
         assert result is None
         assert caplog.record_tuples == [
             (
-                "scout_apm.core.core_agent_manager",
+                "scout_apm.core.agent.manager",
                 logging.DEBUG,
                 "Core Agent Manifest does not exist at " + filename,
             )
@@ -118,7 +118,7 @@ class TestParseManifest(object):
         else:
             error = OSError(errno.EACCES)
         mock_open = mock.patch(
-            "scout_apm.core.core_agent_manager.open",
+            "scout_apm.core.agent.manager.open",
             create=True,
             side_effect=error,
         )
@@ -129,7 +129,7 @@ class TestParseManifest(object):
         assert result is None
         assert caplog.record_tuples == [
             (
-                "scout_apm.core.core_agent_manager",
+                "scout_apm.core.agent.manager",
                 logging.DEBUG,
                 "Error opening Core Agent Manifest at " + filename,
             )
@@ -144,7 +144,7 @@ class TestParseManifest(object):
         assert result is None
         assert len(caplog.record_tuples) == 2
         assert caplog.record_tuples[1] == (
-            "scout_apm.core.core_agent_manager",
+            "scout_apm.core.agent.manager",
             logging.DEBUG,
             "Error parsing Core Agent Manifest",
         )
@@ -158,7 +158,7 @@ class TestParseManifest(object):
         assert result is None
         assert len(caplog.record_tuples) == 2
         assert caplog.record_tuples[1] == (
-            "scout_apm.core.core_agent_manager",
+            "scout_apm.core.agent.manager",
             logging.DEBUG,
             "Error parsing Core Agent Manifest",
         )
@@ -175,7 +175,7 @@ class TestParseManifest(object):
         assert result is None
         assert len(caplog.record_tuples) == 2
         assert caplog.record_tuples[1] == (
-            "scout_apm.core.core_agent_manager",
+            "scout_apm.core.agent.manager",
             logging.DEBUG,
             "Error parsing Core Agent Manifest",
         )
@@ -193,7 +193,7 @@ class TestParseManifest(object):
         assert result.bin_version == "1.2.3"
         assert result.sha256 == "abc"
         logger, level, message = caplog.record_tuples[0]
-        assert logger == "scout_apm.core.core_agent_manager"
+        assert logger == "scout_apm.core.agent.manager"
         assert level == logging.DEBUG
         assert message.startswith("Core Agent manifest json: ")
 

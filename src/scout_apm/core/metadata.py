@@ -5,9 +5,9 @@ import datetime as dt
 import sys
 from os import getpid
 
-from scout_apm.core.commands import ApplicationEvent
+from scout_apm.core.agent.commands import ApplicationEvent
+from scout_apm.core.agent.socket import CoreAgentSocketThread
 from scout_apm.core.config import scout_config
-from scout_apm.core.socket import CoreAgentSocketThread
 
 
 def report_app_metadata():
