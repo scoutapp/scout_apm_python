@@ -220,7 +220,7 @@ class Defaults(object):
             "core_agent_log_level": "info",
             "core_agent_permissions": 700,
             "core_agent_socket_path": "tcp://127.0.0.1:6590",
-            "core_agent_version": "v1.2.10",  # can be an exact tag name, or 'latest'
+            "core_agent_version": "v1.3.0",  # can be an exact tag name, or 'latest'
             "disabled_instruments": [],
             "download_url": "https://s3-us-west-1.amazonaws.com/scout-public-downloads/apm_core_agent/release",  # noqa: E501
             "framework": "",
