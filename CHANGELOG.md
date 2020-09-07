@@ -6,8 +6,8 @@
 
 - Changed default agent connection to use TCP rather than a unix socket. By
   default the agent will be run on 127.0.0.1, port 6590. This should resolve
-  a number of connection issues customers have seen. To continue using a socket
-  connection, [configure
+  a number of connection issues. To continue using a socket connection,
+  [configure
   `core_agent_socket_path`](https://docs.scoutapm.com/#python-configuration).
   ([Issue #553](https://github.com/scoutapp/scout_apm_python/issues/553))
 
@@ -15,7 +15,8 @@
 
 - Fixed validation check on length of key.
   ([Issue #563](https://github.com/scoutapp/scout_apm_python/issues/563))
-- Update Core Agent to version 1.2.10, fixing several bugs.
+- Update Core Agent to version 1.3.0, fixing several bugs and opening the
+  ability to run with only a TCP socket.
   ([Issue #567](https://github.com/scoutapp/scout_apm_python/issues/567))
 
 ## [2.15.2] 2020-07-24
