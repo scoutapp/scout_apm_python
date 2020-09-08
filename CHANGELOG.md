@@ -1,6 +1,6 @@
 # Changelog
 
-## Pending
+## [2.16.0] 2020-09-08
 
 ### Added
 
