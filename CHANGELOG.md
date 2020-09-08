@@ -10,6 +10,8 @@
   [configure
   `core_agent_socket_path`](https://docs.scoutapm.com/#python-configuration).
   ([Issue #553](https://github.com/scoutapp/scout_apm_python/issues/553))
+- Tested with Django 3.1. No compatibility changes were required, but this is
+  the first release to be tagged as supporting it.
 
 ### Fixed
 
