@@ -35,8 +35,9 @@ jobs:
       run: python3.8 setup.py bdist_wheel
     - name: Build binary wheels
       env:
-        # Disable for platforms where pure Python wheels would be generated.
-        CIBW_SKIP: "cp27-* pp27-* pp36-*"
+        # Disable for platforms where pure Python wheels would be generated,
+        # and Python 3.9 since it's pre-release
+        CIBW_SKIP: "cp27-* cp39-* pp27-* pp36-*"
       run: cibuildwheel
     - name: Check packages
       run: twine check dist/* wheelhouse/*
