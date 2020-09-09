@@ -1,6 +1,7 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import os
 import sys
 
 from setuptools import Extension, find_packages, setup
@@ -19,6 +20,8 @@ compile_extensions = (
     and not sys.platform.startswith("java")
     # Not PyPy
     and "__pypy__" not in sys.builtin_module_names
+    # Not explicitly disabled
+    and (os.environ.get("SCOUT_DISABLE_EXTENSIONS", "") == "")
 )
 if compile_extensions:
     ext_modules = [
