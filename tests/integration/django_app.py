@@ -1,10 +1,14 @@
 # coding: utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import sys
+
 import django
 import wrapt
 from django.conf import settings
 from django.template.response import TemplateResponse
+
+from tests.compat import suppress
 
 config = {
     "ALLOWED_HOSTS": ["*"],
@@ -118,22 +122,22 @@ def sql_kwargs(request):
 
 def sql_type_errors(request):
     with connection.cursor() as cursor:
-        try:
+        with suppress(TypeError):
             cursor.execute()
-        except TypeError:
-            pass
-        try:
+
+        if sys.version_info >= (3, 9):
+            exc_type = TypeError
+        else:
+            exc_type = ValueError
+
+        with suppress(exc_type):
             cursor.execute(sql=None)
-        except ValueError:
-            pass
-        try:
+
+        with suppress(TypeError):
             cursor.executemany()
-        except TypeError:
-            pass
-        try:
+
+        with suppress(TypeError):
             cursor.executemany(sql=None, param_list=[(1,)])
-        except TypeError:
-            pass
     return HttpResponse("Done")
 
 

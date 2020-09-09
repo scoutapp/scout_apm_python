@@ -44,4 +44,17 @@ else:
         yield obj
 
 
-__all__ = ["mock", "nullcontext", "TemporaryDirectory"]
+if sys.version_info >= (3, 4):
+    from contextlib import suppress
+else:
+    from contextlib import contextmanager
+
+    @contextmanager
+    def suppress(*exceptions):
+        try:
+            yield
+        except exceptions:
+            pass
+
+
+__all__ = ["mock", "nullcontext", "suppress", "TemporaryDirectory"]
