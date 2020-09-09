@@ -32,7 +32,7 @@ jobs:
     - name: Build binary wheels
       env:
         # Disable for platforms where pure Python wheels would be generated.
-        CIBW_SKIP: "cp27-* pp27-* pp336-*"
+        CIBW_SKIP: "cp27-* pp27-* pp36-*"
       run: cibuildwheel
     - name: Check packages
       run: twine check dist/* wheelhouse/*
