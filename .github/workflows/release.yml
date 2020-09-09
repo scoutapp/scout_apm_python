@@ -18,15 +18,22 @@ jobs:
     - uses: actions/setup-python@v2.1.1
       with:
         python-version: 3.7
+    - uses: actions/setup-python@v2.1.1
+      with:
+        python-version: 2.7
     - name: Install packaging tools
-      run: python -m pip install --upgrade cibuildwheel pip setuptools twine wheel
+      run: |
+        python2.7 -m pip install --upgrade pip setuptools wheel
+        python3.7 -m pip install --upgrade cibuildwheel pip setuptools twine wheel
     - name: Build sdist
-      run: python setup.py sdist
-    - name: Build wheels
+      run: python3.7 setup.py sdist
+    - name: Build Python 2 wheel
+      run: python2.7 setup.py bdist_wheel
+    - name: Build binary wheels
       env:
-        CIBW_SKIP: "cp33-*"
+        CIBW_SKIP: "cp27-* cp33-*"
       run: cibuildwheel
-    - name: Check wheels
+    - name: Check packages
       run: twine check dist/* wheelhouse/*
     - name: List files
       run: ls -al dist wheelhouse
