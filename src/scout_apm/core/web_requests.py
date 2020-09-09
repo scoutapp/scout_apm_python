@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import datetime as dt
 import time
 
-from scout_apm.compat import datetime_to_timestamp, parse_qsl, urlencode
+from scout_apm.compat import datetime_to_timestamp, parse_qsl, text_type, urlencode
 from scout_apm.core.config import scout_config
 
 # Originally derived from:
@@ -49,7 +49,9 @@ def create_filtered_path(path, query_params):
     # have to cautiously make everything a string again. Ignoring the
     # possibilities of bytes or objects with bad __str__ methods because they
     # seem very unlikely.
-    string_query_params = ((str(key), str(value)) for key, value in query_params)
+    string_query_params = (
+        (text_type(key), text_type(value)) for key, value in query_params
+    )
     # Python 2 unicode compatibility: force all keys and values to bytes
     filtered_params = sorted(
         (
