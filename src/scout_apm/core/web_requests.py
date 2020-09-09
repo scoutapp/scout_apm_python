@@ -43,6 +43,13 @@ FILTER_PARAMETERS = frozenset(
 def create_filtered_path(path, query_params):
     if scout_config.value("uri_reporting") == "path":
         return path
+    # We expect query_params to have keys and values both of strings, because
+    # that's how frameworks build it. However sometimes application code
+    # mutates this structure to use incorrect types before we read it, so we
+    # have to cautiously make everything a string again. Ignoring the
+    # possibilities of bytes or objects with bad __str__ methods because they
+    # seem very unlikely.
+    string_query_params = ((str(key), str(value)) for key, value in query_params)
     # Python 2 unicode compatibility: force all keys and values to bytes
     filtered_params = sorted(
         (
@@ -54,7 +61,7 @@ def create_filtered_path(path, query_params):
                     else value.encode("utf-8")
                 ),
             )
-            for key, value in query_params
+            for key, value in string_query_params
         )
     )
     if not filtered_params:
