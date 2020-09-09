@@ -1,5 +1,14 @@
 # Changelog
 
+## Pending
+
+### Fixed
+
+- Added a cast to string of query parameters, to work around cases where
+  application code changes them to non-strings. Fixes a possible exception:
+  `AttributeError: 'int' object has no attribute 'encode'` in
+  `scout.core.web_requests`.
+
 ## [2.16.0] 2020-09-08
 
 ### Added

@@ -35,6 +35,10 @@ from scout_apm.core.web_requests import (
             [("password", "hunter2"), ("password", "hunter3")],
             "/?password=%5BFILTERED%5D&password=%5BFILTERED%5D",
         ),
+        # Check that if a user mutates the query params to contain non-string
+        # types, we cast them to strings.
+        ("/", [("bar", 1)], "/?bar=1"),
+        ("/", [("bar", None)], "/?bar=None"),
     ],
 )
 def test_create_filtered_path(path, params, expected):
