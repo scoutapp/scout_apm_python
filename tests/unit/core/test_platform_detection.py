@@ -50,7 +50,7 @@ def test_get_arch(platform_machine, machine, arch):
     "system, platform",
     [
         ("Darwin", "apple-darwin"),
-        ("Linux", "unknown-linux-gnu"),
+        ("Linux", "unknown-linux-musl"),
         ("Windows", "unknown"),
         ("", "unknown"),
     ],
@@ -59,25 +59,3 @@ def test_get_arch(platform_machine, machine, arch):
 def test_get_platform(platform_system, system, platform):
     platform_system.return_value = system
     assert platform_detection.get_platform() == platform
-
-
-@pytest.mark.parametrize(
-    "output, libc",
-    [
-        (b"ldd (GNU libc) 2.17\n", "gnu"),
-        (b"musl libc (x86_64)\nVersion 1.1.18\n", "musl"),
-        (b"", "gnu"),
-    ],
-)
-@mock.patch("subprocess.check_output")
-def test_get_libc(check_output, output, libc):
-    platform_detection._libc = None  # reset cache
-    check_output.return_value = output
-    assert platform_detection.get_libc() == libc
-
-
-@mock.patch("subprocess.check_output")
-def test_get_libc_no_ldd(check_output):
-    platform_detection._libc = None  # reset cache
-    check_output.side_effect = OSError
-    assert platform_detection.get_libc() == "gnu"
