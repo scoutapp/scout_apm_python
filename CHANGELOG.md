@@ -1,6 +1,6 @@
 # Changelog
 
-## Pending
+## [2.16.2] 2020-09-17
 
 - Moved core agent on Linux to default to the musl version, rather than try
   detect whether to use the musl or GNU libc version.
