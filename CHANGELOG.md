@@ -1,5 +1,11 @@
 # Changelog
 
+## Pending
+
+- Moved core agent on Linux to default to the musl version, rather than try
+  detect whether to use the musl or GNU libc version.
+  ([PR #585](https://github.com/scoutapp/scout_apm_python/pull/585))
+
 ## [2.16.1] 2020-09-09
 
 ### Fixed

@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import platform
-import subprocess
 
 
 def is_valid_triple(triple):
@@ -38,35 +37,11 @@ def get_platform():
     """
     system_name = platform.system()
     if system_name == "Linux":
-        libc = get_libc()
-        return "unknown-linux-{libc}".format(libc=libc)
+        # Previously we'd use either "-gnu" or "-musl" indicate which version
+        # of libc we were built against. We now default to musl since it
+        # reliably works on all platforms.
+        return "unknown-linux-musl"
     elif system_name == "Darwin":
         return "apple-darwin"
     else:
         return "unknown"
-
-
-_libc = None
-
-
-def get_libc():
-    """
-    Alpine linux uses a non glibc version of the standard library, it uses
-    the stripped down musl instead. The core agent can be built against it,
-    but which one is running must be detected. Shelling out to `ldd`
-    appears to be the most reliable way to do this.
-    """
-    global _libc
-    if _libc is None:
-        try:
-            output = subprocess.check_output(
-                ["ldd", "--version"], stderr=subprocess.STDOUT, close_fds=True
-            )
-        except (OSError, subprocess.CalledProcessError):
-            _libc = "gnu"
-        else:
-            if b"musl" in output:
-                _libc = "musl"
-            else:
-                _libc = "gnu"
-    return _libc
