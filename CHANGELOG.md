@@ -9,6 +9,7 @@
 ### Fixed
 - Exclude python library paths from backtraces.
   ([PR #514](https://github.com/scoutapp/scout_apm_python/issues/514))
+- Capture the full URL in `urllib3` spans.
 
 ## [2.18.0] 2021-02-09
 

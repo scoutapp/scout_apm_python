@@ -91,6 +91,29 @@ def test_request(tracked_request):
     assert span.tags["url"] == "https://example.com:443/"
 
 
+def test_second_request(tracked_request):
+    ensure_installed()
+    with tracked_request.span("Test"), httpretty.enabled(allow_net_connect=False):
+        httpretty.register_uri(
+            httpretty.GET, "https://example.com/foo", body="Hello World!"
+        )
+        httpretty.register_uri(
+            httpretty.GET, "https://example.org/bar", body="Hello World!"
+        )
+
+        http = urllib3_cert_pool_manager()
+        http.request("GET", "https://example.com/foo")
+        http.request("GET", "https://example.org/bar")
+
+    assert len(tracked_request.complete_spans) == 3
+    assert (
+        tracked_request.complete_spans[0].tags["url"] == "https://example.com:443/foo"
+    )
+    assert (
+        tracked_request.complete_spans[1].tags["url"] == "https://example.org:443/bar"
+    )
+
+
 def test_request_type_error(tracked_request):
     ensure_installed()
     with pytest.raises(TypeError):
@@ -101,7 +124,7 @@ def test_request_type_error(tracked_request):
     assert len(tracked_request.complete_spans) == 1
     span = tracked_request.complete_spans[0]
     assert span.operation == "HTTP/Unknown"
-    assert span.tags["url"] == "https://example.com:443/"
+    assert span.tags["url"] == "Unknown"
 
 
 def test_request_no_absolute_url(caplog, tracked_request):

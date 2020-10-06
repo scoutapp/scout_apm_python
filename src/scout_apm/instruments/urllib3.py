@@ -43,21 +43,22 @@ def ensure_installed():
 
 @wrapt.decorator
 def wrapped_urlopen(wrapped, instance, args, kwargs):
-    def _extract_method(method, *args, **kwargs):
-        return method
+    def _extract_method_url(method, url, *args, **kwargs):
+        return method, url
 
     try:
-        method = _extract_method(*args, **kwargs)
+        method, url = _extract_method_url(*args, **kwargs)
     except TypeError:
         method = "Unknown"
-
-    try:
-        url = text_type(instance._absolute_url("/"))
-    except Exception:
-        logger.exception("Could not get URL for HTTPConnectionPool")
         url = "Unknown"
+    else:
+        try:
+            url = text_type(instance._absolute_url(url))
+        except Exception:
+            logger.exception("Could not get URL for HTTPConnectionPool")
+            url = "Unknown"
 
     tracked_request = TrackedRequest.instance()
     with tracked_request.span(operation="HTTP/{}".format(method)) as span:
-        span.tag("url", text_type(url))
+        span.tag("url", url)
         return wrapped(*args, **kwargs)
