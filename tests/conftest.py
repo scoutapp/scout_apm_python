@@ -5,6 +5,7 @@ import logging
 import os
 import sys
 
+import celery
 import psutil
 import pytest
 import wrapt
@@ -15,6 +16,11 @@ from scout_apm.core.agent.manager import CoreAgentManager
 from scout_apm.core.config import SCOUT_PYTHON_VALUES, scout_config
 from scout_apm.core.tracked_request import TrackedRequest
 from tests.compat import TemporaryDirectory
+
+# Activate the celery pytest plugin
+# https://docs.celeryproject.org/en/latest/userguide/testing.html#pytest-plugin
+if celery.VERSION >= (5, 0):
+    pytest_plugins = ["celery.contrib.pytest"]
 
 # Env variables have precedence over Python configs in ScoutConfig.
 # Unset all Scout env variables to prevent interference with tests.
