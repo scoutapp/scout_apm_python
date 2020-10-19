@@ -4,7 +4,13 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import scout_apm.core
 from scout_apm.compat import ContextDecorator, text
 from scout_apm.core.config import ScoutConfig
-from scout_apm.core.tracked_request import TrackedRequest
+from scout_apm.core.tracked_request import TrackedRequest, Span
+
+try:
+    # for typing
+    from typing import Any, Optional, Dict, Type, Callable
+except ImportError:
+    pass
 
 __all__ = [
     "BackgroundTransaction",
@@ -19,6 +25,7 @@ __all__ = [
 class Context(object):
     @classmethod
     def add(self, key, value):
+        # type: (str, Any) -> None
         """Adds context to the currently executing request.
 
         :key: Any String identifying the request context.
@@ -34,15 +41,17 @@ class Config(ScoutConfig):
     pass
 
 
-install = scout_apm.core.install
+install = scout_apm.core.install # type: Callable[[Optional[Dict[str, Any]]], bool]
 
 
 def ignore_transaction():
+    # type: () -> None
     TrackedRequest.instance().tag("ignore_transaction", True)
 
 
 class instrument(ContextDecorator):
     def __init__(self, operation, kind="Custom", tags=None):
+        # type: (str, str, Optional[Dict[str, Any]]) -> None
         self.operation = text(kind) + "/" + text(operation)
         if tags is None:
             self.tags = {}
@@ -50,6 +59,7 @@ class instrument(ContextDecorator):
             self.tags = tags
 
     def __enter__(self):
+        # type: () -> instrument
         tracked_request = TrackedRequest.instance()
         self.span = tracked_request.start_span(operation=self.operation)
         for key, value in self.tags.items():
@@ -57,11 +67,13 @@ class instrument(ContextDecorator):
         return self
 
     def __exit__(self, *exc):
+        # (Optional[Type[BaseException]], Optional[BaseException], Optional[TracebackType]) -> Optional[bool]
         tracked_request = TrackedRequest.instance()
         tracked_request.stop_span()
         return False
 
     def tag(self, key, value):
+        # type: (str, Any) -> None
         if self.span is not None:
             self.span.tag(key, value)
 
@@ -115,22 +127,27 @@ class Transaction(ContextDecorator):
 class WebTransaction(Transaction):
     @classmethod
     def start(cls, name, tags=None):
+        # type: (str, Optional[Dict[str, Any]]) -> None
         super(WebTransaction, cls).start("Controller", text(name), tags)
 
     def __enter__(self):
+        # type: () -> None
         super(WebTransaction, self).start("Controller", self.name, self.tags)
 
 
 class BackgroundTransaction(Transaction):
     @classmethod
     def start(cls, name, tags=None):
+        # type: (str, Optional[Dict[str, Any]]) -> None
         super(BackgroundTransaction, cls).start("Job", text(name), tags)
 
     def __enter__(self):
+        # type: () -> None
         super(BackgroundTransaction, self).start("Job", self.name, self.tags)
 
 
 def rename_transaction(name):
+    # type: (str) -> None
     if name is not None:
         tracked_request = TrackedRequest.instance()
         tracked_request.tag("transaction.name", name)
