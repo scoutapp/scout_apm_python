@@ -1,5 +1,12 @@
 # Changelog
 
+## Pending
+
+### Added
+
+- Support Python 3.9.
+  ([PR #583](https://github.com/scoutapp/scout_apm_python/pull/583))
+
 ## [2.16.2] 2020-09-17
 
 - Moved core agent on Linux to default to the musl version, rather than try
