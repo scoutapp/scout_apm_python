@@ -31,8 +31,11 @@ class ScoutMiddleware:
             if "endpoint" in scope:
                 # Rename top span
                 endpoint = scope["endpoint"]
+                if not hasattr(endpoint, "__qualname__"):
+                    endpoint = endpoint.__class__
                 controller_span.operation = "Controller/{}.{}".format(
-                    endpoint.__module__, endpoint.__qualname__
+                    endpoint.__module__,
+                    endpoint.__qualname__,
                 )
                 tracked_request.is_real_request = True
 
