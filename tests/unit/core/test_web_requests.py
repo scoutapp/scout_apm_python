@@ -146,6 +146,27 @@ def test_track_amazon_request_queue_time_valid(header_value, tracked_request):
     queue_time_ns = tracked_request.tags["scout.queue_time_ns"]
     assert isinstance(queue_time_ns, int) and queue_time_ns > 0
 
+@pytest.mark.parametrize(
+    "header_value",
+    [
+        "Root=1-{start_time}-12456789abcdef012345678",
+        "Root=1-{start_time}-12456789abcdef012345678;CalledFrom=app",
+        "Self=1-{start_time}-12456789abcdef012345678",
+        "Self=1-{start_time}-12456789abcdef012345678;Root=1-123-abcdef012345678912345678",  # noqa: E501
+        "Self=1-{start_time}-12456789abcdef012345678;Root=1-123-abcdef012345678912345678;CalledFrom=app",  # noqa: E501
+    ],
+)
+def test_track_amazon_request_queue_time_hexidecimal_valid(header_value, tracked_request):
+    start_time = int(datetime_to_timestamp(dt.datetime.utcnow()), 16) - 2
+
+    result = track_amazon_request_queue_time(
+        "Root=1-{start_time}-12456789abcdef012345678".format(start_time=start_time), tracked_request
+    )
+
+    assert result is True
+    queue_time_ns = tracked_request.tags["scout.queue_time_ns"]
+    assert isinstance(queue_time_ns, int) and queue_time_ns > 0
+
 
 @pytest.mark.parametrize(
     "header_value",

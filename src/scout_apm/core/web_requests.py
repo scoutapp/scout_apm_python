@@ -137,8 +137,10 @@ def track_amazon_request_queue_time(header_value, tracked_request):
     if not first_char.isdigit():
         return False
 
+    # If the timestamp is 8 characters long, it's in hexadecimal format.
+    base = 16 if len(timestamp_str) == 8 else 10
     try:
-        start_timestamp_ns = int(timestamp_str) * 1000000000.0
+        start_timestamp_ns = int(timestamp_str, base) * 1000000000.0
     except ValueError:
         return False
 
