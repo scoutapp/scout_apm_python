@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.17.1] 2021-02-01
+
+### Fixed
+
+- Support hex timestamp in Amazon headers
+  ([PR #598](https://github.com/scoutapp/scout_apm_python/pull/598))
+
 ## [2.17.0] 2020-09-17
 
 ### Added
