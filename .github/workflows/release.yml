@@ -37,7 +37,7 @@ jobs:
       env:
         # Disable for platforms where pure Python wheels would be generated,
         # and Python 3.9 since it's pre-release
-        CIBW_SKIP: "cp27-* cp39-* pp27-* pp36-* pp37-*"
+        CIBW_SKIP: "cp27-* -cp35-* cp39-* pp27-* pp36-* pp37-*"
       run: cibuildwheel
     - name: Check packages
       run: twine check dist/* wheelhouse/*
