@@ -157,7 +157,7 @@ def test_track_amazon_request_queue_time_valid(header_value, tracked_request):
     ],
 )
 def test_track_amazon_request_queue_time_hexidecimal_valid(header_value, tracked_request):
-    start_time = int(datetime_to_timestamp(dt.datetime.utcnow()), 16) - 2
+    start_time = format(int(datetime_to_timestamp(dt.datetime.utcnow())), 'x')
 
     result = track_amazon_request_queue_time(
         "Root=1-{start_time}-12456789abcdef012345678".format(start_time=start_time), tracked_request
