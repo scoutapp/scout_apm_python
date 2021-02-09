@@ -13,7 +13,7 @@ packages = find_packages("src")
 if sys.version_info < (3, 6):
     packages = [p for p in packages if not p.startswith("scout_apm.async_")]
 
-compile_extensions2 = (
+compile_extensions = (
     # Python 3+
     sys.version_info >= (3,)
     # Not Jython
@@ -23,7 +23,7 @@ compile_extensions2 = (
     # Not explicitly disabled
     and (os.environ.get("SCOUT_DISABLE_EXTENSIONS", "") == "")
 )
-if False:
+if compile_extensions:
     ext_modules = [
         Extension(
             name=str("scout_apm.core._objtrace"),
