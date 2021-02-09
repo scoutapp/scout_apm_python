@@ -4,30 +4,41 @@ Dev Guide
 Basic Setup
 -----------
 
-**First,** install one or more of the supported Python versions. It's best to
-install all which can be done with [pyenv](https://github.com/pyenv/pyenv).
+**First**, install one or more of the supported Python versions. It's best to
+install all, which can be done with [pyenv](https://github.com/pyenv/pyenv).
 
-**Second,** install [tox](https://tox.readthedocs.io/en/latest/) with
-`python -m pip install tox`. Best to use the latest version of Python you have
-installed for this.
+**Second**, install [pre-commit](https://pre-commit.com/). This can be done
+with your system package manager, such as `brew install pre-commit`.
 
-**Third,** run the tests with a tox environment. For example,
-`tox -e py37-django22` will run with Python 3.7 and Django 2.2.
+**Third**, install pre-commit into the local repository:
 
-You can get a list of all the defined environments with `tox -l`. They're
-defined at the top of `tox.ini`.
+```
+pre-commit install
+```
 
-If you run `tox` with no arguments, it will test all environments. There are a
-lot of environments so this can take some time. It's best to only let CI do
-this when you create a pull request.
+**Fourth**, check your pre-commit is working by running all the checks:
 
-**Fourth,** run the code style checks with `tox -e py38-codestyle`. Everything
-should pass.
+```
+pre-commit run --all-files
+```
 
-**Fifth,** install the pre-commit code style checks hook with
-`.tox/py38-codestyle/bin/pre-commit install`. This will use
-[pre-commit](https://pre-commit.com/) inside the virtual environment that tox
-made to run the checks every time you commit.
+**Fifth**, install [tox](https://tox.readthedocs.io/en/latest/) on your system
+Python (it’s best to use the latest version of Python for this):
+
+```
+python -m pip install tox
+```
+
+**Sixth**, run the tests. tox has many environments defined in the `envlist`
+key in `tox.ini`, which you can list with `tox -l`. Pick one for a Python
+version that you have installed and run the tests, for example:
+
+```
+tox -e py39-django31
+```
+
+If you run `tox` with no arguments, it will test all environments. This will
+take a while - it's often more efficient to only run all environments on CI.
 
 Editable Mode
 -------------
@@ -45,11 +56,11 @@ Tox runs the tests with [pytest](https://docs.pytest.org/en/latest/). You can
 pass arguments through to Pytest after a `--` to signify the end of arguments
 for tox to parse.
 
-For example, to run `pytest --pdb`, which starts PDB on test failure, run
-`tox -e py37-django22 -- --pdb`.
+For example, to run `pytest --pdb`, which starts PDB on test failure, run e.g.
+`tox -e py39-django31 -- --pdb`.
 
 You can use this to run a specific test file, for example
-`tox -e py37-django22 -- tests/integration/test_django.py`.
+`tox -e py39-django31 -- tests/integration/test_django.py`.
 
 Test Services
 -------------
