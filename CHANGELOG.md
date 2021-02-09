@@ -1,6 +1,6 @@
 # Changelog
 
-## Pending
+## [2.18.0] 2021-02-09
 
 ### Added
 
