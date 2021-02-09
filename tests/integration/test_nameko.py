@@ -5,19 +5,27 @@ import datetime as dt
 from contextlib import contextmanager
 
 import pytest
-from nameko.containers import get_container_cls
-from nameko.web.handlers import http
 from webtest import TestApp
 from werkzeug.wrappers import Response
 
 from scout_apm.api import Config
 from scout_apm.compat import datetime_to_timestamp, kwargs_only
-from scout_apm.nameko import ScoutReporter
 from tests.integration.util import (
     parametrize_filtered_params,
     parametrize_queue_time_header_name,
     parametrize_user_ip_headers,
 )
+
+pytest.skip(
+    "nameko tests temporarily disabled due to kombu version conflict - see tox.ini",
+    allow_module_level=True,
+)
+# from nameko.containers import get_container_cls
+# from nameko.web.handlers import http
+# from scout_apm.nameko import ScoutReporter
+http = None
+get_container_cls = None
+ScoutReporter = None
 
 
 @contextmanager
