@@ -20,7 +20,11 @@ def elasticsearch_client():
     ensure_installed()
     if "ELASTICSEARCH_URL" not in os.environ:
         raise pytest.skip("Elasticsearch isn't available")
-    yield elasticsearch.Elasticsearch(os.environ["ELASTICSEARCH_URL"])
+    client = elasticsearch.Elasticsearch(os.environ["ELASTICSEARCH_URL"])
+    try:
+        yield client
+    finally:
+        client.close()
 
 
 def test_all_client_attributes_accounted_for():
