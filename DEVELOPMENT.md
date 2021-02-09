@@ -59,7 +59,7 @@ by environment variables. These are:
 
 * `ELASTICSEARCH_URL` - point to a running Elasticsearch instance, e.g.
   "http://localhost:9200/" . You can start it with:
-  `docker run --detach --name elasticsearch --publish 9200:9200 -e "discovery.type=single-node" elasticsearch:7.5.2` .
+  `docker run --detach --name elasticsearch --publish 9200:9200 -e "discovery.type=single-node" elasticsearch:7.10.1` .
 * `MONGODB_URL` - point to a running MongoDB instance e.g.
   "mongodb://localhost:27017/" . You can start it with:
   `docker run --detach --name mongo --publish 27017:27017 mongo:4.0` .
