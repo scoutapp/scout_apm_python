@@ -65,7 +65,7 @@ by environment variables. These are:
   `docker run --detach --name mongo --publish 27017:27017 mongo:4.0` .
 * `REDIS_URL` - point to a running Redis instance e.g.
   "redis://localhost:6379/0" . You can start it with:
-  `docker run --detach --name redis --publish 6379:6379 redis:5` .
+  `docker run --detach --name redis --publish 6379:6379 redis:6` .
 
 You can `export` any of these environment variables and run the respective
 tests with `tox`.
