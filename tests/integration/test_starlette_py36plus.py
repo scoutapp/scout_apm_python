@@ -72,6 +72,13 @@ def app_with_scout(*, middleware=None, scout_config=None):
 
         return PlainTextResponse("Triggering background jobs", background=tasks)
 
+    class InstanceApp:
+        async def __call__(self, scope, receive, send):
+            resp = PlainTextResponse(
+                "Welcome home from an app that's a class instance."
+            )
+            await resp(scope, receive, send)
+
     routes = [
         Route("/", endpoint=home),
         Route("/sync-home/", endpoint=sync_home),
@@ -80,6 +87,7 @@ def app_with_scout(*, middleware=None, scout_config=None):
         Route("/crash/", endpoint=crash),
         Route("/return-error/", endpoint=return_error),
         Route("/background-jobs/", endpoint=background_jobs),
+        Route("/instance-app/", endpoint=InstanceApp()),
     ]
 
     async def raise_error_handler(request, exc):
@@ -464,3 +472,29 @@ async def test_username_bad_user(tracked_requests):
     assert len(tracked_requests) == 1
     tracked_request = tracked_requests[0]
     assert "username" not in tracked_request.tags
+
+
+@async_test
+async def test_instance_app(tracked_requests):
+    with app_with_scout() as app:
+        communicator = ApplicationCommunicator(
+            app, asgi_http_scope(path="/instance-app/")
+        )
+        await communicator.send_input({"type": "http.request"})
+        # Read the response.
+        response_start = await communicator.receive_output()
+        response_body = await communicator.receive_output()
+
+    assert response_start["type"] == "http.response.start"
+    assert response_start["status"] == 200
+    assert response_body["type"] == "http.response.body"
+    assert response_body["body"] == b"Welcome home from an app that's a class instance."
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.tags["path"] == "/instance-app/"
+    span = tracked_request.complete_spans[0]
+    assert span.operation == (
+        "Controller/tests.integration.test_starlette_py36plus."
+        + "app_with_scout.<locals>.InstanceApp"
+    )
