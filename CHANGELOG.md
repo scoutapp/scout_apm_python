@@ -8,7 +8,7 @@
   `open_point_in_time()`.
   ([PR #602](https://github.com/scoutapp/scout_apm_python/pull/602))
 
-- The release now includes a wheel for Python 3.9.
+- The release now includes binary wheels for Linux ARM and Python 3.9.
 
 ### Fixed
 
