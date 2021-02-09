@@ -1,5 +1,9 @@
 # Changelog
 
+- Instrument new Elasticsearch methods `close_point_in_time()` and
+  `open_point_in_time()`.
+  ([PR #602](https://github.com/scoutapp/scout_apm_python/pull/602))
+
 ## [2.17.1] 2021-02-01
 
 ### Fixed
