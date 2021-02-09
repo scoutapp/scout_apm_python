@@ -8,6 +8,8 @@
   `open_point_in_time()`.
   ([PR #602](https://github.com/scoutapp/scout_apm_python/pull/602))
 
+- The release now includes a wheel for Python 3.9.
+
 ### Fixed
 
 - Support hex timestamp in Amazon headers
