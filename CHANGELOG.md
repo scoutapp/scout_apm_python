@@ -12,6 +12,8 @@
 
 - Support hex timestamp in Amazon headers
   ([PR #598](https://github.com/scoutapp/scout_apm_python/pull/598))
+- Fix a socket resource leak when downloading the core agent.
+  ([PR #609](https://github.com/scoutapp/scout_apm_python/pull/609))
 
 ## [2.17.0] 2020-09-17
 

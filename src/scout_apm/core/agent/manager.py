@@ -216,6 +216,7 @@ class CoreAgentDownloader(object):
                     fp.write(chunk)
         finally:
             response.release_conn()
+            http.clear()
         return True
 
     def untar(self):
