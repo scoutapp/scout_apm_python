@@ -1,6 +1,7 @@
 global-exclude *.py[cod]
 prune __pycache__
 prune tests
+recursive-include src *.c
 include CHANGELOG.md
 include DEVELOPMENT.md
 include LICENSE
