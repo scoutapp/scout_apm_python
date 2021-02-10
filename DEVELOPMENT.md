@@ -84,6 +84,10 @@ tests with `tox`.
 Running the test app
 --------------------
 
+Note: this has not been tested in a while. Instead, the
+[scout-test-apps repo](https://github.com/tim-schilling/scout-test-apps) has
+been used with many individual scout apps.
+
 Add the following env variables:
 
     export SCOUT_MONITOR="True"
@@ -112,3 +116,24 @@ Or with any other WSGI server, really!
 
 As above, you can create different virtualenvs to test with different Python
 versions, provided you do the whole setup for each virtualenv.
+
+Releases
+--------
+
+Releases are run in the "releases" GitHub Actions Workflow. This runs on every
+pull request and commit to master, to check that the build works. When a tag
+is pushed that starts with 'v', the built artifacts will also be uploaded to
+PyPI, using a password stored in the GitHub Actions Secrets.
+
+The build process uses the [cibuildwheel
+tool](https://cibuildwheel.readthedocs.io/) to handle much of the complexity
+of building binary wheels across different Python versions and processor
+architectures. Its documentation is excellent.
+
+Documentation
+-------------
+
+The user documentation is stored in the [slate_apm_help
+repo](https://github.com/scoutapp/slate_apm_help) in the
+`source/_includes/python.md` file. Make relevant changes there when developing
+features.
