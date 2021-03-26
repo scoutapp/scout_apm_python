@@ -22,6 +22,10 @@ class ScoutMiddleware:
             return await self.app(scope, receive, send)
 
         tracked_request = TrackedRequest.instance()
+        # Assume the request is real until we determine it's not. This is useful
+        # when the asyncio instrumentation is determining if a new Task should
+        # reuse the existing tracked request.
+        tracked_request.is_real_request = True
         # Can't name controller until post-routing - see final clause
         controller_span = tracked_request.start_span(operation="Controller/Unknown")
 
@@ -37,7 +41,9 @@ class ScoutMiddleware:
                     endpoint.__module__,
                     endpoint.__qualname__,
                 )
-                tracked_request.is_real_request = True
+            else:
+                # Mark the request as not real
+                tracked_request.is_real_request = False
 
             # From AuthenticationMiddleware - bypass request.user because it
             # throws AssertionError if 'user' is not in Scope, and we need a

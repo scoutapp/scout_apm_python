@@ -18,21 +18,24 @@ try:
 except ImportError:
     asyncio = None
 
+SCOUT_REQUEST_ATTR = "__scout_trackedrequest"
+
 
 def get_current_asyncio_task():
     """
     Cross-version implementation of asyncio.current_task()
     Returns None if there is no task.
     """
-    try:
-        if hasattr(asyncio, "current_task"):
-            # Python 3.7 and up
-            return asyncio.current_task()
-        else:
-            # Python 3.6
-            return asyncio.Task.current_task()
-    except RuntimeError:
-        return None
+    if asyncio:
+        try:
+            if hasattr(asyncio, "current_task"):
+                # Python 3.7 and up
+                return asyncio.current_task()
+            else:
+                # Python 3.6
+                return asyncio.Task.current_task()
+        except RuntimeError:
+            return None
 
 
 class SimplifiedAsgirefLocal:
@@ -111,8 +114,11 @@ class LocalContext(object):
             self._local = ThreadLocal()
 
     def get_tracked_request(self):
+        task = get_current_asyncio_task()
         if not hasattr(self._local, "tracked_request"):
-            self._local.tracked_request = TrackedRequest()
+            self._local.tracked_request = (
+                task and getattr(task, SCOUT_REQUEST_ATTR, None) or TrackedRequest()
+            )
         return self._local.tracked_request
 
     def clear_tracked_request(self, instance):
