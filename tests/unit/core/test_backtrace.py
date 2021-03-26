@@ -1,7 +1,9 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import os
 import sys
+import sysconfig
 
 from scout_apm.core import backtrace
 
@@ -37,3 +39,17 @@ def test_capture_limit():
 
     stack = capture_recursive_bottom(backtrace.LIMIT * 2)
     assert len(stack) == backtrace.LIMIT
+
+
+def test_filter_frames():
+    """Verify the frames from the library paths are excluded."""
+    paths = sysconfig.get_paths()
+    library_path = {paths["purelib"], paths["platlib"]}.pop()
+    frames = [
+        {"file": os.path.join(library_path, "test"), "line": 1, "function": "foo"},
+        {"file": "/valid/path", "line": 1, "function": "foo"},
+    ]
+
+    actual = list(backtrace.filter_frames(frames))
+    assert len(actual) == 1
+    assert actual[0]["file"] == "/valid/path"

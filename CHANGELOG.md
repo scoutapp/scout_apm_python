@@ -3,9 +3,12 @@
 ## Pending
 
 ### Added
-
 - Tested with Django 3.2. Only define ``default_app_config`` when using
   a version of Django earlier than 3.2.
+
+### Fixed
+- Exclude python library paths from backtraces.
+  ([PR #514](https://github.com/scoutapp/scout_apm_python/issues/514))
 
 ## [2.18.0] 2021-02-09
 
