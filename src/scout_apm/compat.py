@@ -34,13 +34,15 @@ else:
 if sys.version_info >= (3, 2):
     from contextlib import ContextDecorator
 else:
-    import functools
 
     class ContextDecorator(object):
+        def _recreate_cm(self):
+            return self
+
         def __call__(self, f):
-            @functools.wraps(f)
+            @wraps(f)
             def decorated(*args, **kwds):
-                with self:
+                with self._recreate_cm():
                     return f(*args, **kwds)
 
             return decorated

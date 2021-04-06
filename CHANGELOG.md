@@ -6,6 +6,10 @@
 
 - Tested with Django 3.2. Only define ``default_app_config`` when using
   a version of Django earlier than 3.2.
+- Support instrumentation and transaction decorators for asynchronous
+  functions via ``@instrument.async_``, ``@WebTransaction.async_`` and
+  ``@BackgroundTransaction.async_``.
+  ([PR #633](https://github.com/scoutapp/scout_apm_python/issues/633))
 
 ### Fixed
 

@@ -130,6 +130,7 @@ async def test_task_awaited(tracked_request):
 
 @async_test
 async def test_nested_tasks(tracked_request):
+    @instrument.async_("orchestrator")
     async def orchestrator():
         await coro("1")
         await asyncio.gather(
@@ -143,11 +144,12 @@ async def test_nested_tasks(tracked_request):
         await orchestrator()
 
     spans = tracked_request.complete_spans
-    assert len(spans) == 4
+    assert len(spans) == 5
     assert [span.operation for span in spans] == [
         "Custom/coro",
         "Custom/coro",
         "Custom/coro",
+        "Custom/orchestrator",
         "Job/test",
     ]
     # Verify the order of the coroutines
@@ -155,6 +157,7 @@ async def test_nested_tasks(tracked_request):
         "1",
         "2b",
         "2a",
+        None,
         None,
     ]
 

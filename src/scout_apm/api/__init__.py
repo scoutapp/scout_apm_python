@@ -6,6 +6,15 @@ from scout_apm.compat import ContextDecorator, text
 from scout_apm.core.config import ScoutConfig
 from scout_apm.core.tracked_request import TrackedRequest
 
+# The async_ module can only be shipped on Python 3.6+
+try:
+    from scout_apm.async_.api import AsyncDecoratorMixin
+except ImportError:
+
+    class AsyncDecoratorMixin(object):
+        pass
+
+
 __all__ = [
     "BackgroundTransaction",
     "Config",
@@ -41,7 +50,7 @@ def ignore_transaction():
     TrackedRequest.instance().tag("ignore_transaction", True)
 
 
-class instrument(ContextDecorator):
+class instrument(AsyncDecoratorMixin, ContextDecorator):
     def __init__(self, operation, kind="Custom", tags=None):
         self.operation = text(kind) + "/" + text(operation)
         if tags is None:
@@ -66,7 +75,7 @@ class instrument(ContextDecorator):
             self.span.tag(key, value)
 
 
-class Transaction(ContextDecorator):
+class Transaction(AsyncDecoratorMixin, ContextDecorator):
     """
     This Class is not meant to be used directly.
     Use one of the subclasses
