@@ -144,31 +144,37 @@ async def test_echo(tracked_request):
     assert tracked_request.complete_spans[0].operation == "Redis/ECHO"
 
 
-# def test_pipeline_echo(redis_conn, tracked_request):
-#     with redis_conn.pipeline() as p:
-#         p.echo("Hello World!")
-#         p.execute()
+@async_test
+async def test_pipeline_echo(tracked_request):
+    redis_conn = await get_redis_conn()
+    with redis_conn.pipeline() as p:
+        p.echo("Hello World!")
+        p.execute()
 
-#     assert len(tracked_request.complete_spans) == 1
-#     assert tracked_request.complete_spans[0].operation == "Redis/MULTI"
-
-
-# def test_execute_command_missing_argument(redis_conn, tracked_request):
-#     # Redis instrumentation doesn't crash if op is missing.
-#     # This raises a TypeError (Python 3) or IndexError (Python 2)
-#     # when calling the original method.
-#     with pytest.raises(IndexError):
-#         redis_conn.execute_command()
-
-#     assert len(tracked_request.complete_spans) == 1
-#     assert tracked_request.complete_spans[0].operation == "Redis/Unknown"
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.complete_spans[0].operation == "Redis/MULTI"
 
 
-# def test_perform_request_bad_url(redis_conn, tracked_request):
-#     with pytest.raises(TypeError):
-#         # Redis instrumentation doesn't crash if op has the wrong type.
-#         # This raises a TypeError when calling the original method.
-#         redis_conn.execute_command(None)
+@async_test
+async def test_execute_command_missing_argument(tracked_request):
+    redis_conn = await get_redis_conn()
+    # Redis instrumentation doesn't crash if op is missing.
+    # This raises a TypeError (Python 3) or IndexError (Python 2)
+    # when calling the original method.
+    with pytest.raises(IndexError):
+        redis_conn.execute_command()
 
-#     assert len(tracked_request.complete_spans) == 1
-#     assert tracked_request.complete_spans[0].operation == "Redis/None"
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.complete_spans[0].operation == "Redis/Unknown"
+
+
+@async_test
+async def test_perform_request_bad_url(tracked_request):
+    redis_conn = await get_redis_conn()
+    with pytest.raises(TypeError):
+        # Redis instrumentation doesn't crash if op has the wrong type.
+        # This raises a TypeError when calling the original method.
+        redis_conn.execute_command(None)
+
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.complete_spans[0].operation == "Redis/None"
