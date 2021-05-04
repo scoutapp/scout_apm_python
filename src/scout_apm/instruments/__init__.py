@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 instrument_names = [
     "aioredis",
-    "asyncio", 
+    "asyncio",
     "elasticsearch",
     "jinja2",
     "pymongo",
