@@ -2,6 +2,8 @@
 
 ## Pending
 
+## [2.19.0] 2021-05-04
+
 ### Added
 
 - Tested with Django 3.2. Only define ``default_app_config`` when using
