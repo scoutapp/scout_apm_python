@@ -10,7 +10,6 @@ from scout_apm.core.tracked_request import TrackedRequest
 from scout_apm.core.web_requests import (
     create_filtered_path,
     ignore_path,
-    track_amazon_request_queue_time,
     track_request_queue_time,
 )
 
@@ -72,14 +71,10 @@ def wrap_callback(wrapped, instance, args, kwargs):
         )
         tracked_request.tag("user_ip", user_ip)
 
-    tracked_queue_time = False
     queue_time = request.headers.get("x-queue-start", "") or request.headers.get(
         "x-request-start", ""
     )
-    tracked_queue_time = track_request_queue_time(queue_time, tracked_request)
-    if not tracked_queue_time:
-        amazon_queue_time = request.headers.get("x-amzn-trace-id", "")
-        track_amazon_request_queue_time(amazon_queue_time, tracked_request)
+    track_request_queue_time(queue_time, tracked_request)
 
     with tracked_request.span(
         operation="Controller{}".format(controller_name), should_capture_backtrace=False

@@ -12,7 +12,6 @@ from scout_apm.core.tracked_request import TrackedRequest
 from scout_apm.core.web_requests import (
     create_filtered_path,
     ignore_path,
-    track_amazon_request_queue_time,
     track_request_queue_time,
 )
 
@@ -75,10 +74,7 @@ class ScoutMiddleware(object):
         queue_time = req.get_header("x-queue-start", default="") or req.get_header(
             "x-request-start", default=""
         )
-        tracked_queue_time = track_request_queue_time(queue_time, tracked_request)
-        if not tracked_queue_time:
-            amazon_queue_time = req.get_header("x-amzn-trace-id", default="")
-            track_amazon_request_queue_time(amazon_queue_time, tracked_request)
+        track_request_queue_time(queue_time, tracked_request)
 
     def process_resource(self, req, resp, resource, params):
         if self._do_nothing:

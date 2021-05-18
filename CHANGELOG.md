@@ -1,6 +1,10 @@
 # Changelog
 
 ## Pending
+- Removed parsing queue time from Amazon ALB header, X-Amzn-Trace-Id.
+  The time portion of the header only has the truncated seconds which
+  appears as about 500ms for queue time constantly.
+  ([Issue #631](https://github.com/scoutapp/scout_apm_python/issues/631))
 
 ## [2.19.0] 2021-05-04
 

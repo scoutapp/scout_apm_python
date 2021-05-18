@@ -148,24 +148,6 @@ def test_queue_time(header_name, tracked_requests):
     assert isinstance(queue_time_ns, int) and queue_time_ns > 0
 
 
-def test_amazon_queue_time(tracked_requests):
-    queue_start = int(datetime_to_timestamp(dt.datetime.utcnow())) - 2
-    with app_with_scout() as app:
-        response = TestApp(app).get(
-            "/",
-            headers={
-                "X-Amzn-Trace-Id": str(
-                    "Self=1-{}-12456789abcdef012345678".format(queue_start)
-                )
-            },
-        )
-
-    assert response.status_int == 200
-    assert len(tracked_requests) == 1
-    queue_time_ns = tracked_requests[0].tags["scout.queue_time_ns"]
-    assert isinstance(queue_time_ns, int) and queue_time_ns > 0
-
-
 def test_home_ignored(tracked_requests):
     with app_with_scout(config={"scout.ignore": ["/"]}) as app:
         response = TestApp(app).get("/")

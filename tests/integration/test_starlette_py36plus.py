@@ -312,31 +312,6 @@ async def test_queue_time(header_name, tracked_requests):
 
 
 @async_test
-async def test_amazon_queue_time(tracked_requests):
-    queue_start = int(datetime_to_timestamp(dt.datetime.utcnow())) - 2
-    with app_with_scout() as app:
-        communicator = ApplicationCommunicator(
-            app,
-            asgi_http_scope(
-                path="/",
-                headers={
-                    "X-Amzn-Trace-Id": "Self=1-{}-12456789abcdef012345678".format(
-                        queue_start
-                    )
-                },
-            ),
-        )
-        await communicator.send_input({"type": "http.request"})
-        response_start = await communicator.receive_output()
-        await communicator.receive_output()
-
-    assert response_start["type"] == "http.response.start"
-    assert response_start["status"] == 200
-    queue_time_ns = tracked_requests[0].tags["scout.queue_time_ns"]
-    assert isinstance(queue_time_ns, int) and queue_time_ns > 0
-
-
-@async_test
 async def test_server_error(tracked_requests):
     with app_with_scout() as app:
         communicator = ApplicationCommunicator(app, asgi_http_scope(path="/crash/"))

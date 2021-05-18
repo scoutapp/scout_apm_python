@@ -111,53 +111,6 @@ def track_request_queue_time(header_value, tracked_request):
     return True
 
 
-def track_amazon_request_queue_time(header_value, tracked_request):
-    items = header_value.split(";")
-    found_item = None
-    for item in items:
-        if found_item is None and item.startswith("Root="):
-            found_item = item
-        elif item.startswith("Self="):
-            found_item = item
-
-    if found_item is None:
-        return False
-
-    pieces = found_item.split("-")
-    if len(pieces) != 3:
-        return False
-
-    timestamp_str = pieces[1]
-
-    try:
-        first_char = timestamp_str[0]
-    except IndexError:
-        return False
-
-    if not first_char.isdigit():
-        return False
-
-    # If the timestamp is 8 characters long, it's in hexadecimal format.
-    base = 16 if len(timestamp_str) == 8 else 10
-    try:
-        start_timestamp_ns = int(timestamp_str, base) * 1000000000.0
-    except ValueError:
-        return False
-
-    if start_timestamp_ns == 0:
-        return False
-
-    tr_start_timestamp_ns = datetime_to_timestamp(tracked_request.start_time) * 1e9
-
-    # Ignore if in the futuren
-    if start_timestamp_ns > tr_start_timestamp_ns:
-        return False
-
-    queue_time_ns = int(tr_start_timestamp_ns - start_timestamp_ns)
-    tracked_request.tag("scout.queue_time_ns", queue_time_ns)
-    return True
-
-
 # Cutoff epoch is used for determining ambiguous timestamp boundaries
 CUTOFF_EPOCH_S = time.mktime((dt.date.today().year - 10, 1, 1, 0, 0, 0, 0, 0, 0))
 CUTOFF_EPOCH_MS = CUTOFF_EPOCH_S * 1000.0
@@ -209,14 +162,7 @@ def asgi_track_request_data(scope, tracked_request):
     queue_time = headers.get(b"x-queue-start", b"") or headers.get(
         b"x-request-start", b""
     )
-    tracked_queue_time = track_request_queue_time(
-        queue_time.decode("latin1"), tracked_request
-    )
-    if not tracked_queue_time:
-        amazon_queue_time = headers.get(b"x-amzn-trace-id", b"")
-        track_amazon_request_queue_time(
-            amazon_queue_time.decode("latin1"), tracked_request
-        )
+    track_request_queue_time(queue_time.decode("latin1"), tracked_request)
 
 
 def werkzeug_track_request_data(werkzeug_request, tracked_request):
@@ -245,7 +191,4 @@ def werkzeug_track_request_data(werkzeug_request, tracked_request):
     queue_time = werkzeug_request.headers.get(
         "x-queue-start", default=""
     ) or werkzeug_request.headers.get("x-request-start", default="")
-    tracked_queue_time = track_request_queue_time(queue_time, tracked_request)
-    if not tracked_queue_time:
-        amazon_queue_time = werkzeug_request.headers.get("x-amzn-trace-id", default="")
-        track_amazon_request_queue_time(amazon_queue_time, tracked_request)
+    track_request_queue_time(queue_time, tracked_request)
