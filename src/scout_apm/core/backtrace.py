@@ -23,36 +23,44 @@ def filter_frames(frames):
 
 if sys.version_info >= (3, 5):
 
-    def frame_walker():
+    def frame_walker(start_frame=None):
         """Iterate over each frame of the stack.
 
         Taken from python3/traceback.ExtractSummary.extract to support
         iterating over the entire stack, but without creating a large
         data structure.
         """
-        for frame, lineno in traceback.walk_stack(sys._getframe().f_back):
+        if start_frame is None:
+            start_frame = sys._getframe().f_back
+        for frame, lineno in traceback.walk_stack(start_frame):
             co = frame.f_code
             filename = co.co_filename
             name = co.co_name
             yield {"file": filename, "line": lineno, "function": name}
 
-    def capture():
-        return list(itertools.islice(filter_frames(frame_walker()), LIMIT))
+    def capture(start_frame=None, apply_filter=True):
+        walker = frame_walker(start_frame)
+        if apply_filter:
+            walker = filter_frames(walker)
+        return list(itertools.islice(walker, LIMIT))
 
 
 else:
 
-    def frame_walker():
+    def frame_walker(start_frame):
         """Iterate over each frame of the stack.
 
         Taken from python2.7/traceback.extract_stack to support iterating
         over the entire stack, but without creating a large data structure.
         """
-        try:
-            raise ZeroDivisionError
-        except ZeroDivisionError:
-            # Get the current frame
-            f = sys.exc_info()[2].tb_frame.f_back
+        if start_frame is None:
+            try:
+                raise ZeroDivisionError
+            except ZeroDivisionError:
+                # Get the current frame
+                f = sys.exc_info()[2].tb_frame.f_back
+        else:
+            f = start_frame
 
         while f is not None:
             lineno = f.f_lineno
@@ -62,5 +70,8 @@ else:
             yield {"file": filename, "line": lineno, "function": name}
             f = f.f_back
 
-    def capture():
-        return list(itertools.islice(filter_frames(frame_walker()), LIMIT))
+    def capture(start_frame=None, apply_filter=True):
+        walker = frame_walker(start_frame)
+        if apply_filter:
+            walker = filter_frames(walker)
+        return list(itertools.islice(walker, LIMIT))

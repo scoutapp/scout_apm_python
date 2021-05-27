@@ -67,6 +67,7 @@ setup(
         'urllib3[secure] < 1.25 ; python_version < "3.5"',
         'urllib3[secure] < 2 ; python_version >= "3.5"',
         "wrapt>=1.10,<2.0",
+        "requests",
     ],
     keywords="apm performance monitoring development",
     classifiers=[

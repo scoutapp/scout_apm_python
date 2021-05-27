@@ -223,6 +223,9 @@ class Defaults(object):
             "core_agent_version": "v1.3.0",  # can be an exact tag name, or 'latest'
             "disabled_instruments": [],
             "download_url": "https://s3-us-west-1.amazonaws.com/scout-public-downloads/apm_core_agent/release",  # noqa: B950
+            "errors_enabled": False,
+            "errors_ignored_exceptions": [],
+            "errors_host": "https://errors.scoutapm.com",
             "framework": "",
             "framework_version": "",
             "hostname": None,

@@ -12,6 +12,7 @@ from scout_apm.core.web_requests import (
     CUTOFF_EPOCH_S,
     convert_ambiguous_timestamp_to_ns,
     create_filtered_path,
+    filter_element,
     ignore_path,
     track_amazon_request_queue_time,
     track_request_queue_time,
@@ -43,6 +44,26 @@ from scout_apm.core.web_requests import (
 )
 def test_create_filtered_path(path, params, expected):
     assert create_filtered_path(path, params) == expected
+
+
+@pytest.mark.parametrize(
+    "key, value, expected",
+    [
+        ("bar", "baz", b"baz"),
+        ("password", "baz", b"[FILTERED]"),
+        ("bar", {"password": "hunter2"}, {b"password": b"[FILTERED]"}),
+        ("bar", [{"password": "hunter2"}], [{b"password": b"[FILTERED]"}]),
+        ("bar", {"baz"}, {b"baz"}),
+        (
+            "bar",
+            ({"password": "hunter2"}, "baz"),
+            ({b"password": b"[FILTERED]"}, b"baz"),
+        ),
+        ("", None, b"None"),
+    ],
+)
+def test_filter_element(key, value, expected):
+    assert filter_element(key, value) == expected
 
 
 @pytest.mark.parametrize("path, params", [("/", []), ("/", [("foo", "ignored")])])
