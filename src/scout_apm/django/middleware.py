@@ -5,7 +5,6 @@ import sys
 
 import django
 from django.conf import settings
-from django.views.debug import SafeExceptionReporterFilter
 
 from scout_apm.compat import string_types
 from scout_apm.core.config import scout_config
@@ -24,6 +23,14 @@ if django.VERSION >= (1, 11):
 else:
     from django.core.urlresolvers import get_urlconf
 
+if django.VERSION < (3, 2):
+    from django.views.debug import get_safe_settings
+else:
+    from django.views.debug import SafeExceptionReporterFilter
+
+    def get_safe_settings():
+        return SafeExceptionReporterFilter().get_safe_settings()
+
 
 def get_controller_name(request):
     view_func = request.resolver_match.func
@@ -37,7 +44,9 @@ def get_controller_name(request):
             django_admin_components.action,
         )
 
-    django_rest_framework_components = _get_django_rest_framework_components(request)
+    django_rest_framework_components = _get_django_rest_framework_components(
+        request, view_func, view_name
+    )
     if django_rest_framework_components is not None:
         view_name = "{}.{}".format(
             django_rest_framework_components.controller,
@@ -71,7 +80,9 @@ def get_request_components(request):
     if django_admin_components:
         request_components = django_admin_components
 
-    django_rest_framework_components = _get_django_rest_framework_components(request)
+    django_rest_framework_components = _get_django_rest_framework_components(
+        request, view_func, view_name
+    )
     if django_rest_framework_components is not None:
         request_components = django_rest_framework_components
 
@@ -244,7 +255,7 @@ class MiddlewareTimingMiddleware(object):
             params=request.GET.dict(),
             session=dict(request.session.items()),
             request_components=get_request_components(request),
-            environment=SafeExceptionReporterFilter().get_safe_settings(),
+            environment=get_safe_settings(),
         )
 
 
@@ -351,8 +362,8 @@ class OldStyleMiddlewareTimingMiddleware(object):
             path=path,
             params=request.GET.dict(),
             session=dict(request.session.items()),
-            environment=SafeExceptionReporterFilter().get_safe_settings(),
             request_components=get_request_components(request),
+            environment=get_safe_settings(),
         )
 
 

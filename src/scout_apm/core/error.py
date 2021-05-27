@@ -1,6 +1,8 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import sys
+
 try:
     from html import escape
 except ImportError:
@@ -25,19 +27,19 @@ class ErrorMonitor(object):
         environment=None,
         request_components=None,
     ):
-        exc_type, exc_value, traceback = exception
 
         if not scout_config.value("errors_enabled"):
             return
 
-        if exc_type in scout_config.value("errors_ignored_exceptions"):
+        if isinstance(exception, scout_config.value("errors_ignored_exceptions")):
             return
 
+        traceback = sys.exc_info()[2]
         tags = TrackedRequest.instance().tags if scout_config.value("monitor") else None
 
         message = {
-            "exception_class": exc_type,
-            "message": exc_value,
+            "exception_class": exception.__class__,
+            "message": exception,
             "request_uri": path,
             "request_params": filter_element("", params) if params else None,
             "request_session": filter_element("", session) if session else None,
@@ -50,7 +52,7 @@ class ErrorMonitor(object):
         }
 
         # send via API
-        response = cls._push(message)
+        response = cls._push(message)  # noqa
 
     @classmethod
     def _push(cls, message):
@@ -66,5 +68,5 @@ class ErrorMonitor(object):
             scout_config.value("errors_host/apps/error.scout"),
             params=params,
             data=message,
-            headers={},
+            headers=headers,
         )
