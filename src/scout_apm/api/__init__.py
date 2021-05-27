@@ -1,9 +1,12 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import sys
+
 import scout_apm.core
 from scout_apm.compat import ContextDecorator, text
 from scout_apm.core.config import ScoutConfig
+from scout_apm.core.error import ErrorMonitor
 from scout_apm.core.tracked_request import TrackedRequest
 
 # The async_ module can only be shipped on Python 3.6+
@@ -19,6 +22,7 @@ __all__ = [
     "BackgroundTransaction",
     "Config",
     "Context",
+    "Error",
     "WebTransaction",
     "install",
     "instrument",
@@ -143,3 +147,51 @@ def rename_transaction(name):
     if name is not None:
         tracked_request = TrackedRequest.instance()
         tracked_request.tag("transaction.name", name)
+
+
+class Error(object):
+    @classmethod
+    def capture(
+        cls,
+        exception,
+        request_path=None,
+        request_params=None,
+        session=None,
+        custom_controller=None,
+        custom_params=None,
+    ):
+        """
+        Capture the exception manually.
+
+        Utilizes sys.exc_info to gather the traceback. This has the side
+        effect that if another exception is raised before calling
+        ``Error.capture``, the traceback will match the most recently
+        raised exception.
+
+        Includes any context added for the TrackedRequest.
+
+        :exception: Any exception.
+        :request_path: Any String identifying the relative path of the request.
+              Example: "/hello-world/"
+        :request_params: Any json-serializable dict representing the
+              querystring parameters.
+              Example: {"page": 1}
+        :session: Any json-serializable dict representing the
+              request session.
+              Example: {"step": 0}
+        :custom_controller: Any String identifying the controller or job.
+              Example: "send_email"
+        :custom_params: Any json-serializable dict.
+              Example: {"to": "scout@test.com", "from": "no-reply@test.com"}
+        :returns: nothing.
+        """
+        if isinstance(exception, Exception):
+            exc_info = (exception.__class__, exception, sys.exc_info()[2])
+            ErrorMonitor.send(
+                exc_info,
+                request_path=request_path,
+                request_params=request_params,
+                session=session,
+                custom_controller=custom_controller,
+                custom_params=custom_params,
+            )

@@ -77,6 +77,8 @@ def app_with_scout(**settings):
     uninstall and reinstall scout per test.
     """
     settings.setdefault("SCOUT_MONITOR", True)
+    settings.setdefault("SCOUT_ERRORS_ENABLED", True)
+
     settings["SCOUT_CORE_AGENT_LAUNCH"] = False
     with override_settings(**settings):
         # Have to create a new WSGI app each time because the middleware stack
@@ -243,6 +245,16 @@ def test_server_error(tracked_requests):
     assert operations == expected_operations
 
 
+def test_server_error_error_monitor(tracked_requests, error_monitor_errors):
+    with app_with_scout(DEBUG_PROPAGATE_EXCEPTIONS=False) as app:
+        TestApp(app).get("/crash/", expect_errors=True)
+
+    assert len(error_monitor_errors) == 1
+    error = error_monitor_errors[0]
+    assert error["exception_class"] == "ValueError"
+    assert error["message"] == "BØØM!"
+
+
 def test_return_error(tracked_requests):
     with app_with_scout() as app:
         response = TestApp(app).get("/return-error/", expect_errors=True)
@@ -256,6 +268,13 @@ def test_return_error(tracked_requests):
         "Controller/tests.integration.django_app.return_error",
         "Middleware",
     ]
+
+
+def test_return_error_error_monitor(tracked_requests, error_monitor_errors):
+    with app_with_scout() as app:
+        TestApp(app).get("/return-error/", expect_errors=True)
+
+    assert len(error_monitor_errors) == 0
 
 
 def test_cbv(tracked_requests):
@@ -465,6 +484,36 @@ def test_django_rest_framework_api_operation_name(
     ]
 
 
+@pytest.mark.parametrize(
+    "url, expected_action",
+    [
+        [
+            "/drf-router/crash/",
+            "list",
+        ],
+        [
+            "/drf-router/crash/1/",
+            "retrieve",
+        ],
+    ],
+)
+def test_django_rest_framework_api_request_components(
+    url, expected_action, tracked_requests, error_monitor_errors
+):
+    with app_with_scout(DEBUG_PROPAGATE_EXCEPTIONS=False) as app:
+        make_admin_user()
+        response = TestApp(app).get(url, expect_errors=True)
+
+    assert response.status_int == 500
+    assert len(error_monitor_errors) == 1
+    error = error_monitor_errors[0]
+    assert error["request_components"] == {
+        "module": "tests.integration.django_app",
+        "controller": "ErrorViewSet",
+        "action": expected_action,
+    }
+
+
 def skip_if_no_tastypie():
     # This would make more sense as a test decorator, but can't be one because
     # it requires the Django application to be constructed first, under
@@ -497,6 +546,57 @@ def test_tastypie_api_operation_name(url, expected_op_name, tracked_requests):
     tracked_request = tracked_requests[0]
     span = tracked_request.complete_spans[-2]
     assert span.operation == expected_op_name
+
+
+@pytest.mark.parametrize(
+    "url, expected_action",
+    [
+        [
+            "/tastypie-api/v1/crash/1/",
+            "get_detail",
+        ],
+        [
+            "/tastypie-api/v1/crash/",
+            "get_list",
+        ],
+    ],
+)
+def test_error_monitor_tastypie_request_components(
+    url, expected_action, tracked_requests, error_monitor_errors
+):
+    with app_with_scout(DEBUG_PROPAGATE_EXCEPTIONS=False) as app:
+        skip_if_no_tastypie()
+        make_admin_user()
+        response = TestApp(app).get(url, {"format": "json"}, expect_errors=True)
+
+    assert response.status_int == 500
+    assert len(error_monitor_errors) == 1
+    error = error_monitor_errors[0]
+    assert error["request_components"] == {
+        "module": "tests.integration.django_app",
+        "controller": "CrashResource",
+        "action": expected_action,
+    }
+
+
+def test_error_monitor_tastypie_request_components_fail_no_tastypie(
+    tracked_requests, error_monitor_errors
+):
+    with app_with_scout(DEBUG_PROPAGATE_EXCEPTIONS=False) as app:
+        skip_if_no_tastypie()
+        with pretend_package_unavailable("tastypie"):
+            response = TestApp(app).get(
+                "/tastypie-api/v1/crash/1/", {"format": "json"}, expect_errors=True
+            )
+
+    assert response.status_int == 500
+    assert len(error_monitor_errors) == 1
+    error = error_monitor_errors[0]
+    assert error["request_components"] == {
+        "module": "tastypie.resources",
+        "controller": "wrapper",
+        "action": "GET",
+    }
 
 
 def test_tastypie_api_operation_name_fail_no_tastypie(tracked_requests):
@@ -538,6 +638,70 @@ def test_tastypie_api_operation_name_fail_no_closure(tracked_requests):
     assert span.operation == "Controller/tastypie.resources.wrapper"
 
 
+def crash_middleware_no_resolver(get_response):
+    def middleware(request):
+        raise ValueError("BØØM!")
+
+    return middleware
+
+
+def crash_middleware(get_response):
+    def middleware(request):
+        get_response(request)
+        # Error after the view processes so request.resolver_match is set
+        raise ValueError("BØØM!")
+
+    return middleware
+
+
+@skip_unless_new_style_middleware
+@pytest.mark.parametrize(
+    "middleware, expected_request_components",
+    [
+        [
+            __name__ + ".crash_middleware_no_resolver",
+            None,
+        ],
+        [
+            __name__ + ".crash_middleware",
+            {
+                "action": "GET",
+                "controller": "hello",
+                "module": "tests.integration.django_app",
+            },
+        ],
+    ],
+)
+def test_error_monitor_middleware_crash(
+    middleware,
+    expected_request_components,
+    tracked_requests,
+    error_monitor_errors,
+):
+    new_middleware = settings.MIDDLEWARE + [middleware]
+    with app_with_scout(
+        MIDDLEWARE=new_middleware, DEBUG_PROPAGATE_EXCEPTIONS=False
+    ) as app:
+        response = TestApp(app).get("/hello/", expect_errors=True)
+
+    assert response.status_int == 500
+    assert len(error_monitor_errors) == 1
+    error = error_monitor_errors[0]
+    assert error["request_components"] == expected_request_components
+
+
+@skip_unless_new_style_middleware
+def test_error_monitor_sanitized_environment(tracked_requests, error_monitor_errors):
+    with app_with_scout(DEBUG_PROPAGATE_EXCEPTIONS=False) as app:
+        response = TestApp(app).get("/crash/", expect_errors=True)
+
+    assert response.status_int == 500
+    assert len(error_monitor_errors) == 1
+    error = error_monitor_errors[0]
+    assert error["environment"]["SECRET_KEY"] == "********************"
+    assert error["environment"]["DATABASES"]["default"]["PASSWORD"] == "[FILTERED]"
+
+
 def test_no_monitor(tracked_requests):
     with app_with_scout(SCOUT_MONITOR=False) as app:
         response = TestApp(app).get("/hello/")
@@ -552,6 +716,16 @@ def test_no_monitor_server_error(tracked_requests):
 
     assert response.status_int == 500
     assert tracked_requests == []
+
+
+def test_no_error_monitoring_server_error(tracked_requests, error_monitor_errors):
+    with app_with_scout(
+        SCOUT_ERRORS_ENABLED=False, DEBUG_PROPAGATE_EXCEPTIONS=False
+    ) as app:
+        response = TestApp(app).get("/crash/", expect_errors=True)
+
+    assert response.status_int == 500
+    assert error_monitor_errors == []
 
 
 def test_username_anonymous(tracked_request):
@@ -873,6 +1047,32 @@ def test_old_style_exception_on_request_middleware(middleware_index, tracked_req
 
     assert response.status_int == 500
     assert len(tracked_requests) == 0
+
+
+@skip_unless_old_style_middleware
+@pytest.mark.parametrize("middleware_index", [0, 1, 999])
+def test_old_style_exception_on_request_middleware_error_monitor(
+    middleware_index, tracked_requests, error_monitor_errors
+):
+    """
+    Test the case the old style middleware has the errors monitored.
+    """
+    new_middleware = (
+        settings.MIDDLEWARE_CLASSES[:middleware_index]
+        + [__name__ + "." + OldStyleExceptionOnRequestMiddleware.__name__]
+        + settings.MIDDLEWARE_CLASSES[middleware_index:]
+    )
+    with app_with_scout(
+        MIDDLEWARE_CLASSES=new_middleware,
+        DEBUG_PROPAGATE_EXCEPTIONS=False,
+        SCOUT_ERRORS_ENABLED=True,
+    ) as app:
+        TestApp(app).get("/", expect_errors=True)
+
+    assert len(error_monitor_errors) == 1
+    error = error_monitor_errors[0]
+    assert error["exception_class"] == "ValueError"
+    assert error["message"] == "Woops!"
 
 
 @skip_unless_old_style_middleware

@@ -37,7 +37,7 @@ def socket(running_agent):
     time.sleep(0.01)
 
     yield socket
-    # ensure_stopped() already called by global auto_stop_core_agent_socket
+    # ensure_stopped() already called by global stop_and_empty_core_error_service
 
 
 class Command(object):

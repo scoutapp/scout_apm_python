@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import datetime as dt
+import gzip
 import inspect
 import sys
 from functools import wraps
@@ -151,9 +152,27 @@ def urllib3_cert_pool_manager(**kwargs):
     return urllib3.PoolManager(cert_reqs=CERT_REQUIRED, ca_certs=certifi.where())
 
 
+if sys.version_info >= (3, 2):
+
+    def gzip_compress(data):
+        return gzip.compress(data)
+
+
+else:
+    import io
+
+    def gzip_compress(data):
+        """Reimplementation gzip.compress for python 2.7"""
+        buf = io.BytesIO()
+        with gzip.GzipFile(fileobj=buf, mode="wb") as f:
+            f.write(data)
+        return buf.getvalue()
+
+
 __all__ = [
     "ContextDecorator",
     "datetime_to_timestamp",
+    "gzip_compress",
     "kwargs_only",
     "parse_qsl",
     "queue",

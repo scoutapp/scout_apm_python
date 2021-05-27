@@ -12,6 +12,7 @@ from scout_apm.core import objtrace
 from scout_apm.core.agent.manager import CoreAgentManager
 from scout_apm.core.agent.socket import CoreAgentSocketThread
 from scout_apm.core.config import scout_config
+from scout_apm.core.error_service import ErrorServiceThread
 from scout_apm.core.metadata import report_app_metadata
 
 logger = logging.getLogger(__name__)
@@ -61,7 +62,7 @@ shutdown_registered = False
 def shutdown():
     timeout_seconds = scout_config.value("shutdown_timeout_seconds")
 
-    def callback(queue_size):
+    def apm_callback(queue_size):
         if scout_config.value("shutdown_message_enabled"):
             print(  # noqa: T001
                 (
@@ -75,6 +76,25 @@ def shutdown():
                 file=sys.stderr,
             )
 
+    def error_callback(queue_size):
+        if scout_config.value("shutdown_message_enabled"):
+            print(  # noqa: T001
+                (
+                    "Scout draining {queue_size} error{s} for up to"
+                    + " {timeout_seconds} seconds"
+                ).format(
+                    queue_size=queue_size,
+                    s=("" if queue_size == 1 else "s"),
+                    timeout_seconds=timeout_seconds,
+                ),
+                file=sys.stderr,
+            )
+
     CoreAgentSocketThread.wait_until_drained(
-        timeout_seconds=timeout_seconds, callback=callback
+        timeout_seconds=timeout_seconds, callback=apm_callback
     )
+
+    if scout_config.value("errors_enabled"):
+        ErrorServiceThread.wait_until_drained(
+            timeout_seconds=timeout_seconds, callback=error_callback
+        )

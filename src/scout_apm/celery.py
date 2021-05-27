@@ -2,13 +2,33 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import datetime as dt
+import logging
 
 from celery.signals import before_task_publish, task_failure, task_postrun, task_prerun
+
+try:
+    import django
+
+    if django.VERSION < (3, 1):
+        from django.views.debug import get_safe_settings
+    else:
+        from django.views.debug import SafeExceptionReporterFilter
+
+        def get_safe_settings():
+            return SafeExceptionReporterFilter().get_safe_settings()
+
+
+except ImportError:
+    # Django not installed
+    get_safe_settings = None
 
 import scout_apm.core
 from scout_apm.compat import datetime_to_timestamp
 from scout_apm.core.config import scout_config
+from scout_apm.core.error import ErrorMonitor
 from scout_apm.core.tracked_request import TrackedRequest
+
+logger = logging.getLogger(__name__)
 
 
 def before_task_publish_callback(headers=None, properties=None, **kwargs):
@@ -52,9 +72,51 @@ def task_postrun_callback(task=None, **kwargs):
     tracked_request.stop_span()
 
 
-def task_failure_callback(task_id=None, **kwargs):
+def task_failure_callback(
+    sender,
+    task_id=None,
+    exception=None,
+    args=None,
+    kwargs=None,
+    traceback=None,
+    **remaining
+):
     tracked_request = TrackedRequest.instance()
     tracked_request.tag("error", "true")
+
+    custom_controller = sender.name
+    custom_params = {
+        "celery": {
+            "task_id": task_id,
+            "args": args,
+            "kwargs": kwargs,
+        }
+    }
+
+    # Look up the django settings if populated.
+    environment = None
+    if get_safe_settings:
+        try:
+            environment = get_safe_settings()
+        except django.core.exceptions.ImproperlyConfigured as exc:
+            # Django not setup correctly
+            logger.debug(
+                "Celery integration does not have django configured properly: %r", exc
+            )
+            pass
+        except Exception as exc:
+            logger.debug(
+                "Celery task_failure callback exception: %r", exc, exc_info=exc
+            )
+            pass
+
+    exc_info = (exception.__class__, exception, traceback)
+    ErrorMonitor.send(
+        exc_info,
+        environment=environment,
+        custom_params=custom_params,
+        custom_controller=custom_controller,
+    )
 
 
 def install(app=None):

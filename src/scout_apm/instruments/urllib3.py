@@ -6,6 +6,7 @@ import logging
 import wrapt
 
 from scout_apm.compat import text_type
+from scout_apm.core.config import scout_config
 from scout_apm.core.tracked_request import TrackedRequest
 
 try:
@@ -56,6 +57,10 @@ def wrapped_urlopen(wrapped, instance, args, kwargs):
     except Exception:
         logger.exception("Could not get URL for HTTPConnectionPool")
         url = "Unknown"
+
+    # Don't instrument ErrorMonitor calls
+    if text_type(url).startswith(scout_config.value("errors_host")):
+        return wrapped(*args, **kwargs)
 
     tracked_request = TrackedRequest.instance()
     with tracked_request.span(operation="HTTP/{}".format(method)) as span:

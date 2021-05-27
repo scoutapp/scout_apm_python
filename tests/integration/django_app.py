@@ -182,8 +182,16 @@ def drf_router():
         queryset = User.objects.all()
         serializer_class = UserSerializer
 
+    class ErrorViewSet(viewsets.ModelViewSet):
+        queryset = User.objects.all()
+
+        def get_queryset(self, *args, **kwargs):
+            raise ValueError("BØØM!")
+
     router = routers.SimpleRouter()
     router.register(r"users", UserViewSet)
+    router.register(r"crash", ErrorViewSet)
+
     return router
 
 
@@ -206,8 +214,17 @@ def tastypie_api():
             queryset = User.objects.all()
             allowed_methods = ["get"]
 
+    class CrashResource(TastypieModelResource):
+        class Meta:
+            queryset = User.objects.all()
+            allowed_methods = ["get"]
+
+        def build_filters(self, *args, **kwargs):
+            raise ValueError("BØØM!")
+
     api = TastypieApi(api_name="v1")
     api.register(UserResource())
+    api.register(CrashResource())
     return api
 
 

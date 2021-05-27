@@ -1,12 +1,9 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import sys
-
 import django
 from django.conf import settings
 
-from scout_apm.compat import string_types
 from scout_apm.core.config import scout_config
 from scout_apm.core.tracked_request import TrackedRequest
 from scout_apm.core.web_requests import (
@@ -14,100 +11,12 @@ from scout_apm.core.web_requests import (
     ignore_path,
     track_request_queue_time,
 )
+from scout_apm.django.request import get_controller_name
 
 if django.VERSION >= (1, 11):
     from django.urls import get_urlconf
 else:
     from django.core.urlresolvers import get_urlconf
-
-
-def get_operation_name(request):
-    view_func = request.resolver_match.func
-    view_name = request.resolver_match._func_path
-
-    if hasattr(view_func, "model_admin"):
-        # Seems to comes from Django admin (attribute only set on Django 1.9+)
-        admin_class = view_func.model_admin.__class__
-        view_name = (
-            admin_class.__module__
-            + "."
-            + admin_class.__name__
-            + "."
-            + view_func.__name__
-        )
-
-    django_rest_framework_name = _get_django_rest_framework_name(
-        request, view_func, view_name
-    )
-    if django_rest_framework_name is not None:
-        return django_rest_framework_name
-
-    # Seems to be a Tastypie Resource. Need to resort to some stack inspection
-    # to find a better name since its decorators don't wrap very well
-    if view_name == "tastypie.resources.wrapper":
-        tastypie_name = _get_tastypie_operation_name(request, view_func)
-        if tastypie_name is not None:
-            return tastypie_name
-
-    return "Controller/" + view_name
-
-
-def _get_django_rest_framework_name(request, view_func, view_name):
-    try:
-        from rest_framework.viewsets import ViewSetMixin
-    except ImportError:
-        return None
-
-    kls = getattr(view_func, "cls", None)
-    if isinstance(kls, type) and not issubclass(kls, ViewSetMixin):
-        return None
-
-    # Get 'actions' set in ViewSetMixin.as_view
-    actions = getattr(view_func, "actions", None)
-    if not actions or not isinstance(actions, dict):
-        return None
-
-    method_lower = request.method.lower()
-    if method_lower not in actions:
-        return None
-
-    return "Controller/{}.{}".format(view_name, actions[method_lower])
-
-
-def _get_tastypie_operation_name(request, view_func):
-    try:
-        from tastypie.resources import Resource
-    except ImportError:
-        return None
-
-    if sys.version_info[0] == 2:  # pragma: no cover
-        try:
-            wrapper = view_func.__closure__[0].cell_contents
-        except (AttributeError, IndexError):
-            return None
-    else:
-        try:
-            wrapper = view_func.__wrapped__
-        except AttributeError:
-            return None
-
-    if not hasattr(wrapper, "__closure__") or len(wrapper.__closure__) != 2:
-        return None
-
-    instance = wrapper.__closure__[0].cell_contents
-    if not isinstance(instance, Resource):  # pragma: no cover
-        return None
-
-    method_name = wrapper.__closure__[1].cell_contents
-    if not isinstance(method_name, string_types):  # pragma: no cover
-        return None
-
-    if method_name.startswith("dispatch_"):  # pragma: no cover
-        method_name = request.method.lower() + method_name.split("dispatch", 1)[1]
-
-    return "Controller/{}.{}.{}".format(
-        instance.__module__, instance.__class__.__name__, method_name
-    )
 
 
 def track_request_view_data(request, tracked_request):
@@ -221,7 +130,7 @@ class ViewTimingMiddleware(object):
 
         span = tracked_request.current_span()
         if span is not None:
-            span.operation = get_operation_name(request)
+            span.operation = get_controller_name(request)
 
     def process_exception(self, request, exception):
         """
@@ -260,9 +169,9 @@ class OldStyleMiddlewareTimingMiddleware(object):
         # i.e. that custom instrumentation within the application is not
         # causing errors
         tracked_request = getattr(request, "_scout_tracked_request", None)
-        if 500 <= response.status_code <= 599:
-            tracked_request.tag("error", "true")
         if tracked_request is not None:
+            if 500 <= response.status_code <= 599:
+                tracked_request.tag("error", "true")
             tracked_request.stop_span()
         return response
 
@@ -278,7 +187,7 @@ class OldStyleViewMiddleware(object):
         tracked_request.is_real_request = True
 
         span = tracked_request.start_span(
-            operation=get_operation_name(request), should_capture_backtrace=False
+            operation=get_controller_name(request), should_capture_backtrace=False
         )
         # Save the span into the request, so we can check
         # if we're matched up when stopping

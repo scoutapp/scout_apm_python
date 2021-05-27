@@ -1,10 +1,13 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import pytest
+
 from scout_apm.api import (
     BackgroundTransaction,
     Config,
     Context,
+    Error,
     WebTransaction,
     ignore_transaction,
     instrument,
@@ -315,3 +318,67 @@ def test_rename_transaction_none(tracked_request):
     rename_transaction(None)
 
     assert "transaction.name" not in tracked_request.tags
+
+
+def test_error_capture(error_monitor_errors, tracked_request):
+    scout_config.set(errors_enabled=True)
+    tracked_request.tag("spam", "eggs")
+
+    request_path = "/test/"
+    request_params = {"page": 1}
+    session = {"step": 0}
+    custom_controller = "test-controller"
+    custom_params = {"foo": "bar"}
+    try:
+        try:
+            1 / 0
+        except ZeroDivisionError as exc:
+            Error.capture(
+                exc,
+                request_path=request_path,
+                request_params=request_params,
+                session=session,
+                custom_controller=custom_controller,
+                custom_params=custom_params,
+            )
+    finally:
+        scout_config.reset_all()
+
+    assert len(error_monitor_errors) == 1
+    error = error_monitor_errors[0]
+    assert error["trace"][0]["function"] == "test_error_capture"
+    assert error["exception_class"] == "ZeroDivisionError"
+    assert error["message"] == "division by zero"
+    assert error["context"] == {
+        "spam": "eggs",
+        "custom_params": {"foo": "bar"},
+    }
+    assert error["request_uri"] == request_path
+    assert error["request_params"] == {"page": "1"}
+    assert error["request_session"] == {"step": "0"}
+    assert error["request_components"] == {
+        "module": None,
+        "controller": custom_controller,
+        "action": None,
+    }
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        None,
+        0,
+        1,
+        "foo",
+        True,
+    ],
+)
+def test_error_capture_skip(value, error_monitor_errors):
+    scout_config.set(errors_enabled=True)
+
+    try:
+        Error.capture(value)
+    finally:
+        scout_config.reset_all()
+
+    assert len(error_monitor_errors) == 0

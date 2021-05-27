@@ -11,9 +11,11 @@ import pytest
 import wrapt
 from webtest import TestApp
 
+from scout_apm.core import error_service as scout_apm_core_error_service
 from scout_apm.core.agent import socket as scout_apm_core_socket
 from scout_apm.core.agent.manager import CoreAgentManager
 from scout_apm.core.config import SCOUT_PYTHON_VALUES, scout_config
+from scout_apm.core.error_service import ErrorServiceThread
 from scout_apm.core.tracked_request import TrackedRequest
 from tests.compat import TemporaryDirectory
 
@@ -38,11 +40,40 @@ for key in os.environ.keys():
 TestApp.__test__ = False
 
 
+class ExcludeDebugLogFilter(logging.Filter):
+    excluded_logs = [
+        # Name, level, [values to see if they are contained in the message]
+        (
+            "httpretty.core",
+            10,
+            ("error closing file", "'super' object has no attribute 'flush'"),
+        ),
+        ("httpretty.core", 10, ("error closing file", "flush of closed file")),
+    ]
+
+    def filter(self, record):
+        """
+        Exclude debug logs that are generated from other libraries that unduly
+        influence our logging assertions.
+
+        Is the specified record to be logged? Returns False for no, True for
+        yes.
+        """
+        for name, level, excluded_message_parts in self.excluded_logs:
+            if record.name == name and record.levelno == level:
+                message = record.getMessage()
+                if all(part in message for part in excluded_message_parts):
+                    # Return False to prevent the log from being recorded
+                    return False
+        return True
+
+
 # Override built-in caplog fixture to always be at DEBUG level since we have
 # many DEBUG log messages
 @pytest.fixture()
 def caplog(caplog):
     caplog.set_level(logging.DEBUG)
+    caplog.handler.addFilter(ExcludeDebugLogFilter("scout_test"))
     yield caplog
 
 
@@ -153,10 +184,12 @@ def terminate_core_agent_processes():
 @pytest.fixture(autouse=True, scope="session")
 def short_timeouts():
     scout_apm_core_socket.SECOND = 0.01
+    scout_apm_core_error_service.SECOND = 0.01
     try:
         yield
     finally:
         scout_apm_core_socket.SECOND = 1
+        scout_apm_core_error_service.SECOND = 1
 
 
 @pytest.fixture(autouse=True)
@@ -167,6 +200,16 @@ def stop_and_empty_core_agent_socket():
     while not command_queue.empty():
         command_queue.get()
         command_queue.task_done()
+
+
+@pytest.fixture(autouse=True)
+def stop_and_empty_core_error_service():
+    yield
+    scout_apm_core_error_service.ErrorServiceThread.ensure_stopped()
+    queue = scout_apm_core_error_service.ErrorServiceThread._queue
+    while not queue.empty():
+        queue.get()
+        queue.task_done()
 
 
 @pytest.fixture
@@ -200,3 +243,24 @@ def tracked_requests():
         yield requests
     finally:
         TrackedRequest.finish = orig
+
+
+@pytest.fixture
+def error_monitor_errors():
+    """
+    Mock calls made to the error service thread.
+    Returns a list of error dicts
+    """
+    errors = []
+
+    @wrapt.decorator
+    def capture_error(wrapped, instance, args, kwargs):
+        errors.append(kwargs["error"])
+        return wrapped(*args, **kwargs)
+
+    orig = ErrorServiceThread.send
+    ErrorServiceThread.send = capture_error(orig)
+    try:
+        yield errors
+    finally:
+        ErrorServiceThread.send = orig

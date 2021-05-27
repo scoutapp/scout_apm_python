@@ -1,17 +1,19 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import logging
 from contextlib import contextmanager
 
 import celery
 import pytest
 from celery.signals import setup_logging
+from django.core.exceptions import ImproperlyConfigured
 
 import scout_apm.celery
 from scout_apm.api import Config
 from scout_apm.compat import kwargs_only
 from scout_apm.core.config import scout_config
-from tests.compat import SimpleNamespace
+from tests.compat import SimpleNamespace, mock
 
 # http://docs.celeryproject.org/en/latest/userguide/testing.html#py-test
 skip_unless_celery_4_plus = pytest.mark.skipif(
@@ -51,7 +53,7 @@ def app_with_scout(celery_config=None, app=None, config=None):
         return "Hello World!"
 
     @app.task
-    def crash():
+    def crash(foo, spam=None):
         raise ValueError("Boom!")
 
     # Setup according to https://docs.scoutapm.com/#celery
@@ -98,7 +100,7 @@ def test_hello_eager(tracked_requests):
 
 def test_error_task(tracked_requests):
     with app_with_scout() as app:
-        result = app.tasks["tests.integration.test_celery.crash"].apply()
+        result = app.tasks["tests.integration.test_celery.crash"].si(None).apply()
 
     assert isinstance(result.result, ValueError)
     assert len(tracked_requests) == 1
@@ -108,6 +110,93 @@ def test_error_task(tracked_requests):
     span = tracked_request.complete_spans[0]
     assert span.operation == "Job/tests.integration.test_celery.crash"
     assert tracked_request.tags["error"]
+
+
+def test_error_task_error_monitor(error_monitor_errors, mock_get_safe_settings):
+    mock_get_safe_settings.return_value = {"setting1": "value"}
+    with app_with_scout(config={"errors_enabled": True, "monitor": True}) as app:
+        result = (
+            app.tasks["tests.integration.test_celery.crash"].si("arg1", spam=2).apply()
+        )
+
+    assert isinstance(result.result, ValueError)
+
+    assert len(error_monitor_errors) == 1
+    error = error_monitor_errors[0]
+    filepath, line, func_str = error["trace"][0].split(":")
+    assert filepath.endswith("tests/integration/test_celery.py")
+    # The line number changes between python versions. Make sure it's not empty.
+    assert line
+    assert func_str == "in crash"
+    assert error["exception_class"] == "ValueError"
+    assert error["message"] == "Boom!"
+    assert error["request_components"] == {
+        "module": None,
+        "controller": "tests.integration.test_celery.crash",
+        "action": None,
+    }
+    assert error["context"]["custom_params"] == {
+        "celery": {
+            "args": ("arg1",),
+            "kwargs": {"spam": 2},
+            "task_id": result.task_id,
+        },
+    }
+
+
+@pytest.fixture
+def mock_get_safe_settings():
+    """We're unable to mock.patch the function so monkey-patch it."""
+    original = scout_apm.celery.get_safe_settings
+    scout_apm.celery.get_safe_settings = mock.Mock()
+    yield scout_apm.celery.get_safe_settings
+    scout_apm.celery.get_safe_settings = original
+
+
+@pytest.mark.parametrize(
+    "thrown, log_starts_with",
+    [
+        [
+            ImproperlyConfigured("invalid"),
+            "Celery integration does not have django configured properly: "
+            "ImproperlyConfigured",
+        ],
+        [
+            Exception("other"),
+            "Celery task_failure callback exception: Exception",
+        ],
+    ],
+)
+def test_error_task_error_monitor_exception(
+    thrown, log_starts_with, mock_get_safe_settings, error_monitor_errors, caplog
+):
+    mock_get_safe_settings.side_effect = thrown
+    with app_with_scout(config={"errors_enabled": True, "monitor": True}) as app:
+        result = app.tasks["tests.integration.test_celery.crash"].si(None).apply()
+
+    assert isinstance(result.result, ValueError)
+
+    assert len(error_monitor_errors) == 1
+    error = error_monitor_errors[0]
+    assert error["context"]["custom_params"] == {
+        "celery": {
+            "args": (None,),
+            "kwargs": {},
+            "task_id": result.task_id,
+        },
+    }
+    assert error["request_components"] == {
+        "module": None,
+        "controller": "tests.integration.test_celery.crash",
+        "action": None,
+    }
+    actual_debugs = [
+        log
+        for source, level, log in caplog.record_tuples
+        if source == "scout_apm.celery" and level == logging.DEBUG
+    ]
+    assert len(actual_debugs) == 1
+    assert actual_debugs[0].startswith(log_starts_with)
 
 
 @skip_unless_celery_4_plus

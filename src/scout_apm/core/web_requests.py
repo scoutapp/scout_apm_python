@@ -43,32 +43,56 @@ FILTER_PARAMETERS = frozenset(
 def create_filtered_path(path, query_params):
     if scout_config.value("uri_reporting") == "path":
         return path
-    # We expect query_params to have keys and values both of strings, because
-    # that's how frameworks build it. However sometimes application code
-    # mutates this structure to use incorrect types before we read it, so we
-    # have to cautiously make everything a string again. Ignoring the
-    # possibilities of bytes or objects with bad __str__ methods because they
-    # seem very unlikely.
-    string_query_params = (
-        (text_type(key), text_type(value)) for key, value in query_params
-    )
-    # Python 2 unicode compatibility: force all keys and values to bytes
     filtered_params = sorted(
-        (
+        [
             (
-                key.encode("utf-8"),
-                (
-                    b"[FILTERED]"
-                    if key.lower() in FILTER_PARAMETERS
-                    else value.encode("utf-8")
-                ),
+                text_type(key).encode("utf-8"),
+                # Apply text_type again to cover the None case.
+                text_type(filter_element(key, value)).encode("utf-8"),
             )
-            for key, value in string_query_params
-        )
+            for key, value in query_params
+        ]
     )
     if not filtered_params:
         return path
     return path + "?" + urlencode(filtered_params)
+
+
+def filter_element(key, value):
+    """
+    Filter an individual key/value element of sensitive content. If the
+    value is a dictionary, recursively filter the keys in that dictionary.
+
+    Can be used recursively on a dict with:
+
+        filter_element('', {"foo": "bar"})
+    """
+    is_sensitive = text_type(key).lower() in FILTER_PARAMETERS
+
+    if is_sensitive:
+        filtered = "[FILTERED]"
+    elif isinstance(value, dict):
+        # Python 2 unicode compatibility: force all keys and values to bytes
+        #
+        # We expect query_params to have keys and values both of strings, because
+        # that's how frameworks build it. However sometimes application code
+        # mutates this structure to use incorrect types, or we are filtering a
+        # different collection, so we have to cautiously make everything a string
+        # again. Ignoring the possibilities of bytes or objects with bad __str__
+        # methods because they seem very unlikely.
+        filtered = {text_type(k): filter_element(k, v) for k, v in value.items()}
+    elif isinstance(value, list):
+        filtered = [filter_element("", v) for v in value]
+    elif isinstance(value, set):
+        filtered = {filter_element("", v) for v in value}
+    elif isinstance(value, tuple):
+        filtered = tuple([filter_element("", v) for v in value])
+    elif value is None:
+        filtered = value
+    else:
+        filtered = text_type(value)
+
+    return filtered
 
 
 def ignore_path(path):
@@ -192,3 +216,12 @@ def werkzeug_track_request_data(werkzeug_request, tracked_request):
         "x-queue-start", default=""
     ) or werkzeug_request.headers.get("x-request-start", default="")
     track_request_queue_time(queue_time, tracked_request)
+
+
+class RequestComponents(object):
+    __slots__ = ("module", "controller", "action")
+
+    def __init__(self, module, controller, action):
+        self.module = module
+        self.controller = controller
+        self.action = action

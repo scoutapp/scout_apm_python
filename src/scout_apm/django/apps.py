@@ -1,15 +1,30 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import sys
+
+import django
 from django.apps import AppConfig
 from django.conf import settings
+from django.core.signals import got_request_exception
 from django.test.signals import setting_changed
+
+if django.VERSION < (3, 1):
+    from django.views.debug import get_safe_settings
+else:
+    from django.views.debug import SafeExceptionReporterFilter
+
+    def get_safe_settings():
+        return SafeExceptionReporterFilter().get_safe_settings()
+
 
 import scout_apm.core
 from scout_apm.core.config import scout_config
+from scout_apm.core.error import ErrorMonitor
 from scout_apm.django.instruments.huey import ensure_huey_instrumented
 from scout_apm.django.instruments.sql import ensure_sql_instrumented
 from scout_apm.django.instruments.template import ensure_templates_instrumented
+from scout_apm.django.request import get_request_components
 
 
 class ScoutApmDjangoConfig(AppConfig):
@@ -26,6 +41,9 @@ class ScoutApmDjangoConfig(AppConfig):
         if not installed:
             return
 
+        if scout_config.value("errors_enabled"):
+            got_request_exception.connect(self.on_got_request_exception)
+
         self.install_middleware()
 
         # Setup Instruments
@@ -36,6 +54,21 @@ class ScoutApmDjangoConfig(AppConfig):
     def update_scout_config_from_django_settings(self, **kwargs):
         for name in dir(settings):
             self.on_setting_changed(name)
+
+    def on_got_request_exception(self, request, **kwargs):
+        """
+        Process this exception with the error monitoring solution.
+        """
+        ErrorMonitor.send(
+            sys.exc_info(),
+            request_components=get_request_components(request),
+            request_path=request.path,
+            request_params=request.GET.dict(),
+            session=dict(request.session.items())
+            if hasattr(request, "session")
+            else None,
+            environment=get_safe_settings(),
+        )
 
     def on_setting_changed(self, setting, **kwargs):
         cast = None

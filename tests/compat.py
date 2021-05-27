@@ -1,6 +1,7 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import gzip
 import sys
 
 if sys.version_info >= (3, 0):
@@ -57,4 +58,19 @@ else:
             pass
 
 
-__all__ = ["mock", "nullcontext", "suppress", "TemporaryDirectory"]
+if sys.version_info >= (3, 2):
+
+    def gzip_decompress(data):
+        return gzip.decompress(data)
+
+
+else:
+    import io
+
+    def gzip_decompress(data):
+        """Reimplementation gzip.compress for python 2.7"""
+        with gzip.GzipFile(fileobj=io.BytesIO(data), mode="rb") as f:
+            return f.read()
+
+
+__all__ = ["gzip_decompress", "mock", "nullcontext", "suppress", "TemporaryDirectory"]
