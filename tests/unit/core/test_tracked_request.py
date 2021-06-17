@@ -133,7 +133,7 @@ def test_start_span_at_max_ignores_span(caplog, tracked_request):
     assert caplog.record_tuples == [
         (
             "scout_apm.core.tracked_request",
-            logging.WARNING,
+            logging.DEBUG,
             "Hit the maximum number of spans, this trace will be incomplete.",
         )
     ]

@@ -91,7 +91,7 @@ class TrackedRequest(object):
 
         if len(self.complete_spans) >= self.MAX_COMPLETE_SPANS:
             if not self.hit_max:
-                logger.warning(
+                logger.debug(
                     "Hit the maximum number of spans, this trace will be incomplete."
                 )
                 self.hit_max = True

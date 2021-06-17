@@ -1,14 +1,16 @@
 # Changelog
 
 ## Pending
-- Improved debug logging for requests. It now includes some summary
-  information about the request.
-  ([Issue #654](https://github.com/scoutapp/scout_apm_python/issues/654))
-- Added Celery's ``priority`` delivery info to the set of tags.
 - Removed parsing queue time from Amazon ALB header, X-Amzn-Trace-Id.
   The time portion of the header only has the truncated seconds which
   appears as about 500ms for queue time constantly.
   ([Issue #631](https://github.com/scoutapp/scout_apm_python/issues/631))
+- Added Celery's ``priority`` delivery info to the set of tags.
+- Changed max spans reached log level from warning to debug.
+  ([Issue #653](https://github.com/scoutapp/scout_apm_python/issues/653))
+- Improved debug logging for requests. It now includes some summary
+  information about the request.
+  ([Issue #654](https://github.com/scoutapp/scout_apm_python/issues/654))
 
 ## [2.19.0] 2021-05-04
 
