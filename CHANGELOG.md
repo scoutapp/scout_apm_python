@@ -1,6 +1,8 @@
 # Changelog
 
 ## Pending
+- Reuse existing core agent process if it exists. This avoids spawning
+  multiple processes that can occur with custom instrumentation.
 - Removed parsing queue time from Amazon ALB header, X-Amzn-Trace-Id.
   The time portion of the header only has the truncated seconds which
   appears as about 500ms for queue time constantly.

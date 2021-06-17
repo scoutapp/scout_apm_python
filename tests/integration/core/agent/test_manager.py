@@ -9,7 +9,11 @@ import pytest
 from scout_apm.core.agent import manager
 from scout_apm.core.config import scout_config
 from tests.compat import mock
-from tests.conftest import core_agent_is_running, terminate_core_agent_processes
+from tests.conftest import (
+    core_agent_is_running,
+    get_core_agent_pid,
+    terminate_core_agent_processes,
+)
 
 # Tests must execute in the order in which they are defined.
 
@@ -80,6 +84,46 @@ def test_download_and_launch(path, core_agent_manager):
             time.sleep(0.1)
         else:
             raise AssertionError("Could not find core agent running")
+
+        terminate_core_agent_processes()
+    finally:
+        scout_config.reset_all()
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        None,
+        "tcp://127.0.0.1:5678",
+        "/tmp/scout-tests.sock",
+    ],
+)
+def test_download_and_launch_reuses_existing(path, core_agent_manager, caplog):
+    if path is not None:
+        scout_config.set(core_agent_socket_path=path)
+
+    try:
+        result = core_agent_manager.launch()
+
+        assert result is True
+
+        time.sleep(0.10)  # wait for agent to start running
+        for _ in range(10):
+            if core_agent_is_running():
+                break
+            time.sleep(0.1)
+        else:
+            raise AssertionError("Could not find core agent running")
+        pid = get_core_agent_pid()
+
+        # Launch again
+        assert core_agent_manager.launch()
+        assert core_agent_is_running()
+        assert (
+            "scout_apm.core.agent.manager",
+            logging.DEBUG,
+            "Core Agent is already running at pid: {}".format(pid),
+        ) in caplog.record_tuples
 
         terminate_core_agent_processes()
     finally:

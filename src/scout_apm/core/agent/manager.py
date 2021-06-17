@@ -10,6 +10,7 @@ import subprocess
 import tarfile
 import time
 
+import psutil
 from urllib3.exceptions import HTTPError
 
 from scout_apm.compat import CouldNotOpenFile, text_type, urllib3_cert_pool_manager
@@ -57,20 +58,33 @@ class CoreAgentManager(object):
     def download(self):
         self.downloader.download()
 
+    def is_running(self, params):
+        for proc in psutil.process_iter(["name"]):
+            if proc.cmdline() == params:
+                return proc.pid
+        return False
+
     def run(self):
         try:
-            with open(os.devnull) as devnull:
-                subprocess.check_call(
-                    (
-                        self.agent_binary()
-                        + self.daemonize_flag()
-                        + self.log_level()
-                        + self.log_file()
-                        + self.config_file()
-                        + self.socket_path()
-                    ),
-                    close_fds=True,
-                    stdout=devnull,
+            process_params = (
+                self.agent_binary()
+                + self.daemonize_flag()
+                + self.log_level()
+                + self.log_file()
+                + self.config_file()
+                + self.socket_path()
+            )
+            existing_pid = self.is_running(process_params)
+            if not existing_pid:
+                with open(os.devnull) as devnull:
+                    subprocess.check_call(
+                        process_params,
+                        close_fds=True,
+                        stdout=devnull,
+                    )
+            else:
+                logger.debug(
+                    "Core Agent is already running at pid: {}".format(existing_pid)
                 )
         except Exception:
             # TODO detect failure of launch properly

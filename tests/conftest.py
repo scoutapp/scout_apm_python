@@ -139,6 +139,13 @@ def core_agent_manager(core_agent_dir):
         scout_config.reset_all()
 
 
+def get_core_agent_pid():
+    for p in psutil.process_iter(["name"]):
+        if p.name() == "core-agent":
+            return p.pid
+    return None
+
+
 def core_agent_is_running():
     return any(p.name() == "core-agent" for p in psutil.process_iter(["name"]))
 
