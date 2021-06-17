@@ -149,6 +149,21 @@ class TrackedRequest(object):
                 CoreAgentSocketThread.send(batch_command)
             SamplersThread.ensure_started()
 
+        details = " ".join(
+            "{}={}".format(key, value)
+            for key, value in [
+                ("start_time", self.start_time),
+                ("end_time", self.end_time),
+                ("duration", (self.end_time - self.start_time).total_seconds()),
+                ("active_spans", len(self.active_spans)),
+                ("complete_spans", len(self.complete_spans)),
+                ("tags", len(self.tags)),
+                ("hit_max", self.hit_max),
+                ("is_real_request", self.is_real_request),
+            ]
+        )
+        logger.debug("Request %s %s", self.request_id, details)
+
         from scout_apm.core.context import context
 
         context.clear_tracked_request(self)

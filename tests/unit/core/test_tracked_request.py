@@ -185,6 +185,37 @@ def test_finish_does_captures_memory_on_real_requests(tracked_request):
     assert "mem_delta" in tracked_request.tags
 
 
+def test_finish_log_request_info(tracked_request, caplog):
+    tracked_request.start_span(operation="Something")
+    tracked_request.stop_span()
+    tracked_request.is_real_request = True
+    tracked_request.finish()
+
+    assert (
+        "scout_apm.core.tracked_request",
+        logging.DEBUG,
+        "Stopping request: {}".format(tracked_request.request_id),
+    ) in caplog.record_tuples
+
+    assert (
+        "scout_apm.core.tracked_request",
+        logging.DEBUG,
+        (
+            "Request {} ".format(tracked_request.request_id)
+            + "start_time={} ".format(tracked_request.start_time)
+            + "end_time={} ".format(tracked_request.end_time)
+            + "duration={} ".format(
+                (tracked_request.end_time - tracked_request.start_time).total_seconds()
+            )
+            + "active_spans=0 "
+            + "complete_spans=1 "
+            + "tags=1 "
+            + "hit_max=False "
+            + "is_real_request=True"
+        ),
+    ) in caplog.record_tuples
+
+
 def test_is_ignored_default_false(tracked_request):
     assert not tracked_request.is_ignored()
 
