@@ -77,8 +77,14 @@ def test_hello_eager(tracked_requests):
     tracked_request = tracked_requests[0]
     assert "task_id" in tracked_request.tags
     assert tracked_request.tags["is_eager"] is True
-    assert tracked_request.tags["exchange"] == "unknown"
-    assert tracked_request.tags["routing_key"] == "unknown"
+    if celery.VERSION < (5, 1):
+        assert tracked_request.tags["exchange"] == "unknown"
+        assert tracked_request.tags["priority"] == "unknown"
+        assert tracked_request.tags["routing_key"] == "unknown"
+    else:
+        assert tracked_request.tags["exchange"] is None
+        assert tracked_request.tags["priority"] is None
+        assert tracked_request.tags["routing_key"] is None
     assert tracked_request.tags["queue"] == "unknown"
     assert tracked_request.active_spans == []
     assert len(tracked_request.complete_spans) == 1
@@ -97,6 +103,7 @@ def test_hello_worker(celery_app, celery_worker, tracked_requests):
     assert "task_id" in tracked_request.tags
     assert tracked_request.tags["is_eager"] is False
     assert tracked_request.tags["exchange"] == ""
+    assert tracked_request.tags["priority"] == 0
     assert tracked_request.tags["routing_key"] == "celery"
     assert tracked_request.tags["queue"] == "unknown"
     assert (

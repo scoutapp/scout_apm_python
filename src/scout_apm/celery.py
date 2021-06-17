@@ -40,6 +40,7 @@ def task_prerun_callback(task=None, **kwargs):
     delivery_info = task.request.delivery_info
     tracked_request.tag("is_eager", delivery_info.get("is_eager", False))
     tracked_request.tag("exchange", delivery_info.get("exchange", "unknown"))
+    tracked_request.tag("priority", delivery_info.get("priority", "unknown"))
     tracked_request.tag("routing_key", delivery_info.get("routing_key", "unknown"))
     tracked_request.tag("queue", delivery_info.get("queue", "unknown"))
 

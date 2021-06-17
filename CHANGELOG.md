@@ -1,6 +1,7 @@
 # Changelog
 
 ## Pending
+- Added Celery's ``priority`` delivery info to the set of tags.
 - Removed parsing queue time from Amazon ALB header, X-Amzn-Trace-Id.
   The time portion of the header only has the truncated seconds which
   appears as about 500ms for queue time constantly.
