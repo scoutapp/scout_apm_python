@@ -19,7 +19,7 @@ def create_task(coro):
     return asyncio.get_event_loop().create_task(coro)
 
 
-async def coro(value=None, wait=None, loop=None):
+async def coro(value=None, wait=None):
     """Helper function for testing coroutines.
 
     :value: This will be inserted into the ``tags`` of ``instrument``.
@@ -29,10 +29,10 @@ async def coro(value=None, wait=None, loop=None):
     """
 
     if wait:
-        await asyncio.sleep(wait, loop=loop)
+        await asyncio.sleep(wait)
     tags = {"value": value} if value else None
     with instrument("coro", tags=tags):
-        await asyncio.sleep(0.1, loop=loop)
+        await asyncio.sleep(0.1)
 
 
 def get_future():
