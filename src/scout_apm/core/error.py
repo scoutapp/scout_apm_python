@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import sys
 
-from scout_apm.core.backtrace import capture
+from scout_apm.core.backtrace import capture_stacktrace
 from scout_apm.core.config import scout_config
 from scout_apm.core.error_service import ErrorServiceThread
 from scout_apm.core.tracked_request import TrackedRequest
@@ -50,6 +50,7 @@ class ErrorMonitor(object):
                     module=None, controller=custom_controller, action=None
                 )
 
+        app_root = scout_config.value("application_root")
         error = {
             "exception_class": exc_class.__name__,
             "message": text_type(exc_value),
@@ -61,8 +62,14 @@ class ErrorMonitor(object):
             "request_session": filter_element("", session) if session else None,
             "environment": filter_element("", environment) if environment else None,
             "trace": [
-                "{file}:{line}:in {function}".format(**frame)
-                for frame in capture(traceback.tb_frame, apply_filter=False)
+                "{file}:{line}:in {function}".format(
+                    file=frame["file"].split(app_root, maxsplit=1)[-1]
+                    if app_root
+                    else frame["file"],
+                    line=frame["line"],
+                    function=frame["function"],
+                )
+                for frame in capture_stacktrace(traceback)
             ],
             "request_components": {
                 "module": request_components.module,

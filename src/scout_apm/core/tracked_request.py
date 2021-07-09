@@ -285,4 +285,4 @@ class Span(object):
         self.tag("stop_allocations", end_allocs)
 
     def capture_backtrace(self):
-        self.tag("stack", backtrace.capture())
+        self.tag("stack", backtrace.capture_backtrace())

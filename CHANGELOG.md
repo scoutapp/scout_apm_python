@@ -6,6 +6,7 @@
 - Support Error Monitoring. See
   [integration docs](https://scoutapm.com/docs/python/error-monitoring).
   ([PR #651](https://github.com/scoutapp/scout_apm_python/pull/651))
+- Deprecate `backtrace.capture` in favor of `backtrace.capture_backtrace`
 
 ### Fixed
 - Setup metadata keywords now contains an array of strings.

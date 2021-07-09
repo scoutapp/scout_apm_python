@@ -5,6 +5,7 @@ import itertools
 import sys
 import sysconfig
 import traceback
+import warnings
 
 # Maximum non-Scout frames to target retrieving
 LIMIT = 50
@@ -23,44 +24,52 @@ def filter_frames(frames):
 
 if sys.version_info >= (3, 5):
 
-    def frame_walker(start_frame=None):
-        """Iterate over each frame of the stack.
+    def stacktrace_walker(tb):
+        """Iterate over each frame of the stack downards for exceptions."""
+        for frame, lineno in traceback.walk_tb(tb):
+            co = frame.f_code
+            filename = co.co_filename
+            name = co.co_name
+            yield {"file": filename, "line": lineno, "function": name}
+
+    def backtrace_walker():
+        """Iterate over each frame of the stack upwards.
 
         Taken from python3/traceback.ExtractSummary.extract to support
         iterating over the entire stack, but without creating a large
         data structure.
         """
-        if start_frame is None:
-            start_frame = sys._getframe().f_back
+        start_frame = sys._getframe().f_back
         for frame, lineno in traceback.walk_stack(start_frame):
             co = frame.f_code
             filename = co.co_filename
             name = co.co_name
             yield {"file": filename, "line": lineno, "function": name}
 
-    def capture(start_frame=None, apply_filter=True):
-        walker = frame_walker(start_frame)
-        if apply_filter:
-            walker = filter_frames(walker)
-        return list(itertools.islice(walker, LIMIT))
-
 
 else:
 
-    def frame_walker(start_frame):
-        """Iterate over each frame of the stack.
+    def stacktrace_walker(tb):
+        """Iterate over each frame of the stack downards for exceptions."""
+        while tb is not None:
+            lineno = tb.tb_lineno
+            co = tb.tb_frame.f_code
+            filename = co.co_filename
+            name = co.co_name
+            yield {"file": filename, "line": lineno, "function": name}
+            tb = tb.tb_next
+
+    def backtrace_walker():
+        """Iterate over each frame of the stack upwards.
 
         Taken from python2.7/traceback.extract_stack to support iterating
         over the entire stack, but without creating a large data structure.
         """
-        if start_frame is None:
-            try:
-                raise ZeroDivisionError
-            except ZeroDivisionError:
-                # Get the current frame
-                f = sys.exc_info()[2].tb_frame.f_back
-        else:
-            f = start_frame
+        try:
+            raise ZeroDivisionError
+        except ZeroDivisionError:
+            # Get the current frame
+            f = sys.exc_info()[2].tb_frame.f_back
 
         while f is not None:
             lineno = f.f_lineno
@@ -70,8 +79,21 @@ else:
             yield {"file": filename, "line": lineno, "function": name}
             f = f.f_back
 
-    def capture(start_frame=None, apply_filter=True):
-        walker = frame_walker(start_frame)
-        if apply_filter:
-            walker = filter_frames(walker)
-        return list(itertools.islice(walker, LIMIT))
+
+def capture_backtrace():
+    walker = filter_frames(backtrace_walker())
+    return list(itertools.islice(walker, LIMIT))
+
+
+def capture_stacktrace(tb):
+    walker = stacktrace_walker(tb)
+    return list(reversed(list(itertools.islice(walker, LIMIT))))
+
+
+def capture():
+    warnings.warn(
+        "capture is deprecated, instead use capture_backtrace instead.",
+        DeprecationWarning,
+        2,
+    )
+    return capture_backtrace()
