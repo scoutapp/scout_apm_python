@@ -346,7 +346,11 @@ def test_error_capture(error_monitor_errors, tracked_request):
 
     assert len(error_monitor_errors) == 1
     error = error_monitor_errors[0]
-    assert error["trace"][0]["function"] == "test_error_capture"
+    filepath, line, func_str = error["trace"][0].split(":")
+    assert filepath.endswith("tests/integration/test_api.py")
+    # The line number changes between python versions. Make sure it's not empty.
+    assert line
+    assert func_str == "in test_error_capture"
     assert error["exception_class"] == "ZeroDivisionError"
     assert error["message"] == "division by zero"
     assert error["context"] == {

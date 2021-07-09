@@ -191,6 +191,9 @@ def test_monitor(
     assert len(error_monitor_errors) == 1
     error = error_monitor_errors[0]
     # Remove the trace from the error as it bloats the test.
-    trace = error.pop("trace")
-    assert trace[0]["function"] == "test_monitor"
+    filepath, line, func_str = error.pop("trace")[0].split(":")
+    assert filepath.endswith("tests/unit/core/test_error.py")
+    # The line number changes between python versions. Make sure it's not empty.
+    assert line
+    assert func_str == "in test_monitor"
     assert error == expected_error

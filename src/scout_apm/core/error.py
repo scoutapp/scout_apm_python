@@ -60,7 +60,10 @@ class ErrorMonitor(object):
             else None,
             "request_session": filter_element("", session) if session else None,
             "environment": filter_element("", environment) if environment else None,
-            "trace": capture(traceback.tb_frame, apply_filter=False),
+            "trace": [
+                "{file}:{line}:in {function}".format(**frame)
+                for frame in capture(traceback.tb_frame, apply_filter=False)
+            ],
             "request_components": {
                 "module": request_components.module,
                 "controller": request_components.controller,
