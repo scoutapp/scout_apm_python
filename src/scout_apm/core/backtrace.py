@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import itertools
+import os
 import sys
 import sysconfig
 import traceback
@@ -22,15 +23,36 @@ def filter_frames(frames):
             yield frame
 
 
+def module_filepath(module, filepath):
+    """Get the filepath relative to the base module."""
+    root_module = module.split(".", 1)[0]
+    if root_module == module:
+        return os.path.basename(filepath)
+
+    module_dir = sys.modules[root_module].__file__.rsplit(os.sep, 2)[0]
+    return filepath.split(module_dir, 1)[-1].lstrip(os.sep)
+
+
+def filepath(frame):
+    """Get the filepath for frame."""
+    module = frame.f_globals.get("__name__", None)
+    filepath = frame.f_code.co_filename
+
+    if filepath.endswith(".pyc"):
+        filepath = filepath[:-1]
+
+    if not module:
+        return filepath
+    return module_filepath(module, filepath)
+
+
 if sys.version_info >= (3, 5):
 
     def stacktrace_walker(tb):
         """Iterate over each frame of the stack downards for exceptions."""
         for frame, lineno in traceback.walk_tb(tb):
-            co = frame.f_code
-            filename = co.co_filename
-            name = co.co_name
-            yield {"file": filename, "line": lineno, "function": name}
+            name = frame.f_code.co_name
+            yield {"file": filepath(frame), "line": lineno, "function": name}
 
     def backtrace_walker():
         """Iterate over each frame of the stack upwards.
@@ -41,10 +63,8 @@ if sys.version_info >= (3, 5):
         """
         start_frame = sys._getframe().f_back
         for frame, lineno in traceback.walk_stack(start_frame):
-            co = frame.f_code
-            filename = co.co_filename
-            name = co.co_name
-            yield {"file": filename, "line": lineno, "function": name}
+            name = frame.f_code.co_name
+            yield {"file": filepath(frame), "line": lineno, "function": name}
 
 
 else:
@@ -53,10 +73,12 @@ else:
         """Iterate over each frame of the stack downards for exceptions."""
         while tb is not None:
             lineno = tb.tb_lineno
-            co = tb.tb_frame.f_code
-            filename = co.co_filename
-            name = co.co_name
-            yield {"file": filename, "line": lineno, "function": name}
+            name = tb.tb_frame.f_code.co_name
+            yield {
+                "file": filepath(tb.tb_frame),
+                "line": lineno,
+                "function": name,
+            }
             tb = tb.tb_next
 
     def backtrace_walker():
@@ -69,15 +91,13 @@ else:
             raise ZeroDivisionError
         except ZeroDivisionError:
             # Get the current frame
-            f = sys.exc_info()[2].tb_frame.f_back
+            frame = sys.exc_info()[2].tb_frame.f_back
 
-        while f is not None:
-            lineno = f.f_lineno
-            co = f.f_code
-            filename = co.co_filename
-            name = co.co_name
-            yield {"file": filename, "line": lineno, "function": name}
-            f = f.f_back
+        while frame is not None:
+            lineno = frame.f_lineno
+            name = frame.f_code.co_name
+            yield {"file": filepath(frame), "line": lineno, "function": name}
+            frame = frame.f_back
 
 
 def capture_backtrace():

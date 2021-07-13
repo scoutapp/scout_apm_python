@@ -20,14 +20,12 @@ def test_capture_backtrace():
         assert isinstance(frame["line"], int)
         assert isinstance(frame["function"], str)
 
-    assert stack[0]["file"] == format_py_filename(__file__)
-
-
-def format_py_filename(filename):
-    if sys.version_info[0] == 2 and filename.endswith(".pyc"):
-        # Python 2 will include .pyc filename if it's used, so strip that
-        return filename[:-1]
-    return filename
+    assert stack[0]["file"] == "scout_apm/core/backtrace.py"
+    assert stack[0]["function"] == "filter_frames"
+    assert stack[1]["file"] == "scout_apm/core/backtrace.py"
+    assert stack[1]["function"] == "capture_backtrace"
+    assert stack[2]["file"] == "tests/unit/core/test_backtrace.py"
+    assert stack[2]["function"] == "test_capture_backtrace"
 
 
 def test_capture_backtrace_limit():
@@ -74,5 +72,5 @@ def test_capture_stacktrace():
         assert isinstance(frame["line"], int)
         assert isinstance(frame["function"], str)
 
-    assert stack[0]["file"] == format_py_filename(__file__)
+    assert stack[0]["file"] == "tests/unit/core/test_backtrace.py"
     assert stack[0]["function"] == "error"

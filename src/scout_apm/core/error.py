@@ -50,7 +50,6 @@ class ErrorMonitor(object):
                     module=None, controller=custom_controller, action=None
                 )
 
-        app_root = scout_config.value("application_root")
         error = {
             "exception_class": exc_class.__name__,
             "message": text_type(exc_value),
@@ -63,9 +62,7 @@ class ErrorMonitor(object):
             "environment": filter_element("", environment) if environment else None,
             "trace": [
                 "{file}:{line}:in {function}".format(
-                    file=frame["file"].split(app_root, maxsplit=1)[-1]
-                    if app_root
-                    else frame["file"],
+                    file=frame["file"],
                     line=frame["line"],
                     function=frame["function"],
                 )

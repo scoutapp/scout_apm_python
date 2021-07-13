@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
+import os
 from datetime import datetime
 from time import sleep
 
@@ -11,6 +12,8 @@ import pytest
 from scout_apm.core.config import scout_config
 from scout_apm.core.error_service import ErrorServiceThread
 from tests.compat import gzip_decompress
+
+WORKING_DIRECTORY = os.getcwd().encode("utf-8")
 
 
 @pytest.fixture
@@ -41,7 +44,7 @@ def error_service_thread():
         (
             {},
             b'{"notifier": "scout_apm_python", "environment": null, '
-            b'"root": "", "problems": [{"foo": "bar"}]}',
+            b'"root": "' + WORKING_DIRECTORY + b'", "problems": [{"foo": "bar"}]}',
             {"Agent-Hostname": None, "X-Error-Count": "1"},
             "https://errors.scoutapm.com/apps/error.scout" "?name=Python+App",
         ),
@@ -76,7 +79,9 @@ def test_send_batch(error_service_thread):
     def request_callback(request, uri, response_headers):
         decompressed_body = (
             b'{"notifier": "scout_apm_python", "environment": null, '
-            b'"root": "", "problems": [{"foo": 0}, {"foo": 1}, '
+            b'"root": "'
+            + WORKING_DIRECTORY
+            + b'", "problems": [{"foo": 0}, {"foo": 1}, '
             b'{"foo": 2}, {"foo": 3}, {"foo": 4}]}'
         )
         assert gzip_decompress(request.body) == decompressed_body

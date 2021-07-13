@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import datetime as dt
+import os
 import sys
 from contextlib import contextmanager
 
@@ -117,7 +118,7 @@ def test_instruments_idempotent(func):
 def test_on_setting_changed_application_root():
     with app_with_scout(BASE_DIR="/tmp/foobar"):
         assert scout_config.value("application_root") == "/tmp/foobar"
-    assert scout_config.value("application_root") == ""
+    assert scout_config.value("application_root") == os.getcwd()
 
 
 @skip_if_python_2
@@ -126,7 +127,7 @@ def test_on_setting_changed_application_root_pathlib():
         value = scout_config.value("application_root")
         assert isinstance(value, str)
         assert value == "/tmp/foobar"
-    assert scout_config.value("application_root") == ""
+    assert scout_config.value("application_root") == os.getcwd()
 
 
 def test_on_setting_changed_monitor():

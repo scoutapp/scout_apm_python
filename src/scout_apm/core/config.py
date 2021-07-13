@@ -212,7 +212,7 @@ class Defaults(object):
     def __init__(self):
         self.defaults = {
             "app_server": "",
-            "application_root": "",
+            "application_root": os.getcwd(),
             "collect_remote_ip": True,
             "core_agent_dir": "/tmp/scout_apm_core",
             "core_agent_download": True,

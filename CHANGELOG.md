@@ -10,6 +10,9 @@
 
 ### Fixed
 - Setup metadata keywords now contains an array of strings.
+- Remove non-project paths from traces.
+  ([Issue #416](https://github.com/scoutapp/scout_apm_python/issues/416))
+
 
 ## [2.20.0] 2021-07-21
 - Removed parsing queue time from Amazon ALB header, X-Amzn-Trace-Id.
