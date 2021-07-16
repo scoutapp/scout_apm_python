@@ -11,6 +11,8 @@
 - Improved debug logging for requests. It now includes some summary
   information about the request.
   ([Issue #654](https://github.com/scoutapp/scout_apm_python/issues/654))
+- Set ``TrackedRequest.tags("error", "true")`` when Celery tasks fail.
+  ([Issue #649](https://github.com/scoutapp/scout_apm_python/issues/649))
 
 ## [2.19.0] 2021-05-04
 

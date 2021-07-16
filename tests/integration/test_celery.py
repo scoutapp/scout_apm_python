@@ -50,6 +50,10 @@ def app_with_scout(celery_config=None, app=None, config=None):
     def hello():
         return "Hello World!"
 
+    @app.task
+    def crash():
+        raise ValueError("Boom!")
+
     # Setup according to https://docs.scoutapm.com/#celery
     Config.set(**config)
     scout_apm.celery.install(app)
@@ -90,6 +94,20 @@ def test_hello_eager(tracked_requests):
     assert len(tracked_request.complete_spans) == 1
     span = tracked_request.complete_spans[0]
     assert span.operation == "Job/tests.integration.test_celery.hello"
+
+
+def test_error_task(tracked_requests):
+    with app_with_scout() as app:
+        result = app.tasks["tests.integration.test_celery.crash"].apply()
+
+    assert isinstance(result.result, ValueError)
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert tracked_request.active_spans == []
+    assert len(tracked_request.complete_spans) == 1
+    span = tracked_request.complete_spans[0]
+    assert span.operation == "Job/tests.integration.test_celery.crash"
+    assert tracked_request.tags["error"]
 
 
 @skip_unless_celery_4_plus

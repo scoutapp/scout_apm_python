@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import datetime as dt
 
-from celery.signals import before_task_publish, task_postrun, task_prerun
+from celery.signals import before_task_publish, task_failure, task_postrun, task_prerun
 
 import scout_apm.core
 from scout_apm.compat import datetime_to_timestamp
@@ -52,6 +52,11 @@ def task_postrun_callback(task=None, **kwargs):
     tracked_request.stop_span()
 
 
+def task_failure_callback(task_id=None, **kwargs):
+    tracked_request = TrackedRequest.instance()
+    tracked_request.tag("error", "true")
+
+
 def install(app=None):
     if app is not None:
         copy_configuration(app)
@@ -62,6 +67,7 @@ def install(app=None):
 
     before_task_publish.connect(before_task_publish_callback)
     task_prerun.connect(task_prerun_callback)
+    task_failure.connect(task_failure_callback)
     task_postrun.connect(task_postrun_callback)
 
 
