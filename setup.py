@@ -68,7 +68,7 @@ setup(
         'urllib3[secure] < 2 ; python_version >= "3.5"',
         "wrapt>=1.10,<2.0",
     ],
-    keywords="apm performance monitoring development",
+    keywords=["apm", "performance monitoring", "development"],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Framework :: Bottle",

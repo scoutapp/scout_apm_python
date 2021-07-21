@@ -2,6 +2,10 @@
 
 ## Pending
 
+### Added
+
+### Fixed
+- Setup metadata keywords now contains an array of strings.
 
 ## [2.20.0] 2021-07-21
 - Removed parsing queue time from Amazon ALB header, X-Amzn-Trace-Id.
