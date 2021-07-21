@@ -1,6 +1,9 @@
 # Changelog
 
 ## Pending
+
+
+## [2.20.0] 2021-07-21
 - Removed parsing queue time from Amazon ALB header, X-Amzn-Trace-Id.
   The time portion of the header only has the truncated seconds which
   appears as about 500ms for queue time constantly.
