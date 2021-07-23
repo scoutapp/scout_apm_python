@@ -3,6 +3,12 @@
 ## Pending
 
 ### Added
+
+### Fixed
+
+## [2.21.0] 2021-07-23
+
+### Added
 - Support Error Monitoring. See
   [integration docs](https://scoutapm.com/docs/python/error-monitoring).
   ([PR #651](https://github.com/scoutapp/scout_apm_python/pull/651))
