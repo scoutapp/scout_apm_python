@@ -5,6 +5,8 @@
 ### Added
 
 ### Fixed
+- Handle case of namespace packages when capturing backtraces.
+  ([Issue #667](https://github.com/scoutapp/scout_apm_python/issues/667))
 
 ## [2.21.0] 2021-07-23
 

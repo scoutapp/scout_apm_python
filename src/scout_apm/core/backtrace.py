@@ -7,6 +7,9 @@ import sys
 import sysconfig
 import traceback
 import warnings
+from logging import getLogger
+
+logger = getLogger(__name__)
 
 # Maximum non-Scout frames to target retrieving
 LIMIT = 50
@@ -25,11 +28,25 @@ def filter_frames(frames):
 
 def module_filepath(module, filepath):
     """Get the filepath relative to the base module."""
-    root_module = module.split(".", 1)[0]
-    if root_module == module:
+    root_module_name = module.split(".", 1)[0]
+    if root_module_name == module:
         return os.path.basename(filepath)
 
-    module_dir = sys.modules[root_module].__file__.rsplit(os.sep, 2)[0]
+    root_module = sys.modules[root_module_name]
+    if root_module.__file__:
+        module_dir = root_module.__file__.rsplit(os.sep, 2)[0]
+    elif root_module.__path__:
+        # Default to using the first path specified for the module.
+        module_dir = root_module.__path__[0].rsplit(os.sep, 1)[0]
+        if len(root_module.__path__) > 1:
+            logger.debug(
+                "{} has {} paths. Use the first and ignore the rest.".format(
+                    root_module, len(root_module.__path__)
+                )
+            )
+    else:
+        # If the file path don't exist, then return the full path.
+        return filepath
     return filepath.split(module_dir, 1)[-1].lstrip(os.sep)
 
 

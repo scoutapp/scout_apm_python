@@ -5,7 +5,18 @@ import os
 import sys
 import sysconfig
 
+import pytest
+
 from scout_apm.core import backtrace
+
+
+def get_tb():
+    # Python 2 compatible way of getting the current frame.
+    try:
+        raise ZeroDivisionError
+    except ZeroDivisionError:
+        # Get the current frame
+        return sys.exc_info()[2]
 
 
 def test_capture_backtrace():
@@ -54,15 +65,7 @@ def test_filter_frames():
 
 
 def test_capture_stacktrace():
-    def error():
-        # Python 2 compatible way of getting the current frame.
-        try:
-            raise ZeroDivisionError
-        except ZeroDivisionError:
-            # Get the current frame
-            return sys.exc_info()[2]
-
-    stack = backtrace.capture_stacktrace(error())
+    stack = backtrace.capture_stacktrace(get_tb())
 
     assert len(stack) == 1
     for frame in stack:
@@ -73,4 +76,52 @@ def test_capture_stacktrace():
         assert isinstance(frame["function"], str)
 
     assert stack[0]["file"] == "tests/unit/core/test_backtrace.py"
-    assert stack[0]["function"] == "error"
+    assert stack[0]["function"] == "get_tb"
+
+
+def test_module_filepath():
+    frame = get_tb().tb_frame
+    module = frame.f_globals["__name__"]
+    filepath = frame.f_code.co_filename
+    assert (
+        backtrace.module_filepath(module, filepath)
+        == "tests/unit/core/test_backtrace.py"
+    )
+
+
+@pytest.fixture
+def test_package_as_namespace_package():
+    original = sys.modules["tests"].__file__
+    sys.modules["tests"].__file__ = None
+    yield
+    sys.modules["tests"].__file__ = original
+
+
+def test_module_filepath_with_namespace(test_package_as_namespace_package):
+    frame = get_tb().tb_frame
+    module = frame.f_globals["__name__"]
+    filepath = frame.f_code.co_filename
+    assert (
+        backtrace.module_filepath(module, filepath)
+        == "tests/unit/core/test_backtrace.py"
+    )
+
+
+@pytest.fixture
+def test_package_no_file_or_path():
+    orig_file = sys.modules["tests"].__file__
+    orig_path = sys.modules["tests"].__path__
+    sys.modules["tests"].__file__ = None
+    sys.modules["tests"].__path__ = None
+    yield
+    sys.modules["tests"].__file__ = orig_file
+    sys.modules["tests"].__path__ = orig_path
+
+
+def test_module_filepath_without_file_or_path(test_package_no_file_or_path):
+    frame = get_tb().tb_frame
+    module = frame.f_globals["__name__"]
+    filepath = frame.f_code.co_filename
+    full_path = backtrace.module_filepath(module, filepath)
+    assert full_path != "tests/unit/core/test_backtrace.py"
+    assert full_path.endswith("tests/unit/core/test_backtrace.py")
