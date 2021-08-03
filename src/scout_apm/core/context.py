@@ -18,6 +18,12 @@ try:
 except ImportError:
     asyncio = None
 
+try:
+    from contextvars import ContextVar
+except ImportError:
+    ContextVar = None
+
+
 SCOUT_REQUEST_ATTR = "__scout_trackedrequest"
 
 
@@ -112,18 +118,24 @@ class LocalContext(object):
             self._local = SimplifiedAsgirefLocal()
         else:
             self._local = ThreadLocal()
+        self._ctx = ContextVar(SCOUT_REQUEST_ATTR) if ContextVar else None
+        self._token = None
 
     def get_tracked_request(self):
-        task = get_current_asyncio_task()
+        if self._ctx:
+            if not self._ctx.get(None):
+                self._token = self._ctx.set(TrackedRequest())
+            return self._ctx.get()
         if not hasattr(self._local, "tracked_request"):
-            self._local.tracked_request = (
-                task and getattr(task, SCOUT_REQUEST_ATTR, None) or TrackedRequest()
-            )
+            self._local.tracked_request = TrackedRequest()
         return self._local.tracked_request
 
     def clear_tracked_request(self, instance):
         if getattr(self._local, "tracked_request", None) is instance:
             del self._local.tracked_request
+        if self._ctx and self._token is not None and self._ctx.get() is instance:
+            self._ctx = ContextVar(SCOUT_REQUEST_ATTR)
+            self._token = None
 
 
 context = LocalContext()
