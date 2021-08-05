@@ -24,7 +24,7 @@ from tests.integration.util import (
     parametrize_queue_time_header_name,
     parametrize_user_ip_headers,
 )
-from tests.tools import asgi_http_scope, async_test
+from tests.tools import asgi_http_scope
 
 
 @contextmanager
@@ -113,7 +113,7 @@ def app_with_scout(*, middleware=None, scout_config=None):
         Config.reset_all()
 
 
-@async_test
+@pytest.mark.asyncio
 async def test_home(tracked_requests):
     with app_with_scout() as app:
         communicator = ApplicationCommunicator(app, asgi_http_scope(path="/"))
@@ -137,7 +137,7 @@ async def test_home(tracked_requests):
     )
 
 
-@async_test
+@pytest.mark.asyncio
 async def test_sync_home(tracked_requests):
     with app_with_scout() as app:
         communicator = ApplicationCommunicator(app, asgi_http_scope(path="/sync-home/"))
@@ -161,7 +161,7 @@ async def test_sync_home(tracked_requests):
     )
 
 
-@async_test
+@pytest.mark.asyncio
 async def test_home_ignored(tracked_requests):
     with app_with_scout(scout_config={"ignore": ["/"]}) as app:
         communicator = ApplicationCommunicator(app, asgi_http_scope(path="/"))
@@ -177,7 +177,7 @@ async def test_home_ignored(tracked_requests):
     assert tracked_requests == []
 
 
-@async_test
+@pytest.mark.asyncio
 async def test_hello(tracked_requests):
     with app_with_scout() as app:
         communicator = ApplicationCommunicator(app, asgi_http_scope(path="/hello/"))
@@ -201,7 +201,7 @@ async def test_hello(tracked_requests):
     )
 
 
-@async_test
+@pytest.mark.asyncio
 async def test_sync_hello(tracked_requests):
     with app_with_scout() as app:
         communicator = ApplicationCommunicator(
@@ -227,7 +227,7 @@ async def test_sync_hello(tracked_requests):
     )
 
 
-@async_test
+@pytest.mark.asyncio
 async def test_not_found(tracked_requests):
     with app_with_scout() as app:
         communicator = ApplicationCommunicator(app, asgi_http_scope(path="/not-found/"))
@@ -242,7 +242,7 @@ async def test_not_found(tracked_requests):
 
 
 @parametrize_filtered_params
-@async_test
+@pytest.mark.asyncio
 async def test_filtered_params(params, expected_path, tracked_requests):
     with app_with_scout() as app:
         communicator = ApplicationCommunicator(
@@ -259,7 +259,7 @@ async def test_filtered_params(params, expected_path, tracked_requests):
 
 
 @parametrize_user_ip_headers
-@async_test
+@pytest.mark.asyncio
 async def test_user_ip(headers, client_address, expected, tracked_requests):
     with app_with_scout() as app:
         communicator = ApplicationCommunicator(
@@ -275,7 +275,7 @@ async def test_user_ip(headers, client_address, expected, tracked_requests):
     assert tracked_requests[0].tags["user_ip"] == expected
 
 
-@async_test
+@pytest.mark.asyncio
 async def test_user_ip_collection_disabled(tracked_requests):
     with app_with_scout(scout_config={"collect_remote_ip": False}) as app:
         communicator = ApplicationCommunicator(
@@ -290,7 +290,7 @@ async def test_user_ip_collection_disabled(tracked_requests):
 
 
 @parametrize_queue_time_header_name
-@async_test
+@pytest.mark.asyncio
 async def test_queue_time(header_name, tracked_requests):
     # Not testing floats due to Python 2/3 rounding differences
     queue_start = int(datetime_to_timestamp(dt.datetime.utcnow())) - 2
@@ -311,7 +311,7 @@ async def test_queue_time(header_name, tracked_requests):
     assert isinstance(queue_time_ns, int) and queue_time_ns > 0
 
 
-@async_test
+@pytest.mark.asyncio
 async def test_server_error(tracked_requests):
     with app_with_scout() as app:
         communicator = ApplicationCommunicator(app, asgi_http_scope(path="/crash/"))
@@ -332,7 +332,7 @@ async def test_server_error(tracked_requests):
     )
 
 
-@async_test
+@pytest.mark.asyncio
 async def test_return_error(tracked_requests):
     with app_with_scout() as app:
         communicator = ApplicationCommunicator(
@@ -350,7 +350,7 @@ async def test_return_error(tracked_requests):
     assert tracked_request.tags["error"] == "true"
 
 
-@async_test
+@pytest.mark.asyncio
 async def test_no_monitor(tracked_requests):
     with app_with_scout(scout_config={"monitor": False}) as app:
         communicator = ApplicationCommunicator(app, asgi_http_scope(path="/"))
@@ -363,7 +363,7 @@ async def test_no_monitor(tracked_requests):
     assert tracked_requests == []
 
 
-@async_test
+@pytest.mark.asyncio
 async def test_unknown_asgi_scope(tracked_requests):
     with app_with_scout() as app:
         communicator = ApplicationCommunicator(app, {"type": "lifespan"})
@@ -374,7 +374,7 @@ async def test_unknown_asgi_scope(tracked_requests):
     assert tracked_requests == []
 
 
-@async_test
+@pytest.mark.asyncio
 async def test_background_jobs(tracked_requests):
     with app_with_scout() as app:
         communicator = ApplicationCommunicator(
@@ -407,7 +407,7 @@ async def test_background_jobs(tracked_requests):
     )
 
 
-@async_test
+@pytest.mark.asyncio
 async def test_username(tracked_requests):
     class DummyBackend(AuthenticationBackend):
         async def authenticate(self, request):
@@ -428,7 +428,7 @@ async def test_username(tracked_requests):
     assert tracked_request.tags["username"] == "dummy"
 
 
-@async_test
+@pytest.mark.asyncio
 async def test_username_bad_user(tracked_requests):
     class BadUserBackend(AuthenticationBackend):
         async def authenticate(self, request):
@@ -449,7 +449,7 @@ async def test_username_bad_user(tracked_requests):
     assert "username" not in tracked_request.tags
 
 
-@async_test
+@pytest.mark.asyncio
 async def test_instance_app(tracked_requests):
     with app_with_scout() as app:
         communicator = ApplicationCommunicator(

@@ -1,7 +1,6 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import functools
 import sys
 from contextlib import contextmanager
 
@@ -70,27 +69,6 @@ def n_plus_one_thresholds(count=None, duration=None):
         )
     with mock_count, mock_duration:
         yield
-
-
-def async_test(func):
-    """
-    Wrap async_to_sync with another function because Pytest complains about
-    collecting the resulting callable object as a test because it's not a true
-    function:
-
-    PytestCollectionWarning: cannot collect 'test_foo' because it is not a
-    function.
-    """
-    # inner import because for Python 3.6+ tests only
-    from asgiref.sync import async_to_sync
-
-    sync_func = async_to_sync(func)
-
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        return sync_func(*args, **kwargs)
-
-    return wrapper
 
 
 def asgi_http_scope(headers=None, **kwargs):

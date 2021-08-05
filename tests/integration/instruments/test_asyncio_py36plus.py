@@ -16,8 +16,6 @@ import functools
 import pytest
 
 from scout_apm.api import BackgroundTransaction, instrument
-from src.scout_apm.core.tracked_request import TrackedRequest
-from tests.tools import async_test
 
 
 def create_task(coro):
@@ -68,9 +66,8 @@ async def resolving_future(wait):
     return fut
 
 
-@async_test
-async def test_coroutine(tracked_requests):
-    tracked_request = TrackedRequest.instance()
+@pytest.mark.asyncio
+async def test_coroutine(tracked_requests, tracked_request):
     with BackgroundTransaction("test"):
         await coro()
 
@@ -82,9 +79,8 @@ async def test_coroutine(tracked_requests):
     assert tracked_requests[0].request_id == tracked_request.request_id
 
 
-@async_test
-async def test_coroutine_timeout(tracked_requests):
-    tracked_request = TrackedRequest.instance()
+@pytest.mark.asyncio
+async def test_coroutine_timeout(tracked_requests, tracked_request):
     with BackgroundTransaction("test"):
         with pytest.raises(asyncio.TimeoutError):
             await asyncio.wait_for(coro("long", wait=0.5), timeout=0.1)
@@ -95,9 +91,8 @@ async def test_coroutine_timeout(tracked_requests):
     assert tracked_requests[0].request_id == tracked_request.request_id
 
 
-@async_test
-async def test_task_awaited(tracked_requests):
-    tracked_request = TrackedRequest.instance()
+@pytest.mark.asyncio
+async def test_task_awaited(tracked_requests, tracked_request):
     with BackgroundTransaction("test"):
         await create_task(coro())
 
@@ -109,10 +104,8 @@ async def test_task_awaited(tracked_requests):
     assert tracked_requests[0].request_id == tracked_request.request_id
 
 
-@async_test
-async def test_nested_tasks(tracked_requests):
-    tracked_request = TrackedRequest.instance()
-
+@pytest.mark.asyncio
+async def test_nested_tasks(tracked_requests, tracked_request):
     @instrument.async_("orchestrator")
     async def orchestrator():
         await coro("1")
@@ -146,9 +139,8 @@ async def test_nested_tasks(tracked_requests):
     assert tracked_requests[0].request_id == tracked_request.request_id
 
 
-@async_test
-async def test_task_not_awaited(tracked_requests):
-    tracked_request = TrackedRequest.instance()
+@pytest.mark.asyncio
+async def test_task_not_awaited(tracked_requests, tracked_request):
     with BackgroundTransaction("test"):
         await create_task(coro("short"))
         long = create_task(coro("long", wait=0.5))
@@ -169,9 +161,8 @@ async def test_task_not_awaited(tracked_requests):
     assert tracked_requests[0].request_id == tracked_request.request_id
 
 
-@async_test
-async def test_task_cancelled(tracked_requests):
-    tracked_request = TrackedRequest.instance()
+@pytest.mark.asyncio
+async def test_task_cancelled(tracked_requests, tracked_request):
     with BackgroundTransaction("test"):
         long = create_task(coro("long", wait=0.5))
         long.cancel()
@@ -182,9 +173,8 @@ async def test_task_cancelled(tracked_requests):
     assert tracked_requests[0].request_id == tracked_request.request_id
 
 
-@async_test
-async def test_future_awaited(tracked_requests):
-    tracked_request = TrackedRequest.instance()
+@pytest.mark.asyncio
+async def test_future_awaited(tracked_requests, tracked_request):
     with BackgroundTransaction("test"):
         fut = get_future()
         create_task(set_future(fut, wait=0.5))
@@ -198,9 +188,8 @@ async def test_future_awaited(tracked_requests):
     assert tracked_requests[0].request_id == tracked_request.request_id
 
 
-@async_test
-async def test_future_gathered(tracked_requests):
-    tracked_request = TrackedRequest.instance()
+@pytest.mark.asyncio
+async def test_future_gathered(tracked_requests, tracked_request):
     with BackgroundTransaction("test"):
         await asyncio.gather(
             resolving_future(0.5),
@@ -217,9 +206,8 @@ async def test_future_gathered(tracked_requests):
     assert tracked_requests[0].request_id == tracked_request.request_id
 
 
-@async_test
-async def test_future_not_gathered(tracked_requests):
-    tracked_request = TrackedRequest.instance()
+@pytest.mark.asyncio
+async def test_future_not_gathered(tracked_requests, tracked_request):
     with BackgroundTransaction("test"):
         gather_future = asyncio.gather(
             resolving_future(0.5),
@@ -236,9 +224,8 @@ async def test_future_not_gathered(tracked_requests):
     assert tracked_requests[0].request_id == tracked_request.request_id
 
 
-@async_test
-async def test_future_cancelled(tracked_requests):
-    tracked_request = TrackedRequest.instance()
+@pytest.mark.asyncio
+async def test_future_cancelled(tracked_requests, tracked_request):
     with BackgroundTransaction("test"):
         gather_future = asyncio.gather(
             resolving_future(0.5),
@@ -252,13 +239,11 @@ async def test_future_cancelled(tracked_requests):
     assert tracked_request.complete_spans[0].operation == "Job/test"
 
 
-@async_test
-async def test_run_in_executor_with_context_copied(tracked_requests):
+@pytest.mark.asyncio
+async def test_run_in_executor_with_context_copied(tracked_requests, tracked_request):
     def inner_func():
         with BackgroundTransaction("test"):
             pass
-
-    tracked_request = TrackedRequest.instance()
 
     loop = asyncio.get_event_loop()
     child = functools.partial(inner_func)
@@ -272,11 +257,10 @@ async def test_run_in_executor_with_context_copied(tracked_requests):
     assert len(tracked_requests[0].complete_spans) == 1
 
 
-@async_test
-async def test_run_in_executor_without_context_copied(tracked_requests):
-
-    tracked_request = TrackedRequest.instance()
-
+@pytest.mark.asyncio
+async def test_run_in_executor_without_context_copied(
+    tracked_requests, tracked_request
+):
     def inner_func():
         with BackgroundTransaction("test"):
             pass

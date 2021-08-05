@@ -4,11 +4,11 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 
 import jinja2
+import pytest
 
 from scout_apm.instruments.jinja2 import ensure_installed
 from tests.compat import mock
 from tests.integration.instruments.test_jinja2 import mock_not_attempted
-from tests.tools import async_test
 
 
 def test_ensure_installed_fail_no_render_async_attribute(caplog):
@@ -29,7 +29,7 @@ def test_ensure_installed_fail_no_render_async_attribute(caplog):
     ]
 
 
-@async_test
+@pytest.mark.asyncio
 async def test_async_render(tracked_request):
     ensure_installed()
     template = jinja2.Template("Hello {{ name }}!", enable_async=True)
@@ -43,7 +43,7 @@ async def test_async_render(tracked_request):
     assert span.tags["name"] is None
 
 
-@async_test
+@pytest.mark.asyncio
 async def test_async_render_name(tracked_request):
     ensure_installed()
     template = jinja2.Template("Hello {{ name }}!", enable_async=True)

@@ -4,10 +4,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import pytest
 
 from scout_apm.api import BackgroundTransaction, WebTransaction, instrument
-from tests.tools import async_test
 
 
-@async_test
+@pytest.mark.asyncio
 async def test_instrument_decorator_async(tracked_request):
     @instrument.async_("Foo")
     async def foo():
@@ -37,7 +36,7 @@ def test_instrument_decorator_async_for_sync_function(tracked_request):
     assert len(tracked_request.complete_spans) == 0
 
 
-@async_test
+@pytest.mark.asyncio
 async def test_instrument_decorator_async_misconfigured(tracked_request):
     """Test case where .async_ isn't used from parent instrument"""
 
@@ -56,7 +55,7 @@ async def test_instrument_decorator_async_misconfigured(tracked_request):
     assert tracked_request.complete_spans[0].operation == "Custom/Bar"
 
 
-@async_test
+@pytest.mark.asyncio
 async def test_instrument_decorator_async_classmethod(tracked_request):
     class Example(object):
         @classmethod
@@ -71,7 +70,7 @@ async def test_instrument_decorator_async_classmethod(tracked_request):
     assert tracked_request.complete_spans[0].operation == "Custom/Test Decorator"
 
 
-@async_test
+@pytest.mark.asyncio
 async def test_instrument_decorator_async_staticmethod(tracked_request):
     class Example(object):
         @staticmethod
@@ -86,7 +85,7 @@ async def test_instrument_decorator_async_staticmethod(tracked_request):
     assert tracked_request.complete_spans[0].operation == "Custom/Test Decorator"
 
 
-@async_test
+@pytest.mark.asyncio
 async def test_instrument_decorator_async_return_awaitable(tracked_request):
     @instrument.async_("Foo")
     async def foo():
@@ -104,7 +103,7 @@ async def test_instrument_decorator_async_return_awaitable(tracked_request):
     assert tracked_request.complete_spans[1].operation == "Custom/Bar"
 
 
-@async_test
+@pytest.mark.asyncio
 async def test_instrument_decorator_async_return_awaitable_misconfigured(
     tracked_request,
 ):
@@ -125,7 +124,7 @@ async def test_instrument_decorator_async_return_awaitable_misconfigured(
     assert tracked_request.complete_spans[0].operation == "Custom/Bar"
 
 
-@async_test
+@pytest.mark.asyncio
 async def test_instrument_context_manager_async_await_later(tracked_request):
     """
     Test proving that if an awaitable goes unawaited in a context manager,
@@ -150,7 +149,7 @@ async def test_instrument_context_manager_async_await_later(tracked_request):
     assert tracked_request.complete_spans[0].operation == "Custom/Test Decorator"
 
 
-@async_test
+@pytest.mark.asyncio
 async def test_web_transaction_decorator_async(tracked_request):
     @instrument.async_("Foo")
     async def foo():
@@ -168,7 +167,7 @@ async def test_web_transaction_decorator_async(tracked_request):
     assert tracked_request.complete_spans[1].operation == "Controller/Bar"
 
 
-@async_test
+@pytest.mark.asyncio
 async def test_web_transaction_decorator_async_misconfigured(tracked_request):
     """Test case where .async_ isn't used from WebTransaction"""
 
@@ -199,7 +198,7 @@ def test_web_transaction_decorator_async_for_sync_function(tracked_request):
     assert len(tracked_request.complete_spans) == 0
 
 
-@async_test
+@pytest.mark.asyncio
 async def test_background_transaction_decorator_async(tracked_request):
     @instrument.async_("Foo")
     async def foo():
@@ -217,7 +216,7 @@ async def test_background_transaction_decorator_async(tracked_request):
     assert tracked_request.complete_spans[1].operation == "Job/Bar"
 
 
-@async_test
+@pytest.mark.asyncio
 async def test_background_transaction_decorator_async_misconfigured(tracked_request):
     """Test case where .async_ isn't used from BackgroundTransaction"""
 
