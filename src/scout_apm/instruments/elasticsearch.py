@@ -71,6 +71,7 @@ CLIENT_METHODS = [
     ClientMethod("search_shards", True),
     ClientMethod("search_template", True),
     ClientMethod("termvectors", True),
+    ClientMethod("terms_enum", True),
     ClientMethod("update", True),
     ClientMethod("update_by_query", True),
     ClientMethod("update_by_query_rethrottle", False),
