@@ -16,7 +16,7 @@ get_objtrace_config_state(PyObject *module)
 {
     void *state = PyModule_GetState(module);
     assert(state != NULL);
-    return (_objtrace_config_state *)state
+    return (_objtrace_config_state *)state;
 }
 #else
 static int enabled = 0;
