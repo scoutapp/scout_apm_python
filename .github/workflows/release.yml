@@ -35,7 +35,7 @@ jobs:
     - name: Install packaging tools
       run: |
         python2.7 -m pip install --upgrade pip setuptools wheel
-        python3.9 -m pip install --upgrade cibuildwheel pip setuptools twine wheel
+        python3.9 -m pip install --upgrade "cibuildwheel<2.0.0" pip setuptools twine wheel
 
     - name: Build sdist
       run: python3.9 setup.py sdist
