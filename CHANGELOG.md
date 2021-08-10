@@ -8,6 +8,8 @@
 
 ### Fixed
 - Switch to storing TrackedRequest in a ContextVar for Python3.6+ rather than in a thread local.
+- Support instrumenting Jinja v3 ``render_async`` function.
+  ([Issue #646](https://github.com/scoutapp/scout_apm_python/issues/646))
 
 ## [2.21.1] 2021-07-27
 
