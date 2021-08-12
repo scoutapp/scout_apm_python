@@ -3,6 +3,12 @@
 ## Pending
 
 ### Added
+
+### Fixed
+
+## [2.22.0] 2021-08-12
+
+### Added
 - Added `terms_enum` instrumentation for ElasticSearch 7.14.0.
   ([Issue #671](https://github.com/scoutapp/scout_apm_python/issues/671))
 
