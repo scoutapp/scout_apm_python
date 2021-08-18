@@ -7,8 +7,12 @@ import sys
 
 from scout_apm.core import objtrace
 from scout_apm.core.tracked_request import TrackedRequest
-from tests.compat import mock
-from tests.tools import skip_if_objtrace_is_extension, skip_if_objtrace_not_extension
+from tests.compat import copy_context, mock
+from tests.tools import (
+    skip_if_missing_context_vars,
+    skip_if_objtrace_is_extension,
+    skip_if_objtrace_not_extension,
+)
 
 
 def test_tracked_request_repr(tracked_request):
@@ -23,6 +27,18 @@ def test_tracked_request_instance_is_a_singleton():
     finally:
         tracked_request_1.finish()
         tracked_request_2.finish()
+
+
+@skip_if_missing_context_vars
+def test_tracked_request_copied_into_new_context():
+    tracked_request_1 = TrackedRequest.instance()
+    ctx = copy_context()
+
+    def generate_new_tracked_request(existing_tracked_request):
+        new_tracked_request = TrackedRequest.instance()
+        assert existing_tracked_request is new_tracked_request
+
+    ctx.run(generate_new_tracked_request, tracked_request_1)
 
 
 def test_is_real_request_default_false(tracked_request):
@@ -214,6 +230,17 @@ def test_finish_log_request_info(tracked_request, caplog):
             + "is_real_request=True"
         ),
     ) in caplog.record_tuples
+
+
+def test_finish_clears_context():
+    tracked_request_1 = TrackedRequest.instance()
+    tracked_request_1.is_real_request = True
+    tracked_request_2 = TrackedRequest.instance()
+    assert tracked_request_2 is tracked_request_1
+
+    tracked_request_1.finish()
+    tracked_request_3 = TrackedRequest.instance()
+    assert tracked_request_3 is not tracked_request_2
 
 
 def test_is_ignored_default_false(tracked_request):

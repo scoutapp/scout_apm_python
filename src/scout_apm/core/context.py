@@ -20,8 +20,10 @@ except ImportError:
 
 try:
     from contextvars import ContextVar
+
+    scout_context_var = ContextVar("__scout_trackedrequest")
 except ImportError:
-    ContextVar = None
+    scout_context_var = None
 
 
 SCOUT_REQUEST_ATTR = "__scout_trackedrequest"
@@ -118,14 +120,13 @@ class LocalContext(object):
             self._local = SimplifiedAsgirefLocal()
         else:
             self._local = ThreadLocal()
-        self._ctx = ContextVar(SCOUT_REQUEST_ATTR) if ContextVar else None
-        self._token = None
+        self.use_context_var = scout_context_var is not None
 
     def get_tracked_request(self):
-        if self._ctx:
-            if not self._ctx.get(None):
-                self._token = self._ctx.set(TrackedRequest())
-            return self._ctx.get()
+        if scout_context_var:
+            if not scout_context_var.get(None):
+                scout_context_var.set(TrackedRequest())
+            return scout_context_var.get()
         if not hasattr(self._local, "tracked_request"):
             self._local.tracked_request = TrackedRequest()
         return self._local.tracked_request
@@ -133,9 +134,8 @@ class LocalContext(object):
     def clear_tracked_request(self, instance):
         if getattr(self._local, "tracked_request", None) is instance:
             del self._local.tracked_request
-        if self._ctx and self._token is not None and self._ctx.get() is instance:
-            self._ctx = ContextVar(SCOUT_REQUEST_ATTR)
-            self._token = None
+        if scout_context_var and scout_context_var.get(None) is instance:
+            scout_context_var.set(None)
 
 
 context = LocalContext()

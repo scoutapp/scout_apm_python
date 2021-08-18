@@ -73,4 +73,17 @@ else:
             return f.read()
 
 
-__all__ = ["gzip_decompress", "mock", "nullcontext", "suppress", "TemporaryDirectory"]
+try:
+    from contextvars import copy_context
+except ImportError:
+    copy_context = None
+
+
+__all__ = [
+    "gzip_decompress",
+    "mock",
+    "nullcontext",
+    "suppress",
+    "TemporaryDirectory",
+    "copy_context",
+]
