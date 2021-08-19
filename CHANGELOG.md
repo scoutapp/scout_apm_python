@@ -3,6 +3,12 @@
 ## Pending
 
 ### Added
+
+### Fixed
+
+## [2.22.1] 2021-08-19
+
+### Added
 - Prevent a TrackedRequest from being sent more than once. Additional
   logging was added to identify cases when this is occurring.
 
