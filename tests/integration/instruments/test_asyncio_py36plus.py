@@ -17,6 +17,7 @@ import sys
 import pytest
 
 from scout_apm.api import BackgroundTransaction, instrument
+from scout_apm.core.tracked_request import TrackedRequest
 
 
 def create_task(coro):
@@ -283,6 +284,54 @@ async def test_run_in_executor_with_context_copied(tracked_requests, tracked_req
 
 
 @pytest.mark.asyncio
+async def test_run_in_executor_with_context_copied_and_active_span(
+    tracked_requests, tracked_request
+):
+    # Start an outer span to prevent the tracked_request from finishing.
+    tracked_request.start_span("outer")
+
+    def inner_func():
+        with BackgroundTransaction("test"):
+            pass
+
+    # Run inner_func
+    loop = asyncio.get_event_loop()
+    child = functools.partial(inner_func)
+    context = contextvars.copy_context()
+    func = context.run
+    args = (child,)
+    await loop.run_in_executor(None, func, *args)
+    # Verify finish wasn't called
+    assert len(tracked_requests) == 0
+    assert len(tracked_request.complete_spans) == 1
+
+    tracked_request.stop_span()
+
+    assert tracked_requests[0].request_id == tracked_request.request_id
+    assert len(tracked_requests[0].complete_spans) == 2
+
+
+@pytest.mark.asyncio
+async def test_run_in_executor_with_context_copied_escalates_ignored(tracked_request):
+    # Start an outer span to prevent the tracked_request from finishing.
+    tracked_request.start_span("outer")
+
+    def inner_func():
+        with BackgroundTransaction("test"):
+            TrackedRequest.instance().tag("ignore_transaction", True)
+
+    # Run inner_func
+    loop = asyncio.get_event_loop()
+    child = functools.partial(inner_func)
+    context = contextvars.copy_context()
+    func = context.run
+    args = (child,)
+    await loop.run_in_executor(None, func, *args)
+    tracked_request.stop_span()
+    assert tracked_request.is_ignored()
+
+
+@pytest.mark.asyncio
 async def test_run_in_executor_without_context_copied(
     tracked_requests, tracked_request
 ):
@@ -297,3 +346,50 @@ async def test_run_in_executor_without_context_copied(
     assert len(tracked_requests) == 1
     assert tracked_requests[0].request_id != tracked_request.request_id
     assert len(tracked_requests[0].complete_spans) == 1
+
+
+@pytest.mark.asyncio
+async def test_run_in_executor_without_context_copied_and_active_span(
+    tracked_requests, tracked_request
+):
+    # Start an outer span to prevent the tracked_request from finishing.
+    tracked_request.start_span("outer")
+
+    def inner_func():
+        with BackgroundTransaction("test"):
+            pass
+
+    # Run inner_func
+    loop = asyncio.get_event_loop()
+    func = functools.partial(inner_func)
+    await loop.run_in_executor(None, func)
+    # Verify finish wasn't called
+    assert len(tracked_requests) == 1
+    assert len(tracked_requests[0].complete_spans) == 1
+    assert len(tracked_request.complete_spans) == 0
+
+    tracked_request.stop_span()
+
+    assert tracked_requests[0].request_id != tracked_request.request_id
+    assert len(tracked_request.complete_spans) == 1
+
+
+@pytest.mark.asyncio
+async def test_run_in_executor_without_context_copied_escalates_ignored(
+    tracked_request,
+):
+    # Start an outer span to prevent the tracked_request from finishing.
+    tracked_request.start_span("outer")
+
+    def inner_func():
+        with BackgroundTransaction("test"):
+            TrackedRequest.instance().tag("ignore_transaction", True)
+
+    # Run inner_func
+    loop = asyncio.get_event_loop()
+    func = functools.partial(inner_func)
+    await loop.run_in_executor(None, func)
+
+    tracked_request.stop_span()
+
+    assert not tracked_request.is_ignored()

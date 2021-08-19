@@ -3,6 +3,8 @@
 ## Pending
 
 ### Added
+- Prevent a TrackedRequest from being sent more than once. Additional
+  logging was added to identify cases when this is occurring.
 
 ### Fixed
 - Define TrackedRequest ContextVar at module level and ignore tokens.
