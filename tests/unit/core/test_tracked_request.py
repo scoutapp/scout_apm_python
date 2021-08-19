@@ -7,8 +7,12 @@ import sys
 
 from scout_apm.core import objtrace
 from scout_apm.core.tracked_request import TrackedRequest
-from tests.compat import mock
-from tests.tools import skip_if_objtrace_is_extension, skip_if_objtrace_not_extension
+from tests.compat import copy_context, mock
+from tests.tools import (
+    skip_if_missing_context_vars,
+    skip_if_objtrace_is_extension,
+    skip_if_objtrace_not_extension,
+)
 
 
 def test_tracked_request_repr(tracked_request):
@@ -23,6 +27,17 @@ def test_tracked_request_instance_is_a_singleton():
     finally:
         tracked_request_1.finish()
         tracked_request_2.finish()
+
+
+@skip_if_missing_context_vars
+def test_tracked_request_copied_into_new_context(tracked_request):
+    ctx = copy_context()
+
+    def generate_new_tracked_request(existing_tracked_request):
+        new_tracked_request = TrackedRequest.instance()
+        assert existing_tracked_request is new_tracked_request
+
+    ctx.run(generate_new_tracked_request, tracked_request)
 
 
 def test_is_real_request_default_false(tracked_request):
@@ -186,15 +201,20 @@ def test_finish_does_captures_memory_on_real_requests(tracked_request):
 
 
 def test_finish_log_request_info(tracked_request, caplog):
+    tracked_request.is_real_request = True
     tracked_request.start_span(operation="Something")
     tracked_request.stop_span()
-    tracked_request.is_real_request = True
-    tracked_request.finish()
 
     assert (
         "scout_apm.core.tracked_request",
         logging.DEBUG,
         "Stopping request: {}".format(tracked_request.request_id),
+    ) in caplog.record_tuples
+
+    assert (
+        "scout_apm.core.tracked_request",
+        logging.DEBUG,
+        "Sending request: {}".format(tracked_request.request_id),
     ) in caplog.record_tuples
 
     assert (
@@ -211,9 +231,27 @@ def test_finish_log_request_info(tracked_request, caplog):
             + "complete_spans=1 "
             + "tags=1 "
             + "hit_max=False "
-            + "is_real_request=True"
+            + "is_real_request=True "
+            + "sent=True"
         ),
     ) in caplog.record_tuples
+
+
+def test_finish_clears_context():
+    tracked_request_1 = TrackedRequest.instance()
+    tracked_request_1.is_real_request = True
+    tracked_request_2 = TrackedRequest.instance()
+    try:
+        assert tracked_request_2 is tracked_request_1
+    finally:
+        tracked_request_1.finish()
+        tracked_request_2.finish()
+
+    tracked_request_3 = TrackedRequest.instance()
+    try:
+        assert tracked_request_3 is not tracked_request_2
+    finally:
+        tracked_request_3.finish()
 
 
 def test_is_ignored_default_false(tracked_request):
@@ -223,3 +261,54 @@ def test_is_ignored_default_false(tracked_request):
 def test_is_ignored_mark_true(tracked_request):
     tracked_request.tag("ignore_transaction", True)
     assert tracked_request.is_ignored()
+
+
+def test_request_only_sent_once(tracked_request, caplog):
+    tracked_request.is_real_request = True
+    tracked_request.start_span(operation="Something")
+    tracked_request.stop_span()
+
+    assert tracked_request.sent
+
+    sent_log = (
+        "scout_apm.core.tracked_request",
+        logging.DEBUG,
+        "Sending request: {}".format(tracked_request.request_id),
+    )
+    info_log = (
+        "scout_apm.core.tracked_request",
+        logging.DEBUG,
+        (
+            "Request {} ".format(tracked_request.request_id)
+            + "start_time={} ".format(tracked_request.start_time)
+            + "end_time={} ".format(tracked_request.end_time)
+            + "duration={} ".format(
+                (tracked_request.end_time - tracked_request.start_time).total_seconds()
+            )
+            + "active_spans=0 "
+            + "complete_spans=1 "
+            + "tags=1 "
+            + "hit_max=False "
+            + "is_real_request=True "
+            + "sent=True"
+        ),
+    )
+    assert (
+        len([log_tuple for log_tuple in caplog.record_tuples if log_tuple == sent_log])
+        == 1
+    )
+    assert (
+        len([log_tuple for log_tuple in caplog.record_tuples if log_tuple == info_log])
+        == 1
+    )
+
+    # Call finish again.
+    tracked_request.finish()
+    assert (
+        len([log_tuple for log_tuple in caplog.record_tuples if log_tuple == sent_log])
+        == 1
+    )
+    assert (
+        len([log_tuple for log_tuple in caplog.record_tuples if log_tuple == info_log])
+        == 2
+    )

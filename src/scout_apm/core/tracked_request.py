@@ -34,6 +34,7 @@ class TrackedRequest(object):
         "_memory_start",
         "n_plus_one_tracker",
         "hit_max",
+        "sent",
     )
 
     # Stop adding new spans at this point, to avoid exhausting memory
@@ -56,6 +57,7 @@ class TrackedRequest(object):
         self._memory_start = get_rss_in_mb()
         self.n_plus_one_tracker = NPlusOneTracker()
         self.hit_max = False
+        self.sent = False
         logger.debug("Starting request: %s", self.request_id)
 
     def __repr__(self):
@@ -139,12 +141,17 @@ class TrackedRequest(object):
 
     # Request is done, release any info we have about it.
     def finish(self):
+        from scout_apm.core.context import context
+
         logger.debug("Stopping request: %s", self.request_id)
         if self.end_time is None:
             self.end_time = dt.datetime.utcnow()
+
         if self.is_real_request:
             self.tag("mem_delta", self._get_mem_delta())
-            if not self.is_ignored():
+            if not self.is_ignored() and not self.sent:
+                self.sent = True
+                logger.debug("Sending request: %s", self.request_id)
                 batch_command = BatchCommand.from_tracked_request(self)
                 CoreAgentSocketThread.send(batch_command)
             SamplersThread.ensure_started()
@@ -160,12 +167,10 @@ class TrackedRequest(object):
                 ("tags", len(self.tags)),
                 ("hit_max", self.hit_max),
                 ("is_real_request", self.is_real_request),
+                ("sent", self.sent),
             ]
         )
         logger.debug("Request %s %s", self.request_id, details)
-
-        from scout_apm.core.context import context
-
         context.clear_tracked_request(self)
 
     def _get_mem_delta(self):

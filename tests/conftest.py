@@ -15,6 +15,7 @@ from scout_apm.core import error_service as scout_apm_core_error_service
 from scout_apm.core.agent import socket as scout_apm_core_socket
 from scout_apm.core.agent.manager import CoreAgentManager
 from scout_apm.core.config import SCOUT_PYTHON_VALUES, scout_config
+from scout_apm.core.context import scout_context_var
 from scout_apm.core.error_service import ErrorServiceThread
 from scout_apm.core.tracked_request import TrackedRequest
 from tests.compat import TemporaryDirectory
@@ -122,24 +123,23 @@ def isolate_global_state():
         if SCOUT_PYTHON_VALUES:
             raise ConfigLeak("Python config changes: %r" % SCOUT_PYTHON_VALUES)
 
+        request = None
         try:
             request = TrackedRequest._thread_lookup.instance
         except AttributeError:
             pass
-        else:
-            if request is not None:
-                raise TrackedRequestLeak(
-                    "Unfinished request: "
-                    "active spans = %r, complete spans = %r, tags = %r"
-                    % (
-                        [(span.operation, span.tags) for span in request.active_spans],
-                        [
-                            (span.operation, span.tags)
-                            for span in request.complete_spans
-                        ],
-                        request.tags,
-                    )
+        if request is None and scout_context_var:
+            request = scout_context_var.get(None)
+        if request is not None:
+            raise TrackedRequestLeak(
+                "Unfinished request: "
+                "active spans = %r, complete spans = %r, tags = %r"
+                % (
+                    [(span.operation, span.tags) for span in request.active_spans],
+                    [(span.operation, span.tags) for span in request.complete_spans],
+                    request.tags,
                 )
+            )
 
 
 @pytest.fixture(autouse=True, scope="session")

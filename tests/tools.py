@@ -4,6 +4,11 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import sys
 from contextlib import contextmanager
 
+try:
+    from contextvars import ContextVar
+except ImportError:
+    ContextVar = None
+
 import pytest
 
 from scout_apm.core import objtrace
@@ -22,6 +27,10 @@ skip_if_objtrace_not_extension = pytest.mark.skipif(
 )
 skip_if_objtrace_is_extension = pytest.mark.skipif(
     objtrace.is_extension, reason="Requires no objtrace C extension"
+)
+
+skip_if_missing_context_vars = pytest.mark.skipif(
+    ContextVar is None, reason="Requires ContextVars"
 )
 
 

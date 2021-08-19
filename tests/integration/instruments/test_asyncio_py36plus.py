@@ -12,10 +12,12 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import asyncio
 import contextvars
 import functools
+import sys
 
 import pytest
 
 from scout_apm.api import BackgroundTransaction, instrument
+from scout_apm.core.tracked_request import TrackedRequest
 
 
 def create_task(coro):
@@ -145,6 +147,7 @@ async def test_task_not_awaited(tracked_requests, tracked_request):
         await create_task(coro("short"))
         long = create_task(coro("long", wait=0.5))
 
+    assert len(tracked_requests) == 1
     assert len(tracked_request.complete_spans) == 2
     span = tracked_request.complete_spans[0]
     assert span.operation == "Custom/coro"
@@ -153,12 +156,24 @@ async def test_task_not_awaited(tracked_requests, tracked_request):
 
     assert not long.done()
     await long
-    assert len(tracked_request.complete_spans) == 2
-    assert tracked_request.complete_spans[0].operation == "Custom/coro"
     assert tracked_request.complete_spans[0].tags["value"] == "short"
     assert tracked_request.complete_spans[1].operation == "Job/test"
-    assert len(tracked_requests) == 1
+
     assert tracked_requests[0].request_id == tracked_request.request_id
+
+    if sys.version_info[:2] < (3, 7):
+        # Python 3.6 utilizes the contextvars backport which functions
+        # slightly differently than the contextvars stdlib implementation
+        # in 3.7+
+        assert len(tracked_request.complete_spans) == 2
+        assert len(tracked_requests) == 1
+    else:
+        assert len(tracked_request.complete_spans) == 3
+        assert tracked_request.complete_spans[2].tags["value"] == "long"
+        # When we await long, it will call finish again which adds it
+        # to tracked_requests
+        assert len(tracked_requests) == 2
+        assert tracked_requests[0] is tracked_requests[1]
 
 
 @pytest.mark.asyncio
@@ -212,6 +227,8 @@ async def test_future_not_gathered(tracked_requests, tracked_request):
         gather_future = asyncio.gather(
             resolving_future(0.5),
             coro(wait=0.5),
+            coro(wait=0.5),
+            coro(wait=0.5),
         )
 
     assert len(tracked_request.complete_spans) == 1
@@ -219,9 +236,18 @@ async def test_future_not_gathered(tracked_requests, tracked_request):
 
     await gather_future
 
-    assert len(tracked_request.complete_spans) == 1
-    assert len(tracked_requests) == 1
-    assert tracked_requests[0].request_id == tracked_request.request_id
+    if sys.version_info[:2] < (3, 7):
+        # Python 3.6 utilizes the contextvars backport which functions
+        # slightly differently than the contextvars stdlib implementation
+        # in 3.7+
+        assert len(tracked_request.complete_spans) == 1
+        assert len(tracked_requests) == 1
+    else:
+        assert len(tracked_request.complete_spans) == 5
+        # When the last awaitable completes, it will call finish again which
+        # adds it to tracked_requests
+        assert len(tracked_requests) == 2
+        assert tracked_requests[0].request_id == tracked_request.request_id
 
 
 @pytest.mark.asyncio
@@ -258,6 +284,54 @@ async def test_run_in_executor_with_context_copied(tracked_requests, tracked_req
 
 
 @pytest.mark.asyncio
+async def test_run_in_executor_with_context_copied_and_active_span(
+    tracked_requests, tracked_request
+):
+    # Start an outer span to prevent the tracked_request from finishing.
+    tracked_request.start_span("outer")
+
+    def inner_func():
+        with BackgroundTransaction("test"):
+            pass
+
+    # Run inner_func
+    loop = asyncio.get_event_loop()
+    child = functools.partial(inner_func)
+    context = contextvars.copy_context()
+    func = context.run
+    args = (child,)
+    await loop.run_in_executor(None, func, *args)
+    # Verify finish wasn't called
+    assert len(tracked_requests) == 0
+    assert len(tracked_request.complete_spans) == 1
+
+    tracked_request.stop_span()
+
+    assert tracked_requests[0].request_id == tracked_request.request_id
+    assert len(tracked_requests[0].complete_spans) == 2
+
+
+@pytest.mark.asyncio
+async def test_run_in_executor_with_context_copied_escalates_ignored(tracked_request):
+    # Start an outer span to prevent the tracked_request from finishing.
+    tracked_request.start_span("outer")
+
+    def inner_func():
+        with BackgroundTransaction("test"):
+            TrackedRequest.instance().tag("ignore_transaction", True)
+
+    # Run inner_func
+    loop = asyncio.get_event_loop()
+    child = functools.partial(inner_func)
+    context = contextvars.copy_context()
+    func = context.run
+    args = (child,)
+    await loop.run_in_executor(None, func, *args)
+    tracked_request.stop_span()
+    assert tracked_request.is_ignored()
+
+
+@pytest.mark.asyncio
 async def test_run_in_executor_without_context_copied(
     tracked_requests, tracked_request
 ):
@@ -272,3 +346,50 @@ async def test_run_in_executor_without_context_copied(
     assert len(tracked_requests) == 1
     assert tracked_requests[0].request_id != tracked_request.request_id
     assert len(tracked_requests[0].complete_spans) == 1
+
+
+@pytest.mark.asyncio
+async def test_run_in_executor_without_context_copied_and_active_span(
+    tracked_requests, tracked_request
+):
+    # Start an outer span to prevent the tracked_request from finishing.
+    tracked_request.start_span("outer")
+
+    def inner_func():
+        with BackgroundTransaction("test"):
+            pass
+
+    # Run inner_func
+    loop = asyncio.get_event_loop()
+    func = functools.partial(inner_func)
+    await loop.run_in_executor(None, func)
+    # Verify finish wasn't called
+    assert len(tracked_requests) == 1
+    assert len(tracked_requests[0].complete_spans) == 1
+    assert len(tracked_request.complete_spans) == 0
+
+    tracked_request.stop_span()
+
+    assert tracked_requests[0].request_id != tracked_request.request_id
+    assert len(tracked_request.complete_spans) == 1
+
+
+@pytest.mark.asyncio
+async def test_run_in_executor_without_context_copied_escalates_ignored(
+    tracked_request,
+):
+    # Start an outer span to prevent the tracked_request from finishing.
+    tracked_request.start_span("outer")
+
+    def inner_func():
+        with BackgroundTransaction("test"):
+            TrackedRequest.instance().tag("ignore_transaction", True)
+
+    # Run inner_func
+    loop = asyncio.get_event_loop()
+    func = functools.partial(inner_func)
+    await loop.run_in_executor(None, func)
+
+    tracked_request.stop_span()
+
+    assert not tracked_request.is_ignored()

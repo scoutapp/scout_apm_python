@@ -3,8 +3,13 @@
 ## Pending
 
 ### Added
+- Prevent a TrackedRequest from being sent more than once. Additional
+  logging was added to identify cases when this is occurring.
 
 ### Fixed
+- Define TrackedRequest ContextVar at module level and ignore tokens.
+  ([Issue #675](https://github.com/scoutapp/scout_apm_python/issues/675))
+
 
 ## [2.22.0] 2021-08-12
 
