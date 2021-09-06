@@ -5,6 +5,7 @@
 ### Added
 - Convert objtrace to use PEP 489 multi-phase initialization.
   ([Issue #661](https://github.com/scoutapp/scout_apm_python/issues/661))
+- Enable error monitoring by default.
 
 ### Fixed
 - Disconnect receiver from celery task_failure signal.
