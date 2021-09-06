@@ -17,6 +17,11 @@ jobs:
         os: [ ubuntu-20.04 ]
         python: [ 3.9 ]
         manylinux_image: [ manylinux1, manylinux2010, manylinux2014, manylinux_2_24 ]
+        include:
+          - os: ubuntu-20.04
+            python: 3.9
+            manylinux_image: manylinux1
+            cibw_skip_override: "pp37-* cp310-*"
 
     steps:
       - uses: actions/checkout@v2
@@ -42,7 +47,7 @@ jobs:
           # Disable for platforms where pure Python wheels would be generated
           CIBW_ARCHS_LINUX: "auto aarch64"
           CIBW_BUILD_VERBOSITY: 1
-          CIBW_SKIP: "pp37-*"
+          CIBW_SKIP: ${{ matrix.cibw_skip_override || 'pp37-*' }}
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
         run: cibuildwheel
