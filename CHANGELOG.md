@@ -3,6 +3,8 @@
 ## Pending
 
 ### Added
+- Convert objtrace to use PEP 489 multi-phase initialization.
+  ([Issue #661](https://github.com/scoutapp/scout_apm_python/issues/661))
 
 ### Fixed
 
