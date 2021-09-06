@@ -42,6 +42,11 @@ jobs:
         uses: docker/setup-qemu-action@v1
         with:
           platforms: all
+      - name: Set AArch64 env if needed
+        if: matrix.manylinux_image != 'manylinux1' && matrix.manylinux_image != 'manylinux2010'
+        env:
+          CIBW_MANYLINUX_AARCH64_IMAGE: ${{ matrix.manylinux_image }}
+        run: echo "set CIBW_MANYLINUX_AARCH64_IMAGE=${{ env.CIBW_MANYLINUX_AARCH64_IMAGE }}"
       - name: Build binary wheels
         env:
           # Disable for platforms where pure Python wheels would be generated
@@ -50,7 +55,6 @@ jobs:
           CIBW_SKIP: ${{ matrix.cibw_skip_override || 'pp37-*' }}
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
-          CIBW_MANYLINUX_AARCH64_IMAGE: ${{ matrix.manylinux_image }}
         run: cibuildwheel
 
       - uses: actions/upload-artifact@v2
@@ -84,6 +88,11 @@ jobs:
         uses: docker/setup-qemu-action@v1
         with:
           platforms: all
+      - name: Set AArch64 env if needed
+        if: matrix.manylinux_image != 'manylinux1' && matrix.manylinux_image != 'manylinux2010'
+        env:
+          CIBW_MANYLINUX_AARCH64_IMAGE: ${{ matrix.manylinux_image }}
+        run: echo "set CIBW_MANYLINUX_AARCH64_IMAGE=${{ env.CIBW_MANYLINUX_AARCH64_IMAGE }}"
       - name: Build binary wheels
         env:
           # Disable for platforms where pure Python wheels would be generated
@@ -92,7 +101,6 @@ jobs:
           CIBW_BUILD: "cp35-* cp36-*"
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
-          CIBW_MANYLINUX_AARCH64_IMAGE: ${{ matrix.manylinux_image }}
         run: cibuildwheel
 
       - uses: actions/upload-artifact@v2
