@@ -50,6 +50,7 @@ jobs:
           CIBW_SKIP: ${{ matrix.cibw_skip_override || 'pp37-*' }}
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
+          CIBW_MANYLINUX_AARCH64_IMAGE: ${{ matrix.manylinux_image }}
         run: cibuildwheel
 
       - uses: actions/upload-artifact@v2
@@ -91,6 +92,7 @@ jobs:
           CIBW_BUILD: "cp35-* cp36-*"
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
+          CIBW_MANYLINUX_AARCH64_IMAGE: ${{ matrix.manylinux_image }}
         run: cibuildwheel
 
       - uses: actions/upload-artifact@v2
