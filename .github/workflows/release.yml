@@ -9,63 +9,109 @@ on:
   pull_request:
 
 jobs:
-  release:
-    name: Build release
-    runs-on: ubuntu-18.04
+  cibuildwheel:
+    name: Build ${{ matrix.cibw_build }} wheels
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest ]
+        python: [3.9]
+        cibuildwheel_version: ["cibuildwheel"]
+        cibw_build: ["*-*"]
+        include:
+          - os: ubuntu-18.04
+            python: 3.9
+            cibuildwheel_version: "cibuildwheel==1.12.0"
+            cibw_build: "cp35-*"
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - uses: actions/setup-python@v2
-      with:
-        python-version: 3.9
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: ${{ matrix.python }}
 
-    - uses: actions/setup-python@v2
-      with:
-        python-version: 2.7
+      - name: Install cibuildwheel
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade "${{matrix.cibuildwheel_version}}"
 
-    - name: Set up QEMU
-      # For cross-architecture builds
-      # https://cibuildwheel.readthedocs.io/en/stable/faq/#emulation
-      if: runner.os == 'Linux'
-      uses: docker/setup-qemu-action@v1
-      with:
-        platforms: all
+      - name: Set up QEMU
+        # For cross-architecture builds
+        # https://cibuildwheel.readthedocs.io/en/stable/faq/#emulation
+        if: runner.os == 'Linux'
+        uses: docker/setup-qemu-action@v1
+        with:
+          platforms: all
+      - name: Build binary wheels
+        env:
+          # Disable for platforms where pure Python wheels would be generated
+          CIBW_ARCHS_LINUX: "auto aarch64"
+          CIBW_BUILD_VERBOSITY: 3
+          CIBW_SKIP: "cp27-* pp27-* pp36-* pp37-*"
+          CIBW_BUILD: ${{ matrix.cibw_build }}
+        run: cibuildwheel
 
-    - name: Install packaging tools
-      run: |
-        python2.7 -m pip install --upgrade pip setuptools wheel
-        python3.9 -m pip install --upgrade "cibuildwheel<2.0.0" pip setuptools twine wheel
+      - uses: actions/upload-artifact@v2
+        with:
+          path: ./wheelhouse/*.whl
 
-    - name: Build sdist
-      run: python3.9 setup.py sdist
+  build_pure_wheels:
+    name: Build wheels
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: [3.9, 2.7]
+    steps:
+      - uses: actions/checkout@v2
 
-    - name: Build Python 2 pure Python wheel
-      run: python2.7 setup.py bdist_wheel
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install packaging tools
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
 
-    - name: Build Python 3 pure Python wheel
-      env:
-        SCOUT_DISABLE_EXTENSIONS: "1"
-      run: python3.9 setup.py bdist_wheel
+      - name: Build Python pure Python wheel
+        env:
+          BUILD_DISABLE_EXTENSIONS: "1"
+        run: python setup.py bdist_wheel
 
-    - name: Build binary wheels
-      env:
-        # Disable for platforms where pure Python wheels would be generated
-        CIBW_ARCHS_LINUX: "auto aarch64"
-        CIBW_BUILD_VERBOSITY: 1
-        CIBW_SKIP: "cp27-* pp27-* pp36-* pp37-*"
-      run: cibuildwheel
+      - uses: actions/upload-artifact@v2
+        with:
+          path: dist/*.whl
 
-    - name: Check packages
-      run: twine check dist/* wheelhouse/*
+  build_sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
 
-    - name: List files
-      run: ls -al dist wheelhouse
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: 3.9
 
-    - name: Release
-      if: startsWith(github.event.ref, 'refs/tags')
-      env:
-        TWINE_NON_INTERACTIVE: 1
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-      run: twine upload --skip-existing dist/* wheelhouse/*
+      - name: Build sdist
+        run: python setup.py sdist
+
+      - uses: actions/upload-artifact@v2
+        with:
+          path: dist/*.tar.gz
+
+  upload_pypi:
+    needs: [cibuildwheel, build_pure_wheels, build_sdist]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: artifact
+          path: dist
+
+      - uses: pypa/gh-action-pypi-publish@v1.4.2
+        with:
+          user: __token__
+          password: ${{ secrets.TWINE_PASSWORD }}
