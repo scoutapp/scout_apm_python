@@ -9,23 +9,14 @@ on:
   pull_request:
 
 jobs:
-  cibuildwheel:
-    name: Build ${{ matrix.cibw_build }}-${{ matrix.manylinux_image }} wheels
+  cibuildwheel_py37plus:
+    name: Build python 3.7+ ${{ matrix.manylinux_image }} wheels
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest ]
-        python: [3.9]
-        manylinux_image: [manylinux1, manylinux2010, manylinux2014, manylinux_2_24]
-        cibuildwheel_version: ["cibuildwheel"]
-        cibw_build: [""]
-        cibw_skip: ["pp37-*"]
-        include:
-          - os: ubuntu-18.04
-            python: 3.9
-            cibuildwheel_version: "cibuildwheel==1.12.0"
-            cibw_build: "cp35-* cp36-*"
-            cibw_skip: ""
+        os: [ ubuntu-20.04 ]
+        python: [ 3.9 ]
+        manylinux_image: [ manylinux1, manylinux2010, manylinux2014, manylinux_2_24 ]
 
     steps:
       - uses: actions/checkout@v2
@@ -37,8 +28,7 @@ jobs:
 
       - name: Install cibuildwheel
         run: |
-          python -m pip install --upgrade pip
-          pip install --upgrade "${{matrix.cibuildwheel_version}}"
+          python -m pip install --upgrade pip cibuildwheel
 
       - name: Set up QEMU
         # For cross-architecture builds
@@ -52,8 +42,48 @@ jobs:
           # Disable for platforms where pure Python wheels would be generated
           CIBW_ARCHS_LINUX: "auto aarch64"
           CIBW_BUILD_VERBOSITY: 1
-          CIBW_BUILD: ${{ matrix.cibw_build }}
-          CIBW_SKIP: ${{ matrix.cibw_skip }}
+          CIBW_SKIP: "pp37-*"
+          CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
+          CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
+        run: cibuildwheel
+
+      - uses: actions/upload-artifact@v2
+        with:
+          path: ./wheelhouse/*.whl
+
+  cibuildwheel_py35py36:
+    name: Build python 3.5, 3.6 ${{ matrix.manylinux_image }} wheels
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-18.04 ]
+        python: [ 3.9 ]
+        manylinux_image: [ manylinux1, manylinux2010, manylinux2014, manylinux_2_24 ]
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install cibuildwheel
+        run: |
+          python -m pip install --upgrade pip "cibuildwheel==1.12.0"
+
+      - name: Set up QEMU
+        # For cross-architecture builds
+        # https://cibuildwheel.readthedocs.io/en/stable/faq/#emulation
+        if: runner.os == 'Linux'
+        uses: docker/setup-qemu-action@v1
+        with:
+          platforms: all
+      - name: Build binary wheels
+        env:
+          # Disable for platforms where pure Python wheels would be generated
+          CIBW_ARCHS_LINUX: "auto aarch64"
+          CIBW_BUILD_VERBOSITY: 1
+          CIBW_BUILD: "cp35-* cp36-*"
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
         run: cibuildwheel
@@ -64,7 +94,7 @@ jobs:
 
   build_pure_wheels:
     name: Build wheels
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         python: [3.9, 2.7]
@@ -90,7 +120,7 @@ jobs:
 
   build_sdist:
     name: Build source distribution
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
 
@@ -107,8 +137,8 @@ jobs:
           path: dist/*.tar.gz
 
   upload_pypi:
-    needs: [cibuildwheel, build_pure_wheels, build_sdist]
-    runs-on: ubuntu-latest
+    needs: [cibuildwheel_py37plus, cibuildwheel_py35py36, build_pure_wheels, build_sdist]
+    runs-on: ubuntu-20.04
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
     steps:
       - uses: actions/download-artifact@v2
