@@ -7,6 +7,8 @@
   ([Issue #661](https://github.com/scoutapp/scout_apm_python/issues/661))
 
 ### Fixed
+- Disconnect receiver from celery task_failure signal.
+  ([Issue #678](https://github.com/scoutapp/scout_apm_python/issues/678))
 
 ## [2.22.1] 2021-08-19
 

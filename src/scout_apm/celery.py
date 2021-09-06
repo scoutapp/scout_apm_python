@@ -151,3 +151,4 @@ def uninstall():
     before_task_publish.disconnect(before_task_publish_callback)
     task_prerun.disconnect(task_prerun_callback)
     task_postrun.disconnect(task_postrun_callback)
+    task_failure.disconnect(task_failure_callback)
