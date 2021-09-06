@@ -46,11 +46,11 @@ jobs:
         if: matrix.manylinux_image != 'manylinux1' && matrix.manylinux_image != 'manylinux2010'
         env:
           CIBW_MANYLINUX_AARCH64_IMAGE: ${{ matrix.manylinux_image }}
+          CIBW_ARCHS_LINUX: "auto aarch64"
         run: echo "set CIBW_MANYLINUX_AARCH64_IMAGE=${{ env.CIBW_MANYLINUX_AARCH64_IMAGE }}"
       - name: Build binary wheels
         env:
           # Disable for platforms where pure Python wheels would be generated
-          CIBW_ARCHS_LINUX: "auto aarch64"
           CIBW_BUILD_VERBOSITY: 1
           CIBW_SKIP: ${{ matrix.cibw_skip_override || 'pp37-*' }}
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
@@ -92,11 +92,10 @@ jobs:
         if: matrix.manylinux_image != 'manylinux1' && matrix.manylinux_image != 'manylinux2010'
         env:
           CIBW_MANYLINUX_AARCH64_IMAGE: ${{ matrix.manylinux_image }}
+          CIBW_ARCHS_LINUX: "auto aarch64"
         run: echo "set CIBW_MANYLINUX_AARCH64_IMAGE=${{ env.CIBW_MANYLINUX_AARCH64_IMAGE }}"
       - name: Build binary wheels
         env:
-          # Disable for platforms where pure Python wheels would be generated
-          CIBW_ARCHS_LINUX: "auto aarch64"
           CIBW_BUILD_VERBOSITY: 1
           CIBW_BUILD: "cp35-* cp36-*"
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
