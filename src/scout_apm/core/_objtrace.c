@@ -4,8 +4,24 @@
 
 #define VERSION "1.0.0"
 
+#if PY_VERSION_HEX >= 0x03050000
+// Config state
+typedef struct {
+    int enabled;
+    int installed;
+} _objtrace_config_state;
+
+static inline _objtrace_config_state*
+get_objtrace_config_state(PyObject *module)
+{
+    void *state = PyModule_GetState(module);
+    assert(state != NULL);
+    return (_objtrace_config_state *)state;
+}
+#else
 static int enabled = 0;
 static int installed = 0;
+#endif
 
 #if PY_VERSION_HEX >= 0x03050000
 #  define FAIL_CALLOC
@@ -91,22 +107,40 @@ static void remove_hooks(void)
 static PyObject*
 objtrace_enable(PyObject *module)
 {
+#if PY_VERSION_HEX >= 0x03050000
+    _objtrace_config_state *state = get_objtrace_config_state(module);
+    state->enabled = 1;
+    if (!state->installed) {
+        state->installed = 1;
+        setup_hooks();
+    }
+#else
     enabled = 1;
     if (!installed) {
         installed = 1;
         setup_hooks();
     }
+#endif
     Py_RETURN_NONE;
 }
 
 static PyObject*
 objtrace_disable(PyObject *module)
 {
+#if PY_VERSION_HEX >= 0x03050000
+    _objtrace_config_state *state = get_objtrace_config_state(module);
+    if (state->installed) {
+        state->installed = 0;
+        remove_hooks();
+    }
+    state->enabled = 0;
+#else
     if (installed) {
         installed = 0;
         remove_hooks();
     }
     enabled = 0;
+#endif
     Py_RETURN_NONE;
 }
 
@@ -146,13 +180,39 @@ static PyMethodDef module_methods[] = {
     {NULL, NULL}  /* sentinel */
 };
 
-static struct PyModuleDef module_def = {
+#if PY_VERSION_HEX >= 0x03050000
+static int
+objtrace_mod_exec(PyObject* module)
+{
+    PyObject *version;
+    version = PyUnicode_FromString(VERSION);
+    if (version == NULL)
+        return -1;
+
+    return PyModule_AddObject(module, "__version__", version);
+}
+
+static PyModuleDef_Slot _objtrace_slots[] = {
+    {Py_mod_exec, objtrace_mod_exec},
+    {0, NULL}
+};
+#endif
+
+static struct PyModuleDef _objtrace_module = {
     PyModuleDef_HEAD_INIT,
     "scout_apm.core._objtrace",
     module_doc,
-    0, /* non-negative size to be able to unload the module */
+#if PY_VERSION_HEX >= 0x03050000
+    sizeof(_objtrace_config_state), /* non-negative size to be able to unload the module */
+#else
+    0,
+#endif
     module_methods,
+#if PY_VERSION_HEX >= 0x03050000
+    _objtrace_slots,
+#else
     NULL,
+#endif
     NULL,
     NULL,
     NULL
@@ -161,9 +221,12 @@ static struct PyModuleDef module_def = {
 PyMODINIT_FUNC
 PyInit__objtrace(void)
 {
+#if PY_VERSION_HEX >= 0x03050000
+    return PyModuleDef_Init(&_objtrace_module);
+#else
     PyObject *m, *version;
 
-    m = PyModule_Create(&module_def);
+    m = PyModule_Create(&_objtrace_module);
     if (m == NULL)
         return NULL;
 
@@ -173,4 +236,5 @@ PyInit__objtrace(void)
 
     PyModule_AddObject(m, "__version__", version);
     return m;
+#endif
 }
