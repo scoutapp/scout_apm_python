@@ -3,6 +3,13 @@
 ## Pending
 
 ### Added
+
+### Fixed
+
+
+## [2.23.0] 2021-09-06
+
+### Added
 - Convert objtrace to use PEP 489 multi-phase initialization.
   ([Issue #661](https://github.com/scoutapp/scout_apm_python/issues/661))
 - Enable error monitoring by default.
@@ -10,6 +17,7 @@
 ### Fixed
 - Disconnect receiver from celery task_failure signal.
   ([Issue #678](https://github.com/scoutapp/scout_apm_python/issues/678))
+
 
 ## [2.22.1] 2021-08-19
 
