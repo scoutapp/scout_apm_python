@@ -224,7 +224,7 @@ class Defaults(object):
             "disabled_instruments": [],
             "download_url": "https://s3-us-west-1.amazonaws.com/scout-public-downloads/apm_core_agent/release",  # noqa: B950
             "errors_batch_size": 5,
-            "errors_enabled": False,
+            "errors_enabled": True,
             "errors_ignored_exceptions": (),
             "errors_host": "https://errors.scoutapm.com",
             "framework": "",
