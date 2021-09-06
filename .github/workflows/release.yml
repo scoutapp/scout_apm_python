@@ -10,12 +10,13 @@ on:
 
 jobs:
   cibuildwheel:
-    name: Build ${{ matrix.cibw_build }} wheels
+    name: Build ${{ matrix.cibw_build }}-${{ matrix.manylinux_image }} wheels
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ ubuntu-latest ]
         python: [3.9]
+        manylinux_image: [manylinux1, manylinux2010, manylinux2014, manylinux_2_24]
         cibuildwheel_version: ["cibuildwheel"]
         cibw_build: [""]
         cibw_skip: ["pp37-*"]
@@ -53,6 +54,8 @@ jobs:
           CIBW_BUILD_VERBOSITY: 1
           CIBW_BUILD: ${{ matrix.cibw_build }}
           CIBW_SKIP: ${{ matrix.cibw_skip }}
+          CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
+          CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
         run: cibuildwheel
 
       - uses: actions/upload-artifact@v2
