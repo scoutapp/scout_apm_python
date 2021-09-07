@@ -3,6 +3,7 @@
 ## Pending
 
 ### Added
+- Rework release Github action to utilize newer versions of cibuildwheel when available.
 
 ### Fixed
 
