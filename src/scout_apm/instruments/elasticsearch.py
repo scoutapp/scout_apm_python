@@ -68,6 +68,7 @@ CLIENT_METHODS = [
     ClientMethod("scripts_painless_execute", False),
     ClientMethod("scroll", False),
     ClientMethod("search", True),
+    ClientMethod("search_mvt", True),
     ClientMethod("search_shards", True),
     ClientMethod("search_template", True),
     ClientMethod("termvectors", True),
