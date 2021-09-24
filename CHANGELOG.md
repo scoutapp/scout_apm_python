@@ -4,6 +4,7 @@
 
 ### Added
 - Rework release Github action to utilize newer versions of cibuildwheel when available.
+- Added `search_mvt` instrumentation for ElasticSearch 7.15.0.
 
 ### Fixed
 
