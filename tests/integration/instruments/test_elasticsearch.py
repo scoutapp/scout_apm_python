@@ -157,7 +157,7 @@ def test_search(elasticsearch_client, tracked_request):
 def test_search_arg_named_index(elasticsearch_client, tracked_request):
     with pytest.raises(elasticsearch.exceptions.NotFoundError):
         # body, index
-        elasticsearch_client.search(None, "myindex")
+        elasticsearch_client.search(body=None, index="myindex")
 
     assert len(tracked_request.complete_spans) == 1
     span = tracked_request.complete_spans[0]
@@ -175,7 +175,7 @@ def test_search_kwarg_named_index(elasticsearch_client, tracked_request):
 
 def test_search_arg_empty_index(elasticsearch_client, tracked_request):
     # body, index
-    elasticsearch_client.search(None, "")
+    elasticsearch_client.search(body=None, index="")
 
     assert len(tracked_request.complete_spans) == 1
     span = tracked_request.complete_spans[0]
