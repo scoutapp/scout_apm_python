@@ -5,6 +5,8 @@
 ### Added
 - Rework release Github action to utilize newer versions of cibuildwheel when available.
 - Added `search_mvt` instrumentation for ElasticSearch 7.15.0.
+- Default core agent version to v1.3.1. Support ARM64 core agent architecture.
+  ([Issue #683](https://github.com/scoutapp/scout_apm_python/issues/683))
 
 ### Fixed
 

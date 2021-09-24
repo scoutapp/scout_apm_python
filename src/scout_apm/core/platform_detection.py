@@ -8,14 +8,28 @@ def is_valid_triple(triple):
     values = triple.split("-", 1)
     return (
         len(values) == 2
-        and values[0] in ("i686", "x86_64", "unknown")
+        and values[0] in ("i686", "x86_64", "aarch64", "unknown")
         and values[1]
         in ("unknown-linux-gnu", "unknown-linux-musl", "apple-darwin", "unknown")
+        # Validate _apple_darwin_aarch64_override was applied.
+        and triple != "aarch64-apple-darwin"
     )
 
 
+def _apple_darwin_aarch64_override(triple):
+    """
+    If using M1 ARM64 machine, still use x86_64.
+    See https://github.com/scoutapp/scout_apm_python/issues/683
+    """
+    if triple == "aarch64-apple-darwin":
+        return "x86_64-apple-darwin"
+    return triple
+
+
 def get_triple():
-    return "{arch}-{platform}".format(arch=get_arch(), platform=get_platform())
+    return _apple_darwin_aarch64_override(
+        "{arch}-{platform}".format(arch=get_arch(), platform=get_platform())
+    )
 
 
 def get_arch():
@@ -27,6 +41,8 @@ def get_arch():
         return "i686"
     elif arch == "x86_64":
         return "x86_64"
+    elif arch == "aarch64":
+        return "aarch64"
     else:
         return "unknown"
 
