@@ -10,6 +10,9 @@ from scout_apm.core.web_requests import RequestComponents
 def get_controller_name(request):
     view_func = request.resolver_match.func
     view_name = request.resolver_match._func_path
+    if hasattr(view_func, "view_class"):
+        view_func = view_func.view_class
+        view_name = "{}.{}".format(view_func.__module__, view_func.__name__)
 
     django_admin_components = _get_django_admin_components(view_func)
     if django_admin_components:
@@ -48,6 +51,8 @@ def get_request_components(request):
         return None
     view_func = request.resolver_match.func
     view_name = request.resolver_match._func_path
+    if hasattr(view_func, "view_class"):
+        view_func = view_func.view_class
     request_components = RequestComponents(
         module=view_func.__module__,
         controller=view_func.__name__,
