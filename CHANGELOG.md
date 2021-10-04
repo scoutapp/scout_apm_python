@@ -6,6 +6,11 @@
 
 ### Fixed
 
+## [2.23.2] 2021-10-04
+
+### Added
+- Reverted - Rework release Github action to utilize newer versions of cibuildwheel when available.
+
 ## [2.23.1] 2021-10-04
 
 ### Added

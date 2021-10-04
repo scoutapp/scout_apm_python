@@ -9,158 +9,63 @@ on:
   pull_request:
 
 jobs:
-  cibuildwheel_py37plus:
-    name: Build python 3.7+ ${{ matrix.manylinux_image }} wheels
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ ubuntu-20.04 ]
-        python: [ 3.9 ]
-        manylinux_image: [ manylinux1, manylinux2010, manylinux2014, manylinux_2_24 ]
-        include:
-          - os: ubuntu-20.04
-            python: 3.9
-            manylinux_image: manylinux1
-            cibw_skip_override: "pp37-* cp310-*"
+  release:
+    name: Build release
+    runs-on: ubuntu-18.04
 
     steps:
-      - uses: actions/checkout@v2
+    - uses: actions/checkout@v2
 
-      - uses: actions/setup-python@v2
-        name: Install Python
-        with:
-          python-version: ${{ matrix.python }}
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
 
-      - name: Install cibuildwheel
-        run: |
-          python -m pip install --upgrade pip cibuildwheel
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 2.7
 
-      - name: Set up QEMU
-        # For cross-architecture builds
-        # https://cibuildwheel.readthedocs.io/en/stable/faq/#emulation
-        if: runner.os == 'Linux'
-        uses: docker/setup-qemu-action@v1
-        with:
-          platforms: all
-      - name: Set AArch64 env if needed
-        if: matrix.manylinux_image != 'manylinux1' && matrix.manylinux_image != 'manylinux2010'
-        env:
-          CIBW_MANYLINUX_AARCH64_IMAGE: ${{ matrix.manylinux_image }}
-          CIBW_ARCHS_LINUX: "auto aarch64"
-        run: echo "set CIBW_MANYLINUX_AARCH64_IMAGE=${{ env.CIBW_MANYLINUX_AARCH64_IMAGE }}"
-      - name: Build binary wheels
-        env:
-          # Disable for platforms where pure Python wheels would be generated
-          CIBW_BUILD_VERBOSITY: 1
-          CIBW_SKIP: ${{ matrix.cibw_skip_override || 'pp37-*' }}
-          CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
-          CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
-        run: cibuildwheel
+    - name: Set up QEMU
+      # For cross-architecture builds
+      # https://cibuildwheel.readthedocs.io/en/stable/faq/#emulation
+      if: runner.os == 'Linux'
+      uses: docker/setup-qemu-action@v1
+      with:
+        platforms: all
 
-      - uses: actions/upload-artifact@v2
-        with:
-          path: ./wheelhouse/*.whl
+    - name: Install packaging tools
+      run: |
+        python2.7 -m pip install --upgrade pip setuptools wheel
+        python3.9 -m pip install --upgrade "cibuildwheel<2.0.0" pip setuptools twine wheel
 
-  cibuildwheel_py35py36:
-    name: Build python 3.5, 3.6 ${{ matrix.manylinux_image }} wheels
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ ubuntu-18.04 ]
-        python: [ 3.9 ]
-        manylinux_image: [ manylinux1, manylinux2010, manylinux2014, manylinux_2_24 ]
-    steps:
-      - uses: actions/checkout@v2
+    - name: Build sdist
+      run: python3.9 setup.py sdist
 
-      - uses: actions/setup-python@v2
-        name: Install Python
-        with:
-          python-version: ${{ matrix.python }}
+    - name: Build Python 2 pure Python wheel
+      run: python2.7 setup.py bdist_wheel
 
-      - name: Install cibuildwheel
-        run: |
-          python -m pip install --upgrade pip "cibuildwheel==1.12.0"
+    - name: Build Python 3 pure Python wheel
+      env:
+        SCOUT_DISABLE_EXTENSIONS: "1"
+      run: python3.9 setup.py bdist_wheel
 
-      - name: Set up QEMU
-        # For cross-architecture builds
-        # https://cibuildwheel.readthedocs.io/en/stable/faq/#emulation
-        if: runner.os == 'Linux'
-        uses: docker/setup-qemu-action@v1
-        with:
-          platforms: all
-      - name: Set AArch64 env if needed
-        if: matrix.manylinux_image != 'manylinux1' && matrix.manylinux_image != 'manylinux2010'
-        env:
-          CIBW_MANYLINUX_AARCH64_IMAGE: ${{ matrix.manylinux_image }}
-          CIBW_ARCHS_LINUX: "auto aarch64"
-        run: echo "set CIBW_MANYLINUX_AARCH64_IMAGE=${{ env.CIBW_MANYLINUX_AARCH64_IMAGE }}"
-      - name: Build binary wheels
-        env:
-          CIBW_BUILD_VERBOSITY: 1
-          CIBW_BUILD: "cp35-* cp36-*"
-          CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
-          CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
-        run: cibuildwheel
+    - name: Build binary wheels
+      env:
+        # Disable for platforms where pure Python wheels would be generated
+        CIBW_ARCHS_LINUX: "auto aarch64"
+        CIBW_BUILD_VERBOSITY: 1
+        CIBW_SKIP: "cp27-* pp27-* pp36-* pp37-*"
+      run: cibuildwheel
 
-      - uses: actions/upload-artifact@v2
-        with:
-          path: ./wheelhouse/*.whl
+    - name: Check packages
+      run: twine check dist/* wheelhouse/*
 
-  build_pure_wheels:
-    name: Build wheels
-    runs-on: ubuntu-20.04
-    strategy:
-      matrix:
-        python: [3.9, 2.7]
-    steps:
-      - uses: actions/checkout@v2
+    - name: List files
+      run: ls -al dist wheelhouse
 
-      - uses: actions/setup-python@v2
-        name: Install Python
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install packaging tools
-        run: |
-          python -m pip install --upgrade pip setuptools wheel
-
-      - name: Build Python pure Python wheel
-        env:
-          BUILD_DISABLE_EXTENSIONS: "1"
-        run: python setup.py bdist_wheel
-
-      - uses: actions/upload-artifact@v2
-        with:
-          path: dist/*.whl
-
-  build_sdist:
-    name: Build source distribution
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-
-      - uses: actions/setup-python@v2
-        name: Install Python
-        with:
-          python-version: 3.9
-
-      - name: Build sdist
-        run: python setup.py sdist
-
-      - uses: actions/upload-artifact@v2
-        with:
-          path: dist/*.tar.gz
-
-  upload_pypi:
-    needs: [cibuildwheel_py37plus, cibuildwheel_py35py36, build_pure_wheels, build_sdist]
-    runs-on: ubuntu-20.04
-    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
-    steps:
-      - uses: actions/download-artifact@v2
-        with:
-          name: artifact
-          path: dist
-
-      - uses: pypa/gh-action-pypi-publish@v1.4.2
-        with:
-          user: __token__
-          password: ${{ secrets.TWINE_PASSWORD }}
+    - name: Release
+      if: startsWith(github.event.ref, 'refs/tags')
+      env:
+        TWINE_NON_INTERACTIVE: 1
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+      run: twine upload --skip-existing dist/* wheelhouse/*
