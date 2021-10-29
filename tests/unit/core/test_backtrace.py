@@ -108,6 +108,28 @@ def test_module_filepath_with_namespace(test_package_as_namespace_package):
 
 
 @pytest.fixture
+def test_package_invalid_path():
+    orig_file = sys.modules["tests"].__file__
+    orig_path = sys.modules["tests"].__path__
+    sys.modules["tests"].__file__ = None
+    sys.modules["tests"].__path__ = "invalid"
+    yield
+    sys.modules["tests"].__file__ = orig_file
+    sys.modules["tests"].__path__ = orig_path
+
+
+@pytest.fixture
+def test_package_error():
+    orig_file = sys.modules["tests"].__file__
+    orig_path = sys.modules["tests"].__path__
+    sys.modules["tests"].__file__ = None
+    sys.modules["tests"].__path__ = [None]
+    yield
+    sys.modules["tests"].__file__ = orig_file
+    sys.modules["tests"].__path__ = orig_path
+
+
+@pytest.fixture
 def test_package_no_file_or_path():
     orig_file = sys.modules["tests"].__file__
     orig_path = sys.modules["tests"].__path__
@@ -116,6 +138,24 @@ def test_package_no_file_or_path():
     yield
     sys.modules["tests"].__file__ = orig_file
     sys.modules["tests"].__path__ = orig_path
+
+
+def test_module_filepath_with_invalid_path(test_package_invalid_path):
+    frame = get_tb().tb_frame
+    module = frame.f_globals["__name__"]
+    filepath = frame.f_code.co_filename
+    full_path = backtrace.module_filepath(module, filepath)
+    assert full_path != "tests/unit/core/test_backtrace.py"
+    assert full_path.endswith("tests/unit/core/test_backtrace.py")
+
+
+def test_module_filepath_error(test_package_error):
+    frame = get_tb().tb_frame
+    module = frame.f_globals["__name__"]
+    filepath = frame.f_code.co_filename
+    full_path = backtrace.module_filepath(module, filepath)
+    assert full_path != "tests/unit/core/test_backtrace.py"
+    assert full_path.endswith("tests/unit/core/test_backtrace.py")
 
 
 def test_module_filepath_without_file_or_path(test_package_no_file_or_path):

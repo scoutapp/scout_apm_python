@@ -6,6 +6,8 @@
 - Added support for Django 4.0 and Python 3.10.
 
 ### Fixed
+- Make `module_filepath` more robust avoiding throwing exceptions.
+  ([Issue 691](https://github.com/scoutapp/scout_apm_python/issues/691))
 
 ## [2.23.2] 2021-10-04
 

@@ -32,22 +32,27 @@ def module_filepath(module, filepath):
     if root_module_name == module:
         return os.path.basename(filepath)
 
+    module_dir = None
     root_module = sys.modules[root_module_name]
-    if root_module.__file__:
-        module_dir = root_module.__file__.rsplit(os.sep, 2)[0]
-    elif root_module.__path__:
-        # Default to using the first path specified for the module.
-        module_dir = root_module.__path__[0].rsplit(os.sep, 1)[0]
-        if len(root_module.__path__) > 1:
-            logger.debug(
-                "{} has {} paths. Use the first and ignore the rest.".format(
-                    root_module, len(root_module.__path__)
+    try:
+        if root_module.__file__:
+            module_dir = root_module.__file__.rsplit(os.sep, 2)[0]
+        elif root_module.__path__ and isinstance(root_module.__path__, (list, tuple)):
+            # Default to using the first path specified for the module.
+            module_dir = root_module.__path__[0].rsplit(os.sep, 1)[0]
+            if len(root_module.__path__) > 1:
+                logger.debug(
+                    "{} has {} paths. Use the first and ignore the rest.".format(
+                        root_module, len(root_module.__path__)
+                    )
                 )
-            )
-    else:
-        # If the file path don't exist, then return the full path.
-        return filepath
-    return filepath.split(module_dir, 1)[-1].lstrip(os.sep)
+    except Exception as exc:
+        logger.debug(
+            "Error processing module {} and filepath {}".format(root_module, filepath),
+            exc_info=exc,
+        )
+
+    return filepath.split(module_dir, 1)[-1].lstrip(os.sep) if module_dir else filepath
 
 
 def filepath(frame):
