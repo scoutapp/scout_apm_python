@@ -107,18 +107,27 @@ def test_module_filepath_with_namespace(test_package_as_namespace_package):
     )
 
 
-@pytest.fixture
-def test_package_no_file_or_path():
+@pytest.fixture(
+    params=[
+        # Invalid path case
+        [None, "invalid"],
+        # Raise an error case
+        [None, [None]],
+        # No file or path case.
+        [None, None],
+    ]
+)
+def error_module(request):
     orig_file = sys.modules["tests"].__file__
     orig_path = sys.modules["tests"].__path__
-    sys.modules["tests"].__file__ = None
-    sys.modules["tests"].__path__ = None
+    sys.modules["tests"].__file__ = request.param[0]
+    sys.modules["tests"].__path__ = request.param[1]
     yield
     sys.modules["tests"].__file__ = orig_file
     sys.modules["tests"].__path__ = orig_path
 
 
-def test_module_filepath_without_file_or_path(test_package_no_file_or_path):
+def test_module_filepath_error_flows(error_module):
     frame = get_tb().tb_frame
     module = frame.f_globals["__name__"]
     filepath = frame.f_code.co_filename
