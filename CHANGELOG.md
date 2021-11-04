@@ -3,6 +3,12 @@
 ## Pending
 
 ### Added
+
+### Fixed
+
+## [2.23.3] 2021-11-04
+
+### Added
 - Added support for Django 4.0 and Python 3.10.
 
 ### Fixed
