@@ -34,7 +34,13 @@ def test_ensure_stopped(caplog):
     time.sleep(0.001)
     SamplersThread.ensure_stopped()
 
-    assert caplog.record_tuples[-1] == (
+    # Ignore logs from the core agent thread.
+    records = [
+        record
+        for record in caplog.record_tuples
+        if record[0] == "scout_apm.core.samplers.thread"
+    ]
+    assert records[-1] == (
         "scout_apm.core.samplers.thread",
         10,
         "Stopping Samplers.",
