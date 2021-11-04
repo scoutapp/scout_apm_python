@@ -3,6 +3,8 @@
 ## Pending
 
 ### Added
+- Split CI tests GitHub actions into two jobs to support python 3.4 on
+  Ubuntu 18 and modern versions with Ubuntu 20.
 
 ### Fixed
 
