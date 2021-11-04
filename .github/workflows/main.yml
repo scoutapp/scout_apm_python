@@ -5,6 +5,10 @@ on:
     branches:
     - master
   pull_request:
+  schedule:
+    # Run daily. Avoid running at distinct hours to reduce load
+    # on GitHub.
+    - cron: '44 2 * * *'
 
 jobs:
   tests-ubuntu-20:
