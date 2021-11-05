@@ -254,6 +254,37 @@ def test_server_error_error_monitor(tracked_requests, error_monitor_errors):
     error = error_monitor_errors[0]
     assert error["exception_class"] == "ValueError"
     assert error["message"] == "BØØM!"
+    assert error["request_uri"] == "/crash/"
+    assert error["request_session"] is None
+    assert error["request_params"] is None
+    assert error["request_components"] == {
+        "module": "tests.integration.django_app",
+        "controller": "crash",
+        "action": "GET",
+    }
+
+
+def test_server_error_error_monitor_with_session(
+    tracked_requests, error_monitor_errors
+):
+    with app_with_scout(DEBUG_PROPAGATE_EXCEPTIONS=False) as app:
+        test_app = TestApp(app)
+        test_app.get("/set-session/")
+        test_app.get("/crash/", expect_errors=True)
+
+    assert len(error_monitor_errors) == 1
+    error = error_monitor_errors[0]
+    assert error["request_session"] == {"session_var": "1"}
+
+
+def test_server_error_error_monitor_with_params(tracked_requests, error_monitor_errors):
+    with app_with_scout(DEBUG_PROPAGATE_EXCEPTIONS=False) as app:
+        test_app = TestApp(app)
+        test_app.get("/crash/?spam=eggs&break=false", expect_errors=True)
+
+    assert len(error_monitor_errors) == 1
+    error = error_monitor_errors[0]
+    assert error["request_params"] == {"spam": "eggs", "break": "false"}
 
 
 def test_return_error(tracked_requests):
@@ -699,7 +730,7 @@ def test_error_monitor_sanitized_environment(tracked_requests, error_monitor_err
     assert response.status_int == 500
     assert len(error_monitor_errors) == 1
     error = error_monitor_errors[0]
-    assert error["environment"]["SECRET_KEY"] == "********************"
+    assert error["environment"]["SECRET_KEY"] == "[FILTERED]"
     assert error["environment"]["DATABASES"]["default"]["PASSWORD"] == "[FILTERED]"
 
 

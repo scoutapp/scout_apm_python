@@ -1,14 +1,20 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import logging
+import sys
+
 import wrapt
 from flask import current_app
-from flask.globals import request
+from flask.globals import request, session
 
 import scout_apm.core
 from scout_apm.core.config import scout_config
+from scout_apm.core.error import ErrorMonitor
 from scout_apm.core.tracked_request import TrackedRequest
-from scout_apm.core.web_requests import werkzeug_track_request_data
+from scout_apm.core.web_requests import RequestComponents, werkzeug_track_request_data
+
+logger = logging.getLogger(__name__)
 
 
 class ScoutApm(object):
@@ -35,11 +41,10 @@ class ScoutApm(object):
         if request.routing_exception is not None:
             return wrapped(*args, **kwargs)
 
-        rule = request.url_rule
-        view_func = instance.view_functions[rule.endpoint]
-
-        name = view_func.__module__ + "." + view_func.__name__
-        operation = "Controller/" + name
+        request_components = get_request_components(self.app, request)
+        operation = "Controller/{}.{}".format(
+            request_components.module, request_components.controller
+        )
 
         tracked_request = TrackedRequest.instance()
         tracked_request.is_real_request = True
@@ -56,6 +61,15 @@ class ScoutApm(object):
                 response = wrapped(*args, **kwargs)
             except Exception as exc:
                 tracked_request.tag("error", "true")
+                if scout_config.value("errors_enabled"):
+                    ErrorMonitor.send(
+                        sys.exc_info(),
+                        request_components=get_request_components(self.app, request),
+                        request_path=request.path,
+                        request_params=request.args,
+                        session=dict(session.items()),
+                        environment=self.app.config,
+                    )
                 raise exc
             else:
                 if 500 <= response.status_code <= 599:
@@ -92,3 +106,13 @@ class ScoutApm(object):
                 clean_name = name.replace("SCOUT_", "").lower()
                 configs[clean_name] = value
         scout_config.set(**configs)
+
+
+def get_request_components(app, request):
+    view_func = app.view_functions[request.endpoint]
+    request_components = RequestComponents(
+        module=view_func.__module__,
+        controller=view_func.__name__,
+        action=request.method,
+    )
+    return request_components

@@ -33,6 +33,7 @@ FILTER_PARAMETERS = frozenset(
         "protected",
         "salt",
         "secret",
+        "secret_key",
         "ssn",
         "stripetoken",
         "token",

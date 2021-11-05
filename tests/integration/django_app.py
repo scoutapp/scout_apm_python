@@ -82,6 +82,11 @@ def hello(request):
     return HttpResponse("Hello World!")
 
 
+def set_session(request):
+    request.session["session_var"] = 1
+    return HttpResponse("Set session")
+
+
 def crash(request):
     raise ValueError("BØØM!")  # non-ASCII
 
@@ -241,6 +246,7 @@ def urlpatterns():
             path("", home),
             path("hello/", hello),
             path("crash/", crash),
+            path("set-session/", set_session),
             path("return-error/", return_error),
             path("cbv/", CbvView.as_view()),
             path("get-username/", get_username),
@@ -263,6 +269,7 @@ def urlpatterns():
             url(r"^$", home),
             url(r"^hello/$", hello),
             url(r"^crash/$", crash),
+            url(r"^set-session/$", set_session),
             url(r"^return-error/$", return_error),
             url(r"^cbv/$", CbvView.as_view()),
             url(r"^get-username/$", get_username),

@@ -8,6 +8,7 @@
 - Run CI tests once per day to identify issues quicker.
 - Set Scout core agent default version to v1.4.0.
   ([Issue 700](https://github.com/scoutapp/scout_apm_python/issues/700))
+- Instrument Flask for Error Monitoring.
 
 ### Fixed
 

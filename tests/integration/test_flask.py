@@ -45,6 +45,11 @@ def app_with_scout(config=None):
             return "Hello Options!"
         return "Hello World!"
 
+    @app.route("/set-session/")
+    def set_session():
+        flask.session["session_var"] = 1
+        return "Set session"
+
     @app.route("/crash/")
     def crash():
         raise ValueError("BØØM!")  # non-ASCII
@@ -56,6 +61,7 @@ def app_with_scout(config=None):
     # Setup according to https://docs.scoutapm.com/#flask
     ScoutApm(app)
     app.config.update(config)
+    app.secret_key = "123"
 
     try:
         yield app
@@ -239,3 +245,86 @@ def test_no_monitor(tracked_requests):
 
     assert response.status_int == 200
     assert tracked_requests == []
+
+
+def test_server_error_error_monitor(tracked_requests, error_monitor_errors):
+    with app_with_scout(config={"PROPAGATE_EXCEPTIONS": False}) as app:
+        TestApp(app).get("/crash/", expect_errors=True)
+
+    assert len(error_monitor_errors) == 1
+    error = error_monitor_errors[0]
+    assert error["exception_class"] == "ValueError"
+    assert error["message"] == "BØØM!"
+    assert error["request_uri"] == "/crash/"
+    assert error["request_session"] is None
+    assert error["request_params"] is None
+    assert error["request_components"] == {
+        "module": "tests.integration.test_flask",
+        "controller": "crash",
+        "action": "GET",
+    }
+
+
+def test_server_error_error_monitor_with_session(
+    tracked_requests, error_monitor_errors
+):
+    with app_with_scout(config={"PROPAGATE_EXCEPTIONS": False}) as app:
+        test_app = TestApp(app)
+        test_app.get("/set-session/")
+        test_app.get("/crash/", expect_errors=True)
+
+    assert len(error_monitor_errors) == 1
+    error = error_monitor_errors[0]
+    assert error["request_session"] == {"session_var": "1"}
+
+
+def test_server_error_error_monitor_with_params(tracked_requests, error_monitor_errors):
+    with app_with_scout(config={"PROPAGATE_EXCEPTIONS": False}) as app:
+        test_app = TestApp(app)
+        test_app.get("/crash/?spam=eggs&break=false", expect_errors=True)
+
+    assert len(error_monitor_errors) == 1
+    error = error_monitor_errors[0]
+    assert error["request_params"] == {"spam": "eggs", "break": "false"}
+
+
+def test_return_error_error_monitor(tracked_requests, error_monitor_errors):
+    with app_with_scout() as app:
+        TestApp(app).get("/return-error/", expect_errors=True)
+
+    assert len(error_monitor_errors) == 0
+
+
+def test_no_monitor_server_error(tracked_requests):
+    with app_with_scout(
+        config={"SCOUT_MONITOR": False, "PROPAGATE_EXCEPTIONS": False}
+    ) as app:
+        response = TestApp(app).get("/crash/", expect_errors=True)
+
+    assert response.status_int == 500
+    assert tracked_requests == []
+
+
+def test_no_error_monitoring_server_error(tracked_requests, error_monitor_errors):
+    with app_with_scout(
+        config={"SCOUT_ERRORS_ENABLED": False, "PROPAGATE_EXCEPTIONS": False}
+    ) as app:
+        response = TestApp(app).get("/crash/", expect_errors=True)
+
+    assert response.status_int == 500
+    assert error_monitor_errors == []
+
+
+def test_error_monitor_sanitized_environment(tracked_requests, error_monitor_errors):
+    config = {
+        "PROPAGATE_EXCEPTIONS": False,
+        "DATABASES": {"default": {"PASSWORD": "123"}},
+    }
+    with app_with_scout(config=config) as app:
+        response = TestApp(app).get("/crash/", expect_errors=True)
+
+    assert response.status_int == 500
+    assert len(error_monitor_errors) == 1
+    error = error_monitor_errors[0]
+    assert error["environment"]["SECRET_KEY"] == "[FILTERED]"
+    assert error["environment"]["DATABASES"]["default"]["PASSWORD"] == "[FILTERED]"
