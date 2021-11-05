@@ -63,7 +63,7 @@ class ScoutApmDjangoConfig(AppConfig):
             sys.exc_info(),
             request_components=get_request_components(request),
             request_path=request.path,
-            request_params=request.GET.dict(),
+            request_params=[(k, v) for k, vs in request.GET.lists() for v in vs],
             session=dict(request.session.items())
             if hasattr(request, "session")
             else None,

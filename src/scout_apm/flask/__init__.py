@@ -66,7 +66,9 @@ class ScoutApm(object):
                         sys.exc_info(),
                         request_components=get_request_components(self.app, request),
                         request_path=request.path,
-                        request_params=request.args,
+                        request_params=[
+                            (k, v) for k, vs in request.args.lists() for v in vs
+                        ],
                         session=dict(session.items()),
                         environment=self.app.config,
                     )

@@ -281,11 +281,11 @@ def test_server_error_error_monitor_with_session(
 def test_server_error_error_monitor_with_params(tracked_requests, error_monitor_errors):
     with app_with_scout(config={"PROPAGATE_EXCEPTIONS": False}) as app:
         test_app = TestApp(app)
-        test_app.get("/crash/?spam=eggs&break=false", expect_errors=True)
+        test_app.get("/crash/?spam[]=eggs&spam[]=false", expect_errors=True)
 
     assert len(error_monitor_errors) == 1
     error = error_monitor_errors[0]
-    assert error["request_params"] == {"spam": "eggs", "break": "false"}
+    assert error["request_params"] == [("spam[]", "eggs"), ("spam[]", "false")]
 
 
 def test_return_error_error_monitor(tracked_requests, error_monitor_errors):

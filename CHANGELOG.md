@@ -11,6 +11,9 @@
 - Instrument Flask for Error Monitoring.
 
 ### Fixed
+- Properly handle querystring parameters in error monitoring service by
+  passing them as a list of tuples rather than a dictionary. When there
+  were multiple params with the same key, it was keeping the last value.
 
 ## [2.23.3] 2021-11-04
 
