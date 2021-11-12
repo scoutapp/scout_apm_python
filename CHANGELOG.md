@@ -6,6 +6,8 @@
 - Split CI tests GitHub actions into two jobs to support python 3.4 on
   Ubuntu 18 and modern versions with Ubuntu 20.
 - Run CI tests once per day to identify issues quicker.
+- Set Scout core agent default version to v1.4.0.
+  ([Issue 700](https://github.com/scoutapp/scout_apm_python/issues/700))
 
 ### Fixed
 
