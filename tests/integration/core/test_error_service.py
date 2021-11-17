@@ -40,7 +40,7 @@ def error_service_thread():
                 "notifier": "scout_apm_python",
                 "environment": "scout-test",
                 "root": "/tmp/",
-                "problems": [{"foo": "bar"}],
+                "problems": [{"foo": "BØØM!"}],
             },
             {"Agent-Hostname": "example.com", "X-Error-Count": "1"},
             "https://testserver/apps/error.scout?key=scout-app-key"
@@ -52,10 +52,10 @@ def error_service_thread():
                 "notifier": "scout_apm_python",
                 "environment": None,
                 "root": WORKING_DIRECTORY,
-                "problems": [{"foo": "bar"}],
+                "problems": [{"foo": "BØØM!"}],
             },
             {"Agent-Hostname": None, "X-Error-Count": "1"},
-            "https://errors.scoutapm.com/apps/error.scout" "?name=Python+App",
+            "https://errors.scoutapm.com/apps/error.scout?name=Python+App",
         ),
     ],
 )
@@ -68,10 +68,10 @@ def test_send(
         with httpretty.enabled(allow_net_connect=False):
             httpretty.register_uri(
                 httpretty.POST,
-                "{}/apps/error.scout".format(scout_config.value("errors_host")),
+                expected_uri,
                 body="Hello World!",
             )
-            ErrorServiceThread.send({"foo": "bar"})
+            ErrorServiceThread.send({"foo": "BØØM!"})
             ErrorServiceThread.wait_until_drained()
 
             request = httpretty.last_request()
@@ -121,14 +121,14 @@ def test_send_api_error(error_service_thread, caplog):
                 body="Unexpected Error",
                 status=500,
             )
-            ErrorServiceThread.send({"foo": "bar"})
+            ErrorServiceThread.send({"foo": "BØØM!"})
             ErrorServiceThread.wait_until_drained()
     finally:
         scout_config.reset_all()
     assert caplog.record_tuples[-1][0] == "scout_apm.core.error_service"
     assert caplog.record_tuples[-1][1] == logging.DEBUG
     assert caplog.record_tuples[-1][2].startswith(
-        "ErrorServiceThread exception on _send:"
+        "ErrorServiceThread 500 response error on _send:"
     )
 
 

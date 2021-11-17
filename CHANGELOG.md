@@ -10,6 +10,8 @@
 - When Celery `task_failure` signal has a string type for the `traceback`
   parameter, use the `einfo.tb` to fetch the traceback.
   ([Issue 708](https://github.com/scoutapp/scout_apm_python/issues/708))
+- Use urllib3 to post errors to Scout Errors API. Removes dependency on
+  requests library.
 
 ## [2.23.4] 2021-11-12
 

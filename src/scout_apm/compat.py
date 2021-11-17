@@ -79,11 +79,13 @@ def text(value, encoding="utf-8", errors="strict"):
 
 
 if sys.version_info >= (3, 0):
-    from urllib.parse import parse_qsl, urlencode
+    from html import escape
+    from urllib.parse import parse_qsl, urlencode, urljoin
 else:
+    from cgi import escape
     from urllib import urlencode
 
-    from urlparse import parse_qsl
+    from urlparse import parse_qsl, urljoin
 
 
 if sys.version_info >= (3, 0):
@@ -160,7 +162,7 @@ else:
     def gzip_compress(data):
         """Reimplementation gzip.compress for python 2.7"""
         buf = io.BytesIO()
-        with gzip.GzipFile(fileobj=buf, mode="wb") as f:
+        with gzip.GzipFile(fileobj=buf, mode="w") as f:
             f.write(data)
         return buf.getvalue()
 
@@ -168,6 +170,7 @@ else:
 __all__ = [
     "ContextDecorator",
     "datetime_to_timestamp",
+    "escape",
     "gzip_compress",
     "kwargs_only",
     "parse_qsl",
@@ -176,4 +179,5 @@ __all__ = [
     "text",
     "text_type",
     "urlencode",
+    "urljoin",
 ]

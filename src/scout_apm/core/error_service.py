@@ -7,19 +7,14 @@ import os
 import threading
 import time
 
-try:
-    from html import escape
-except ImportError:
-    from cgi import escape
-
-try:
-    from urllib.parse import urljoin
-except ImportError:
-    from urlparse import urljoin
-
-import requests
-
-from scout_apm.compat import gzip_compress, queue
+from scout_apm.compat import (
+    escape,
+    gzip_compress,
+    queue,
+    urlencode,
+    urljoin,
+    urllib3_cert_pool_manager,
+)
 from scout_apm.core.config import scout_config
 from scout_apm.core.threading import SingletonThread
 
@@ -75,6 +70,7 @@ class ErrorServiceThread(SingletonThread):
 
     def run(self):
         batch_size = scout_config.value("errors_batch_size") or 1
+        http = urllib3_cert_pool_manager()
         try:
             while True:
                 errors = []
@@ -87,7 +83,7 @@ class ErrorServiceThread(SingletonThread):
                 except queue.Empty:
                     pass
 
-                if errors and self._send(errors):
+                if errors and self._send(http, errors):
                     for _ in range(len(errors)):
                         self._queue.task_done()
 
@@ -99,9 +95,10 @@ class ErrorServiceThread(SingletonThread):
         except Exception as exc:
             logger.debug("ErrorServiceThread exception: %r", exc, exc_info=exc)
         finally:
+            http.clear()
             logger.debug("ErrorServiceThread stopped.")
 
-    def _send(self, errors):
+    def _send(self, http, errors):
         try:
             data = json.dumps(
                 {
@@ -110,7 +107,7 @@ class ErrorServiceThread(SingletonThread):
                     "root": scout_config.value("application_root"),
                     "problems": errors,
                 }
-            )
+            ).encode("utf-8")
         except (ValueError, TypeError) as exc:
             logger.debug(
                 "Exception when serializing error message: %r", exc, exc_info=exc
@@ -122,21 +119,41 @@ class ErrorServiceThread(SingletonThread):
             "name": escape(scout_config.value("name"), quote=False),
         }
         headers = {
-            "Agent-Hostname": scout_config.value("hostname"),
+            "Agent-Hostname": scout_config.value("hostname") or "",
             "Content-Encoding": "gzip",
             "Content-Type": "application/json",
             "X-Error-Count": "{}".format(len(errors)),
         }
 
+        encoded_args = urlencode(params)
+        full_url = urljoin(
+            scout_config.value("errors_host"), "apps/error.scout"
+        ) + "?{}".format(encoded_args)
+
         try:
-            response = requests.post(
-                urljoin(scout_config.value("errors_host"), "apps/error.scout"),
-                params=params,
-                data=gzip_compress(data.encode("utf-8")),
-                headers=headers,
+            # urllib3 requires all parameters to be the same type for
+            # python 2.7.
+            # Since gzip can only return a str, convert all unicode instances
+            # to str.
+            response = http.request(
+                str("POST"),
+                str(full_url),
+                body=gzip_compress(data),
+                headers={str(key): str(value) for key, value in headers.items()},
             )
-            response.raise_for_status()
-        except requests.HTTPError as exc:
+            if response.status >= 400:
+                logger.debug(
+                    (
+                        "ErrorServiceThread %r response error on _send:"
+                        + " %r on PID: %s on thread: %s"
+                    ),
+                    response.status,
+                    response.data,
+                    os.getpid(),
+                    threading.current_thread(),
+                )
+                return False
+        except Exception as exc:
             logger.debug(
                 (
                     "ErrorServiceThread exception on _send:"
@@ -148,5 +165,4 @@ class ErrorServiceThread(SingletonThread):
                 exc_info=exc,
             )
             return False
-
         return True
