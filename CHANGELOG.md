@@ -3,6 +3,12 @@
 ## Pending
 
 ### Added
+
+### Fixed
+
+## [2.23.4] 2021-11-12
+
+### Added
 - Split CI tests GitHub actions into two jobs to support python 3.4 on
   Ubuntu 18 and modern versions with Ubuntu 20.
 - Run CI tests once per day to identify issues quicker.
