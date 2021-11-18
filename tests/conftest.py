@@ -245,10 +245,14 @@ def tracked_requests():
         TrackedRequest.finish = orig
 
 
-@pytest.fixture
-def error_monitor_errors():
+@pytest.fixture(autouse=True, params=[False])
+def error_monitor_errors(request):
     """
     Mock calls made to the error service thread.
+
+    Will prevent messages being sent to the ErrorServiceThread unless
+    the fixture is overridden with ``@pytest.fixture(params=[True])``
+
     Returns a list of error dicts
     """
     errors = []
@@ -256,7 +260,9 @@ def error_monitor_errors():
     @wrapt.decorator
     def capture_error(wrapped, instance, args, kwargs):
         errors.append(kwargs["error"])
-        return wrapped(*args, **kwargs)
+        send = request.param
+        if send:
+            return wrapped(*args, **kwargs)
 
     orig = ErrorServiceThread.send
     ErrorServiceThread.send = capture_error(orig)

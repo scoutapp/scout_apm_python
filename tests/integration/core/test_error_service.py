@@ -24,6 +24,15 @@ def error_service_thread():
     # ensure_stopped() already called by global stop_and_empty_core_agent_socket
 
 
+@pytest.fixture(params=[True])
+def error_monitor_errors(error_monitor_errors):
+    """
+    Override error_monitor_errors to capture the messages sent to
+    ErrorServiceThread
+    """
+    return error_monitor_errors
+
+
 @pytest.mark.parametrize(
     "config, decoded_body, expected_headers, expected_uri",
     [
@@ -71,7 +80,7 @@ def test_send(
                 expected_uri,
                 body="Hello World!",
             )
-            ErrorServiceThread.send({"foo": "BØØM!"})
+            ErrorServiceThread.send(error={"foo": "BØØM!"})
             ErrorServiceThread.wait_until_drained()
 
             request = httpretty.last_request()
@@ -99,7 +108,7 @@ def test_send_batch(error_service_thread):
                 body="Hello world!",
             )
             for i in range(5):
-                ErrorServiceThread.send({"foo": i})
+                ErrorServiceThread.send(error={"foo": i})
             ErrorServiceThread.wait_until_drained()
 
             request = httpretty.last_request()
@@ -121,7 +130,7 @@ def test_send_api_error(error_service_thread, caplog):
                 body="Unexpected Error",
                 status=500,
             )
-            ErrorServiceThread.send({"foo": "BØØM!"})
+            ErrorServiceThread.send(error={"foo": "BØØM!"})
             ErrorServiceThread.wait_until_drained()
     finally:
         scout_config.reset_all()
@@ -134,7 +143,7 @@ def test_send_api_error(error_service_thread, caplog):
 
 def test_send_unserializable_data(error_service_thread, caplog):
     with httpretty.enabled(allow_net_connect=False):
-        ErrorServiceThread.send({"value": datetime.now()})
+        ErrorServiceThread.send(error={"value": datetime.now()})
         ErrorServiceThread.wait_until_drained()
 
     if ErrorServiceThread._queue.empty() and not caplog.record_tuples:
