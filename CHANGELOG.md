@@ -5,6 +5,8 @@
 ### Added
 
 ### Fixed
+- Avoid instrumenting PyMongo collection methods that were removed in v4.
+  ([Issue 710](https://github.com/scoutapp/scout_apm_python/issues/710))
 
 ## [2.23.4] 2021-11-12
 
