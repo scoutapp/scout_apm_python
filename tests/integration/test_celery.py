@@ -199,6 +199,40 @@ def test_error_task_error_monitor_exception(
     assert actual_debugs[0].startswith(log_starts_with)
 
 
+@mock.patch("scout_apm.celery.get_safe_settings", False)
+@mock.patch("scout_apm.celery.ErrorMonitor.send")
+def test_celery_task_failure_callback_tracback_fallback(
+    mock_send, mock_get_safe_settings, tracked_request
+):
+    """
+    Verify that when the traceback param is a string, it uses einfo.tb
+    """
+    exception = Exception()
+    mock_sender = mock.Mock()
+    mock_sender.name = "test"
+    scout_apm.celery.task_failure_callback(
+        sender=mock_sender,
+        task_id=None,
+        exception=exception,
+        args=None,
+        kwargs=None,
+        traceback="spam",
+        einfo=mock.Mock(tb="traceback"),
+    )
+    mock_send.assert_called_once_with(
+        (Exception, exception, "traceback"),
+        environment=None,
+        custom_params={
+            "celery": {
+                "task_id": None,
+                "args": None,
+                "kwargs": None,
+            }
+        },
+        custom_controller="test",
+    )
+
+
 @skip_unless_celery_4_plus
 def test_hello_worker(celery_app, celery_worker, tracked_requests):
     with app_with_scout(app=celery_app) as app:

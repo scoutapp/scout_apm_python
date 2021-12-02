@@ -7,6 +7,9 @@
 ### Fixed
 - Avoid instrumenting PyMongo collection methods that were removed in v4.
   ([Issue 710](https://github.com/scoutapp/scout_apm_python/issues/710))
+- When Celery `task_failure` signal has a string type for the `traceback`
+  parameter, use the `einfo.tb` to fetch the traceback.
+  ([Issue 708](https://github.com/scoutapp/scout_apm_python/issues/708))
 
 ## [2.23.4] 2021-11-12
 
