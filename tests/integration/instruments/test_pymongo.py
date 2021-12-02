@@ -7,7 +7,11 @@ import os
 import pymongo
 import pytest
 
-from scout_apm.instruments.pymongo import COLLECTION_METHODS, ensure_installed
+from scout_apm.instruments.pymongo import (
+    COLLECTION_METHODS,
+    COLLECTION_METHODS_V3,
+    ensure_installed,
+)
 from tests.compat import mock
 
 
@@ -43,9 +47,11 @@ def test_all_collection_attributes_accounted_for():
         # probably won't be used in web requests:
         "watch",
     }
-    assert (
-        all_methods - deliberately_ignored_methods - set(COLLECTION_METHODS)
-    ) == set()
+    if pymongo.version >= "4.0":
+        expected_methods = COLLECTION_METHODS
+    else:
+        expected_methods = COLLECTION_METHODS_V3
+    assert (all_methods - deliberately_ignored_methods - set(expected_methods)) == set()
 
 
 @pytest.mark.parametrize(["method_name"], [[x] for x in COLLECTION_METHODS])
