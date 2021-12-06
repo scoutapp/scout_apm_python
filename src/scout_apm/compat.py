@@ -19,7 +19,6 @@ if sys.version_info >= (3,):
     def iteritems(dictionary):
         return dictionary.items()
 
-
 else:
 
     def iteritems(dictionary):
@@ -60,7 +59,6 @@ if sys.version_info >= (3, 3):
     def datetime_to_timestamp(datetime_obj):
         return datetime_obj.replace(tzinfo=dt.timezone.utc).timestamp()
 
-
 else:
     _EPOCH = dt.datetime(1970, 1, 1)
 
@@ -92,7 +90,6 @@ if sys.version_info >= (3, 0):
 
     def get_pos_args(func):
         return inspect.getfullargspec(func).args
-
 
 else:
 
@@ -156,7 +153,6 @@ if sys.version_info >= (3, 2):
 
     def gzip_compress(data):
         return gzip.compress(data)
-
 
 else:
     import io

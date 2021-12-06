@@ -88,7 +88,6 @@ if sys.version_info >= (3, 5):
             name = frame.f_code.co_name
             yield {"file": filepath(frame), "line": lineno, "function": name}
 
-
 else:
 
     def stacktrace_walker(tb):
