@@ -63,7 +63,6 @@ if sys.version_info >= (3, 2):
     def gzip_decompress(data):
         return gzip.decompress(data)
 
-
 else:
     import io
 

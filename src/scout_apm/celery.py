@@ -17,7 +17,6 @@ try:
         def get_safe_settings():
             return SafeExceptionReporterFilter().get_safe_settings()
 
-
 except ImportError:
     # Django not installed
     get_safe_settings = None
