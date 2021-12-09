@@ -107,9 +107,32 @@ def test_ensure_installed_fail_no_client_bulk(caplog):
     )
     logger, level, message = caplog.record_tuples[1]
     assert logger == "scout_apm.instruments.elasticsearch"
-    assert level == logging.WARNING
+    assert level == logging.DEBUG
     assert message.startswith(
         "Failed to instrument elasticsearch.Elasticsearch.bulk: AttributeError"
+    )
+
+
+def test_ensure_installed_fail_no_client_methods(caplog):
+    mock_not_patched = mock.patch(
+        "scout_apm.instruments.elasticsearch.have_patched_client", new=False
+    )
+    # Change the wrap methods to a boolean to cause an exception
+    # and fail to wrap any of the client methods.
+    mock_wrap_client_index_method = mock.patch(
+        "scout_apm.instruments.elasticsearch.wrap_client_index_method", new=False
+    )
+    mock_wrap_client_method = mock.patch(
+        "scout_apm.instruments.elasticsearch.wrap_client_method", new=False
+    )
+    with mock_not_patched, mock_wrap_client_index_method, mock_wrap_client_method:
+        ensure_installed()
+
+    logger, level, message = caplog.record_tuples[-1]
+    assert logger == "scout_apm.instruments.elasticsearch"
+    assert level == logging.WARNING
+    assert message.startswith(
+        "Failed to instrument any elasticsearch.Elasticsearch methods."
     )
 
 

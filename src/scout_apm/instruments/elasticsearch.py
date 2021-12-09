@@ -86,6 +86,7 @@ def ensure_client_instrumented():
     global have_patched_client
 
     if not have_patched_client:
+        instrumented_count = 0
         for name, takes_index_argument in CLIENT_METHODS:
             try:
                 method = getattr(Elasticsearch, name)
@@ -94,13 +95,19 @@ def ensure_client_instrumented():
                 else:
                     wrapped = wrap_client_method(method)
                 setattr(Elasticsearch, name, wrapped)
+                instrumented_count += 1
             except Exception as exc:
-                logger.warning(
+                logger.debug(
                     "Failed to instrument elasticsearch.Elasticsearch.%s: %r",
                     name,
                     exc,
                     exc_info=exc,
                 )
+        if instrumented_count == 0:
+            logger.warning(
+                "Failed to instrument any elasticsearch.Elasticsearch methods."
+                " Enable debug logs to view root causes."
+            )
 
         have_patched_client = True
 

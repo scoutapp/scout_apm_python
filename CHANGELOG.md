@@ -5,6 +5,11 @@
 ### Added
 
 ### Fixed
+- Only log warnings for ElasticSearch client method instrumentation
+  if no client methods were instrumented. Otherwise, log the issues at
+  the debug level. This avoids flooding logs when clients use an older
+  version of ElasticSearch.
+  ([Issue 713](https://github.com/scoutapp/scout_apm_python/issues/713))
 
 ## [2.23.5] 2021-12-09
 
