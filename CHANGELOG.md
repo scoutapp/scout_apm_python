@@ -5,6 +5,12 @@
 ### Added
 
 ### Fixed
+
+## [2.23.5] 2021-12-09
+
+### Added
+
+### Fixed
 - Avoid instrumenting PyMongo collection methods that were removed in v4.
   ([Issue 710](https://github.com/scoutapp/scout_apm_python/issues/710))
 - When Celery `task_failure` signal has a string type for the `traceback`
