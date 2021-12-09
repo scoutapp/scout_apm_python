@@ -105,7 +105,7 @@ def test_monitor_ignore_exceptions(error_monitor_errors):
         ),
         (
             "/test/",
-            [("foo", "bar")],
+            {"foo": ["bar"]},
             {"spam": "eggs"},
             {"PASSWORD": "hunter2"},
             RequestComponents("sample.app", "DataView", "detail"),
@@ -116,7 +116,7 @@ def test_monitor_ignore_exceptions(error_monitor_errors):
                 "message": "division by zero",
                 "request_id": "sample_id",
                 "request_uri": "/test/",
-                "request_params": [("foo", "bar")],
+                "request_params": {"foo": ["bar"]},
                 "request_session": {"spam": "eggs"},
                 "environment": {"PASSWORD": "[FILTERED]"},
                 "request_components": {
@@ -131,7 +131,7 @@ def test_monitor_ignore_exceptions(error_monitor_errors):
         ),
         (
             "/test/",
-            [("foo", "bar")],
+            {"foo": ["bar"]},
             {"spam": "eggs"},
             {"PASSWORD": "hunter2"},
             RequestComponents("sample.app", "DataView", "detail"),
@@ -142,7 +142,7 @@ def test_monitor_ignore_exceptions(error_monitor_errors):
                 "message": "division by zero",
                 "request_id": "sample_id",
                 "request_uri": "/test/",
-                "request_params": [("foo", "bar")],
+                "request_params": {"foo": ["bar"]},
                 "request_session": {"spam": "eggs"},
                 "environment": {"PASSWORD": "[FILTERED]"},
                 "request_components": {

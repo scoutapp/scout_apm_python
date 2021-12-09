@@ -64,11 +64,11 @@ if sys.version_info >= (3, 2):
         return gzip.decompress(data)
 
 else:
-    import io
+    import StringIO
 
     def gzip_decompress(data):
         """Reimplementation gzip.compress for python 2.7"""
-        with gzip.GzipFile(fileobj=io.BytesIO(data), mode="rb") as f:
+        with gzip.GzipFile(fileobj=StringIO.StringIO(data), mode="rb") as f:
             return f.read()
 
 

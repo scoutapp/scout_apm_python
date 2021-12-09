@@ -284,7 +284,7 @@ def test_server_error_error_monitor_with_params(tracked_requests, error_monitor_
 
     assert len(error_monitor_errors) == 1
     error = error_monitor_errors[0]
-    assert error["request_params"] == [("spam[]", "eggs"), ("spam[]", "false")]
+    assert error["request_params"] == {"spam[]": ["eggs", "false"]}
 
 
 def test_return_error(tracked_requests):
