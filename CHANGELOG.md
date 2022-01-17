@@ -10,6 +10,8 @@
   the debug level. This avoids flooding logs when clients use an older
   version of ElasticSearch.
   ([Issue 713](https://github.com/scoutapp/scout_apm_python/issues/713))
+- Restore building wheels for python 3.4 and 3.5.
+  ([Issue 584](https://github.com/scoutapp/scout_apm_python/issues/584))
 
 ## [2.23.5] 2021-12-09
 
