@@ -153,15 +153,16 @@ jobs:
           path: dist
 
       - name: Publish distributions to Test PyPI
-        uses: pypa/gh-action-pypi-publish@v1.4.2
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
           password: ${{ secrets.TEST_TWINE_PASSWORD }}
           repository_url: https://test.pypi.org/legacy/
+          skip_existing: true
 
       - name: Publish distributiosn to PyPI
         if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
-        uses: pypa/gh-action-pypi-publish@v1.4.2
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
           password: ${{ secrets.TWINE_PASSWORD }}
