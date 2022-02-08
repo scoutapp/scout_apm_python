@@ -5,6 +5,10 @@
 ### Added
 
 ### Fixed
+
+## [2.24.0] 2022-02-08
+
+### Fixed
 - Only log warnings for ElasticSearch client method instrumentation
   if no client methods were instrumented. Otherwise, log the issues at
   the debug level. This avoids flooding logs when clients use an older
