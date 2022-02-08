@@ -15,6 +15,7 @@ def reset_objtrace_counts():
     try:
         yield
     finally:
+        objtrace.disable()
         objtrace.reset_counts()
 
 
@@ -69,10 +70,11 @@ def test_get_counts_multiple_allocations():
     reason="For some reason can only force a realloc on Python 3.5+",
 )
 def test_get_counts_reallocations():
-    items = []
+    text = "some text"
+    leg = " scout"
     objtrace.enable()
-    for i in range(1000):
-        items.append(i)
+    for _ in range(3):
+        text += leg
     counts = objtrace.get_counts()
     assert counts[2] > 0
 
