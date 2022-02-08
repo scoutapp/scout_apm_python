@@ -122,8 +122,13 @@ else:
 
 
 def capture_backtrace():
-    walker = filter_frames(backtrace_walker())
-    return list(itertools.islice(walker, LIMIT))
+    walker = backtrace_walker()
+    filtered_walker = filter_frames(backtrace_walker())
+    frame_list = list(itertools.islice(walker, LIMIT))
+    filtered_frame_list = list(itertools.islice(filtered_walker, LIMIT))
+    logger.debug("Backtrace length %s", len(frame_list))
+    logger.debug("Filtered backtrace length %s", len(filtered_frame_list))
+    return filtered_frame_list
 
 
 def capture_stacktrace(tb):

@@ -255,6 +255,7 @@ class Span(object):
             return
         slow_threshold = 0.5
         if self.duration() > slow_threshold:
+            logger.debug("Capturing backtrace for span %s", self.span_id)
             self.capture_backtrace()
 
     def add_allocation_tags(self):
