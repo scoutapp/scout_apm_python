@@ -5,7 +5,10 @@ import datetime as dt
 import logging
 import sys
 
+import pytest
+
 from scout_apm.core import objtrace
+from scout_apm.core.config import scout_config
 from scout_apm.core.tracked_request import TrackedRequest
 from tests.compat import copy_context, mock
 from tests.tools import (
@@ -13,6 +16,18 @@ from tests.tools import (
     skip_if_objtrace_is_extension,
     skip_if_objtrace_not_extension,
 )
+
+
+@pytest.fixture
+def reset_config():
+    """
+    Reset scout configuration after a test
+    """
+    try:
+        yield
+    finally:
+        # Reset Scout configuration.
+        scout_config.reset_all()
 
 
 def test_tracked_request_repr(tracked_request):
@@ -214,7 +229,7 @@ def test_finish_log_request_info(tracked_request, caplog):
     assert (
         "scout_apm.core.tracked_request",
         logging.DEBUG,
-        "Sending request: {}".format(tracked_request.request_id),
+        "Sending request: {}.".format(tracked_request.request_id),
     ) in caplog.record_tuples
 
     assert (
@@ -235,6 +250,42 @@ def test_finish_log_request_info(tracked_request, caplog):
             + "sent=True"
         ),
     ) in caplog.record_tuples
+
+
+def test_finish_log_request_info_with_logged_payload(
+    tracked_request, caplog, reset_config
+):
+    scout_config.set(log_payload_content=True)
+    tracked_request.is_real_request = True
+    tracked_request.start_span(operation="Something")
+    tracked_request.stop_span()
+
+    # Find the logged message.
+    actual_message = None
+    for module, level, message in caplog.record_tuples:
+        if module == "scout_apm.core.tracked_request" and level == logging.DEBUG:
+            if message.startswith(
+                "Sending request: {}. Payload: ".format(tracked_request.request_id)
+            ):
+                actual_message = message
+                break
+    assert actual_message
+    # Verify the counts of the spans and the request id.
+    assert actual_message.count("'StartRequest'") == 1
+    assert actual_message.count("'FinishRequest'") == 1
+    assert actual_message.count("'TagRequest'") == 1
+    assert actual_message.count("'StartSpan'") == 1
+    assert actual_message.count("'StopSpan'") == 1
+    if objtrace.is_extension:
+        assert actual_message.count("'TagSpan'") == 3
+        total_requests = 8
+    else:
+        assert actual_message.count("'TagSpan'") == 0
+        total_requests = 5
+    # Verify each request id in the payload is the tracked request's.
+    assert actual_message.count("'request_id'") == total_requests
+    # The actual request id is also included in the log message after Sending request:
+    assert actual_message.count(tracked_request.request_id) == total_requests + 1
 
 
 def test_finish_clears_context():
@@ -273,7 +324,7 @@ def test_request_only_sent_once(tracked_request, caplog):
     sent_log = (
         "scout_apm.core.tracked_request",
         logging.DEBUG,
-        "Sending request: {}".format(tracked_request.request_id),
+        "Sending request: {}.".format(tracked_request.request_id),
     )
     info_log = (
         "scout_apm.core.tracked_request",
