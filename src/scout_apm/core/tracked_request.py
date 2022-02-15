@@ -9,6 +9,7 @@ from uuid import uuid4
 from scout_apm.core import backtrace, objtrace
 from scout_apm.core.agent.commands import BatchCommand
 from scout_apm.core.agent.socket import CoreAgentSocketThread
+from scout_apm.core.config import scout_config
 from scout_apm.core.n_plus_one_tracker import NPlusOneTracker
 from scout_apm.core.samplers.memory import get_rss_in_mb
 from scout_apm.core.samplers.thread import SamplersThread
@@ -151,8 +152,15 @@ class TrackedRequest(object):
             self.tag("mem_delta", self._get_mem_delta())
             if not self.is_ignored() and not self.sent:
                 self.sent = True
-                logger.debug("Sending request: %s", self.request_id)
                 batch_command = BatchCommand.from_tracked_request(self)
+                if scout_config.value("log_payload_content"):
+                    logger.debug(
+                        "Sending request: %s. Payload: %s",
+                        self.request_id,
+                        batch_command.message(),
+                    )
+                else:
+                    logger.debug("Sending request: %s.", self.request_id)
                 CoreAgentSocketThread.send(batch_command)
             SamplersThread.ensure_started()
 

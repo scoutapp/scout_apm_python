@@ -1,6 +1,7 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import logging
 import sys
 from contextlib import contextmanager
 
@@ -168,6 +169,7 @@ def test_monitor(
     expected_error,
     tracked_request,
     error_monitor_errors,
+    caplog,
 ):
     with app_with_scout():
         tracked_request.request_id = "sample_id"
@@ -197,3 +199,49 @@ def test_monitor(
     assert line
     assert func_str == "in test_monitor"
     assert error == expected_error
+    assert (
+        "scout_apm.core.error",
+        logging.DEBUG,
+        "Sending error for request: sample_id.",
+    ) in caplog.record_tuples
+
+
+def test_monitor_with_logged_payload(
+    tracked_request,
+    error_monitor_errors,
+    caplog,
+):
+    with app_with_scout(scout_config={"log_payload_content": True}):
+        tracked_request.request_id = "sample_id"
+        tracked_request.tags["spam"] = "foo"
+        exc_info = 0
+        try:
+            1 / 0
+        except ZeroDivisionError:
+            exc_info = sys.exc_info()
+        ErrorMonitor.send(
+            exc_info,
+            request_components=RequestComponents("sample.app", "DataView", "detail"),
+            request_path="/test/",
+        )
+
+    assert len(error_monitor_errors) == 1
+
+    # Find the logged message.
+    actual_message = None
+    for module, level, message in caplog.record_tuples:
+        if module == "scout_apm.core.error" and level == logging.DEBUG:
+            if message.startswith("Sending error for request: sample_id. Payload: "):
+                actual_message = message
+                break
+    assert actual_message
+
+    assert "ZeroDivisionError" in actual_message
+    assert "division by zero" in actual_message
+    assert (
+        "tests/unit/core/test_error.py:219:in test_monitor_with_logged_payload"
+        in actual_message
+    )
+    assert "sample.app" in actual_message
+    assert "DataView" in actual_message
+    assert "/test/" in actual_message

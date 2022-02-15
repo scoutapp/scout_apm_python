@@ -1,6 +1,7 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import logging
 import sys
 
 from scout_apm.core.backtrace import capture_stacktrace
@@ -9,6 +10,7 @@ from scout_apm.core.error_service import ErrorServiceThread
 from scout_apm.core.tracked_request import TrackedRequest
 from scout_apm.core.web_requests import RequestComponents, filter_element
 
+logger = logging.getLogger(__name__)
 text_type = str if sys.version_info[0] >= 3 else unicode  # noqa: F821
 
 
@@ -79,5 +81,14 @@ class ErrorMonitor(object):
             "host": scout_config.value("hostname"),
             "revision_sha": scout_config.value("revision_sha"),
         }
+
+        if scout_config.value("log_payload_content"):
+            logger.debug(
+                "Sending error for request: %s. Payload: %r",
+                tracked_request.request_id,
+                error,
+            )
+        else:
+            logger.debug("Sending error for request: %s.", tracked_request.request_id)
 
         ErrorServiceThread.send(error=error)
