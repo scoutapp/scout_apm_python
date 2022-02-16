@@ -3,6 +3,12 @@
 ## Pending
 
 ### Added
+
+### Fixed
+
+## [2.24.1] 2022-02-16
+
+### Added
 - Add `log_payload_content` to support logging the content of the message
   being sent to either the core agent socket or the error service.
   ([Issue 724](https://github.com/scoutapp/scout_apm_python/issues/724))
