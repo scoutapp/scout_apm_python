@@ -56,12 +56,13 @@ def task_prerun_callback(task=None, **kwargs):
     if parent_task_id:
         tracked_request.tag("parent_task_id", parent_task_id)
 
-    delivery_info = task.request.delivery_info
-    tracked_request.tag("is_eager", delivery_info.get("is_eager", False))
-    tracked_request.tag("exchange", delivery_info.get("exchange", "unknown"))
-    tracked_request.tag("priority", delivery_info.get("priority", "unknown"))
-    tracked_request.tag("routing_key", delivery_info.get("routing_key", "unknown"))
-    tracked_request.tag("queue", delivery_info.get("queue", "unknown"))
+    delivery_info = getattr(task.request, "delivery_info", None)
+    if delivery_info:
+        tracked_request.tag("is_eager", delivery_info.get("is_eager", False))
+        tracked_request.tag("exchange", delivery_info.get("exchange", "unknown"))
+        tracked_request.tag("priority", delivery_info.get("priority", "unknown"))
+        tracked_request.tag("routing_key", delivery_info.get("routing_key", "unknown"))
+        tracked_request.tag("queue", delivery_info.get("queue", "unknown"))
 
     tracked_request.start_span(operation=("Job/" + task.name))
 
