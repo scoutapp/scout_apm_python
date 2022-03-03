@@ -5,6 +5,12 @@
 ### Added
 
 ### Fixed
+
+## [2.24.2] 2022-03-02
+
+### Added
+
+### Fixed
 - Avoid assuming Celery tasks will have a truth-y `delivery_info` property.
   ([Issue 731](https://github.com/scoutapp/scout_apm_python/issues/731))
 
