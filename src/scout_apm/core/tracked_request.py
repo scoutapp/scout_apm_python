@@ -298,4 +298,15 @@ class Span(object):
         self.tag("stop_allocations", end_allocs)
 
     def capture_backtrace(self):
-        self.tag("stack", backtrace.capture_backtrace())
+        # The core-agent will trim the full_path as necessary.
+        self.tag(
+            "stack",
+            [
+                {
+                    "file": frame["full_path"],
+                    "line": frame["line"],
+                    "function": frame["function"],
+                }
+                for frame in backtrace.capture_backtrace()
+            ],
+        )

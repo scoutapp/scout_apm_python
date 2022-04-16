@@ -55,7 +55,7 @@ def module_filepath(module, filepath):
     return filepath.split(module_dir, 1)[-1].lstrip(os.sep) if module_dir else filepath
 
 
-def filepath(frame):
+def filepaths(frame):
     """Get the filepath for frame."""
     module = frame.f_globals.get("__name__", None)
     filepath = frame.f_code.co_filename
@@ -65,7 +65,7 @@ def filepath(frame):
 
     if not module:
         return filepath
-    return module_filepath(module, filepath)
+    return filepath, module_filepath(module, filepath)
 
 
 if sys.version_info >= (3, 5):
@@ -74,7 +74,13 @@ if sys.version_info >= (3, 5):
         """Iterate over each frame of the stack downards for exceptions."""
         for frame, lineno in traceback.walk_tb(tb):
             name = frame.f_code.co_name
-            yield {"file": filepath(frame), "line": lineno, "function": name}
+            full_path, relative_path = filepaths(frame)
+            yield {
+                "file": relative_path,
+                "full_path": full_path,
+                "line": lineno,
+                "function": name,
+            }
 
     def backtrace_walker():
         """Iterate over each frame of the stack upwards.
@@ -86,7 +92,13 @@ if sys.version_info >= (3, 5):
         start_frame = sys._getframe().f_back
         for frame, lineno in traceback.walk_stack(start_frame):
             name = frame.f_code.co_name
-            yield {"file": filepath(frame), "line": lineno, "function": name}
+            full_path, relative_path = filepaths(frame)
+            yield {
+                "file": relative_path,
+                "full_path": full_path,
+                "line": lineno,
+                "function": name,
+            }
 
 else:
 
@@ -95,8 +107,10 @@ else:
         while tb is not None:
             lineno = tb.tb_lineno
             name = tb.tb_frame.f_code.co_name
+            full_path, relative_path = filepaths(tb.tb_frame)
             yield {
-                "file": filepath(tb.tb_frame),
+                "file": relative_path,
+                "full_path": full_path,
                 "line": lineno,
                 "function": name,
             }
@@ -117,7 +131,13 @@ else:
         while frame is not None:
             lineno = frame.f_lineno
             name = frame.f_code.co_name
-            yield {"file": filepath(frame), "line": lineno, "function": name}
+            full_path, relative_path = filepaths(frame)
+            yield {
+                "file": relative_path,
+                "full_path": full_path,
+                "line": lineno,
+                "function": name,
+            }
             frame = frame.f_back
 
 

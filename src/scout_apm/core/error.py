@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
+import os
 import sys
 
 from scout_apm.core.backtrace import capture_stacktrace
@@ -52,6 +53,7 @@ class ErrorMonitor(object):
                     module=None, controller=custom_controller, action=None
                 )
 
+        scm_subdirectory = scout_config.value("scm_subdirectory")
         error = {
             "exception_class": exc_class.__name__,
             "message": text_type(exc_value),
@@ -64,7 +66,9 @@ class ErrorMonitor(object):
             "environment": filter_element("", environment) if environment else None,
             "trace": [
                 "{file}:{line}:in {function}".format(
-                    file=frame["file"],
+                    file=os.path.join(scm_subdirectory, frame["file"])
+                    if scm_subdirectory
+                    else frame["file"],
                     line=frame["line"],
                     function=frame["function"],
                 )

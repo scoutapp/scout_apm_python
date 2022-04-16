@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
+import os
 import sys
 from contextlib import contextmanager
 
@@ -54,7 +55,7 @@ def test_monitor_ignore_exceptions(error_monitor_errors):
 
 @pytest.mark.parametrize(
     "path, params, session, environment, request_components, "
-    "custom_controller, custom_params, expected_error",
+    "custom_controller, scm_subdirectory, custom_params, expected_error",
     [
         (
             "/test/",
@@ -63,6 +64,7 @@ def test_monitor_ignore_exceptions(error_monitor_errors):
             None,
             None,
             None,
+            "scm",
             None,
             {
                 "exception_class": "ZeroDivisionError",
@@ -85,6 +87,7 @@ def test_monitor_ignore_exceptions(error_monitor_errors):
             None,
             None,
             "test-controller",
+            None,
             None,
             {
                 "exception_class": "ZeroDivisionError",
@@ -111,6 +114,7 @@ def test_monitor_ignore_exceptions(error_monitor_errors):
             {"PASSWORD": "hunter2"},
             RequestComponents("sample.app", "DataView", "detail"),
             None,
+            "scm",
             None,
             {
                 "exception_class": "ZeroDivisionError",
@@ -137,6 +141,7 @@ def test_monitor_ignore_exceptions(error_monitor_errors):
             {"PASSWORD": "hunter2"},
             RequestComponents("sample.app", "DataView", "detail"),
             "test-controller",
+            "scm",
             {"baz": 3},
             {
                 "exception_class": "ZeroDivisionError",
@@ -165,13 +170,14 @@ def test_monitor(
     environment,
     request_components,
     custom_controller,
+    scm_subdirectory,
     custom_params,
     expected_error,
     tracked_request,
     error_monitor_errors,
     caplog,
 ):
-    with app_with_scout():
+    with app_with_scout(scout_config={"scm_subdirectory": scm_subdirectory}):
         tracked_request.request_id = "sample_id"
         tracked_request.tags["spam"] = "foo"
         exc_info = 0
@@ -194,7 +200,10 @@ def test_monitor(
     error = error_monitor_errors[0]
     # Remove the trace from the error as it bloats the test.
     filepath, line, func_str = error.pop("trace")[0].split(":")
-    assert filepath.endswith("tests/unit/core/test_error.py")
+    expected_filepath = "tests/unit/core/test_error.py"
+    if scm_subdirectory:
+        expected_filepath = os.path.join(scm_subdirectory, expected_filepath)
+    assert filepath.endswith(expected_filepath)
     # The line number changes between python versions. Make sure it's not empty.
     assert line
     assert func_str == "in test_monitor"
@@ -239,7 +248,7 @@ def test_monitor_with_logged_payload(
     assert "ZeroDivisionError" in actual_message
     assert "division by zero" in actual_message
     assert (
-        "tests/unit/core/test_error.py:219:in test_monitor_with_logged_payload"
+        "tests/unit/core/test_error.py:228:in test_monitor_with_logged_payload"
         in actual_message
     )
     assert "sample.app" in actual_message

@@ -26,16 +26,20 @@ def test_capture_backtrace():
     assert len(stack) >= 1
     for frame in stack:
         assert isinstance(frame, dict)
-        assert set(frame.keys()) == {"file", "line", "function"}
+        assert set(frame.keys()) == {"file", "full_path", "line", "function"}
         assert isinstance(frame["file"], str)
+        assert isinstance(frame["full_path"], str)
         assert isinstance(frame["line"], int)
         assert isinstance(frame["function"], str)
 
     assert stack[0]["file"] == "scout_apm/core/backtrace.py"
+    assert stack[0]["full_path"].endswith("/scout_apm/core/backtrace.py")
     assert stack[0]["function"] == "filter_frames"
     assert stack[1]["file"] == "scout_apm/core/backtrace.py"
+    assert stack[1]["full_path"].endswith("/scout_apm/core/backtrace.py")
     assert stack[1]["function"] == "capture_backtrace"
     assert stack[2]["file"] == "tests/unit/core/test_backtrace.py"
+    assert stack[2]["full_path"].endswith("/tests/unit/core/test_backtrace.py")
     assert stack[2]["function"] == "test_capture_backtrace"
 
 
@@ -56,12 +60,12 @@ def test_filter_frames():
     library_path = {paths["purelib"], paths["platlib"]}.pop()
     frames = [
         {"file": os.path.join(library_path, "test"), "line": 1, "function": "foo"},
-        {"file": "/valid/path", "line": 1, "function": "foo"},
+        {"file": "tests/unit/core/test_backtrace.py", "line": 1, "function": "foo"},
     ]
 
     actual = list(backtrace.filter_frames(frames))
     assert len(actual) == 1
-    assert actual[0]["file"] == "/valid/path"
+    assert actual[0]["file"] == "tests/unit/core/test_backtrace.py"
 
 
 def test_capture_stacktrace():
@@ -70,12 +74,14 @@ def test_capture_stacktrace():
     assert len(stack) == 1
     for frame in stack:
         assert isinstance(frame, dict)
-        assert set(frame.keys()) == {"file", "line", "function"}
+        assert set(frame.keys()) == {"file", "full_path", "line", "function"}
         assert isinstance(frame["file"], str)
+        assert isinstance(frame["full_path"], str)
         assert isinstance(frame["line"], int)
         assert isinstance(frame["function"], str)
 
     assert stack[0]["file"] == "tests/unit/core/test_backtrace.py"
+    assert stack[0]["full_path"].endswith("/tests/unit/core/test_backtrace.py")
     assert stack[0]["function"] == "get_tb"
 
 
@@ -132,5 +138,5 @@ def test_module_filepath_error_flows(error_module):
     module = frame.f_globals["__name__"]
     filepath = frame.f_code.co_filename
     full_path = backtrace.module_filepath(module, filepath)
-    assert full_path != "tests/unit/core/test_backtrace.py"
-    assert full_path.endswith("tests/unit/core/test_backtrace.py")
+    assert full_path != "/tests/unit/core/test_backtrace.py"
+    assert full_path.endswith("/tests/unit/core/test_backtrace.py")

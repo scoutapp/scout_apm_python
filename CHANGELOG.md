@@ -5,6 +5,10 @@
 ### Added
 
 ### Fixed
+- Return the full path for backtraces that are used by the core-agent and
+  APM product. The error stacktraces now prepend the SCM_DIRECTORY setting
+  if it has been set.
+  ([Issue 723](https://github.com/scoutapp/scout_apm_python/issues/723))
 
 ## [2.24.2] 2022-03-02
 
