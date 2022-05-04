@@ -5,6 +5,12 @@
 ### Added
 
 ### Fixed
+
+## [2.25.0] 2022-05-04
+
+### Added
+
+### Fixed
 - Return the full path for backtraces that are used by the core-agent and
   APM product. The error stacktraces now prepend the SCM_DIRECTORY setting
   if it has been set.
