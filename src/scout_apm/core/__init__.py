@@ -64,7 +64,7 @@ def shutdown():
 
     def apm_callback(queue_size):
         if scout_config.value("shutdown_message_enabled"):
-            print(  # noqa: T001
+            print(  # noqa: T001,T201
                 (
                     "Scout draining {queue_size} event{s} for up to"
                     + " {timeout_seconds} seconds"
@@ -78,7 +78,7 @@ def shutdown():
 
     def error_callback(queue_size):
         if scout_config.value("shutdown_message_enabled"):
-            print(  # noqa: T001
+            print(  # noqa: T001,T201
                 (
                     "Scout draining {queue_size} error{s} for up to"
                     + " {timeout_seconds} seconds"
