@@ -5,6 +5,8 @@
 ### Added
 
 ### Fixed
+- Always return a tuple from ``filepaths``.
+  ([Issue 737](https://github.com/scoutapp/scout_apm_python/issues/737))
 
 ## [2.25.0] 2022-05-04
 

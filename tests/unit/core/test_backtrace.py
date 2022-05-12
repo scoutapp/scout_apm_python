@@ -140,3 +140,13 @@ def test_module_filepath_error_flows(error_module):
     full_path = backtrace.module_filepath(module, filepath)
     assert full_path != "/tests/unit/core/test_backtrace.py"
     assert full_path.endswith("/tests/unit/core/test_backtrace.py")
+
+
+def test_filepaths_no_module():
+    """When there is no module a tuple should still be returned"""
+    frame = get_tb().tb_frame
+    frame.f_globals["__name__"] = None
+    actual = backtrace.filepaths(frame)
+    assert len(actual) == 2
+    assert actual[0].endswith("tests/unit/core/test_backtrace.py")
+    assert actual[0].endswith("tests/unit/core/test_backtrace.py")

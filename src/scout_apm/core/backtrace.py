@@ -63,9 +63,7 @@ def filepaths(frame):
     if filepath.endswith(".pyc"):
         filepath = filepath[:-1]
 
-    if not module:
-        return filepath
-    return filepath, module_filepath(module, filepath)
+    return filepath, (module_filepath(module, filepath) if module else filepath)
 
 
 if sys.version_info >= (3, 5):
