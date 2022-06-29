@@ -4,6 +4,8 @@
 
 ### Added
 - Added Django 4.1 to the testing matrix.
+- Added support for Elasticsearch v8+.
+  ([Issue 725](https://github.com/scoutapp/scout_apm_python/issues/725))
 
 ### Fixed
 - Catch SIGQUIT and SIGTERM errors when running core agent. They will now
