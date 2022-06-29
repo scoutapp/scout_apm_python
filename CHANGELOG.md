@@ -3,6 +3,7 @@
 ## Pending
 
 ### Added
+- Added Django 4.1 to the testing matrix.
 
 ### Fixed
 
