@@ -6,6 +6,8 @@
 - Added Django 4.1 to the testing matrix.
 
 ### Fixed
+- Catch SIGQUIT and SIGTERM errors when running core agent. They will now
+  be logged as debug messages rather than exceptions.
 
 ## [2.25.0] 2022-05-12
 

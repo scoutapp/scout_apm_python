@@ -6,6 +6,7 @@ import hashlib
 import json
 import logging
 import os
+import signal
 import subprocess
 import tarfile
 import time
@@ -72,6 +73,12 @@ class CoreAgentManager(object):
                     close_fds=True,
                     stdout=devnull,
                 )
+        except subprocess.CalledProcessError as err:
+            if err.returncode in [signal.SIGTERM, signal.SIGQUIT]:
+                logger.debug("Core agent returned signal: {}".format(err.returncode))
+            else:
+                logger.exception("CalledProcessError running Core Agent")
+            return False
         except Exception:
             # TODO detect failure of launch properly
             logger.exception("Error running Core Agent")
