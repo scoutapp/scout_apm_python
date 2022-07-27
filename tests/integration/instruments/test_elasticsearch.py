@@ -13,6 +13,10 @@ from scout_apm.instruments.elasticsearch import CLIENT_METHODS, ensure_installed
 from tests.compat import mock
 from tests.tools import delete_attributes, skip_if_python_2
 
+skip_if_elasticsearch_v7 = pytest.mark.skipif(
+    elasticsearch.VERSION < (8, 0, 0), reason="Requires ElasticSearch 8"
+)
+
 
 @pytest.fixture(scope="module")
 def elasticsearch_client():
@@ -186,6 +190,7 @@ def test_search_v7_api(elasticsearch_client, tracked_request):
     assert span.operation == "Elasticsearch/Unknown/Search"
 
 
+@skip_if_elasticsearch_v7
 def test_search(elasticsearch_client, tracked_request):
     elasticsearch_client.options().search()
 
@@ -261,7 +266,7 @@ def test_perform_request_missing_url(elasticsearch_client, tracked_request):
 
 
 def test_perform_request_bad_url(elasticsearch_client, tracked_request):
-    with pytest.raises(AttributeError):
+    with pytest.raises((TypeError, AttributeError)):
         # Transport instrumentation doesn't crash if url has the wrong type.
         # This raises a TypeError when calling the original method.
         elasticsearch_client.transport.perform_request("GET", None, body=None)
