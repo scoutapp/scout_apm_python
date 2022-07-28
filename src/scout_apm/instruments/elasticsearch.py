@@ -4,16 +4,17 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 from collections import namedtuple
 
-import elasticsearch
 import wrapt
 
 from scout_apm.compat import get_pos_args, unwrap_decorators
 from scout_apm.core.tracked_request import TrackedRequest
 
 try:
+    from elasticsearch import VERSION as ELASTICSEARCH_VERSION
     from elasticsearch import Elasticsearch
 except ImportError:  # pragma: no cover
     Elasticsearch = None
+    ELASTICSEARCH_VERSION = (0, 0, 0)
 
 try:
     # Transport was moved to elastic_transport as of v8.0.0
@@ -100,7 +101,7 @@ VERSIONED_CLIENT_METHODS = {
 }
 
 CLIENT_METHODS = VERSIONED_CLIENT_METHODS["v7"][:]
-if elasticsearch.VERSION > (8, 0, 0):
+if ELASTICSEARCH_VERSION > (8, 0, 0):
     CLIENT_METHODS += VERSIONED_CLIENT_METHODS["v8"]
 
 

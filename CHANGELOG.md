@@ -1,5 +1,11 @@
 # Changelog
 
+## Pending
+
+### Fixed
+- Wrap an import of elasticsearch in a try/except.
+  ([Issue 744](https://github.com/scoutapp/scout_apm_python/issues/744))
+
 ## [2.26.0] 2022-07-27
 
 ### Added
