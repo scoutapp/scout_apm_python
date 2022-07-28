@@ -1,6 +1,6 @@
 # Changelog
 
-## Pending
+## [2.26.1] 2022-07-28
 
 ### Fixed
 - Wrap an import of elasticsearch in a try/except.
