@@ -65,7 +65,7 @@ setup(
         'contextvars ; python_version >= "3.6" and python_version < "3.7"',
         'importlib-metadata ; python_version < "3.8"',
         "psutil>=5,<6",
-        'urllib3 < 1.25 ; python_version < "3.5"',
+        'urllib3[secure] < 1.25 ; python_version < "3.5"',
         'urllib3 < 2 ; python_version >= "3.5"',
         "wrapt>=1.10,<2.0",
     ],
