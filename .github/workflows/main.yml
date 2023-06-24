@@ -26,7 +26,7 @@ jobs:
 
     services:
       elasticsearch:
-        image: elasticsearch:8.2.3
+        image: elasticsearch:8.7.0
         ports:
         - 9200:9200
         env:
