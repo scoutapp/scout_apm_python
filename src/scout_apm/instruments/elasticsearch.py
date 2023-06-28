@@ -97,6 +97,7 @@ VERSIONED_CLIENT_METHODS = {
     ],
     "v8": [
         ClientMethod("knn_search", True),
+        ClientMethod("health_report", False),
     ],
 }
 

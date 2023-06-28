@@ -194,7 +194,9 @@ class Derived(object):
     def derive_core_agent_full_name(self):
         triple = self.config.value("core_agent_triple")
         if not platform_detection.is_valid_triple(triple):
-            warnings.warn("Invalid value for core_agent_triple: {}".format(triple))
+            warnings.warn(
+                "Invalid value for core_agent_triple: {}".format(triple), stacklevel=2
+            )
         return "{name}-{version}-{triple}".format(
             name="scout_apm_core",
             version=self.config.value("core_agent_version"),
