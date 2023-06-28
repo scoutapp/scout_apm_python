@@ -19,7 +19,6 @@ jobs:
       fail-fast: false
       matrix:
         python-version:
-        - "3.6"
         - "3.7"
         - "3.8"
         - "3.9"
@@ -27,7 +26,7 @@ jobs:
 
     services:
       elasticsearch:
-        image: elasticsearch:8.2.3
+        image: elasticsearch:8.7.0
         ports:
         - 9200:9200
         env:
@@ -71,8 +70,8 @@ jobs:
       fail-fast: false
       matrix:
         python-version:
-        - "2.7"
         - "3.5"
+        - "3.6"
 
     services:
       elasticsearch:
@@ -111,15 +110,57 @@ jobs:
         ENV_PREFIX=$(tr -C -d "0-9" <<< "${{ matrix.python-version }}" | cut -c -3)
         TOXENV=$(tox --listenvs | grep "^py$ENV_PREFIX" | tr '\n' ',') python -m tox
 
-  tests-ubuntu-18:
-    name: Python ${{ matrix.python-version }} Ubuntu 18
-    runs-on: ubuntu-18.04
+
+  tests-python-27:
+    name: Python 2.7
+    runs-on: ubuntu-20.04
+    container:
+      image: python:2.7.18-buster
 
     strategy:
       fail-fast: false
-      matrix:
-        python-version:
-        - "3.4"
+
+    services:
+      elasticsearch:
+        image: elasticsearch:7.10.1
+        ports:
+          - 9200:9200
+        env:
+          discovery.type: single-node
+
+      mongodb:
+        image: mongo:4
+        ports:
+          - 27017:27017
+
+      redis:
+        image: redis:6
+        ports:
+          - 6379:6379
+
+    env:
+      ELASTICSEARCH_URL: http://localhost:9200/
+      MONGODB_URL: mongodb://localhost:27017/
+      REDIS_URL: redis://localhost:6379/0
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Upgrade packaging tools
+        run: python -m pip install --upgrade pip setuptools virtualenv
+      - name: Install dependencies
+        run: python -m pip install --upgrade tox
+      - name: Run tox targets for 2.7
+        run: |
+          TOXENV=$(tox --listenvs | grep "^py27" | tr '\n' ',') python -m tox
+
+  tests-python-34:
+    name: Python 3.4
+    runs-on: ubuntu-20.04
+    container:
+      image: python:3.4.10
+
+    strategy:
+      fail-fast: false
 
     services:
       elasticsearch:
@@ -146,14 +187,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
     - name: Upgrade packaging tools
       run: python -m pip install --upgrade pip setuptools virtualenv
     - name: Install dependencies
       run: python -m pip install --upgrade tox
-    - name: Run tox targets for ${{ matrix.python-version }}
+    - name: Run tox targets for 3.4
       run: |
-        ENV_PREFIX=$(tr -C -d "0-9" <<< "${{ matrix.python-version }}" | cut -c -3)
-        TOXENV=$(tox --listenvs | grep "^py$ENV_PREFIX" | tr '\n' ',') python -m tox
+        TOXENV=$(tox --listenvs | grep "^py34" | tr '\n' ',') python -m tox

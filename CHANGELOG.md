@@ -1,5 +1,16 @@
 # Changelog
 
+## Pending
+
+### Added
+
+### Fixed
+- Fix CI for python 2.7, 3.4, 3.5, 3.6, 3.8
+- Update ElasticSearch support for 8.7.0 (``health_check``).
+- Support flask_sqlalchemy v3. This requires a integration
+  change where ``instrument_sqlalchemy`` is called before ``db.init_app()``.
+- Disable tests for SQLAlchemy v2 to allow CI tests to pass.
+
 ## [2.26.1] 2022-07-28
 
 ### Fixed
