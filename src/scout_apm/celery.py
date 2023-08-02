@@ -80,7 +80,7 @@ def task_failure_callback(
     kwargs=None,
     traceback=None,
     einfo=None,
-    **remaining
+    **remaining,
 ):
     tracked_request = TrackedRequest.instance()
     tracked_request.tag("error", "true")

@@ -95,6 +95,7 @@ class ScoutMiddleware(object):
                     + " more detail."
                 ).format(self.__class__.__name__),
                 RuntimeWarning,
+                stacklevel=2,
             )
             operation = "Controller/{}.{}.{}".format(
                 resource.__module__, resource.__class__.__name__, req.method
