@@ -1,3 +1,10 @@
+[tool.poetry]
+name="scout_apm_python"
+description = "Scout APM Python Agent"
+readme = "README.md"
+version = "0.1.0"
+authors = ["Developers <dev@scoutapm.com>"]
+
 [build-system]
 requires = ["setuptools >= 40.6.0", "wheel"]
 build-backend = "setuptools.build_meta"
