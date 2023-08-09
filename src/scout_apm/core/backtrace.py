@@ -153,6 +153,6 @@ def capture():
     warnings.warn(
         "capture is deprecated, instead use capture_backtrace instead.",
         DeprecationWarning,
-        2,
+        stacklevel=2,
     )
     return capture_backtrace()

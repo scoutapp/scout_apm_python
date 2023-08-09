@@ -33,7 +33,6 @@ def ensure_sql_instrumented():
         connection_created.connect(install_db_execute_hook)
         logger.debug("Installed DB connection created signal handler")
     else:
-
         CursorWrapper.execute = execute_wrapper(CursorWrapper.execute)
         CursorWrapper.executemany = executemany_wrapper(CursorWrapper.executemany)
 
