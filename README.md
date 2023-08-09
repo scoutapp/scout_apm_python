@@ -16,16 +16,14 @@ Python 2.7 or 3.4+.
 Scout APM has integrations for the following frameworks:
 
 * Bottle 0.12+
-* CherryPy 18.0.0+
 * Celery 3.1+
-* Django 1.8+
+* Django 3.2+
 * Dramatiq 1.0+
 * Falcon 2.0+
 * Flask 0.10+
 * Huey 2.0+
 * Hug 2.5.1+
 * Nameko 2.0+
-* Pyramid 1.8+
 * RQ 1.0+
 * Starlette 0.12+
 

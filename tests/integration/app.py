@@ -20,7 +20,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 
 import scout_apm.api
-from tests.integration import test_bottle, test_django, test_flask, test_pyramid
+from tests.integration import test_bottle, test_django, test_flask
 
 logger = logging.getLogger(__name__)
 
@@ -36,8 +36,6 @@ with test_django.app_with_scout() as app:
     SUB_APPS["/django"] = app
 with test_flask.app_with_scout() as app:
     SUB_APPS["/flask"] = app
-with test_pyramid.app_with_scout() as app:
-    SUB_APPS["/pyramid"] = app
 
 
 def app(environ, start_response):
@@ -84,14 +82,6 @@ def app(environ, start_response):
                 <li><a href="/flask/">Home</a></li>
                 <li><a href="/flask/hello/">Hello</a></li>
                 <li><a href="/flask/crash/">Crash</a></li>
-            </ul>
-        </div>
-        <div class="app">
-            <h2>Pyramid</h2>
-            <ul>
-                <li><a href="/pyramid/">Home</a></li>
-                <li><a href="/pyramid/hello/">Hello</a></li>
-                <li><a href="/pyramid/crash/">Crash</a></li>
             </ul>
         </div>
     </div>
