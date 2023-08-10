@@ -72,7 +72,6 @@ setup(
         "Framework :: Django :: 3.2",
         "Framework :: Django :: 4.0",
         "Framework :: Flask",
-        "Framework :: Pyramid",
         "Intended Audience :: Developers",
         "Topic :: System :: Monitoring",
         "License :: OSI Approved :: MIT License",
