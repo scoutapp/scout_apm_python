@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 import os
+from functools import partial
 
 import celery
 import psutil
@@ -257,7 +258,7 @@ def error_monitor_errors(request):
             return wrapped(*args, **kwargs)
 
     orig = ErrorServiceThread.send
-    ErrorServiceThread.send = capture_error(orig)
+    ErrorServiceThread.send = partial(capture_error(orig))
     try:
         yield errors
     finally:

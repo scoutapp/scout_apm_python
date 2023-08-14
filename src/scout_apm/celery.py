@@ -8,14 +8,10 @@ from celery.signals import before_task_publish, task_failure, task_postrun, task
 
 try:
     import django
+    from django.views.debug import SafeExceptionReporterFilter
 
-    if django.VERSION < (3, 1):
-        from django.views.debug import get_safe_settings
-    else:
-        from django.views.debug import SafeExceptionReporterFilter
-
-        def get_safe_settings():
-            return SafeExceptionReporterFilter().get_safe_settings()
+    def get_safe_settings():
+        return SafeExceptionReporterFilter().get_safe_settings()
 
 except ImportError:
     # Django not installed
