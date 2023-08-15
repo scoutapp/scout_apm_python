@@ -12,7 +12,7 @@ Monitor the performance of Python Django apps, Flask apps, and Celery workers wi
 ## Requirements
 
 Python 3.8+.
-For legacy Python versions, including 2.7 and 3.4+, pin scout-apm to 2.26.1.
+For legacy Python versions, including 2.7 and 3.4+, pin scout-apm to <=2.26.1.
 
 Scout APM has integrations for the following frameworks:
 
@@ -24,7 +24,6 @@ Scout APM has integrations for the following frameworks:
 * Flask 0.10+
 * Huey 2.0+
 * Hug 2.5.1+
-* Nameko 2.0+
 * RQ 1.0+
 * Starlette 0.12+
 
