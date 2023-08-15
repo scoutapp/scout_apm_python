@@ -9,8 +9,8 @@ on:
   pull_request:
 
 jobs:
-  cibuildwheel_py37plus:
-    name: Build python 3.7+ ${{ matrix.manylinux_image }} wheels
+  cibuildwheel_py38plus:
+    name: Build python 3.8+ ${{ matrix.manylinux_image }} wheels
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -18,13 +18,13 @@ jobs:
         python: [ '3.10' ]
         manylinux_image: [ manylinux2010, manylinux2014, manylinux_2_24 ]
         # Disable for platforms where pure Python wheels would be generated
-        cibw_skip: [ "pp37-* pp38-* pp39-* pp310-*" ]
+        cibw_skip: [ "pp38-* pp39-* pp310-*" ]
         include:
           # Exclude building 3.10 wheel for manylinux1.
           - os: ubuntu-20.04
             python: 3.9
             manylinux_image: manylinux1
-            cibw_skip: "pp37-* pp38-* pp39-* pp310-* cp310-*"
+            cibw_skip: "pp38-* pp39-* pp310-* cp310-*"
     steps:
       - uses: actions/checkout@v2
 
@@ -62,48 +62,12 @@ jobs:
         with:
           path: ./wheelhouse/*.whl
 
-  cibuildwheel_py35py36:
-    name: Build python 3.5, 3.6 platform wheels
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ ubuntu-18.04 ]
-        python: [ 3.9 ]
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        name: Install Python
-        with:
-          python-version: ${{ matrix.python }}
-
-      - name: Install cibuildwheel
-        run: |
-          python -m pip install --upgrade pip "cibuildwheel==1.12.0"
-
-      - name: Set up QEMU
-        # For cross-architecture builds
-        # https://cibuildwheel.readthedocs.io/en/stable/faq/#emulation
-        if: runner.os == 'Linux'
-        uses: docker/setup-qemu-action@v1
-        with:
-          platforms: all
-      - name: Build binary wheels
-        env:
-          CIBW_BUILD_VERBOSITY: 1
-          CIBW_BUILD: "cp35-* cp36-*"
-          CIBW_ARCHS_LINUX: "auto aarch64"
-        run: python -m cibuildwheel
-
-      - uses: actions/upload-artifact@v2
-        with:
-          path: ./wheelhouse/*.whl
-
   build_pure_wheels:
     name: Build pure python wheels
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python: [3.9, 2.7]
+        python: [3.9]
     steps:
       - uses: actions/checkout@v2
 
@@ -143,7 +107,7 @@ jobs:
           path: dist/*.tar.gz
 
   upload_pypi:
-    needs: [cibuildwheel_py37plus, cibuildwheel_py35py36, build_pure_wheels, build_sdist]
+    needs: [cibuildwheel_py38plus, build_pure_wheels, build_sdist]
     runs-on: ubuntu-20.04
     steps:
       - name: Download distributions for publishing.

@@ -34,7 +34,7 @@ key in `tox.ini`, which you can list with `tox -l`. Pick one for a Python
 version that you have installed and run the tests, for example:
 
 ```
-tox -e py39-django31
+python -m tox -e py39-django31
 ```
 
 If you run `tox` with no arguments, it will test all environments. This will
