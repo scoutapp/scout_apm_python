@@ -4,6 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from contextlib import contextmanager
 
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import text
 from webtest import TestApp
 
 from scout_apm.compat import kwargs_only
@@ -20,17 +21,19 @@ def app_with_scout():
         db = SQLAlchemy(app)
         # Setup according to https://docs.scoutapm.com/#flask-sqlalchemy
         instrument_sqlalchemy(db)
-        conn = db.engine.connect()
+        with app.app_context():
+            conn = db.engine.connect()
 
-        @app.route("/sqlalchemy/")
-        def sqlalchemy():
-            result = conn.execute("SELECT 'Hello from the DB!'")
-            return list(result)[0][0]
+            @app.route("/sqlalchemy/")
+            def sqlalchemy():
+                statement = text("SELECT 'Hello from the DB!'")
+                result = conn.execute(statement)
+                return list(result)[0][0]
 
-        try:
-            yield app
-        finally:
-            conn.close()
+            try:
+                yield app
+            finally:
+                conn.close()
 
 
 def test_sqlalchemy(tracked_requests):
