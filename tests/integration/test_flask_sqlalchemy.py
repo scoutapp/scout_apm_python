@@ -42,7 +42,7 @@ def test_sqlalchemy(tracked_requests):
 
     assert response.status_int == 200
     assert response.text == "Hello from the DB!"
-    # assert len(tracked_requests) == 1
+    assert len(tracked_requests) == 1
     tracked_request = tracked_requests[0]
     spans = tracked_request.complete_spans
 
