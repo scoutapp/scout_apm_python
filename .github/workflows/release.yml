@@ -18,18 +18,18 @@ jobs:
         python: [ '3.10' ]
         manylinux_image: [ manylinux2014, manylinux_2_24 ]
         # Disable for platforms where pure Python wheels would be generated
-        cibw_skip: [ "pp38-* pp39-* pp310-* pp311-*" ]
+        cibw_skip: [ "pp38-* pp39-* pp310-* pp311-*", "cp312-*", "pp312-*"]
         include:
           # Exclude building 3.10+ wheels for manylinux1.
           - os: ubuntu-20.04
             python: 3.9
             manylinux_image: manylinux1
-            cibw_skip: "pp38-* pp39-* pp310-* cp310-* pp311-* cp311-*"
+            cibw_skip: "pp38-* pp39-* pp310-* cp310-* pp311-* cp311-* cp312-* pp312-*"
           # Exclude building 3.11+ wheels for manylinux2010.
           - os: ubuntu-20.04
             python: '3.10'
             manylinux_image: manylinux2010
-            cibw_skip: "pp38-* pp39-* pp310-* pp311-* cp311-*"
+            cibw_skip: "pp38-* pp39-* pp310-* pp311-* cp311-* cp312-* pp312-*"
     steps:
       - uses: actions/checkout@v2
 

@@ -4,6 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from contextlib import contextmanager
 
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import text
 from webtest import TestApp
 
 from scout_apm.compat import kwargs_only
@@ -28,7 +29,7 @@ def app_with_scout():
 
             @app.route("/sqlalchemy/")
             def sqlalchemy():
-                result = conn.execute("SELECT 'Hello from the DB!'")
+                result = conn.execute(text("SELECT 'Hello from the DB!'"))
                 return list(result)[0][0]
 
             try:
