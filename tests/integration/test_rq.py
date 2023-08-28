@@ -8,6 +8,7 @@ from contextlib import contextmanager
 import pytest
 import redis
 from rq import Queue
+from rq.version import VERSION
 
 import scout_apm.rq
 from scout_apm.api import Config
@@ -62,13 +63,20 @@ def app_with_scout(redis_conn, scout_config=None):
         Config.reset_all()
 
 
+def get_job_result(job):
+    """Helper wrapper around an old rq API"""
+    if VERSION <= "1.13.0":
+        return job.result
+    return job.return_value()
+
+
 def test_hello(redis_conn, tracked_requests):
     with app_with_scout(redis_conn=redis_conn) as app:
         job = app.queue.enqueue(hello)
         app.worker.work(burst=True)
 
     assert job.is_finished
-    assert job.result == "Hello World!"
+    assert get_job_result(job) == "Hello World!"
     assert len(tracked_requests) == 1
     tracked_request = tracked_requests[0]
     task_id = tracked_request.tags["task_id"]
@@ -108,5 +116,5 @@ def test_no_monitor(redis_conn, tracked_requests):
         app.worker.work(burst=True)
 
     assert job.is_finished
-    assert job.result == "Hello World!"
+    assert get_job_result(job) == "Hello World!"
     assert tracked_requests == []
