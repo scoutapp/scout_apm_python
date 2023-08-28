@@ -5,7 +5,8 @@
 ### Added
 
 ### Fixed
-- Fix CI for python 2.7, 3.4, 3.5, 3.6, 3.8
+- Fix CI for 3.8+
+- Deprecates support for Python 2.7, 3.4, 3.5, 3.6.
 - Update ElasticSearch support for 8.7.0 (``health_check``).
 - Support flask_sqlalchemy v3. This requires a integration
   change where ``instrument_sqlalchemy`` is called before ``db.init_app()``.
