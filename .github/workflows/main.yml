@@ -22,10 +22,11 @@ jobs:
         - "3.8"
         - "3.9"
         - "3.10"
+        - "3.11"
 
     services:
       elasticsearch:
-        image: elasticsearch:8.2.3
+        image: elasticsearch:8.7.0
         ports:
         - 9200:9200
         env:
