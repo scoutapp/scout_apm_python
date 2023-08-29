@@ -73,6 +73,11 @@ COLLECTION_METHODS = [
     "replace_one",
     "update_many",
     "update_one",
+    "drop_search_index",
+    "create_search_indexes",
+    "create_search_index",
+    "list_search_indexes",
+    "update_search_index",
 ]
 
 COLLECTION_METHODS_V3 = COLLECTION_METHODS + [
