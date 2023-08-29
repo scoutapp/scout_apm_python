@@ -16,9 +16,9 @@ jobs:
       matrix:
         os: [ ubuntu-20.04 ]
         python: [ '3.10' ]
-        manylinux_image: [ manylinux2014, manylinux_2_24 ]
+        manylinux_image: [ manylinux2014, manylinux_2_28 ]
         # Disable for platforms where pure Python wheels would be generated
-        cibw_skip: [ "pp38-* pp39-* pp310-* pp311-*", "cp312-*", "pp312-*"]
+        cibw_skip: "pp38-* pp39-* pp310-* pp311-* cp312-* pp312-*"
         include:
           # Exclude building 3.10+ wheels for manylinux1.
           - os: ubuntu-20.04
