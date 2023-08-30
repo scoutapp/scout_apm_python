@@ -80,6 +80,7 @@ jobs:
         - 9200:9200
         env:
           discovery.type: single-node
+          xpack.security.enabled: false
 
       mongodb:
         image: mongo:4
