@@ -48,7 +48,6 @@ jobs:
           CIBW_SKIP: ${{ matrix.cibw_skip }}
           CIBW_BUILD_VERBOSITY: 1
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
-          CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
         run: python -m cibuildwheel
 
       - uses: actions/upload-artifact@v2
