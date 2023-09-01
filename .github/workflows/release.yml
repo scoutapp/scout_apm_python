@@ -38,7 +38,6 @@ jobs:
         uses: docker/setup-qemu-action@v1
         with:
           platforms: all
-        run: echo "set CIBW_MANYLINUX_AARCH64_IMAGE=${{ env.CIBW_MANYLINUX_AARCH64_IMAGE }}"
       - name: Build binary wheels
         env:
           CIBW_SKIP: ${{ matrix.cibw_skip }}
