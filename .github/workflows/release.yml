@@ -18,18 +18,7 @@ jobs:
         python: ['3.10']
         manylinux_image: [ manylinux2014, manylinux_2_28 ]
         # Disable for platforms where pure Python wheels would be generated
-        cibw_skip: [pp38-*, pp39-*, pp310-*, pp311-*, cp312-*, pp312-*]
-        include:
-          # Exclude building 3.10+ wheels for manylinux1.
-          - os: ubuntu-20.04
-            python: 3.9
-            manylinux_image: manylinux1
-            cibw_skip: [pp38-*, pp39-*, pp310-*, cp310-*, pp311-*, cp311-*, cp312-*, pp312-*]
-          # Exclude building 3.11+ wheels for manylinux2010.
-          - os: ubuntu-20.04
-            python: '3.10'
-            manylinux_image: manylinux2010
-            cibw_skip: [pp38-*, pp39-*, pp310-*, pp311-*, cp311-*, cp312-*, pp312-*]
+        cibw_skip: [pp38-*, pp39-*, pp310-*, pp311-*, pp312-*, cp312-*]
     steps:
       - uses: actions/checkout@v2
 
@@ -49,8 +38,7 @@ jobs:
         uses: docker/setup-qemu-action@v1
         with:
           platforms: all
-      - name: Set AArch64 env if needed
-        if: matrix.manylinux_image != 'manylinux1' && matrix.manylinux_image != 'manylinux2010'
+      - name: Set AArch64 env
         env:
           CIBW_MANYLINUX_AARCH64_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_ARCHS_LINUX: "auto aarch64"
