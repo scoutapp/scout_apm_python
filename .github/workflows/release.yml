@@ -38,16 +38,14 @@ jobs:
         uses: docker/setup-qemu-action@v1
         with:
           platforms: all
-      - name: Set AArch64 env
-        env:
-          CIBW_MANYLINUX_AARCH64_IMAGE: ${{ matrix.manylinux_image }}
-          CIBW_ARCHS_LINUX: "auto aarch64"
         run: echo "set CIBW_MANYLINUX_AARCH64_IMAGE=${{ env.CIBW_MANYLINUX_AARCH64_IMAGE }}"
       - name: Build binary wheels
         env:
           CIBW_SKIP: ${{ matrix.cibw_skip }}
           CIBW_BUILD_VERBOSITY: 1
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
+          CIBW_MANYLINUX_AARCH64_IMAGE: ${{ matrix.manylinux_image }}
+          CIBW_ARCHS_LINUX: "auto aarch64"
         run: python -m cibuildwheel
 
       - uses: actions/upload-artifact@v2
