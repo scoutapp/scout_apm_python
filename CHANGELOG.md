@@ -1,17 +1,15 @@
 # Changelog
 
-## Pending
-
-### Added
-
 ## [3.0.0rc1] 2023-09-08
 
 Version 3.0.0 drops support for Python 2.7 and < 3.8, as well as Django < 3.2.
 If you need to continue using Python < 3.8 or Django < 3.2, please continue using v2.26.1.
 
+### Added
+- Add formal support for Python 3.11 and Django 4.2.
+
 ### Fixed
 - Fix CI for 3.8+.
-- Add formal support for Python 3.11 and Django 4.2.
 - Remove support for Python 2.7, 3.4, 3.5, 3.6.
 - Remove support for Django < 3.2.
 - Remove support for CherryPy, Nameko, and Pyramid.
