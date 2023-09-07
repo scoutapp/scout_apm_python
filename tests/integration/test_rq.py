@@ -12,7 +12,7 @@ from rq.version import VERSION
 
 import scout_apm.rq
 from scout_apm.api import Config
-from scout_apm.compat import kwargs_only, string_type
+from scout_apm.compat import kwargs_only
 from scout_apm.instruments.redis import ensure_installed
 
 
@@ -80,7 +80,7 @@ def test_hello(redis_conn, tracked_requests):
     assert len(tracked_requests) == 1
     tracked_request = tracked_requests[0]
     task_id = tracked_request.tags["task_id"]
-    assert isinstance(task_id, string_type) and len(task_id) == 36
+    assert isinstance(task_id, str) and len(task_id) == 36
     assert tracked_request.tags["queue"] == "myqueue"
     assert 0.0 < tracked_request.tags["queue_time"] < 60.0
     assert len(tracked_request.complete_spans) == 2
@@ -98,7 +98,7 @@ def test_fail(redis_conn, tracked_requests):
 
     tracked_request = tracked_requests[0]
     task_id = tracked_request.tags["task_id"]
-    assert isinstance(task_id, string_type) and len(task_id) == 36
+    assert isinstance(task_id, str) and len(task_id) == 36
     assert tracked_request.tags["queue"] == "myqueue"
     assert 0.0 < tracked_request.tags["queue_time"] < 60.0
     assert tracked_request.tags["error"] == "true"

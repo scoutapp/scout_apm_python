@@ -18,7 +18,7 @@ except ImportError:
     get_safe_settings = None
 
 import scout_apm.core
-from scout_apm.compat import datetime_to_timestamp, string_type
+from scout_apm.compat import datetime_to_timestamp
 from scout_apm.core.config import scout_config
 from scout_apm.core.error import ErrorMonitor
 from scout_apm.core.tracked_request import TrackedRequest
@@ -110,9 +110,7 @@ def task_failure_callback(
     # Celery occassionally will send the traceback as a string rather
     # than a Stack trace object as the docs indicate. In that case,
     # fall back to the billiard ExceptionInfo instance
-    traceback = (
-        traceback if traceback and not isinstance(traceback, string_type) else einfo.tb
-    )
+    traceback = traceback if traceback and not isinstance(traceback, str) else einfo.tb
     exc_info = (exception.__class__, exception, traceback)
     ErrorMonitor.send(
         exc_info,

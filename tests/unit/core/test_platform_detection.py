@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import pytest
 
-from scout_apm.compat import string_type
 from scout_apm.core import platform_detection
 from tests.compat import mock
 
@@ -11,7 +10,7 @@ from tests.compat import mock
 def test_get_triple():
     triple = platform_detection.get_triple()
 
-    assert isinstance(triple, string_type)
+    assert isinstance(triple, str)
     assert platform_detection.is_valid_triple(triple)
 
 
