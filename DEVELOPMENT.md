@@ -100,7 +100,6 @@ Re-activate the virtualenv to export the env variables:
 
 Run the test app:
 
-
     $ PYTHONPATH=. tests/integration/app.py
 
 You can also run it with gunicorn:
