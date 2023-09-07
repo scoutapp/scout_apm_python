@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # coding=utf-8
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 """
 Test application that proxies requests to various frameworks.
@@ -14,8 +13,6 @@ Run it with Python's built-in WSGI server or with a third-party server:
 Configure it with the SCOUT_MONITOR, SCOUT_KEY, and SCOUT_NAME env variables.
 
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
 

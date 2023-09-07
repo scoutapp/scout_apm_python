@@ -1,5 +1,4 @@
 # coding=utf-8
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
 import os
@@ -248,7 +247,7 @@ def test_monitor_with_logged_payload(
     assert "ZeroDivisionError" in actual_message
     assert "division by zero" in actual_message
     assert (
-        "tests/unit/core/test_error.py:228:in test_monitor_with_logged_payload"
+        "tests/unit/core/test_error.py:227:in test_monitor_with_logged_payload"
         in actual_message
     )
     assert "sample.app" in actual_message

@@ -7,7 +7,6 @@ thread may change from when the fixture is started to when the tests
 run. This is only a problem on python 3.6 and results in getting the
 tracked_instance in the test itself.
 """
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import asyncio
 import contextvars
