@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 from contextlib import contextmanager
+from types import SimpleNamespace
 
 import celery
 import pytest
@@ -13,7 +14,7 @@ import scout_apm.celery
 from scout_apm.api import Config
 from scout_apm.compat import kwargs_only
 from scout_apm.core.config import scout_config
-from tests.compat import SimpleNamespace, mock
+from tests.compat import mock
 
 # http://docs.celeryproject.org/en/latest/userguide/testing.html#py-test
 skip_unless_celery_4_plus = pytest.mark.skipif(

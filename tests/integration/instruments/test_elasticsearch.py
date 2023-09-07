@@ -11,7 +11,7 @@ import pytest
 
 from scout_apm.instruments.elasticsearch import CLIENT_METHODS, ensure_installed
 from tests.compat import mock
-from tests.tools import delete_attributes, skip_if_python_2
+from tests.tools import delete_attributes
 
 skip_if_elasticsearch_v7 = pytest.mark.skipif(
     elasticsearch.VERSION < (8, 0, 0), reason="Requires ElasticSearch 8"
@@ -48,7 +48,6 @@ def test_all_client_methods_exist(method_name):
     assert hasattr(elasticsearch.Elasticsearch, method_name)
 
 
-@skip_if_python_2
 @pytest.mark.parametrize(
     ["method_name", "takes_index_argument"],
     [[m.name, m.takes_index_argument] for m in CLIENT_METHODS],
@@ -199,7 +198,6 @@ def test_search(elasticsearch_client, tracked_request):
     assert span.operation == "Elasticsearch/Unknown/Search"
 
 
-@skip_if_python_2  # Cannot unwrap decorators on Python 2
 def test_search_arg_named_index(elasticsearch_client, tracked_request):
     with pytest.raises(elasticsearch.exceptions.NotFoundError):
         # body, index

@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import logging
 import os
-import sys
 
 from scout_apm.core.backtrace import capture_stacktrace
 from scout_apm.core.config import scout_config
@@ -12,7 +11,6 @@ from scout_apm.core.tracked_request import TrackedRequest
 from scout_apm.core.web_requests import RequestComponents, filter_element
 
 logger = logging.getLogger(__name__)
-text_type = str if sys.version_info[0] >= 3 else unicode  # noqa: F821
 
 
 class ErrorMonitor(object):
@@ -56,7 +54,7 @@ class ErrorMonitor(object):
         scm_subdirectory = scout_config.value("scm_subdirectory")
         error = {
             "exception_class": exc_class.__name__,
-            "message": text_type(exc_value),
+            "message": str(exc_value),
             "request_id": tracked_request.request_id,
             "request_uri": request_path,
             "request_params": filter_element("", request_params)

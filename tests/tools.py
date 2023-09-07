@@ -15,13 +15,6 @@ from scout_apm.core import objtrace
 from scout_apm.core.n_plus_one_tracker import NPlusOneTracker
 from tests.compat import mock, nullcontext
 
-skip_if_python_2 = pytest.mark.skipif(
-    sys.version_info[0] < 3, reason="Requires Python 3"
-)
-skip_if_python_3 = pytest.mark.skipif(
-    sys.version_info[0] >= 3, reason="Requires Python 2"
-)
-
 skip_if_objtrace_not_extension = pytest.mark.skipif(
     not objtrace.is_extension, reason="Requires objtrace C extension"
 )

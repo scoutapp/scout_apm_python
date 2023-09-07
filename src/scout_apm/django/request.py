@@ -1,9 +1,6 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import sys
-
-from scout_apm.compat import string_types
 from scout_apm.core.web_requests import RequestComponents
 
 
@@ -122,16 +119,10 @@ def _get_tastypie_components(request, view_func):
     except ImportError:
         return None
 
-    if sys.version_info[0] == 2:  # pragma: no cover
-        try:
-            wrapper = view_func.__closure__[0].cell_contents
-        except (AttributeError, IndexError):
-            return None
-    else:
-        try:
-            wrapper = view_func.__wrapped__
-        except AttributeError:
-            return None
+    try:
+        wrapper = view_func.__wrapped__
+    except AttributeError:
+        return None
 
     if not hasattr(wrapper, "__closure__") or len(wrapper.__closure__) != 2:
         return None
@@ -141,7 +132,7 @@ def _get_tastypie_components(request, view_func):
         return None
 
     method_name = wrapper.__closure__[1].cell_contents
-    if not isinstance(method_name, string_types):  # pragma: no cover
+    if not isinstance(method_name, str):  # pragma: no cover
         return None
 
     if method_name.startswith("dispatch_"):  # pragma: no cover

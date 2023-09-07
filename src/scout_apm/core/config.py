@@ -6,7 +6,6 @@ import os
 import re
 import warnings
 
-from scout_apm.compat import string_type
 from scout_apm.core import platform_detection
 
 logger = logging.getLogger(__name__)
@@ -273,7 +272,7 @@ class Null(object):
 def convert_to_bool(value):
     if isinstance(value, bool):
         return value
-    if isinstance(value, string_type):
+    if isinstance(value, str):
         return value.lower() in ("yes", "true", "t", "1")
     # Unknown type - default to false?
     return False
@@ -291,7 +290,7 @@ def convert_to_list(value):
         return value
     if isinstance(value, tuple):
         return list(value)
-    if isinstance(value, string_type):
+    if isinstance(value, str):
         # Split on commas
         return [item.strip() for item in value.split(",") if item]
     # Unknown type - default to empty?

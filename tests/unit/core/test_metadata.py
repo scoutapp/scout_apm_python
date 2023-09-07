@@ -1,13 +1,13 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import sys
+from types import SimpleNamespace
 
 import pytest
 
 from scout_apm.core.agent.socket import CoreAgentSocketThread
 from scout_apm.core.metadata import get_python_packages_versions, report_app_metadata
-from tests.compat import SimpleNamespace, mock
+from tests.compat import mock
 from tests.tools import pretend_package_unavailable
 
 
@@ -29,10 +29,7 @@ def test_report_app_metadata(mock_send):
 
 @mock.patch.object(CoreAgentSocketThread, "send")
 def test_report_app_metadata_no_importlib_metadata(mock_send):
-    if sys.version_info >= (3, 8):
-        module_name = "importlib"
-    else:
-        module_name = "importlib_metadata"
+    module_name = "importlib"
     with pretend_package_unavailable(module_name):
         report_app_metadata()
 
@@ -46,10 +43,7 @@ def test_report_app_metadata_no_importlib_metadata(mock_send):
 
 
 def test_get_python_packages_versions_None_package():
-    if sys.version_info >= (3, 8):
-        target = "importlib.metadata.distributions"
-    else:
-        target = "importlib_metadata.distributions"
+    target = "importlib.metadata.distributions"
 
     def yielding_nones():
         yield SimpleNamespace(metadata={"Name": "first-package", "Version": "1.0.0"})
