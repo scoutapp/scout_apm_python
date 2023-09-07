@@ -6,7 +6,6 @@ import logging
 import os
 import socket
 import struct
-import sys
 import threading
 import time
 
@@ -209,7 +208,5 @@ class CoreAgentSocketThread(SingletonThread):
     def get_socket_address(self):
         if self.socket_path.is_tcp:
             host, _, port = self.socket_path.tcp_address.partition(":")
-            if sys.version_info[0] == 2:
-                host = bytes(host)
             return host, int(port)
         return self.socket_path

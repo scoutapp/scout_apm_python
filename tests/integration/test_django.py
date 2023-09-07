@@ -5,6 +5,7 @@ import datetime as dt
 import os
 import sys
 from contextlib import contextmanager
+from pathlib import Path
 
 import django
 import pytest
@@ -32,19 +33,12 @@ from tests.tools import (
     delete_attributes,
     n_plus_one_thresholds,
     pretend_package_unavailable,
-    skip_if_python_2,
 )
 
 try:
     from django.urls import resolve
 except ImportError:
     from django.core.urlresolvers import resolve
-
-
-if sys.version_info >= (3,):
-    from pathlib import Path
-else:
-    Path = None
 
 
 skip_unless_new_style_middleware = pytest.mark.skipif(
@@ -121,7 +115,6 @@ def test_on_setting_changed_application_root():
     assert scout_config.value("application_root") == os.getcwd()
 
 
-@skip_if_python_2
 def test_on_setting_changed_application_root_pathlib():
     with app_with_scout(BASE_DIR=Path("/tmp/foobar")):
         value = scout_config.value("application_root")
@@ -642,7 +635,6 @@ def test_tastypie_api_operation_name_fail_no_tastypie(tracked_requests):
     assert span.operation == "Controller/tastypie.resources.wrapper"
 
 
-@skip_if_python_2
 def test_tastypie_api_operation_name_fail_no_wrapper(tracked_requests):
     with app_with_scout() as app:
         skip_if_no_tastypie()
@@ -656,7 +648,6 @@ def test_tastypie_api_operation_name_fail_no_wrapper(tracked_requests):
     assert span.operation == "Controller/tastypie.resources.wrapper"
 
 
-@skip_if_python_2
 def test_tastypie_api_operation_name_fail_no_closure(tracked_requests):
     with app_with_scout() as app:
         skip_if_no_tastypie()

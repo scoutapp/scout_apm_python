@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import datetime as dt
 import logging
-import sys
 
 import pytest
 
@@ -77,10 +76,7 @@ def test_span_repr(tracked_request):
     tracked_request.stop_span()
 
     assert repr_.startswith("<Span(")
-    if sys.version_info[0] == 2:
-        assert "operation=u'myoperation'" in repr_
-    else:
-        assert "operation='myoperation'" in repr_
+    assert "operation='myoperation'" in repr_
 
 
 def test_tag_span(tracked_request):

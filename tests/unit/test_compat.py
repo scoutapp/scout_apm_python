@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import datetime as dt
 import functools
-import sys
 
 import pytest
 
@@ -86,8 +85,5 @@ def test_unwrap_decorators_one_decorator():
     @functools.wraps(foo)
     def bar():
         return foo()
-
-    if sys.version_info < (3,):
-        bar.__wrapped__ = foo
 
     assert unwrap_decorators(bar) is foo

@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import errno
 import logging
-import sys
 
 from scout_apm.core.agent.manager import (
     CoreAgentManager,
@@ -113,14 +112,10 @@ class TestParseManifest(object):
 
     def test_fail_other_open_error(self, caplog, tmp_path):
         filename = str(tmp_path / "does-not-exist.json")
-        if sys.version_info[0] == 2:
-            error = IOError("Woops", errno.EACCES)
-        else:
-            error = OSError(errno.EACCES)
         mock_open = mock.patch(
             "scout_apm.core.agent.manager.open",
             create=True,
-            side_effect=error,
+            side_effect=errno.EACCES,
         )
 
         with mock_open:

@@ -47,10 +47,7 @@ def get_metadata():
 
 def get_python_packages_versions():
     try:
-        if sys.version_info >= (3, 8):
-            from importlib.metadata import distributions
-        else:
-            from importlib_metadata import distributions
+        from importlib.metadata import distributions
     except ImportError:
         # For some reason it is unavailable
         return []
