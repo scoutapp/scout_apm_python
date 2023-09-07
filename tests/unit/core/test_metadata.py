@@ -1,11 +1,13 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+from types import SimpleNamespace
+
 import pytest
 
 from scout_apm.core.agent.socket import CoreAgentSocketThread
 from scout_apm.core.metadata import get_python_packages_versions, report_app_metadata
-from tests.compat import SimpleNamespace, mock
+from tests.compat import mock
 from tests.tools import pretend_package_unavailable
 
 
