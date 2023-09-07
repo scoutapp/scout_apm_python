@@ -3,7 +3,6 @@
 Because the Hug integration is based on the Falcon one, we test only the
 extras here, specifically the transaction naming.
 """
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 from contextlib import contextmanager
 
