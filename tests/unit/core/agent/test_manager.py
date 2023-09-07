@@ -115,7 +115,7 @@ class TestParseManifest(object):
         mock_open = mock.patch(
             "scout_apm.core.agent.manager.open",
             create=True,
-            side_effect=errno.EACCES,
+            side_effect=OSError(errno.EACCES),
         )
 
         with mock_open:
