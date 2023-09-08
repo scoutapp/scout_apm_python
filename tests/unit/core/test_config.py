@@ -1,10 +1,8 @@
 # coding=utf-8
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
 import os
 import pprint
-import sys
 
 import pytest
 
@@ -83,10 +81,7 @@ def test_get_undefined_config_value_null_layer_removed():
         config.value("unknown value")
 
     assert isinstance(excinfo.value, ValueError)
-    if sys.version_info[0] == 2:
-        expected_msg = "key u'unknown value' not found in any layer"
-    else:
-        expected_msg = "key 'unknown value' not found in any layer"
+    expected_msg = "key 'unknown value' not found in any layer"
     assert excinfo.value.args == (expected_msg,)
 
 

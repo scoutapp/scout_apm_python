@@ -17,3 +17,5 @@ src/*.egg-info/
 /.pytest_cache
 .tox/
 .coverage
+
+.idea/

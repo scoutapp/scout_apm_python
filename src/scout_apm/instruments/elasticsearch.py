@@ -1,5 +1,4 @@
 # coding=utf-8
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
 from collections import namedtuple
@@ -97,6 +96,7 @@ VERSIONED_CLIENT_METHODS = {
     ],
     "v8": [
         ClientMethod("knn_search", True),
+        ClientMethod("health_report", False),
     ],
 }
 

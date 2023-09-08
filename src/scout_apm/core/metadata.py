@@ -1,5 +1,4 @@
 # coding=utf-8
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import datetime as dt
 import sys
@@ -47,10 +46,7 @@ def get_metadata():
 
 def get_python_packages_versions():
     try:
-        if sys.version_info >= (3, 8):
-            from importlib.metadata import distributions
-        else:
-            from importlib_metadata import distributions
+        from importlib.metadata import distributions
     except ImportError:
         # For some reason it is unavailable
         return []

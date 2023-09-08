@@ -1,5 +1,4 @@
 # coding=utf-8
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
 
@@ -7,14 +6,9 @@ import django
 import wrapt
 from django.db import connections
 from django.db.backends.signals import connection_created
+from django.db.backends.utils import CursorWrapper
 
 from scout_apm.core.tracked_request import TrackedRequest
-
-try:
-    from django.db.backends.utils import CursorWrapper
-except ImportError:
-    # Backwards compatibility for Django <1.9
-    from django.db.backends.util import CursorWrapper
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +27,6 @@ def ensure_sql_instrumented():
         connection_created.connect(install_db_execute_hook)
         logger.debug("Installed DB connection created signal handler")
     else:
-
         CursorWrapper.execute = execute_wrapper(CursorWrapper.execute)
         CursorWrapper.executemany = executemany_wrapper(CursorWrapper.executemany)
 

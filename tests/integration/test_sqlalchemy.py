@@ -1,9 +1,8 @@
 # coding=utf-8
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 from contextlib import contextmanager
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 
 from scout_apm.sqlalchemy import instrument_sqlalchemy
 from tests.tools import n_plus_one_thresholds
@@ -26,7 +25,7 @@ def conn_with_scout():
 
 def test_single_query(tracked_request):
     with conn_with_scout() as conn:
-        result = conn.execute("SELECT 'Hello World!'")
+        result = conn.execute(text("SELECT 'Hello World!'"))
 
     assert list(result) == [("Hello World!",)]
     assert len(tracked_request.complete_spans) == 1
@@ -38,8 +37,10 @@ def test_single_query(tracked_request):
 def test_many_query(tracked_request):
     tracked_request.start_span(operation="parent")
     with conn_with_scout() as conn:
-        conn.execute("CREATE TABLE t(i integer)")
-        conn.execute("INSERT INTO t(i) VALUES (?)", [1], [2])
+        conn.execute(text("CREATE TABLE t(i integer)"))
+        values = [1, 2]
+        param_list = [{"value": value} for value in values]
+        conn.execute(text("INSERT INTO t(i) VALUES (:value)"), param_list)
 
     spans = tracked_request.complete_spans
     assert len(spans) == 2
@@ -51,7 +52,7 @@ def test_many_query(tracked_request):
 
 def test_execute_capture_backtrace(tracked_request):
     with n_plus_one_thresholds(count=1, duration=0.0), conn_with_scout() as conn:
-        result = conn.execute("SELECT 'Hello World!'")
+        result = conn.execute(text("SELECT 'Hello World!'"))
 
     assert list(result) == [("Hello World!",)]
     assert len(tracked_request.complete_spans) == 1
@@ -64,8 +65,10 @@ def test_execute_capture_backtrace(tracked_request):
 def test_executemany_capture_backtrace(tracked_request):
     tracked_request.start_span(operation="parent")
     with n_plus_one_thresholds(count=2, duration=0.0), conn_with_scout() as conn:
-        conn.execute("CREATE TABLE t(i integer)")
-        conn.execute("INSERT INTO t(i) VALUES (?)", [1], [2])
+        conn.execute(text("CREATE TABLE t(i integer)"))
+        values = [1, 2]
+        param_list = [{"value": value} for value in values]
+        conn.execute(text("INSERT INTO t(i) VALUES (:value)"), param_list)
 
     assert len(tracked_request.complete_spans) == 2
     span = tracked_request.complete_spans[1]

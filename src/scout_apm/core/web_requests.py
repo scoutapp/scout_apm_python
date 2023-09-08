@@ -1,10 +1,9 @@
 # coding=utf-8
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import datetime as dt
 import time
 
-from scout_apm.compat import datetime_to_timestamp, parse_qsl, text_type, urlencode
+from scout_apm.compat import datetime_to_timestamp, parse_qsl, urlencode
 from scout_apm.core.config import scout_config
 
 # Originally derived from:
@@ -47,9 +46,9 @@ def create_filtered_path(path, query_params):
     filtered_params = sorted(
         [
             (
-                text_type(key).encode("utf-8"),
-                # Apply text_type again to cover the None case.
-                text_type(filter_element(key, value)).encode("utf-8"),
+                str(key).encode("utf-8"),
+                # Apply str again to cover the None case.
+                str(filter_element(key, value)).encode("utf-8"),
             )
             for key, value in query_params
         ]
@@ -68,7 +67,7 @@ def filter_element(key, value):
 
         filter_element('', {"foo": "bar"})
     """
-    is_sensitive = text_type(key).lower() in FILTER_PARAMETERS
+    is_sensitive = str(key).lower() in FILTER_PARAMETERS
 
     if is_sensitive:
         filtered = "[FILTERED]"
@@ -81,7 +80,7 @@ def filter_element(key, value):
         # different collection, so we have to cautiously make everything a string
         # again. Ignoring the possibilities of bytes or objects with bad __str__
         # methods because they seem very unlikely.
-        filtered = {text_type(k): filter_element(k, v) for k, v in value.items()}
+        filtered = {str(k): filter_element(k, v) for k, v in value.items()}
     elif isinstance(value, list):
         filtered = [filter_element("", v) for v in value]
     elif isinstance(value, set):
@@ -91,7 +90,7 @@ def filter_element(key, value):
     elif value is None:
         filtered = value
     else:
-        filtered = text_type(value)
+        filtered = str(value)
 
     return filtered
 

@@ -1,5 +1,4 @@
 # coding=utf-8
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import errno
 import hashlib
@@ -13,7 +12,7 @@ import time
 
 from urllib3.exceptions import HTTPError
 
-from scout_apm.compat import CouldNotOpenFile, text_type, urllib3_cert_pool_manager
+from scout_apm.compat import urllib3_cert_pool_manager
 from scout_apm.core.config import scout_config
 
 logger = logging.getLogger(__name__)
@@ -242,7 +241,7 @@ class CoreAgentDownloader(object):
 def parse_manifest(path):
     try:
         manifest_file = open(path)
-    except CouldNotOpenFile as exc:
+    except OSError as exc:
         if exc.errno == errno.ENOENT:
             logger.debug("Core Agent Manifest does not exist at %s", path)
         else:
@@ -255,13 +254,13 @@ def parse_manifest(path):
             logger.debug("Core Agent manifest json: %s", data)
 
             bin_name = data["core_agent_binary"]
-            if not isinstance(bin_name, text_type):
+            if not isinstance(bin_name, str):
                 raise TypeError("core_agent_binary should be a string.")
             bin_version = data["core_agent_version"]
-            if not isinstance(bin_version, text_type):
+            if not isinstance(bin_version, str):
                 raise TypeError("core_agent_version should be a string.")
             sha256 = data["core_agent_binary_sha256"]
-            if not isinstance(sha256, text_type):
+            if not isinstance(sha256, str):
                 raise TypeError("core_agent_binary_sha256 should be a string.")
 
             return CoreAgentManifest(
@@ -297,7 +296,7 @@ def sha256_digest(filename, block_size=65536):
         return None
 
 
-class SocketPath(text_type):
+class SocketPath(str):
     @property
     def is_tcp(self):
         return self.startswith("tcp://")

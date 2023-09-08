@@ -1,8 +1,7 @@
 # coding=utf-8
-from __future__ import absolute_import, division, print_function, unicode_literals
 
-import django
 from django.conf import settings
+from django.urls import get_urlconf
 
 from scout_apm.core.config import scout_config
 from scout_apm.core.tracked_request import TrackedRequest
@@ -12,11 +11,6 @@ from scout_apm.core.web_requests import (
     track_request_queue_time,
 )
 from scout_apm.django.request import get_controller_name
-
-if django.VERSION >= (1, 11):
-    from django.urls import get_urlconf
-else:
-    from django.core.urlresolvers import get_urlconf
 
 
 def track_request_view_data(request, tracked_request):

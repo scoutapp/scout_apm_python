@@ -1,5 +1,4 @@
 # coding=utf-8
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import datetime as dt
 from contextlib import contextmanager
@@ -132,8 +131,7 @@ async def test_home(tracked_requests):
     assert tracked_request.tags["path"] == "/"
     span = tracked_request.complete_spans[0]
     assert span.operation == (
-        "Controller/tests.integration.test_starlette_py36plus."
-        + "app_with_scout.<locals>.home"
+        "Controller/tests.integration.test_starlette." + "app_with_scout.<locals>.home"
     )
 
 
@@ -156,7 +154,7 @@ async def test_sync_home(tracked_requests):
     assert tracked_request.tags["path"] == "/sync-home/"
     span = tracked_request.complete_spans[0]
     assert span.operation == (
-        "Controller/tests.integration.test_starlette_py36plus."
+        "Controller/tests.integration.test_starlette."
         + "app_with_scout.<locals>.sync_home"
     )
 
@@ -196,7 +194,7 @@ async def test_hello(tracked_requests):
     assert tracked_request.tags["path"] == "/hello/"
     span = tracked_request.complete_spans[0]
     assert span.operation == (
-        "Controller/tests.integration.test_starlette_py36plus."
+        "Controller/tests.integration.test_starlette."
         + "app_with_scout.<locals>.HelloEndpoint"
     )
 
@@ -222,7 +220,7 @@ async def test_sync_hello(tracked_requests):
     assert tracked_request.tags["path"] == "/sync-hello/"
     span = tracked_request.complete_spans[0]
     assert span.operation == (
-        "Controller/tests.integration.test_starlette_py36plus."
+        "Controller/tests.integration.test_starlette."
         + "app_with_scout.<locals>.SyncHelloEndpoint"
     )
 
@@ -327,8 +325,7 @@ async def test_server_error(tracked_requests):
     assert tracked_request.tags["error"] == "true"
     span = tracked_request.complete_spans[0]
     assert span.operation == (
-        "Controller/tests.integration.test_starlette_py36plus."
-        + "app_with_scout.<locals>.crash"
+        "Controller/tests.integration.test_starlette." + "app_with_scout.<locals>.crash"
     )
 
 
@@ -394,7 +391,7 @@ async def test_background_jobs(tracked_requests):
     assert len(sync_tracked_request.complete_spans) == 1
     sync_span = sync_tracked_request.complete_spans[0]
     assert sync_span.operation == (
-        "Job/tests.integration.test_starlette_py36plus."
+        "Job/tests.integration.test_starlette."
         + "app_with_scout.<locals>.background_jobs.<locals>.sync_noop"
     )
 
@@ -402,7 +399,7 @@ async def test_background_jobs(tracked_requests):
     assert len(async_tracked_request.complete_spans) == 1
     async_span = async_tracked_request.complete_spans[0]
     assert async_span.operation == (
-        "Job/tests.integration.test_starlette_py36plus."
+        "Job/tests.integration.test_starlette."
         + "app_with_scout.<locals>.background_jobs.<locals>.async_noop"
     )
 
@@ -470,6 +467,6 @@ async def test_instance_app(tracked_requests):
     assert tracked_request.tags["path"] == "/instance-app/"
     span = tracked_request.complete_spans[0]
     assert span.operation == (
-        "Controller/tests.integration.test_starlette_py36plus."
+        "Controller/tests.integration.test_starlette."
         + "app_with_scout.<locals>.InstanceApp"
     )

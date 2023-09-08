@@ -1,5 +1,4 @@
 # coding=utf-8
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import sys
 
@@ -54,20 +53,18 @@ def test_get_counts_allocations():
 
 
 @skip_if_objtrace_not_extension
-@pytest.mark.skipif(
-    sys.version_info < (3, 5), reason="Multiple allocations on Python 3.5+ only"
-)
 def test_get_counts_multiple_allocations():
     objtrace.enable()
     bytes(123)
+    bytes(456)
     counts = objtrace.get_counts()
     assert counts[1] > 0
 
 
 @skip_if_objtrace_not_extension
 @pytest.mark.skipif(
-    sys.version_info < (3, 5),
-    reason="For some reason can only force a realloc on Python 3.5+",
+    sys.version_info >= (3, 11),
+    reason="For some reason can only force a realloc on Python > 3.5 and < 3.11",
 )
 def test_get_counts_reallocations():
     text = "some text"

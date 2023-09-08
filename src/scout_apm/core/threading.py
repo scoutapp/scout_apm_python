@@ -1,11 +1,9 @@
 # coding=utf-8
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import threading
 
 
 class SingletonThread(threading.Thread):
-
     _instance = None
     # Copy these variables into subclasses to avoid sharing:
     # (Would use __init_subclass__() but Python 2 doesn't support it and using

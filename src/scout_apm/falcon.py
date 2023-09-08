@@ -1,5 +1,4 @@
 # coding=utf-8
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
 import warnings
@@ -95,6 +94,7 @@ class ScoutMiddleware(object):
                     + " more detail."
                 ).format(self.__class__.__name__),
                 RuntimeWarning,
+                stacklevel=2,
             )
             operation = "Controller/{}.{}.{}".format(
                 resource.__module__, resource.__class__.__name__, req.method

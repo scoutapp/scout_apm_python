@@ -1,12 +1,10 @@
 # coding=utf-8
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
 import os
 import re
 import warnings
 
-from scout_apm.compat import string_type
 from scout_apm.core import platform_detection
 
 logger = logging.getLogger(__name__)
@@ -194,7 +192,9 @@ class Derived(object):
     def derive_core_agent_full_name(self):
         triple = self.config.value("core_agent_triple")
         if not platform_detection.is_valid_triple(triple):
-            warnings.warn("Invalid value for core_agent_triple: {}".format(triple))
+            warnings.warn(
+                "Invalid value for core_agent_triple: {}".format(triple), stacklevel=2
+            )
         return "{name}-{version}-{triple}".format(
             name="scout_apm_core",
             version=self.config.value("core_agent_version"),
@@ -271,7 +271,7 @@ class Null(object):
 def convert_to_bool(value):
     if isinstance(value, bool):
         return value
-    if isinstance(value, string_type):
+    if isinstance(value, str):
         return value.lower() in ("yes", "true", "t", "1")
     # Unknown type - default to false?
     return False
@@ -289,7 +289,7 @@ def convert_to_list(value):
         return value
     if isinstance(value, tuple):
         return list(value)
-    if isinstance(value, string_type):
+    if isinstance(value, str):
         # Split on commas
         return [item.strip() for item in value.split(",") if item]
     # Unknown type - default to empty?

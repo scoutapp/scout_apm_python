@@ -1,5 +1,4 @@
 # coding=utf-8
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import itertools
 import os
@@ -66,77 +65,36 @@ def filepaths(frame):
     return filepath, (module_filepath(module, filepath) if module else filepath)
 
 
-if sys.version_info >= (3, 5):
+def stacktrace_walker(tb):
+    """Iterate over each frame of the stack downards for exceptions."""
+    for frame, lineno in traceback.walk_tb(tb):
+        name = frame.f_code.co_name
+        full_path, relative_path = filepaths(frame)
+        yield {
+            "file": relative_path,
+            "full_path": full_path,
+            "line": lineno,
+            "function": name,
+        }
 
-    def stacktrace_walker(tb):
-        """Iterate over each frame of the stack downards for exceptions."""
-        for frame, lineno in traceback.walk_tb(tb):
-            name = frame.f_code.co_name
-            full_path, relative_path = filepaths(frame)
-            yield {
-                "file": relative_path,
-                "full_path": full_path,
-                "line": lineno,
-                "function": name,
-            }
 
-    def backtrace_walker():
-        """Iterate over each frame of the stack upwards.
+def backtrace_walker():
+    """Iterate over each frame of the stack upwards.
 
-        Taken from python3/traceback.ExtractSummary.extract to support
-        iterating over the entire stack, but without creating a large
-        data structure.
-        """
-        start_frame = sys._getframe().f_back
-        for frame, lineno in traceback.walk_stack(start_frame):
-            name = frame.f_code.co_name
-            full_path, relative_path = filepaths(frame)
-            yield {
-                "file": relative_path,
-                "full_path": full_path,
-                "line": lineno,
-                "function": name,
-            }
-
-else:
-
-    def stacktrace_walker(tb):
-        """Iterate over each frame of the stack downards for exceptions."""
-        while tb is not None:
-            lineno = tb.tb_lineno
-            name = tb.tb_frame.f_code.co_name
-            full_path, relative_path = filepaths(tb.tb_frame)
-            yield {
-                "file": relative_path,
-                "full_path": full_path,
-                "line": lineno,
-                "function": name,
-            }
-            tb = tb.tb_next
-
-    def backtrace_walker():
-        """Iterate over each frame of the stack upwards.
-
-        Taken from python2.7/traceback.extract_stack to support iterating
-        over the entire stack, but without creating a large data structure.
-        """
-        try:
-            raise ZeroDivisionError
-        except ZeroDivisionError:
-            # Get the current frame
-            frame = sys.exc_info()[2].tb_frame.f_back
-
-        while frame is not None:
-            lineno = frame.f_lineno
-            name = frame.f_code.co_name
-            full_path, relative_path = filepaths(frame)
-            yield {
-                "file": relative_path,
-                "full_path": full_path,
-                "line": lineno,
-                "function": name,
-            }
-            frame = frame.f_back
+    Taken from python3/traceback.ExtractSummary.extract to support
+    iterating over the entire stack, but without creating a large
+    data structure.
+    """
+    start_frame = sys._getframe().f_back
+    for frame, lineno in traceback.walk_stack(start_frame):
+        name = frame.f_code.co_name
+        full_path, relative_path = filepaths(frame)
+        yield {
+            "file": relative_path,
+            "full_path": full_path,
+            "line": lineno,
+            "function": name,
+        }
 
 
 def capture_backtrace():
@@ -153,6 +111,6 @@ def capture():
     warnings.warn(
         "capture is deprecated, instead use capture_backtrace instead.",
         DeprecationWarning,
-        2,
+        stacklevel=2,
     )
     return capture_backtrace()

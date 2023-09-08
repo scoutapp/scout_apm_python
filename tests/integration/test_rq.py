@@ -1,5 +1,4 @@
 # coding=utf-8
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
 from collections import namedtuple
@@ -8,10 +7,11 @@ from contextlib import contextmanager
 import pytest
 import redis
 from rq import Queue
+from rq.version import VERSION
 
 import scout_apm.rq
 from scout_apm.api import Config
-from scout_apm.compat import kwargs_only, string_type
+from scout_apm.compat import kwargs_only
 from scout_apm.instruments.redis import ensure_installed
 
 
@@ -62,17 +62,24 @@ def app_with_scout(redis_conn, scout_config=None):
         Config.reset_all()
 
 
+def get_job_result(job):
+    """Helper wrapper around an old rq API"""
+    if VERSION <= "1.13.0":
+        return job.result
+    return job.return_value()
+
+
 def test_hello(redis_conn, tracked_requests):
     with app_with_scout(redis_conn=redis_conn) as app:
         job = app.queue.enqueue(hello)
         app.worker.work(burst=True)
 
     assert job.is_finished
-    assert job.result == "Hello World!"
+    assert get_job_result(job) == "Hello World!"
     assert len(tracked_requests) == 1
     tracked_request = tracked_requests[0]
     task_id = tracked_request.tags["task_id"]
-    assert isinstance(task_id, string_type) and len(task_id) == 36
+    assert isinstance(task_id, str) and len(task_id) == 36
     assert tracked_request.tags["queue"] == "myqueue"
     assert 0.0 < tracked_request.tags["queue_time"] < 60.0
     assert len(tracked_request.complete_spans) == 2
@@ -90,7 +97,7 @@ def test_fail(redis_conn, tracked_requests):
 
     tracked_request = tracked_requests[0]
     task_id = tracked_request.tags["task_id"]
-    assert isinstance(task_id, string_type) and len(task_id) == 36
+    assert isinstance(task_id, str) and len(task_id) == 36
     assert tracked_request.tags["queue"] == "myqueue"
     assert 0.0 < tracked_request.tags["queue_time"] < 60.0
     assert tracked_request.tags["error"] == "true"
@@ -108,5 +115,5 @@ def test_no_monitor(redis_conn, tracked_requests):
         app.worker.work(burst=True)
 
     assert job.is_finished
-    assert job.result == "Hello World!"
+    assert get_job_result(job) == "Hello World!"
     assert tracked_requests == []

@@ -7,12 +7,10 @@ thread may change from when the fixture is started to when the tests
 run. This is only a problem on python 3.6 and results in getting the
 tracked_instance in the test itself.
 """
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import asyncio
 import contextvars
 import functools
-import sys
 
 import pytest
 
@@ -161,19 +159,12 @@ async def test_task_not_awaited(tracked_requests, tracked_request):
 
     assert tracked_requests[0].request_id == tracked_request.request_id
 
-    if sys.version_info[:2] < (3, 7):
-        # Python 3.6 utilizes the contextvars backport which functions
-        # slightly differently than the contextvars stdlib implementation
-        # in 3.7+
-        assert len(tracked_request.complete_spans) == 2
-        assert len(tracked_requests) == 1
-    else:
-        assert len(tracked_request.complete_spans) == 3
-        assert tracked_request.complete_spans[2].tags["value"] == "long"
-        # When we await long, it will call finish again which adds it
-        # to tracked_requests
-        assert len(tracked_requests) == 2
-        assert tracked_requests[0] is tracked_requests[1]
+    assert len(tracked_request.complete_spans) == 3
+    assert tracked_request.complete_spans[2].tags["value"] == "long"
+    # When we await long, it will call finish again which adds it
+    # to tracked_requests
+    assert len(tracked_requests) == 2
+    assert tracked_requests[0] is tracked_requests[1]
 
 
 @pytest.mark.asyncio
@@ -236,18 +227,11 @@ async def test_future_not_gathered(tracked_requests, tracked_request):
 
     await gather_future
 
-    if sys.version_info[:2] < (3, 7):
-        # Python 3.6 utilizes the contextvars backport which functions
-        # slightly differently than the contextvars stdlib implementation
-        # in 3.7+
-        assert len(tracked_request.complete_spans) == 1
-        assert len(tracked_requests) == 1
-    else:
-        assert len(tracked_request.complete_spans) == 5
-        # When the last awaitable completes, it will call finish again which
-        # adds it to tracked_requests
-        assert len(tracked_requests) == 2
-        assert tracked_requests[0].request_id == tracked_request.request_id
+    assert len(tracked_request.complete_spans) == 5
+    # When the last awaitable completes, it will call finish again which
+    # adds it to tracked_requests
+    assert len(tracked_requests) == 2
+    assert tracked_requests[0].request_id == tracked_request.request_id
 
 
 @pytest.mark.asyncio

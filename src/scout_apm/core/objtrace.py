@@ -1,5 +1,4 @@
 # coding=utf-8
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 # Try use the C extension, but if it isn't available, provide a dummy
 # implementation.

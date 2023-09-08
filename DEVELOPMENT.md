@@ -34,7 +34,7 @@ key in `tox.ini`, which you can list with `tox -l`. Pick one for a Python
 version that you have installed and run the tests, for example:
 
 ```
-tox -e py39-django31
+python -m tox -e py39-django31
 ```
 
 If you run `tox` with no arguments, it will test all environments. This will
@@ -70,7 +70,7 @@ by environment variables. These are:
 
 * `ELASTICSEARCH_URL` - point to a running Elasticsearch instance, e.g.
   "http://localhost:9200/" . You can start it with:
-  `docker run --detach --name elasticsearch --publish 9200:9200 -e "discovery.type=single-node" -e "xpack.security.enabled=false" elasticsearch:8.2.3` .
+  `docker run --detach --name elasticsearch --publish 9200:9200 -e "discovery.type=single-node" -e "xpack.security.enabled=false" elasticsearch:8.7.0` .
 * `MONGODB_URL` - point to a running MongoDB instance e.g.
   "mongodb://localhost:27017/" . You can start it with:
   `docker run --detach --name mongo --publish 27017:27017 mongo:4.0` .
