@@ -60,7 +60,8 @@ setup(
     install_requires=[
         "asgiref",
         "psutil>=5,<6",
-        "urllib3 < 2",
+        "urllib3",
+        "certifi",
         "wrapt>=1.10,<2.0",
     ],
     keywords=["apm", "performance monitoring", "development"],

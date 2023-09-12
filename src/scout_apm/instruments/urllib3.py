@@ -2,6 +2,7 @@
 
 import logging
 
+import urllib3
 import wrapt
 
 from scout_apm.core.config import scout_config
@@ -51,7 +52,10 @@ def wrapped_urlopen(wrapped, instance, args, kwargs):
         method = "Unknown"
 
     try:
-        url = str(instance._absolute_url("/"))
+        if int(urllib3.__version__.split(".")[0]) < 2:
+            url = str(instance._absolute_url("/"))
+        else:
+            url = str(instance._url_from_pool("/"))
     except Exception:
         logger.exception("Could not get URL for HTTPConnectionPool")
         url = "Unknown"
