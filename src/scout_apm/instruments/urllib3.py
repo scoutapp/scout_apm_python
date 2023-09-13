@@ -10,9 +10,14 @@ from scout_apm.core.tracked_request import TrackedRequest
 
 try:
     from urllib3 import HTTPConnectionPool
-    from urllib3.connectionpool import _url_from_pool
 except ImportError:  # pragma: no cover
     HTTPConnectionPool = None
+
+# Try except separately because _url_from_pool is explicitly imported for urllib3 >= 2.
+# HTTPConnectionPool is always required.
+try:
+    from urllib3.connectionpool import _url_from_pool
+except ImportError:  # pragma: no cover
 
     def _url_from_pool(pool, path):
         pass
