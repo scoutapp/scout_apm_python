@@ -10,8 +10,13 @@ from scout_apm.core.tracked_request import TrackedRequest
 
 try:
     from urllib3 import HTTPConnectionPool
+    from urllib3.connectionpool import _url_from_pool
 except ImportError:  # pragma: no cover
     HTTPConnectionPool = None
+
+    def _url_from_pool(pool, path):
+        pass
+
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +60,7 @@ def wrapped_urlopen(wrapped, instance, args, kwargs):
         if int(urllib3.__version__.split(".")[0]) < 2:
             url = str(instance._absolute_url("/"))
         else:
-            url = str(instance._url_from_pool("/"))
+            url = str(_url_from_pool(instance, "/"))
     except Exception:
         logger.exception("Could not get URL for HTTPConnectionPool")
         url = "Unknown"
