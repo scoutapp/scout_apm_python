@@ -19,3 +19,4 @@ src/*.egg-info/
 .coverage
 
 .idea/
+.DS_Store

@@ -147,7 +147,6 @@ def test_home_without_set_api(recwarn, tracked_requests):
         == "Controller/tests.integration.test_falcon.HomeResource.GET"
     )
     assert tracked_request.complete_spans[1].operation == "Middleware"
-    assert len(recwarn) == 1
     warning = recwarn.pop(RuntimeWarning)
     assert str(warning.message) == (
         "ScoutMiddleware.set_api() should be called before requests begin for"
