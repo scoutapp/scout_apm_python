@@ -1,5 +1,10 @@
 # Changelog
 
+## Pending
+
+### Fixed
+- Core Agent fails to download on newer Mac OS/Apple Silicon (Issue #779)
+
 ## [3.0.0rc1] 2023-09-08
 
 Version 3.0.0 drops support for Python 2.7 and < 3.8, as well as Django < 3.2.

@@ -167,6 +167,8 @@ class CoreAgentDownloader(object):
                 downloaded = self.download_package()
                 if downloaded:
                     self.untar()
+                else:
+                    logger.debug("Core Agent download failed: bad http response.")
             except (OSError, HTTPError):
                 logger.exception("Exception raised while downloading Core Agent")
             finally:

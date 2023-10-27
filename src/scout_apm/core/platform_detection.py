@@ -42,6 +42,10 @@ def get_arch():
         return "x86_64"
     elif arch == "aarch64":
         return "aarch64"
+    elif arch == "arm64":
+        # We treat these as synonymous and name them "aarch64" for consistency
+        # Mac OS, for example, uses "arm64"
+        return "aarch64"
     else:
         return "unknown"
 

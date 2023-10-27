@@ -266,6 +266,7 @@ class Span(object):
 
     def add_allocation_tags(self):
         if not objtrace.is_extension:
+            logger.debug("Not adding allocation tags: extension not loaded")
             return
 
         start_allocs = (
