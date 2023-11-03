@@ -105,7 +105,13 @@ def test_request_type_error(tracked_request):
 
 def test_request_no_absolute_url(caplog, tracked_request):
     ensure_installed()
-    delete_absolute_url = delete_attributes(urllib3.HTTPConnectionPool, "_absolute_url")
+    if hasattr(urllib3.HTTPConnectionPool, "_absolute_url"):
+        delete_absolute_url = delete_attributes(
+            urllib3.HTTPConnectionPool, "_absolute_url"
+        )
+    else:
+        # Some versions of urllib3 under test don't have _absolute_url at this point
+        delete_absolute_url = urllib3.HTTPConnectionPool
     with httpretty.enabled(allow_net_connect=False), delete_absolute_url:
         httpretty.register_uri(
             httpretty.GET, "https://example.com/", body="Hello World!"
