@@ -2,10 +2,15 @@
 
 ## Pending
 
+## [3.0.2] 2023-11-06
 ### Fixed
 - Core Agent fails to download on newer Mac OS/Apple Silicon (Issue #779)
 
-## [3.0.0rc1] 2023-09-08
+## [3.0.1] 2023-10-06
+### Added
+- Build wheels for Python 3.12
+
+## [3.0.0] 2023-09-14
 
 Version 3.0.0 drops support for Python 2.7 and < 3.8, as well as Django < 3.2.
 If you need to continue using Python < 3.8 or Django < 3.2, please continue using v2.26.1.
