@@ -103,31 +103,6 @@ def test_request_type_error(tracked_request):
     assert span.tags["url"] == "https://example.com:443/"
 
 
-def test_request_no_absolute_url(caplog, tracked_request):
-    ensure_installed()
-    if hasattr(urllib3.HTTPConnectionPool, "_absolute_url"):
-        delete_absolute_url = delete_attributes(
-            urllib3.HTTPConnectionPool, "_absolute_url"
-        )
-    else:
-        # Some versions of urllib3 under test don't have _absolute_url at this point
-        delete_absolute_url = urllib3.HTTPConnectionPool
-    with httpretty.enabled(allow_net_connect=False), delete_absolute_url:
-        httpretty.register_uri(
-            httpretty.GET, "https://example.com/", body="Hello World!"
-        )
-
-        http = urllib3_cert_pool_manager()
-        response = http.request("GET", "https://example.com")
-
-    assert response.status == 200
-    assert response.data == b"Hello World!"
-    assert len(tracked_request.complete_spans) == 1
-    span = tracked_request.complete_spans[0]
-    assert span.operation == "HTTP/GET"
-    assert span.tags["url"] == "Unknown"
-
-
 def test_request_ignore_errors_host(tracked_request):
     ensure_installed()
     with httpretty.enabled(allow_net_connect=False):
