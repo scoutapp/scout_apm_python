@@ -4,12 +4,10 @@ import logging
 
 import httpretty
 import pytest
-import urllib3
 
 from scout_apm.compat import urllib3_cert_pool_manager
 from scout_apm.instruments.urllib3 import ensure_installed
 from tests.compat import mock
-from tests.tools import delete_attributes
 
 mock_not_attempted = mock.patch(
     "scout_apm.instruments.urllib3.have_patched_pool_urlopen", new=False
