@@ -121,7 +121,7 @@ jobs:
           path: dist/*.tar.gz
 
   upload_pypi:
-    needs: [cibuildwheel_py38plus, build_pure_wheels, build_sdist]
+    needs: [cibuildwheel_py38plus, build_pure_wheels, build_sdist, build_macos_wheels]
     runs-on: ubuntu-20.04
     steps:
       - name: Download distributions for publishing.
