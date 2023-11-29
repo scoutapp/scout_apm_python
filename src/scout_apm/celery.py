@@ -4,6 +4,7 @@ import datetime as dt
 import logging
 
 from celery.signals import before_task_publish, task_failure, task_postrun, task_prerun
+from scout_apm.core.queue_time import track_job_queue_time
 
 try:
     import django
@@ -34,15 +35,8 @@ def task_prerun_callback(task=None, **kwargs):
     tracked_request = TrackedRequest.instance()
     tracked_request.is_real_request = True
 
-    start = getattr(task.request, "scout_task_start", None)
-    if start is not None:
-        now = datetime_to_timestamp(dt.datetime.utcnow())
-        try:
-            queue_time = now - start
-        except TypeError:
-            pass
-        else:
-            tracked_request.tag("queue_time", queue_time)
+    start_time_header = getattr(task.request, "scout_task_start", None)
+    track_job_queue_time(start_time_header, tracked_request)
 
     task_id = getattr(task.request, "id", None)
     if task_id:
