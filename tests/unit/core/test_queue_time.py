@@ -1,3 +1,5 @@
+# coding=utf-8
+
 import datetime as dt
 import time
 
@@ -5,10 +7,10 @@ import pytest
 
 from scout_apm.compat import datetime_to_timestamp
 from scout_apm.core.queue_time import (
-  CUTOFF_EPOCH_S,
-  track_request_queue_time,
-  track_job_queue_time,
-  _convert_ambiguous_timestamp_to_ns,
+    CUTOFF_EPOCH_S,
+    _convert_ambiguous_timestamp_to_ns,
+    track_job_queue_time,
+    track_request_queue_time,
 )
 
 

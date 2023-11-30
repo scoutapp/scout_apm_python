@@ -1,9 +1,9 @@
 # coding=utf-8
 
+import datetime as dt
 import logging
 import time
 import typing
-import datetime as dt
 
 from scout_apm.compat import datetime_to_timestamp
 from scout_apm.core.tracked_request import TrackedRequest
@@ -36,9 +36,11 @@ def _convert_ambiguous_timestamp_to_ns(timestamp: float) -> float:
     return converted_timestamp
 
 
-def track_request_queue_time(header_value: typing.Any, tracked_request: TrackedRequest) -> bool:
+def track_request_queue_time(
+    header_value: typing.Any, tracked_request: TrackedRequest
+) -> bool:
     """
-    Attempt to parse a queue time header value and store the result in the tracked request.
+    Attempt to parse a queue time header and store the result in the tracked request.
 
     Returns:
         bool: Whether we succeeded in marking queue time. Used for testing.
@@ -74,22 +76,24 @@ def track_request_queue_time(header_value: typing.Any, tracked_request: TrackedR
     return True
 
 
-def track_job_queue_time(header_value: typing.Any, tracked_request: TrackedRequest) -> bool:
+def track_job_queue_time(
+    header_value: typing.Any, tracked_request: TrackedRequest
+) -> bool:
     """
-    Attempt to parse a job queue time header value and store the result in the tracked request.
+    Attempt to parse a queue/latency time header and store the result in the request.
 
     Returns:
-        bool: Whether we succeeded in marking queue time. Used for testing.
+        bool: Whether we succeeded in marking queue time for the job. Used for testing.
     """
     if header_value is not None:
-      now = datetime_to_timestamp(dt.datetime.utcnow()) * 1e9
-      try:
-          ambiguous_float_start = typing.cast(float, header_value)
-          start = _convert_ambiguous_timestamp_to_ns(ambiguous_float_start)
-          queue_time_ns = int(now - start)
-      except TypeError:
-          logger.debug("Invalid job queue time header: %r", header_value)
-          return False
-      else:
-          tracked_request.tag("scout.job_queue_time_ns", queue_time_ns)
-          return True
+        now = datetime_to_timestamp(dt.datetime.utcnow()) * 1e9
+        try:
+            ambiguous_float_start = typing.cast(float, header_value)
+            start = _convert_ambiguous_timestamp_to_ns(ambiguous_float_start)
+            queue_time_ns = int(now - start)
+        except TypeError:
+            logger.debug("Invalid job queue time header: %r", header_value)
+            return False
+        else:
+            tracked_request.tag("scout.job_queue_time_ns", queue_time_ns)
+            return True

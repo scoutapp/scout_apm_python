@@ -4,6 +4,7 @@ import datetime as dt
 import logging
 
 from celery.signals import before_task_publish, task_failure, task_postrun, task_prerun
+
 from scout_apm.core.queue_time import track_job_queue_time
 
 try:

@@ -7,10 +7,7 @@ import scout_apm.core
 from scout_apm.core.config import scout_config
 from scout_apm.core.queue_time import track_request_queue_time
 from scout_apm.core.tracked_request import TrackedRequest
-from scout_apm.core.web_requests import (
-    create_filtered_path,
-    ignore_path,
-)
+from scout_apm.core.web_requests import create_filtered_path, ignore_path
 
 
 class ScoutPlugin(object):
