@@ -248,7 +248,7 @@ def test_hello_worker(celery_app, celery_worker, tracked_requests):
     assert tracked_request.tags["routing_key"] == "celery"
     assert tracked_request.tags["queue"] == "unknown"
     assert (
-        0.0 <= tracked_request.tags["queue_time"] < 60.0
+        0.0 <= tracked_request.tags["scout.job_queue_time_ns"] < 60.0
     )  # Assume test took <60 seconds
     assert tracked_request.active_spans == []
     assert len(tracked_request.complete_spans) == 1
@@ -272,7 +272,7 @@ def test_hello_worker_header_preset(celery_app, celery_worker, tracked_requests)
     assert len(tracked_request.complete_spans) == 1
     span = tracked_request.complete_spans[0]
     assert span.operation == "Job/tests.integration.test_celery.hello"
-    assert "queue_time" not in span.tags
+    assert "scout.job_queue_time_ns" not in span.tags
 
 
 @skip_unless_celery_4_plus
