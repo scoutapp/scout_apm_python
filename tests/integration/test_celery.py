@@ -247,8 +247,9 @@ def test_hello_worker(celery_app, celery_worker, tracked_requests):
     assert tracked_request.tags["priority"] == 0
     assert tracked_request.tags["routing_key"] == "celery"
     assert tracked_request.tags["queue"] == "unknown"
+    sixty_seconds = 60_000_000_000
     assert (
-        0.0 <= tracked_request.tags["scout.job_queue_time_ns"] < 60.0
+        0.0 <= tracked_request.tags["scout.job_queue_time_ns"] < sixty_seconds
     )  # Assume test took <60 seconds
     assert tracked_request.active_spans == []
     assert len(tracked_request.complete_spans) == 1
