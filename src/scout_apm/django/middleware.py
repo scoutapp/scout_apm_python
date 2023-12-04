@@ -4,12 +4,9 @@ from django.conf import settings
 from django.urls import get_urlconf
 
 from scout_apm.core.config import scout_config
+from scout_apm.core.queue_time import track_request_queue_time
 from scout_apm.core.tracked_request import TrackedRequest
-from scout_apm.core.web_requests import (
-    create_filtered_path,
-    ignore_path,
-    track_request_queue_time,
-)
+from scout_apm.core.web_requests import create_filtered_path, ignore_path
 from scout_apm.django.request import get_controller_name
 
 
