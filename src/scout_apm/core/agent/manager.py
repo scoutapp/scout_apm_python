@@ -17,6 +17,7 @@ from scout_apm.core.config import scout_config
 
 logger = logging.getLogger(__name__)
 
+CA_ALREADY_RUNNING_EXIT_CODE = 3
 
 class CoreAgentManager(object):
     def __init__(self):
@@ -75,6 +76,9 @@ class CoreAgentManager(object):
         except subprocess.CalledProcessError as err:
             if err.returncode in [signal.SIGTERM, signal.SIGQUIT]:
                 logger.debug("Core agent returned signal: {}".format(err.returncode))
+            elif err.returncode == CA_ALREADY_RUNNING_EXIT_CODE:
+                # Other processes may have already started the core agent.
+                logger.debug("Core agent already running.")
             else:
                 logger.exception("CalledProcessError running Core Agent")
             return False
