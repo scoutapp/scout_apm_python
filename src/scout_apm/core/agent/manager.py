@@ -74,11 +74,12 @@ class CoreAgentManager(object):
                     stdout=devnull,
                 )
         except subprocess.CalledProcessError as err:
-            if err.returncode in [signal.SIGTERM, signal.SIGQUIT]:
-                logger.debug("Core agent returned signal: {}".format(err.returncode))
-            elif err.returncode == CA_ALREADY_RUNNING_EXIT_CODE:
+            if err.returncode == CA_ALREADY_RUNNING_EXIT_CODE:
                 # Other processes may have already started the core agent.
                 logger.debug("Core agent already running.")
+                return True
+            elif err.returncode in [signal.SIGTERM, signal.SIGQUIT]:
+                logger.debug("Core agent returned signal: {}".format(err.returncode))
             else:
                 logger.exception("CalledProcessError running Core Agent")
             return False
