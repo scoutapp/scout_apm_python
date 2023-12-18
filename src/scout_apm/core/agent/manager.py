@@ -5,7 +5,6 @@ import hashlib
 import json
 import logging
 import os
-import signal
 import subprocess
 import tarfile
 import time
@@ -18,6 +17,7 @@ from scout_apm.core.config import scout_config
 logger = logging.getLogger(__name__)
 
 CA_ALREADY_RUNNING_EXIT_CODE = 3
+
 
 class CoreAgentManager(object):
     def __init__(self):
