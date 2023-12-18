@@ -170,6 +170,7 @@ def terminate_core_agent_processes():
     for process in psutil.process_iter(["name"]):
         if process.name() == "core-agent":
             process.terminate()
+            process.wait()
 
 
 # Make all timeouts shorter so that tests exercising them run faster.
