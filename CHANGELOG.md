@@ -12,7 +12,6 @@
 - Update the tag name and unit of time for job latency to similarly match that of request queue time.
 - Handle change in exit codes for the core agent.
 
-
 ## [3.0.2] 2023-11-06
 ### Fixed
 - Core Agent fails to download on newer Mac OS/Apple Silicon (Issue #779)
