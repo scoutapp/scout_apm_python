@@ -78,8 +78,6 @@ class CoreAgentManager(object):
                 # Other processes may have already started the core agent.
                 logger.debug("Core agent already running.")
                 return True
-            elif err.returncode in [signal.SIGTERM, signal.SIGQUIT]:
-                logger.debug("Core agent returned signal: {}".format(err.returncode))
             else:
                 logger.exception("CalledProcessError running Core Agent")
             return False
