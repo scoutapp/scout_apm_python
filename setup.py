@@ -33,7 +33,7 @@ else:
 
 setup(
     name="scout_apm",
-    version="3.0.2",
+    version="3.1.0",
     description="Scout Application Performance Monitoring Agent",
     long_description=long_description,
     long_description_content_type="text/markdown",
