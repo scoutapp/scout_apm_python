@@ -127,23 +127,6 @@ def test_launch_error(caplog, core_agent_manager):
     assert caplog.records[0].exc_info[1] is exception
 
 
-@pytest.mark.parametrize(["signal_code"], [[signal.SIGQUIT], [signal.SIGTERM]])
-def test_launch_expected_signal_error(signal_code, caplog, core_agent_manager):
-    caplog.set_level(logging.ERROR)
-    exception = subprocess.CalledProcessError(signal_code, "err")
-    with mock.patch.object(
-        manager.CoreAgentManager,
-        "agent_binary",
-        side_effect=exception,
-    ):
-        result = core_agent_manager.launch()
-
-    assert not result
-    assert not core_agent_is_running()
-    # Caplog doesn't contain debug messages
-    assert caplog.record_tuples == []
-
-
 def test_launch_unexpected_signal_error(caplog, core_agent_manager):
     caplog.set_level(logging.ERROR)
     exception = subprocess.CalledProcessError(signal.SIGINT, "err")

@@ -5,7 +5,6 @@ import hashlib
 import json
 import logging
 import os
-import signal
 import subprocess
 import tarfile
 import time
@@ -16,6 +15,8 @@ from scout_apm.compat import urllib3_cert_pool_manager
 from scout_apm.core.config import scout_config
 
 logger = logging.getLogger(__name__)
+
+CA_ALREADY_RUNNING_EXIT_CODE = 3
 
 
 class CoreAgentManager(object):
@@ -73,8 +74,10 @@ class CoreAgentManager(object):
                     stdout=devnull,
                 )
         except subprocess.CalledProcessError as err:
-            if err.returncode in [signal.SIGTERM, signal.SIGQUIT]:
-                logger.debug("Core agent returned signal: {}".format(err.returncode))
+            if err.returncode == CA_ALREADY_RUNNING_EXIT_CODE:
+                # Other processes may have already started the core agent.
+                logger.debug("Core agent already running.")
+                return True
             else:
                 logger.exception("CalledProcessError running Core Agent")
             return False
