@@ -11,7 +11,8 @@ from scout_apm.django.request import get_controller_name
 
 
 def track_request_view_data(request, tracked_request):
-    path = request.path
+    path = tracked_request._path or request.path
+
     tracked_request.tag(
         "path",
         create_filtered_path(
@@ -63,6 +64,8 @@ class MiddlewareTimingMiddleware(object):
             return self.get_response(request)
 
         tracked_request = TrackedRequest.instance()
+        # Save the path for later, as it may be modified by middleware and/or view code.
+        tracked_request._path = request.path
 
         queue_time = request.META.get("HTTP_X_QUEUE_START") or request.META.get(
             "HTTP_X_REQUEST_START", ""

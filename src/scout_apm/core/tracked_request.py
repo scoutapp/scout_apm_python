@@ -35,6 +35,7 @@ class TrackedRequest(object):
         "n_plus_one_tracker",
         "hit_max",
         "sent",
+        "_path",
     )
 
     # Stop adding new spans at this point, to avoid exhausting memory
