@@ -24,7 +24,7 @@ def track_request_view_data(request, tracked_request):
         ),
     )
     logger.debug(f"Tracking request path (track_request_view_data): {tracked_request._path} -- {tracked_request.request_id}")
-    logger.debug(f"Filtered path (track_request_view_data): {tracked_request.tags["path"]} -- {tracked_request.request_id}")
+    logger.debug(f"Filtered path (track_request_view_data): {tracked_request.tags['path']} -- {tracked_request.request_id}")
     logger.debug(f"Ignoring path (track_request_view_data): {ignore_path(path)} -- {tracked_request.request_id}")
 
     if ignore_path(path):
