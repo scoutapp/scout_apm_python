@@ -1,4 +1,5 @@
 # coding=utf-8
+import logging
 
 from django.conf import settings
 from django.urls import get_urlconf
@@ -9,9 +10,12 @@ from scout_apm.core.tracked_request import TrackedRequest
 from scout_apm.core.web_requests import create_filtered_path, ignore_path
 from scout_apm.django.request import get_controller_name
 
+logger = logging.getLogger(__name__)
 
 def track_request_view_data(request, tracked_request):
     path = tracked_request._path or request.path
+
+    logger.debug(f"Tracking request path (track_request_view_data): {tracked_request._path} -- {tracked_request.request_id}")
 
     tracked_request.tag(
         "path",
@@ -19,6 +23,10 @@ def track_request_view_data(request, tracked_request):
             path, [(k, v) for k, vs in request.GET.lists() for v in vs]
         ),
     )
+    logger.debug(f"Tracking request path (track_request_view_data): {tracked_request._path} -- {tracked_request.request_id}")
+    logger.debug(f"Filtered path (track_request_view_data): {tracked_request.tags["path"]} -- {tracked_request.request_id}")
+    logger.debug(f"Ignoring path (track_request_view_data): {ignore_path(path)} -- {tracked_request.request_id}")
+
     if ignore_path(path):
         tracked_request.tag("ignore_transaction", True)
 
@@ -66,6 +74,7 @@ class MiddlewareTimingMiddleware(object):
         tracked_request = TrackedRequest.instance()
         # Save the path for later, as it may be modified by middleware and/or view code.
         tracked_request._path = request.path
+        logger.debug(f"Tracking request path (MiddlewareTimingMiddleware): {tracked_request._path} -- {tracked_request.request_id}")
 
         queue_time = request.META.get("HTTP_X_QUEUE_START") or request.META.get(
             "HTTP_X_REQUEST_START", ""
@@ -103,6 +112,7 @@ class ViewTimingMiddleware(object):
             return self.get_response(request)
 
         tracked_request = TrackedRequest.instance()
+        logger.debug(f"Tracking request path (ViewTimingMiddleware): {tracked_request._path} -- {tracked_request.request_id}")
 
         # This operation name won't be recorded unless changed later in
         # process_view
@@ -121,10 +131,13 @@ class ViewTimingMiddleware(object):
             return
         tracked_request = TrackedRequest.instance()
         tracked_request.is_real_request = True
+        logger.debug(f"Tracked Request Middleware {tracked_request.request_id}: {settings.MIDDLEWARE}")
+        logger.debug(f"Tracking request path (ViewTimingMiddleware.process_view): {tracked_request._path} -- {tracked_request.request_id}")
 
         span = tracked_request.current_span()
         if span is not None:
             span.operation = get_controller_name(request)
+            logger.debug(f"Span Operation (ViewTimingMiddleware.process_view): {span.operation} -- {tracked_request.request_id}")
 
     def process_exception(self, request, exception):
         """
