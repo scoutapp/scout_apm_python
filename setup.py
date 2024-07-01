@@ -59,7 +59,7 @@ setup(
     },
     install_requires=[
         "asgiref",
-        "psutil>=5,<6",
+        "psutil>=5",
         "urllib3",
         "certifi",
         "wrapt>=1.10,<2.0",
