@@ -193,8 +193,8 @@ def drf_router():
             raise ValueError("BØØM!")
 
     router = routers.SimpleRouter()
-    router.register(r"users", UserViewSet)
-    router.register(r"crash", ErrorViewSet)
+    router.register(r"users", UserViewSet, basename="user")
+    router.register(r"crash", ErrorViewSet, basename="error")
 
     return router
 

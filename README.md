@@ -35,7 +35,7 @@ To use Scout, you'll need to
 
 For full installation instructions, including information on configuring Scout
 via environment variables and troubleshooting, see our
-[Python docs](https://docs.scoutapm.com/#python-agent).
+[Python docs](https://scoutapm.com/docs/python).
 
 ## Support
 

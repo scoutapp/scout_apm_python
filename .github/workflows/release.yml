@@ -91,7 +91,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install packaging tools
         run: |
-          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install --upgrade pip setuptools importlib_metadata wheel
 
       - name: Build Python pure Python wheel
         env:
