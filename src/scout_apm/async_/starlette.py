@@ -73,6 +73,7 @@ class ScoutMiddleware:
         finally:
             if tracked_request.end_time is None:
                 grab_extra_data()
+                tracked_request.operation = controller_span.operation
                 tracked_request.stop_span()
 
 
@@ -90,11 +91,11 @@ def install_background_instrumentation():
         tracked_request = TrackedRequest.instance()
         tracked_request.is_real_request = True
 
-        with tracked_request.span(
-            operation="Job/{}.{}".format(
-                instance.func.__module__, instance.func.__qualname__
-            )
-        ):
+        operation = "Job/{}.{}".format(
+            instance.func.__module__, instance.func.__qualname__
+        )
+        tracked_request.operation = operation
+        with tracked_request.span(operation=operation):
             return await wrapped(*args, **kwargs)
 
     BackgroundTask.__call__ = wrapped_background_call(BackgroundTask.__call__)

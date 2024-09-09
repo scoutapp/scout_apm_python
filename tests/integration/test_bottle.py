@@ -32,7 +32,8 @@ def app_with_scout(config=None, catchall=False):
     # Disable running the agent.
     config["scout.core_agent_launch"] = False
 
-    app = Bottle(catchall=catchall)
+    app = Bottle()
+    app.config["catchall"] = catchall
 
     @app.route("/")
     def home():
@@ -169,6 +170,7 @@ def test_hello(tracked_requests):
     assert len(tracked_request.complete_spans) == 1
     span = tracked_request.complete_spans[0]
     assert span.operation == "Controller/hello/"
+    assert tracked_request.operation == "Controller/hello/"
 
 
 def test_not_found(tracked_requests):
@@ -190,6 +192,7 @@ def test_server_error(tracked_requests):
     assert len(tracked_request.complete_spans) == 1
     span = tracked_requests[0].complete_spans[0]
     assert span.operation == "Controller/crash/"
+    assert tracked_request.operation == "Controller/crash/"
 
 
 def test_return_error(tracked_requests):
@@ -203,6 +206,7 @@ def test_return_error(tracked_requests):
     assert len(tracked_request.complete_spans) == 1
     span = tracked_requests[0].complete_spans[0]
     assert span.operation == "Controller/return-error/"
+    assert tracked_request.operation == "Controller/return-error/"
 
 
 def test_named(tracked_requests):

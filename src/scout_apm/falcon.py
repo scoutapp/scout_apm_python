@@ -106,6 +106,7 @@ class ScoutMiddleware(object):
         span = tracked_request.start_span(
             operation=operation, should_capture_backtrace=False
         )
+        tracked_request.operation = operation
         req.context.scout_resource_span = span
 
     def _name_operation(self, req, responder, resource):
