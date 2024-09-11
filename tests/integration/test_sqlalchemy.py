@@ -31,6 +31,7 @@ def test_single_query(tracked_request):
     assert len(tracked_request.complete_spans) == 1
     span = tracked_request.complete_spans[0]
     assert span.operation == "SQL/Query"
+    assert tracked_request.operation == "SQL/Query"
     assert span.tags["db.statement"] == "SELECT 'Hello World!'"
 
 
@@ -48,6 +49,7 @@ def test_many_query(tracked_request):
     assert spans[0].tags["db.statement"] == "CREATE TABLE t(i integer)"
     assert spans[1].operation == "SQL/Many"
     assert spans[1].tags["db.statement"] == "INSERT INTO t(i) VALUES (?)"
+    assert tracked_request.operation == "SQL/Many"
 
 
 def test_execute_capture_backtrace(tracked_request):
@@ -59,6 +61,7 @@ def test_execute_capture_backtrace(tracked_request):
     span = tracked_request.complete_spans[0]
     assert span.operation == "SQL/Query"
     assert span.tags["db.statement"] == "SELECT 'Hello World!'"
+    assert tracked_request.operation == "SQL/Query"
     assert "stack" in span.tags
 
 
@@ -75,6 +78,7 @@ def test_executemany_capture_backtrace(tracked_request):
     assert span.operation == "SQL/Many"
     assert span.tags["db.statement"] == "INSERT INTO t(i) VALUES (?)"
     assert "stack" in span.tags
+    assert tracked_request.operation == "SQL/Many"
 
 
 def test_instrument_engine_is_idempotent():
