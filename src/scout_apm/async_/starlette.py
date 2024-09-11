@@ -40,6 +40,7 @@ class ScoutMiddleware:
                     endpoint.__module__,
                     endpoint.__qualname__,
                 )
+                tracked_request.operation = controller_span.operation
             else:
                 # Mark the request as not real
                 tracked_request.is_real_request = False
@@ -73,7 +74,6 @@ class ScoutMiddleware:
         finally:
             if tracked_request.end_time is None:
                 grab_extra_data()
-                tracked_request.operation = controller_span.operation
                 tracked_request.stop_span()
 
 
