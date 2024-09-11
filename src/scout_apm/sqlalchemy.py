@@ -11,7 +11,6 @@ def before_cursor_execute(conn, cursor, statement, parameters, context, executem
     else:
         operation = "SQL/Query"
     tracked_request = TrackedRequest.instance()
-    tracked_request.operation = operation
     span = tracked_request.start_span(operation=operation)
     span.tag("db.statement", statement)
 
