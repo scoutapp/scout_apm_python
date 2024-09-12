@@ -2,6 +2,10 @@
 
 ## Pending
 
+## [3.2.0] 2024-09-12
+### Added
+- "Operation" attribute added to TrackedRequest class to better support development of [scout_apm_python_logging](https://github.com/scoutapp/scout_apm_python_logging)
+
 ## [3.1.0] 2023-12-18
 ### Added
 - Updates Core Agent to v1.5.0
