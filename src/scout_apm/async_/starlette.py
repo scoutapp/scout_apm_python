@@ -40,6 +40,7 @@ class ScoutMiddleware:
                     endpoint.__module__,
                     endpoint.__qualname__,
                 )
+                tracked_request.operation = controller_span.operation
             else:
                 # Mark the request as not real
                 tracked_request.is_real_request = False
@@ -90,11 +91,11 @@ def install_background_instrumentation():
         tracked_request = TrackedRequest.instance()
         tracked_request.is_real_request = True
 
-        with tracked_request.span(
-            operation="Job/{}.{}".format(
-                instance.func.__module__, instance.func.__qualname__
-            )
-        ):
+        operation = "Job/{}.{}".format(
+            instance.func.__module__, instance.func.__qualname__
+        )
+        tracked_request.operation = operation
+        with tracked_request.span(operation=operation):
             return await wrapped(*args, **kwargs)
 
     BackgroundTask.__call__ = wrapped_background_call(BackgroundTask.__call__)

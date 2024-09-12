@@ -35,6 +35,7 @@ class TrackedRequest(object):
         "n_plus_one_tracker",
         "hit_max",
         "sent",
+        "operation",
     )
 
     # Stop adding new spans at this point, to avoid exhausting memory
@@ -58,6 +59,7 @@ class TrackedRequest(object):
         self.n_plus_one_tracker = NPlusOneTracker()
         self.hit_max = False
         self.sent = False
+        self.operation = None
         logger.debug("Starting request: %s", self.request_id)
 
     def __repr__(self):

@@ -47,6 +47,7 @@ class ScoutApm(object):
 
         tracked_request = TrackedRequest.instance()
         tracked_request.is_real_request = True
+        tracked_request.operation = operation
         request._scout_tracked_request = tracked_request
 
         werkzeug_track_request_data(request, tracked_request)

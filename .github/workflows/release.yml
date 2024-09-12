@@ -53,7 +53,7 @@ jobs:
 
   build_macos_wheels:
     name: Build macos wheels (cross-compiles arm64)
-    runs-on: macos-11
+    runs-on: macos-13
     steps:
       - uses: actions/checkout@v3
 

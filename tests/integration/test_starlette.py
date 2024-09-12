@@ -130,9 +130,11 @@ async def test_home(tracked_requests):
     assert len(tracked_request.complete_spans) == 1
     assert tracked_request.tags["path"] == "/"
     span = tracked_request.complete_spans[0]
-    assert span.operation == (
+    expected_operation = (
         "Controller/tests.integration.test_starlette." + "app_with_scout.<locals>.home"
     )
+    assert tracked_request.operation == expected_operation
+    assert span.operation == expected_operation
 
 
 @pytest.mark.asyncio
@@ -193,10 +195,12 @@ async def test_hello(tracked_requests):
     assert len(tracked_request.complete_spans) == 1
     assert tracked_request.tags["path"] == "/hello/"
     span = tracked_request.complete_spans[0]
-    assert span.operation == (
+    expected_operation = (
         "Controller/tests.integration.test_starlette."
         + "app_with_scout.<locals>.HelloEndpoint"
     )
+    assert tracked_request.operation == expected_operation
+    assert span.operation == expected_operation
 
 
 @pytest.mark.asyncio

@@ -71,10 +71,10 @@ def wrap_callback(wrapped, instance, args, kwargs):
         "x-request-start", ""
     )
     track_request_queue_time(queue_time, tracked_request)
+    operation = "Controller{}".format(controller_name)
 
-    with tracked_request.span(
-        operation="Controller{}".format(controller_name), should_capture_backtrace=False
-    ):
+    with tracked_request.span(operation=operation):
+        tracked_request.operation = operation
         try:
             value = wrapped(*args, **kwargs)
         except Exception:

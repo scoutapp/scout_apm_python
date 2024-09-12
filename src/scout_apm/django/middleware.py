@@ -122,6 +122,7 @@ class ViewTimingMiddleware(object):
         span = tracked_request.current_span()
         if span is not None:
             span.operation = get_controller_name(request)
+            tracked_request.operation = span.operation
 
     def process_exception(self, request, exception):
         """

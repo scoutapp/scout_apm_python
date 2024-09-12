@@ -201,6 +201,9 @@ def test_hello(tracked_requests):
         "Controller/tests.integration.django_app.hello",
         "Middleware",
     ]
+    assert (
+        tracked_requests[0].operation == "Controller/tests.integration.django_app.hello"
+    )
 
 
 def test_not_found(tracked_requests):

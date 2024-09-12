@@ -80,6 +80,7 @@ def test_home(tracked_requests):
     assert tracked_request.tags["path"] == "/"
     span = tracked_request.complete_spans[0]
     assert span.operation == "Controller/tests.integration.test_flask.home"
+    assert tracked_request.operation == "Controller/tests.integration.test_flask.home"
 
 
 def test_home_ignored(tracked_requests):
@@ -154,6 +155,7 @@ def test_hello(tracked_requests):
     assert tracked_request.tags["path"] == "/hello/"
     span = tracked_request.complete_spans[0]
     assert span.operation == "Controller/tests.integration.test_flask.hello"
+    assert tracked_request.operation == "Controller/tests.integration.test_flask.hello"
 
 
 def test_hello_options(tracked_requests):
@@ -168,6 +170,7 @@ def test_hello_options(tracked_requests):
     assert tracked_request.tags["path"] == "/hello/"
     span = tracked_request.complete_spans[0]
     assert span.operation == "Controller/tests.integration.test_flask.hello"
+    assert tracked_request.operation == "Controller/tests.integration.test_flask.hello"
 
 
 def test_not_found(tracked_requests):
@@ -190,6 +193,7 @@ def test_server_error(tracked_requests):
     assert len(tracked_request.complete_spans) == 1
     span = tracked_request.complete_spans[0]
     assert span.operation == "Controller/tests.integration.test_flask.crash"
+    assert tracked_request.operation == "Controller/tests.integration.test_flask.crash"
 
 
 def test_return_error(tracked_requests):
@@ -204,6 +208,10 @@ def test_return_error(tracked_requests):
     assert len(tracked_request.complete_spans) == 1
     span = tracked_request.complete_spans[0]
     assert span.operation == "Controller/tests.integration.test_flask.return_error"
+    assert (
+        tracked_request.operation
+        == "Controller/tests.integration.test_flask.return_error"
+    )
 
 
 def test_automatic_options(tracked_requests):
@@ -217,6 +225,9 @@ def test_automatic_options(tracked_requests):
     assert [s.operation for s in spans] == [
         "Controller/tests.integration.test_flask.home"
     ]
+    assert (
+        tracked_requests[0].operation == "Controller/tests.integration.test_flask.home"
+    )
 
 
 def test_preprocessor_response(tracked_requests):
