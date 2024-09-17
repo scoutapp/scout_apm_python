@@ -67,6 +67,7 @@ def test_hello(tracked_requests):
     assert len(tracked_request.complete_spans) == 1
     span = tracked_request.complete_spans[0]
     assert span.operation == "Job/tests.integration.test_huey.hello"
+    assert tracked_request.operation == "Job/tests.integration.test_huey.hello"
 
 
 def test_retry_once(tracked_requests):
@@ -82,6 +83,7 @@ def test_retry_once(tracked_requests):
     assert len(tracked_request.complete_spans) == 1
     span = tracked_request.complete_spans[0]
     assert span.operation == "Job/tests.integration.test_huey.retry_once"
+    assert tracked_request.operation == "Job/tests.integration.test_huey.retry_once"
 
 
 def test_fail(tracked_requests):
@@ -97,6 +99,7 @@ def test_fail(tracked_requests):
     assert len(tracked_request.complete_spans) == 1
     span = tracked_request.complete_spans[0]
     assert span.operation == "Job/tests.integration.test_huey.fail"
+    assert tracked_request.operation == "Job/tests.integration.test_huey.fail"
 
 
 def test_cancelled(tracked_requests):

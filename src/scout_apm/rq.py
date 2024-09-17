@@ -67,8 +67,9 @@ def wrap_perform(wrapped, instance, args, kwargs):
     tracked_request.tag("queue", instance.origin)
     queue_time = (dt.datetime.utcnow() - instance.enqueued_at).total_seconds()
     tracked_request.tag("queue_time", queue_time)
-
-    with tracked_request.span(operation="Job/{}".format(instance.func_name)):
+    operation = "Job/{}".format(instance.func_name)
+    tracked_request.operation = operation
+    with tracked_request.span(operation=operation):
         try:
             return wrapped(*args, **kwargs)
         except Exception:

@@ -96,6 +96,7 @@ def test_hello_eager(tracked_requests):
     assert len(tracked_request.complete_spans) == 1
     span = tracked_request.complete_spans[0]
     assert span.operation == "Job/tests.integration.test_celery.hello"
+    assert tracked_request.operation == "Job/tests.integration.test_celery.hello"
 
 
 def test_error_task(tracked_requests):
@@ -110,6 +111,7 @@ def test_error_task(tracked_requests):
     span = tracked_request.complete_spans[0]
     assert span.operation == "Job/tests.integration.test_celery.crash"
     assert tracked_request.tags["error"]
+    assert tracked_request.operation == "Job/tests.integration.test_celery.crash"
 
 
 def test_error_task_error_monitor(error_monitor_errors, mock_get_safe_settings):
@@ -255,6 +257,7 @@ def test_hello_worker(celery_app, celery_worker, tracked_requests):
     assert len(tracked_request.complete_spans) == 1
     span = tracked_request.complete_spans[0]
     assert span.operation == "Job/tests.integration.test_celery.hello"
+    assert tracked_request.operation == "Job/tests.integration.test_celery.hello"
 
 
 @skip_unless_celery_4_plus
@@ -274,6 +277,7 @@ def test_hello_worker_header_preset(celery_app, celery_worker, tracked_requests)
     span = tracked_request.complete_spans[0]
     assert span.operation == "Job/tests.integration.test_celery.hello"
     assert "scout.job_queue_time_ns" not in span.tags
+    assert tracked_request.operation == "Job/tests.integration.test_celery.hello"
 
 
 @skip_unless_celery_4_plus
