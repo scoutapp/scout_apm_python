@@ -164,6 +164,7 @@ async def test_web_transaction_decorator_async(tracked_request):
     assert len(tracked_request.complete_spans) == 2
     assert tracked_request.complete_spans[0].operation == "Custom/Foo"
     assert tracked_request.complete_spans[1].operation == "Controller/Bar"
+    assert tracked_request.operation == "Controller/Bar"
 
 
 @pytest.mark.asyncio
@@ -183,6 +184,7 @@ async def test_web_transaction_decorator_async_misconfigured(tracked_request):
     assert len(tracked_request.active_spans) == 0
     assert len(tracked_request.complete_spans) == 1
     assert tracked_request.complete_spans[0].operation == "Controller/Bar"
+    assert tracked_request.operation == "Controller/Bar"
 
 
 def test_web_transaction_decorator_async_for_sync_function(tracked_request):
@@ -213,6 +215,7 @@ async def test_background_transaction_decorator_async(tracked_request):
     assert len(tracked_request.complete_spans) == 2
     assert tracked_request.complete_spans[0].operation == "Custom/Foo"
     assert tracked_request.complete_spans[1].operation == "Job/Bar"
+    assert tracked_request.operation == "Job/Bar"
 
 
 @pytest.mark.asyncio
@@ -232,6 +235,7 @@ async def test_background_transaction_decorator_async_misconfigured(tracked_requ
     assert len(tracked_request.active_spans) == 0
     assert len(tracked_request.complete_spans) == 1
     assert tracked_request.complete_spans[0].operation == "Job/Bar"
+    assert tracked_request.operation == "Job/Bar"
 
 
 def test_background_transaction_decorator_async_for_sync_function(tracked_request):

@@ -54,7 +54,9 @@ def task_prerun_callback(task=None, **kwargs):
         tracked_request.tag("routing_key", delivery_info.get("routing_key", "unknown"))
         tracked_request.tag("queue", delivery_info.get("queue", "unknown"))
 
-    tracked_request.start_span(operation=("Job/" + task.name))
+    operation = "Job/" + task.name
+    tracked_request.start_span(operation=operation)
+    tracked_request.operation = operation
 
 
 def task_postrun_callback(task=None, **kwargs):

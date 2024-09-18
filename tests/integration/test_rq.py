@@ -88,6 +88,7 @@ def test_hello(redis_conn, tracked_requests):
         tracked_request.complete_spans[1].operation
         == "Job/tests.integration.test_rq.hello"
     )
+    assert tracked_request.operation == "Job/tests.integration.test_rq.hello"
 
 
 def test_fail(redis_conn, tracked_requests):
@@ -107,6 +108,7 @@ def test_fail(redis_conn, tracked_requests):
         tracked_request.complete_spans[1].operation
         == "Job/tests.integration.test_rq.fail"
     )
+    assert tracked_request.operation == "Job/tests.integration.test_rq.fail"
 
 
 def test_no_monitor(redis_conn, tracked_requests):

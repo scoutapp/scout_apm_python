@@ -79,6 +79,7 @@ def test_hello(tracked_requests):
     assert len(tracked_request.complete_spans) == 1
     span = tracked_request.complete_spans[0]
     assert span.operation == "Job/hello"
+    assert tracked_request.operation == "Job/hello"
 
 
 def test_fail(tracked_requests):
@@ -95,6 +96,7 @@ def test_fail(tracked_requests):
     assert len(tracked_request.complete_spans) == 1
     span = tracked_request.complete_spans[0]
     assert span.operation == "Job/fail"
+    assert tracked_request.operation == "Job/fail"
 
 
 def test_not_installed(tracked_requests):

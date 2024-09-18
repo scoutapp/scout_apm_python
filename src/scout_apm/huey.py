@@ -30,6 +30,7 @@ def scout_on_pre_execute(task):
 
     operation = "Job/{}.{}".format(task.__module__, task.__class__.__name__)
     tracked_request.start_span(operation=operation)
+    tracked_request.operation = operation
 
 
 def scout_on_post_execute(task, task_value, exception):

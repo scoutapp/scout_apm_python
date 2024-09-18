@@ -17,7 +17,9 @@ class ScoutMiddleware(dramatiq.Middleware):
         tracked_request = TrackedRequest.instance()
         tracked_request.tag("queue", message.queue_name)
         tracked_request.tag("message_id", message.message_id)
-        tracked_request.start_span(operation="Job/" + message.actor_name)
+        operation = "Job/" + message.actor_name
+        tracked_request.start_span(operation=operation)
+        tracked_request.operation = operation
 
     def after_process_message(self, broker, message, result=None, exception=None):
         if self._do_nothing:

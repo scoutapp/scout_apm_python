@@ -97,6 +97,7 @@ class Transaction(AsyncDecoratorMixin, ContextDecorator):
         operation = text(kind) + "/" + text(name)
 
         tracked_request = TrackedRequest.instance()
+        tracked_request.operation = operation
         tracked_request.is_real_request = True
         span = tracked_request.start_span(
             operation=operation, should_capture_backtrace=False
