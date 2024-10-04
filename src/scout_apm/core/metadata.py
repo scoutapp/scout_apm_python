@@ -15,7 +15,7 @@ def report_app_metadata():
             event_type="scout.metadata",
             event_value=get_metadata(),
             source="Pid: " + str(getpid()),
-            timestamp=dt.datetime.utcnow(),
+            timestamp=dt.datetime.now(dt.timezone.utc),
         )
     )
 
@@ -24,7 +24,7 @@ def get_metadata():
     data = {
         "language": "python",
         "language_version": "{}.{}.{}".format(*sys.version_info[:3]),
-        "server_time": dt.datetime.utcnow().isoformat() + "Z",
+        "server_time": dt.datetime.now(dt.timezone.utc).isoformat() + "Z",
         "framework": scout_config.value("framework"),
         "framework_version": scout_config.value("framework_version"),
         "environment": "",

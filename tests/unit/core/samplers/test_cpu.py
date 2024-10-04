@@ -11,7 +11,7 @@ from tests.compat import mock
 
 def test_run_negative_time_elapsed(caplog):
     cpu = Cpu()
-    cpu.last_run = dt.datetime.utcnow() + dt.timedelta(days=100)
+    cpu.last_run = dt.datetime.now() + dt.timedelta(days=100)
 
     result = cpu.run()
 
