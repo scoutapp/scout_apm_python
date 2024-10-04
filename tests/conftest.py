@@ -163,7 +163,11 @@ def core_agent_manager(core_agent_dir):
 
 
 def core_agent_is_running():
-    return any(p.name() == "core-agent" for p in psutil.process_iter(["name"]))
+    return any(
+        p.name() == "core-agent"
+        for p in psutil.process_iter(["name"])
+        if p.is_running()
+    )
 
 
 def terminate_core_agent_processes():
