@@ -167,7 +167,7 @@ def test_start_span_at_max_ignores_span(caplog, tracked_request):
 def test_span_captures_backtrace(tracked_request):
     span = tracked_request.start_span(operation="Sql/Work")
     # Pretend it was started 1 second ago
-    span.start_time = dt.datetime.utcnow() - dt.timedelta(seconds=1)
+    span.start_time = dt.datetime.now(dt.timezone.utc) - dt.timedelta(seconds=1)
     tracked_request.stop_span()
     assert "stack" in span.tags
 

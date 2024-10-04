@@ -136,7 +136,7 @@ def test_user_ip_collection_disabled(tracked_requests):
 @parametrize_queue_time_header_name
 def test_queue_time(header_name, tracked_requests):
     # Not testing floats due to Python 2/3 rounding differences
-    queue_start = int(datetime_to_timestamp(dt.datetime.utcnow())) - 2
+    queue_start = int(datetime_to_timestamp(dt.datetime.now())) - 2
     with app_with_scout() as app:
         response = TestApp(app).get(
             "/", headers={header_name: str("t=") + str(queue_start)}

@@ -16,7 +16,7 @@ from scout_apm.core.queue_time import (
 
 @pytest.mark.parametrize("with_t", [True, False])
 def test_track_request_queue_time_valid(with_t, tracked_request):
-    queue_start = int(datetime_to_timestamp(dt.datetime.utcnow())) - 2
+    queue_start = int(datetime_to_timestamp(dt.datetime.now(dt.timezone.utc))) - 2
     if with_t:
         header_value = str("t=") + str(queue_start)
     else:
@@ -35,7 +35,9 @@ def test_track_request_queue_time_valid(with_t, tracked_request):
         str(""),
         str("t=X"),  # first character not a digit
         str("t=0.3f"),  # raises ValueError on float() conversion
-        str(datetime_to_timestamp(dt.datetime.utcnow()) + 3600.0),  # one hour in future
+        str(
+            datetime_to_timestamp(dt.datetime.now(dt.timezone.utc)) + 3600.0
+        ),  # one hour in future
         str(datetime_to_timestamp(dt.datetime(2009, 1, 1))),  # before ambig cutoff
     ],
 )
@@ -48,7 +50,7 @@ def test_track_request_queue_time_invalid(header_value, tracked_request):
 
 @pytest.mark.parametrize("with_t", [True, False])
 def test_track_job_queue_time_valid(with_t, tracked_request):
-    queue_start = datetime_to_timestamp(dt.datetime.utcnow()) - 2.0
+    queue_start = datetime_to_timestamp(dt.datetime.now(dt.timezone.utc)) - 2.0
     result = track_job_queue_time(queue_start, tracked_request)
 
     assert result is True
@@ -61,7 +63,9 @@ def test_track_job_queue_time_valid(with_t, tracked_request):
     [
         str(""),
         str("123"),
-        str(datetime_to_timestamp(dt.datetime.utcnow()) + 3600.0),  # one hour in future
+        str(
+            datetime_to_timestamp(dt.datetime.now(dt.timezone.utc)) + 3600.0
+        ),  # one hour in future
         str(datetime_to_timestamp(dt.datetime(2009, 1, 1))),  # before ambig cutoff
     ],
 )

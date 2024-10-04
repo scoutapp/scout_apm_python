@@ -29,7 +29,9 @@ logger = logging.getLogger(__name__)
 
 def before_task_publish_callback(headers=None, properties=None, **kwargs):
     if "scout_task_start" not in headers:
-        headers["scout_task_start"] = datetime_to_timestamp(dt.datetime.utcnow())
+        headers["scout_task_start"] = datetime_to_timestamp(
+            dt.datetime.now(dt.timezone.utc)
+        )
 
 
 def task_prerun_callback(task=None, **kwargs):

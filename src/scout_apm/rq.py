@@ -65,7 +65,9 @@ def wrap_perform(wrapped, instance, args, kwargs):
     tracked_request.is_real_request = True
     tracked_request.tag("task_id", instance.get_id())
     tracked_request.tag("queue", instance.origin)
-    queue_time = (dt.datetime.utcnow() - instance.enqueued_at).total_seconds()
+    queue_time = (
+        dt.datetime.now(dt.timezone.utc) - instance.enqueued_at
+    ).total_seconds()
     tracked_request.tag("queue_time", queue_time)
     operation = "Job/{}".format(instance.func_name)
     tracked_request.operation = operation

@@ -30,7 +30,7 @@ class SamplersThread(SingletonThread):
                     event = ApplicationEvent(
                         event_value=event_value,
                         event_type=event_type,
-                        timestamp=dt.datetime.utcnow(),
+                        timestamp=dt.datetime.now(dt.timezone.utc),
                         source="Pid: " + str(os.getpid()),
                     )
                     CoreAgentSocketThread.send(event)
