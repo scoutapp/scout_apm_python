@@ -1,5 +1,6 @@
 # coding=utf-8
 
+import datetime as dt
 import logging
 import re
 
@@ -8,6 +9,17 @@ from scout_apm.compat import iteritems
 logger = logging.getLogger(__name__)
 
 key_regex = re.compile(r"^[a-zA-Z0-9]{20}$")
+
+
+def format_dt_for_core_agent(event_time: dt.datetime) -> str:
+    """
+    Returns expected format for Core Agent compatibility. Agent expects UTC datetime
+    with 'Z' suffix. Coerce any tz-aware datetime to UTC just in case.
+    """
+    # if we somehow got a non-UTC datetime, convert it to UTC
+    if event_time.tzinfo is not None:
+        event_time = event_time.astimezone(dt.timezone.utc)
+    return event_time.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 class Register(object):
@@ -49,7 +61,7 @@ class StartSpan(object):
     def message(self):
         return {
             "StartSpan": {
-                "timestamp": self.timestamp.isoformat() + "Z",
+                "timestamp": format_dt_for_core_agent(self.timestamp),
                 "request_id": self.request_id,
                 "span_id": self.span_id,
                 "parent_id": self.parent,
@@ -69,7 +81,7 @@ class StopSpan(object):
     def message(self):
         return {
             "StopSpan": {
-                "timestamp": self.timestamp.isoformat() + "Z",
+                "timestamp": format_dt_for_core_agent(self.timestamp),
                 "request_id": self.request_id,
                 "span_id": self.span_id,
             }
@@ -86,7 +98,7 @@ class StartRequest(object):
     def message(self):
         return {
             "StartRequest": {
-                "timestamp": self.timestamp.isoformat() + "Z",
+                "timestamp": format_dt_for_core_agent(self.timestamp),
                 "request_id": self.request_id,
             }
         }
@@ -102,7 +114,7 @@ class FinishRequest(object):
     def message(self):
         return {
             "FinishRequest": {
-                "timestamp": self.timestamp.isoformat() + "Z",
+                "timestamp": format_dt_for_core_agent(self.timestamp),
                 "request_id": self.request_id,
             }
         }
@@ -121,7 +133,7 @@ class TagSpan(object):
     def message(self):
         return {
             "TagSpan": {
-                "timestamp": self.timestamp.isoformat() + "Z",
+                "timestamp": format_dt_for_core_agent(self.timestamp),
                 "request_id": self.request_id,
                 "span_id": self.span_id,
                 "tag": self.tag,
@@ -142,7 +154,7 @@ class TagRequest(object):
     def message(self):
         return {
             "TagRequest": {
-                "timestamp": self.timestamp.isoformat() + "Z",
+                "timestamp": format_dt_for_core_agent(self.timestamp),
                 "request_id": self.request_id,
                 "tag": self.tag,
                 "value": self.value,
@@ -162,7 +174,7 @@ class ApplicationEvent(object):
     def message(self):
         return {
             "ApplicationEvent": {
-                "timestamp": self.timestamp.isoformat() + "Z",
+                "timestamp": format_dt_for_core_agent(self.timestamp),
                 "event_type": self.event_type,
                 "event_value": self.event_value,
                 "source": self.source,
