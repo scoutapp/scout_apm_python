@@ -13,13 +13,14 @@ key_regex = re.compile(r"^[a-zA-Z0-9]{20}$")
 
 def format_dt_for_core_agent(event_time: dt.datetime) -> str:
     """
-    Returns expected format for Core Agent compatibility. Agent expects UTC datetime
-    with 'Z' suffix. Coerce any tz-aware datetime to UTC just in case.
+    Returns expected format for Core Agent compatibility.
+    Coerce any tz-aware datetime to UTC just in case.
     """
-    # if we somehow got a non-UTC datetime, convert it to UTC
-    if event_time.tzinfo is not None:
+    # if we somehow got a naive datetime, convert it to UTC
+    if event_time.tzinfo is None:
+        logger.warning("Naive datetime passed to format_dt_for_core_agent")
         event_time = event_time.astimezone(dt.timezone.utc)
-    return event_time.strftime("%Y-%m-%dT%H:%M:%SZ")
+    return event_time.isoformat()
 
 
 class Register(object):
