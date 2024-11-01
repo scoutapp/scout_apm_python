@@ -254,7 +254,9 @@ class Span(object):
             return (self.end_time - self.start_time).total_seconds()
         else:
             # Current, running duration
-            return (dt.datetime.now() - self.start_time).total_seconds()
+            return (
+                dt.datetime.now(tz=dt.timezone.utc) - self.start_time
+            ).total_seconds()
 
     # Add any interesting annotations to the span. Assumes that we are in the
     # process of stopping this span.

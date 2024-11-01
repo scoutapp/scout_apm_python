@@ -3,7 +3,7 @@
 import json
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from time import sleep
 
 import httpretty
@@ -142,7 +142,7 @@ def test_send_api_error(error_service_thread, caplog):
 
 def test_send_unserializable_data(error_service_thread, caplog):
     with httpretty.enabled(allow_net_connect=False):
-        ErrorServiceThread.send(error={"value": datetime.now()})
+        ErrorServiceThread.send(error={"value": datetime.now(tz=timezone.utc)})
         ErrorServiceThread.wait_until_drained()
 
     if ErrorServiceThread._queue.empty() and not caplog.record_tuples:
