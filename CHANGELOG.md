@@ -2,6 +2,9 @@
 
 ## Pending
 
+- Change to tz-aware dates internally (Issue #799)
+- psutil dependency un-pin (#790)
+
 ## [3.2.0] 2024-09-12
 ### Added
 - "Operation" attribute added to TrackedRequest class to better support development of [scout_apm_python_logging](https://github.com/scoutapp/scout_apm_python_logging)
