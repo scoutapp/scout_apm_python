@@ -86,7 +86,7 @@ def track_job_queue_time(
         bool: Whether we succeeded in marking queue time for the job. Used for testing.
     """
     if header_value is not None:
-        now = datetime_to_timestamp(dt.datetime.utcnow()) * 1e9
+        now = datetime_to_timestamp(dt.datetime.now(dt.timezone.utc)) * 1e9
         try:
             ambiguous_float_start = typing.cast(float, header_value)
             start = _convert_ambiguous_timestamp_to_ns(ambiguous_float_start)

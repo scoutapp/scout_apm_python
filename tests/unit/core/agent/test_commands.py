@@ -13,14 +13,14 @@ REQUEST_ID = "req-97c1d72c-5519-4665-85d3-1ac21af39b63"
 SPAN_ID = "span-7dbb0712-e3c5-4b73-b317-f8d2114c5993"
 PARENT_ID = "span-d10de59e-1e9f-46e9-9d5e-81b5bfc091ec"
 
-TIMESTAMP = dt.datetime(2018, 12, 1, 17, 4, 34, 386568)
-TIMESTAMP_STR = "2018-12-01T17:04:34.386568Z"
+TIMESTAMP = dt.datetime(2018, 12, 1, 17, 4, 34, 386568, tzinfo=dt.timezone.utc)
+TIMESTAMP_STR = "2018-12-01T17:04:34.386568+00:00"
 
-START_TIME = dt.datetime(2018, 12, 1, 17, 4, 34, 78797)
-START_TIME_STR = "2018-12-01T17:04:34.078797Z"
+START_TIME = dt.datetime(2018, 12, 1, 17, 4, 34, 78797, tzinfo=dt.timezone.utc)
+START_TIME_STR = "2018-12-01T17:04:34.078797+00:00"
 
-END_TIME = dt.datetime(2018, 12, 1, 17, 4, 34, 641403)
-END_TIME_STR = "2018-12-01T17:04:34.641403Z"
+END_TIME = dt.datetime(2018, 12, 1, 17, 4, 34, 641403, tzinfo=dt.timezone.utc)
+END_TIME_STR = "2018-12-01T17:04:34.641403+00:00"
 
 
 def test_register_message_good_key(caplog):

@@ -85,7 +85,7 @@ Running the test app
 --------------------
 
 Note: this has not been tested in a while. Instead, the
-[scout-test-apps repo](https://github.com/tim-schilling/scout-test-apps) has
+[scout-test-apps repo](https://github.com/scoutapp/scout-test-apps) has
 been used with many individual scout apps.
 
 Add the following env variables:
@@ -133,7 +133,6 @@ architectures. Its documentation is excellent.
 Documentation
 -------------
 
-The user documentation is stored in the [slate_apm_help
-repo](https://github.com/scoutapp/slate_apm_help) in the
-`source/_includes/python.md` file. Make relevant changes there when developing
-features.
+The user documentation is stored in the [scout-documentation](https://github.com/scoutapp/scout-documentation) repo.
+It is private to the Scout Monitoring team; if you want to submit a feature feel free to
+send us some Markdown and we will get it added.
