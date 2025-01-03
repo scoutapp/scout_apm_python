@@ -302,19 +302,27 @@ def convert_to_float(value: Any) -> float:
     except ValueError:
         return 0.0
 
-def convert_sample_rate(value: Any) -> float:
+
+def convert_sample_rate(value: Any) -> int:
     """
-    Converts sample rate to float, ensuring it's between 0 and 1
+    Converts sample rate to integer, ensuring it's between 0 and 100
     """
     try:
-        rate = float(value)
-        if not (0 <= rate <= 1):
-            logger.warning(f"Invalid sample rate {rate}. Must be between 0 and 1. Defaulting to 1.")
-            return 1.0
+        rate = int(value)
+        if not (0 <= rate <= 100):
+            logger.warning(
+                f"Invalid sample rate {rate}. Must be between 0 and 100. "
+                "Defaulting to 100."
+            )
+            return 100
         return rate
     except (TypeError, ValueError):
-        logger.warning(f"Invalid sample rate {value}. Must be a number between 0 and 1. Defaulting to 1.")
-        return 1.0
+        logger.warning(
+            f"Invalid sample rate {value}. Must be a number between 0 and 100. "
+            "Defaulting to 100."
+        )
+        return 100
+
 
 def convert_sample_rate(value: Any) -> Optional[int]:
     """
@@ -381,6 +389,7 @@ def convert_endpoint_sampling(value: Union[str, Dict[str, Any]]) -> Dict[str, in
                 continue
         return result
     return {}
+
 
 CONVERSIONS = {
     "collect_remote_ip": convert_to_bool,
