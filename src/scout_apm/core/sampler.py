@@ -1,7 +1,10 @@
 # coding=utf-8
 
+import logging
 import random
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional
+
+logger = logging.getLogger(__name__)
 
 
 class Sampler:
@@ -26,55 +29,48 @@ class Sampler:
             config: ScoutConfig instance containing sampling configuration
         """
         self.config = config
+        # Load sampling configuration
         self.sample_rate = config.value("sample_rate")
         self.sample_endpoints = config.value("sample_endpoints")
         self.sample_jobs = config.value("sample_jobs")
-        self.ignore_endpoints = set(
-            config.value("ignore_endpoints") + config.value("ignore")
-        )
+        self.ignore_endpoints = set(config.value("ignore_endpoints"))
         self.ignore_jobs = set(config.value("ignore_jobs"))
-        self.endpoint_sample_rate = config.value("endpoint_sample_rate")
-        self.job_sample_rate = config.value("job_sample_rate")
 
-    def _any_sampling(self):
-        """
-        Check if any sampling is enabled.
-
-        Returns:
-            Boolean indicating if any sampling is enabled
-        """
-        return (
-            self.sample_rate < 100
-            or self.sample_endpoints
-            or self.sample_jobs
-            or self.ignore_endpoints
-            or self.ignore_jobs
-            or self.endpoint_sample_rate is not None
-            or self.job_sample_rate is not None
-        )
-
-    def _find_matching_rate(
+    def _get_matching_pattern(
         self, name: str, patterns: Dict[str, float]
     ) -> Optional[str]:
         """
-        Finds the matching sample rate for a given operation name.
+        Find the most specific matching pattern for an operation name.
 
         Args:
             name: The operation name to match
             patterns: Dictionary of pattern to sample rate mappings
 
         Returns:
-            The sample rate for the matching pattern or None if no match found
+            The matching pattern or None if no match found
         """
+        # First check for exact match
+        if name in patterns:
+            return name
 
-        for pattern, rate in patterns.items():
-            if name.startswith(pattern):
-                return rate
-        return None
+        # Then check for wildcard patterns, prioritizing longest match
+        matching_pattern = None
+        longest_match = 0
+
+        # Only look at wildcard patterns
+        wildcard_patterns = [p for p in patterns if "*" in p]
+        for pattern in wildcard_patterns:
+            if pattern.endswith("/*"):
+                prefix = pattern[:-1]
+                if name.startswith(prefix) and len(prefix) > longest_match:
+                    longest_match = len(prefix)
+                    matching_pattern = pattern
+
+        return matching_pattern
 
     def _get_operation_type_and_name(
         self, operation: str
-    ) -> Tuple[Optional[str], Optional[str]]:
+    ) -> tuple[Optional[str], Optional[str]]:
         """
         Determines if an operation is an endpoint or job and extracts its name.
 
@@ -90,50 +86,54 @@ class Sampler:
         elif operation.startswith(self.JOB_PREFIX):
             return "job", operation[len(self.JOB_PREFIX) :]
         else:
+            logger.debug(f"Unknown operation type for: {operation}")
             return None, None
 
-    def get_effective_sample_rate(self, operation: str, is_ignored: bool) -> int:
+    def get_effective_sample_rate(self, operation: str) -> int:
         """
         Determines the effective sample rate for a given operation.
 
-        Prioritization:
-        1. Sampling rate for specific endpoint or job
-        2. Specified ignore pattern or flag for operation
-        3. Global endpoint or job sample rate
-        4. Global sample rate
+        Priority order:
+        1. Ignored operations (returns 0)
+        2. Specific operation sample rate
+        3. Global sample rate
 
         Args:
             operation: The operation string (e.g. "Controller/users/show")
-            is_ignored: boolean for if the specific transaction is ignored
 
         Returns:
             Integer between 0 and 100 representing sample rate
         """
         op_type, name = self._get_operation_type_and_name(operation)
-        patterns = self.sample_endpoints if op_type == "endpoint" else self.sample_jobs
-        ignores = self.ignore_endpoints if op_type == "endpoint" else self.ignore_jobs
-        default_operation_rate = (
-            self.endpoint_sample_rate if op_type == "endpoint" else self.job_sample_rate
-        )
-
         if not op_type or not name:
-            return self.sample_rate
-        matching_rate = self._find_matching_rate(name, patterns)
-        if matching_rate is not None:
-            return matching_rate
-        for prefix in ignores:
-            if name.startswith(prefix) or is_ignored:
+            return self.sample_rate  # Fall back to global rate for unknown operations
+
+        if op_type == "endpoint":
+            # Check if endpoint should be ignored
+            if name in self.ignore_endpoints:
                 return 0
-        if default_operation_rate is not None:
-            return default_operation_rate
+
+            # Find matching endpoint pattern
+            matching_pattern = self._get_matching_pattern(name, self.sample_endpoints)
+            if matching_pattern:
+                return self.sample_endpoints[matching_pattern]
+
+        else:  # op_type == 'job'
+            # Check if job should be ignored
+            if name in self.ignore_jobs:
+                return 0
+
+            # Find matching job pattern
+            matching_pattern = self._get_matching_pattern(name, self.sample_jobs)
+            if matching_pattern:
+                return self.sample_jobs[matching_pattern]
 
         # Fall back to global sample rate
         return self.sample_rate
 
-    def should_sample(self, operation: str, is_ignored: bool) -> bool:
+    def should_sample(self, operation: str) -> bool:
         """
         Determines if an operation should be sampled.
-        If no sampling is enabled, always return True.
 
         Args:
             operation: The operation string (e.g. "Controller/users/show"
@@ -142,8 +142,5 @@ class Sampler:
         Returns:
             Boolean indicating whether to sample this operation
         """
-        if not self._any_sampling():
-            return True
-        return random.randint(1, 100) <= self.get_effective_sample_rate(
-            operation, is_ignored
-        )
+        rate = self.get_effective_sample_rate(operation)
+        return random.randint(1, 100) <= rate
