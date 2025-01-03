@@ -248,7 +248,7 @@ class Defaults(object):
             "monitor": False,
             "name": "Python App",
             "revision_sha": self._git_revision_sha(),
-            "sample_rate": 1.0,
+            "sample_rate": 100,
             "sample_endpoints": [],
             "sample_jobs": [],
             "scm_subdirectory": "",
