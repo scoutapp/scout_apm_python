@@ -229,7 +229,10 @@ class Defaults(object):
             "core_agent_socket_path": "tcp://127.0.0.1:6590",
             "core_agent_version": "v1.5.0",  # can be an exact tag name, or 'latest'
             "disabled_instruments": [],
-            "download_url": "https://s3-us-west-1.amazonaws.com/scout-public-downloads/apm_core_agent/release",  # noqa: B950
+            "download_url": (
+                "https://s3-us-west-1.amazonaws.com/scout-public-downloads/"
+                "apm_core_agent/release"
+            ),  # noqa: B950
             "errors_batch_size": 5,
             "errors_enabled": True,
             "errors_ignored_exceptions": (),
@@ -295,19 +298,27 @@ def convert_to_float(value: Any) -> float:
     except ValueError:
         return 0.0
 
-def convert_sample_rate(value: Any) -> float:
+
+def convert_sample_rate(value: Any) -> int:
     """
-    Converts sample rate to float, ensuring it's between 0 and 1
+    Converts sample rate to integer, ensuring it's between 0 and 100
     """
     try:
-        rate = float(value)
-        if not (0 <= rate <= 1):
-            logger.warning(f"Invalid sample rate {rate}. Must be between 0 and 1. Defaulting to 1.")
-            return 1.0
+        rate = int(value)
+        if not (0 <= rate <= 100):
+            logger.warning(
+                f"Invalid sample rate {rate}. Must be between 0 and 100. "
+                "Defaulting to 100."
+            )
+            return 100
         return rate
     except (TypeError, ValueError):
-        logger.warning(f"Invalid sample rate {value}. Must be a number between 0 and 1. Defaulting to 1.")
-        return 1.0
+        logger.warning(
+            f"Invalid sample rate {value}. Must be a number between 0 and 100. "
+            "Defaulting to 100."
+        )
+        return 100
+
 
 def convert_to_list(value: Any) -> List[Any]:
     if isinstance(value, list):
@@ -321,31 +332,36 @@ def convert_to_list(value: Any) -> List[Any]:
     return []
 
 
-def convert_endpoint_sampling(value: Union[str, Dict[str, Any]]) -> Dict[str, float]:
+def convert_endpoint_sampling(value: Union[str, Dict[str, Any]]) -> Dict[str, int]:
     """
-    Converts endpoint sampling configuration from string or dict format to a normalized dict.
-    Format: '/endpoint:.4,/test:0' -> {'/endpoint': 0.4, '/test': 0.0}
+    Converts endpoint sampling configuration from string or dict format
+    to a normalized dict.
+    Example: '/endpoint:40,/test:0' -> {'/endpoint': 40, '/test': 0}
     """
     if isinstance(value, dict):
-        return {k: float(v) for k, v in value.items()}
+        return {k: int(v) for k, v in value.items()}
     if isinstance(value, str):
         if not value.strip():
             return {}
         result = {}
-        pairs = [pair.strip() for pair in value.split(',')]
+        pairs = [pair.strip() for pair in value.split(",")]
         for pair in pairs:
             try:
-                endpoint, rate = pair.split(':')
-                rate_float = float(rate)
-                if not (0 <= rate_float <= 1):
-                    logger.warning(f"Invalid sampling rate {rate} for endpoint {endpoint}. Must be between 0 and 1.")
+                endpoint, rate = pair.split(":")
+                rate_int = int(rate)
+                if not (0 <= rate_int <= 100):
+                    logger.warning(
+                        f"Invalid sampling rate {rate} for endpoint {endpoint}. "
+                        "Must be between 0 and 100."
+                    )
                     continue
-                result[endpoint.strip()] = rate_float
+                result[endpoint.strip()] = rate_int
             except ValueError:
                 logger.warning(f"Invalid sampling configuration: {pair}")
                 continue
         return result
     return {}
+
 
 CONVERSIONS = {
     "collect_remote_ip": convert_to_bool,
@@ -356,7 +372,7 @@ CONVERSIONS = {
     "ignore_endpoints": convert_to_list,
     "ignore_jobs": convert_to_list,
     "monitor": convert_to_bool,
-    "sample_rate": convert_to_float,
+    "sample_rate": convert_sample_rate,
     "sample_endpoints": convert_endpoint_sampling,
     "sample_jobs": convert_endpoint_sampling,
     "shutdown_message_enabled": convert_to_bool,
