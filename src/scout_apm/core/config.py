@@ -76,13 +76,18 @@ class ScoutConfig(object):
         "framework",
         "framework_version",
         "hostname",
-        "ignore",
+        "ignore",  # Deprecated in favor of ignore_endpoints
+        "ignore_endpoints",
+        "ignore_jobs",
         "key",
         "log_level",
         "log_payload_content",
         "monitor",
         "name",
         "revision_sha",
+        "sample_rate",
+        "sample_endpoints",
+        "sample_jobs",
         "scm_subdirectory",
         "shutdown_message_enabled",
         "shutdown_timeout_seconds",
@@ -231,11 +236,17 @@ class Defaults(object):
             "framework": "",
             "framework_version": "",
             "hostname": None,
+            "ignore": [],  # default value for the deprecated config
+            "ignore_endpoints": [],
+            "ignore_jobs": [],
             "key": "",
             "log_payload_content": False,
             "monitor": False,
             "name": "Python App",
             "revision_sha": self._git_revision_sha(),
+            "sample_rate": 1.0,
+            "sample_endpoints": [],
+            "sample_jobs": [],
             "scm_subdirectory": "",
             "shutdown_message_enabled": True,
             "shutdown_timeout_seconds": 2.0,
@@ -283,6 +294,19 @@ def convert_to_float(value):
     except ValueError:
         return 0.0
 
+def convert_sample_rate(value):
+    """
+    Converts sample rate to float, ensuring it's between 0 and 1
+    """
+    try:
+        rate = float(value)
+        if not (0 <= rate <= 1):
+            logger.warning(f"Invalid sample rate {rate}. Must be between 0 and 1. Defaulting to 1.")
+            return 1.0
+        return rate
+    except (TypeError, ValueError):
+        logger.warning(f"Invalid sample rate {value}. Must be a number between 0 and 1. Defaulting to 1.")
+        return 1.0
 
 def convert_to_list(value):
     if isinstance(value, list):
@@ -296,13 +320,44 @@ def convert_to_list(value):
     return []
 
 
+def convert_endpoint_sampling(value):
+    """
+    Converts endpoint sampling configuration from string or dict format to a normalized dict.
+    Format: '/endpoint:.4,/test:0' -> {'/endpoint': 0.4, '/test': 0.0}
+    """
+    if isinstance(value, dict):
+        return {k: float(v) for k, v in value.items()}
+    if isinstance(value, str):
+        if not value.strip():
+            return {}
+        result = {}
+        pairs = [pair.strip() for pair in value.split(',')]
+        for pair in pairs:
+            try:
+                endpoint, rate = pair.split(':')
+                rate_float = float(rate)
+                if not (0 <= rate_float <= 1):
+                    logger.warning(f"Invalid sampling rate {rate} for endpoint {endpoint}. Must be between 0 and 1.")
+                    continue
+                result[endpoint.strip()] = rate_float
+            except ValueError:
+                logger.warning(f"Invalid sampling configuration: {pair}")
+                continue
+        return result
+    return {}
+
 CONVERSIONS = {
     "collect_remote_ip": convert_to_bool,
     "core_agent_download": convert_to_bool,
     "core_agent_launch": convert_to_bool,
     "disabled_instruments": convert_to_list,
     "ignore": convert_to_list,
+    "ignore_endpoints": convert_to_list,
+    "ignore_jobs": convert_to_list,
     "monitor": convert_to_bool,
+    "sample_rate": convert_to_float,
+    "sample_endpoints": convert_endpoint_sampling,
+    "sample_jobs": convert_endpoint_sampling,
     "shutdown_message_enabled": convert_to_bool,
     "shutdown_timeout_seconds": convert_to_float,
 }
