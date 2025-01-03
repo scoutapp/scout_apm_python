@@ -298,7 +298,7 @@ def convert_to_float(value: Any) -> float:
     except ValueError:
         return 0.0
 
-def convert_sample_rate(value):
+def convert_sample_rate(value: Any) -> float:
     """
     Converts sample rate to float, ensuring it's between 0 and 1
     """
