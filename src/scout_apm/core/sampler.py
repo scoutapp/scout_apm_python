@@ -2,7 +2,7 @@
 
 import logging
 import random
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -49,8 +49,12 @@ class Sampler:
         Returns:
             The matching pattern or None if no match found
         """
+        logger.debug(f"Finding matching pattern for name: {name}")
+        logger.debug(f"Patterns: {patterns}")
+
         # First check for exact match
         if name in patterns:
+            logger.debug(f"Exact match found for name: {name}")
             return name
 
         # Then check for wildcard patterns, prioritizing longest match
@@ -60,7 +64,7 @@ class Sampler:
         # Only look at wildcard patterns
         wildcard_patterns = [p for p in patterns if "*" in p]
         for pattern in wildcard_patterns:
-            if pattern.endswith("/*"):
+            if pattern.endswith("*"):
                 prefix = pattern[:-1]
                 if name.startswith(prefix) and len(prefix) > longest_match:
                     longest_match = len(prefix)
@@ -70,7 +74,7 @@ class Sampler:
 
     def _get_operation_type_and_name(
         self, operation: str
-    ) -> tuple[Optional[str], Optional[str]]:
+    ) -> Tuple[Optional[str], Optional[str]]:
         """
         Determines if an operation is an endpoint or job and extracts its name.
 
@@ -126,9 +130,11 @@ class Sampler:
             # Find matching job pattern
             matching_pattern = self._get_matching_pattern(name, self.sample_jobs)
             if matching_pattern:
+                logger.debug(f"Matching job pattern: {matching_pattern}")
                 return self.sample_jobs[matching_pattern]
 
         # Fall back to global sample rate
+        logger.debug(f"Using global sample rate: {self.sample_rate}")
         return self.sample_rate
 
     def should_sample(self, operation: str) -> bool:
@@ -143,4 +149,10 @@ class Sampler:
             Boolean indicating whether to sample this operation
         """
         rate = self.get_effective_sample_rate(operation)
-        return random.randint(1, 100) <= rate
+        rand = random.randint(1, 100)
+        result = rand <= rate
+
+        logger.debug(
+            f"Sampling decision for {operation}: {result} rand: {rand} (rate: {rate})"
+        )
+        return result
