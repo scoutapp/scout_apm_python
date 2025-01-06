@@ -35,7 +35,7 @@ def sampler(config):
 
 
 def test_should_sample_endpoint_always(sampler):
-    assert sampler.should_sample("Controller/users/show") is True
+    assert sampler.should_sample("Controller/users") is True
 
 
 def test_should_sample_endpoint_never(sampler):
