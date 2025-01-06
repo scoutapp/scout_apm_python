@@ -320,27 +320,6 @@ def convert_sample_rate(value: Any) -> int:
         return 100
 
 
-def convert_sample_rate(value: Any) -> int:
-    """
-    Converts sample rate to integer, ensuring it's between 0 and 100
-    """
-    try:
-        rate = int(value)
-        if not (0 <= rate <= 100):
-            logger.warning(
-                f"Invalid sample rate {rate}. Must be between 0 and 100. "
-                "Defaulting to 100."
-            )
-            return 100
-        return rate
-    except (TypeError, ValueError):
-        logger.warning(
-            f"Invalid sample rate {value}. Must be a number between 0 and 100. "
-            "Defaulting to 100."
-        )
-        return 100
-
-
 def convert_to_list(value: Any) -> List[Any]:
     if isinstance(value, list):
         return value
