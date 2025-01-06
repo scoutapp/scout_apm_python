@@ -48,12 +48,9 @@ class Sampler:
         Returns:
             The matching pattern or None if no match found
         """
-        logger.debug(f"Finding matching pattern for name: {name}")
-        logger.debug(f"Patterns: {patterns}")
 
         # First check for exact match
         if name in patterns:
-            logger.debug(f"Exact match found for name: {name}")
             return name
 
         # Then check for wildcard patterns, prioritizing longest match
@@ -88,7 +85,6 @@ class Sampler:
         elif operation.startswith(self.JOB_PREFIX):
             return "job", operation[len(self.JOB_PREFIX) :]
         else:
-            logger.debug(f"Unknown operation type for: {operation}")
             return None, None
 
     def get_effective_sample_rate(self, operation: str) -> int:
@@ -124,11 +120,9 @@ class Sampler:
 
             matching_pattern = self._get_matching_pattern(name, self.sample_jobs)
             if matching_pattern:
-                logger.debug(f"Matching job pattern: {matching_pattern}")
                 return self.sample_jobs[matching_pattern]
 
         # Fall back to global sample rate
-        logger.debug(f"Using global sample rate: {self.sample_rate}")
         return self.sample_rate
 
     def should_sample(self, operation: str) -> bool:
