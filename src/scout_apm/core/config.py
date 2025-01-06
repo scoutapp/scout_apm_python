@@ -4,6 +4,7 @@ import logging
 import os
 import re
 import warnings
+from typing import Any, Dict, List, Optional, Union
 
 from scout_apm.core import platform_detection
 
@@ -30,13 +31,13 @@ class ScoutConfig(object):
             Null(),
         ]
 
-    def value(self, key):
+    def value(self, key: str) -> Any:
         value = self.locate_layer_for_key(key).value(key)
         if key in CONVERSIONS:
             return CONVERSIONS[key](value)
         return value
 
-    def locate_layer_for_key(self, key):
+    def locate_layer_for_key(self, key: str) -> Any:
         for layer in self.layers:
             if layer.has_config(key):
                 return layer
@@ -44,7 +45,7 @@ class ScoutConfig(object):
         # Should be unreachable because Null returns None for all keys.
         raise ValueError("key {!r} not found in any layer".format(key))
 
-    def log(self):
+    def log(self) -> None:
         logger.debug("Configuration Loaded:")
         for key in self.known_keys:
             if key in self.secret_keys:
@@ -76,13 +77,18 @@ class ScoutConfig(object):
         "framework",
         "framework_version",
         "hostname",
-        "ignore",
+        "ignore",  # Deprecated in favor of ignore_endpoints
+        "ignore_endpoints",
+        "ignore_jobs",
         "key",
         "log_level",
         "log_payload_content",
         "monitor",
         "name",
         "revision_sha",
+        "sample_rate",
+        "sample_endpoints",
+        "sample_jobs",
         "scm_subdirectory",
         "shutdown_message_enabled",
         "shutdown_timeout_seconds",
@@ -90,7 +96,7 @@ class ScoutConfig(object):
 
     secret_keys = {"key"}
 
-    def core_agent_permissions(self):
+    def core_agent_permissions(self) -> int:
         try:
             return int(str(self.value("core_agent_permissions")), 8)
         except ValueError:
@@ -100,7 +106,7 @@ class ScoutConfig(object):
             return 0o700
 
     @classmethod
-    def set(cls, **kwargs):
+    def set(cls, **kwargs: Any) -> None:
         """
         Sets a configuration value for the Scout agent. Values set here will
         not override values set in ENV.
@@ -109,7 +115,7 @@ class ScoutConfig(object):
             SCOUT_PYTHON_VALUES[key] = value
 
     @classmethod
-    def unset(cls, *keys):
+    def unset(cls, *keys: str) -> None:
         """
         Removes a configuration value for the Scout agent.
         """
@@ -117,7 +123,7 @@ class ScoutConfig(object):
             SCOUT_PYTHON_VALUES.pop(key, None)
 
     @classmethod
-    def reset_all(cls):
+    def reset_all(cls) -> None:
         """
         Remove all configuration settings set via `ScoutConfig.set(...)`.
 
@@ -135,10 +141,10 @@ class Python(object):
     A configuration overlay that lets other parts of python set values.
     """
 
-    def has_config(self, key):
+    def has_config(self, key: str) -> bool:
         return key in SCOUT_PYTHON_VALUES
 
-    def value(self, key):
+    def value(self, key: str) -> Any:
         return SCOUT_PYTHON_VALUES[key]
 
 
@@ -151,15 +157,15 @@ class Env(object):
     environment variable
     """
 
-    def has_config(self, key):
+    def has_config(self, key: str) -> bool:
         env_key = self.modify_key(key)
         return env_key in os.environ
 
-    def value(self, key):
+    def value(self, key: str) -> Any:
         env_key = self.modify_key(key)
         return os.environ[env_key]
 
-    def modify_key(self, key):
+    def modify_key(self, key: str) -> str:
         env_key = ("SCOUT_" + key).upper()
         return env_key
 
@@ -169,27 +175,27 @@ class Derived(object):
     A configuration overlay that calculates from other values.
     """
 
-    def __init__(self, config):
+    def __init__(self, config: ScoutConfig):
         """
         config argument is the overall ScoutConfig var, so we can lookup the
         components of the derived info.
         """
         self.config = config
 
-    def has_config(self, key):
+    def has_config(self, key: str) -> bool:
         return self.lookup_func(key) is not None
 
-    def value(self, key):
+    def value(self, key: str) -> Any:
         return self.lookup_func(key)()
 
-    def lookup_func(self, key):
+    def lookup_func(self, key: str) -> Optional[Any]:
         """
         Returns the derive_#{key} function, or None if it isn't defined
         """
         func_name = "derive_" + key
         return getattr(self, func_name, None)
 
-    def derive_core_agent_full_name(self):
+    def derive_core_agent_full_name(self) -> str:
         triple = self.config.value("core_agent_triple")
         if not platform_detection.is_valid_triple(triple):
             warnings.warn(
@@ -201,7 +207,7 @@ class Derived(object):
             triple=triple,
         )
 
-    def derive_core_agent_triple(self):
+    def derive_core_agent_triple(self) -> str:
         return platform_detection.get_triple()
 
 
@@ -223,7 +229,10 @@ class Defaults(object):
             "core_agent_socket_path": "tcp://127.0.0.1:6590",
             "core_agent_version": "v1.5.0",  # can be an exact tag name, or 'latest'
             "disabled_instruments": [],
-            "download_url": "https://s3-us-west-1.amazonaws.com/scout-public-downloads/apm_core_agent/release",  # noqa: B950
+            "download_url": (
+                "https://s3-us-west-1.amazonaws.com/scout-public-downloads/"
+                "apm_core_agent/release"
+            ),  # noqa: B950
             "errors_batch_size": 5,
             "errors_enabled": True,
             "errors_ignored_exceptions": (),
@@ -231,26 +240,32 @@ class Defaults(object):
             "framework": "",
             "framework_version": "",
             "hostname": None,
+            "ignore": [],
+            "ignore_endpoints": [],
+            "ignore_jobs": [],
             "key": "",
             "log_payload_content": False,
             "monitor": False,
             "name": "Python App",
             "revision_sha": self._git_revision_sha(),
+            "sample_rate": 100,
+            "sample_endpoints": [],
+            "sample_jobs": [],
             "scm_subdirectory": "",
             "shutdown_message_enabled": True,
             "shutdown_timeout_seconds": 2.0,
             "uri_reporting": "filtered_params",
         }
 
-    def _git_revision_sha(self):
+    def _git_revision_sha(self) -> str:
         # N.B. The environment variable SCOUT_REVISION_SHA may also be used,
         # but that will be picked up by Env
         return os.environ.get("HEROKU_SLUG_COMMIT", "")
 
-    def has_config(self, key):
+    def has_config(self, key: str) -> bool:
         return key in self.defaults
 
-    def value(self, key):
+    def value(self, key: str) -> Any:
         return self.defaults[key]
 
 
@@ -261,14 +276,14 @@ class Null(object):
     Used as the last step of the layered configuration.
     """
 
-    def has_config(self, key):
+    def has_config(self, key: str) -> bool:
         return True
 
-    def value(self, key):
+    def value(self, key: str) -> None:
         return None
 
 
-def convert_to_bool(value):
+def convert_to_bool(value: Any) -> bool:
     if isinstance(value, bool):
         return value
     if isinstance(value, str):
@@ -277,14 +292,35 @@ def convert_to_bool(value):
     return False
 
 
-def convert_to_float(value):
+def convert_to_float(value: Any) -> float:
     try:
         return float(value)
     except ValueError:
         return 0.0
 
 
-def convert_to_list(value):
+def convert_sample_rate(value: Any) -> int:
+    """
+    Converts sample rate to integer, ensuring it's between 0 and 100
+    """
+    try:
+        rate = int(value)
+        if not (0 <= rate <= 100):
+            logger.warning(
+                f"Invalid sample rate {rate}. Must be between 0 and 100. "
+                "Defaulting to 100."
+            )
+            return 100
+        return rate
+    except (TypeError, ValueError):
+        logger.warning(
+            f"Invalid sample rate {value}. Must be a number between 0 and 100. "
+            "Defaulting to 100."
+        )
+        return 100
+
+
+def convert_to_list(value: Any) -> List[Any]:
     if isinstance(value, list):
         return value
     if isinstance(value, tuple):
@@ -296,13 +332,49 @@ def convert_to_list(value):
     return []
 
 
+def convert_endpoint_sampling(value: Union[str, Dict[str, Any]]) -> Dict[str, int]:
+    """
+    Converts endpoint sampling configuration from string or dict format
+    to a normalized dict.
+    Example: '/endpoint:40,/test:0' -> {'/endpoint': 40, '/test': 0}
+    """
+    if isinstance(value, dict):
+        return {k: int(v) for k, v in value.items()}
+    if isinstance(value, str):
+        if not value.strip():
+            return {}
+        result = {}
+        pairs = [pair.strip() for pair in value.split(",")]
+        for pair in pairs:
+            try:
+                endpoint, rate = pair.split(":")
+                rate_int = int(rate)
+                if not (0 <= rate_int <= 100):
+                    logger.warning(
+                        f"Invalid sampling rate {rate} for endpoint {endpoint}. "
+                        "Must be between 0 and 100."
+                    )
+                    continue
+                result[endpoint.strip()] = rate_int
+            except ValueError:
+                logger.warning(f"Invalid sampling configuration: {pair}")
+                continue
+        return result
+    return {}
+
+
 CONVERSIONS = {
     "collect_remote_ip": convert_to_bool,
     "core_agent_download": convert_to_bool,
     "core_agent_launch": convert_to_bool,
     "disabled_instruments": convert_to_list,
     "ignore": convert_to_list,
+    "ignore_endpoints": convert_to_list,
+    "ignore_jobs": convert_to_list,
     "monitor": convert_to_bool,
+    "sample_rate": convert_sample_rate,
+    "sample_endpoints": convert_endpoint_sampling,
+    "sample_jobs": convert_endpoint_sampling,
     "shutdown_message_enabled": convert_to_bool,
     "shutdown_timeout_seconds": convert_to_float,
 }

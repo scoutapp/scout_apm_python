@@ -240,3 +240,78 @@ def test_list_conversion_from_python(original, converted):
 def test_revision_sha(environ, expected):
     with mock.patch.dict(os.environ, clear=True, **environ):
         assert ScoutConfig().value("revision_sha") == expected
+
+
+def test_sample_rate_conversion_from_env():
+    config = ScoutConfig()
+    with mock.patch.dict(os.environ, {"SCOUT_SAMPLE_RATE": "50"}):
+        value = config.value("sample_rate")
+    assert isinstance(value, int)
+    assert value == 50
+
+
+@pytest.mark.parametrize(
+    "original, converted",
+    [("0", 0), ("50", 50), ("100", 100), ("x", 100)],
+)
+def test_sample_rate_conversion_from_python(original, converted):
+    ScoutConfig.set(sample_rate=original)
+    config = ScoutConfig()
+    try:
+        assert config.value("sample_rate") == converted
+    finally:
+        ScoutConfig.reset_all()
+
+
+def test_endpoint_sampling_conversion_from_env():
+    config = ScoutConfig()
+    with mock.patch.dict(
+        os.environ, {"SCOUT_SAMPLE_ENDPOINTS": "/endpoint:40,/test:0"}
+    ):
+        value = config.value("sample_endpoints")
+    assert isinstance(value, dict)
+    assert value == {"/endpoint": 40, "/test": 0}
+
+
+@pytest.mark.parametrize(
+    "original, converted",
+    [
+        ("/endpoint:40,/test:0", {"/endpoint": 40, "/test": 0}),
+        ({"endpoint": 40, "test": 0}, {"endpoint": 40, "test": 0}),
+        ("", {}),
+        (object(), {}),
+    ],
+)
+def test_endpoint_sampling_conversion_from_python(original, converted):
+    ScoutConfig.set(sample_endpoints=original)
+    config = ScoutConfig()
+    try:
+        assert config.value("sample_endpoints") == converted
+    finally:
+        ScoutConfig.reset_all()
+
+
+def test_job_sampling_conversion_from_env():
+    config = ScoutConfig()
+    with mock.patch.dict(os.environ, {"SCOUT_SAMPLE_JOBS": "job1:30,job2:70"}):
+        value = config.value("sample_jobs")
+    assert isinstance(value, dict)
+    assert value == {"job1": 30, "job2": 70}
+
+
+@pytest.mark.parametrize(
+    "original, converted",
+    [
+        ("job1:30,job2:70", {"job1": 30, "job2": 70}),
+        ({"job1": 30, "job2": 70}, {"job1": 30, "job2": 70}),
+        ("", {}),
+        (object(), {}),
+    ],
+)
+def test_job_sampling_conversion_from_python(original, converted):
+    ScoutConfig.set(sample_jobs=original)
+    config = ScoutConfig()
+    try:
+        assert config.value("sample_jobs") == converted
+    finally:
+        ScoutConfig.reset_all()
