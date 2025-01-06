@@ -10,6 +10,7 @@ from scout_apm.core.agent.commands import BatchCommand
 from scout_apm.core.agent.socket import CoreAgentSocketThread
 from scout_apm.core.config import scout_config
 from scout_apm.core.n_plus_one_tracker import NPlusOneTracker
+from scout_apm.core.sampler import Sampler
 from scout_apm.core.samplers.memory import get_rss_in_mb
 from scout_apm.core.samplers.thread import SamplersThread
 
@@ -24,6 +25,7 @@ class TrackedRequest(object):
     """
 
     __slots__ = (
+        "sampler",
         "request_id",
         "start_time",
         "end_time",
@@ -48,6 +50,7 @@ class TrackedRequest(object):
         return context.get_tracked_request()
 
     def __init__(self):
+        self.sampler = Sampler(scout_config)
         self.request_id = "req-" + str(uuid4())
         self.start_time = dt.datetime.now(dt.timezone.utc)
         self.end_time = None
@@ -150,8 +153,14 @@ class TrackedRequest(object):
             self.end_time = dt.datetime.now(dt.timezone.utc)
 
         if self.is_real_request:
-            self.tag("mem_delta", self._get_mem_delta())
-            if not self.is_ignored() and not self.sent:
+            # Use the sampler to determine if the request should be sampled
+            logger.debug("Checking if request should be sampled")
+            if (
+                not self.is_ignored()
+                and not self.sent
+                and self.sampler.should_sample(self.operation)
+            ):
+                self.tag("mem_delta", self._get_mem_delta())
                 self.sent = True
                 batch_command = BatchCommand.from_tracked_request(self)
                 if scout_config.value("log_payload_content"):
