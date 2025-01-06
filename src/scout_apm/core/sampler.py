@@ -29,7 +29,6 @@ class Sampler:
             config: ScoutConfig instance containing sampling configuration
         """
         self.config = config
-        # Load sampling configuration
         self.sample_rate = config.value("sample_rate")
         self.sample_endpoints = config.value("sample_endpoints")
         self.sample_jobs = config.value("sample_jobs")
@@ -61,7 +60,6 @@ class Sampler:
         matching_pattern = None
         longest_match = 0
 
-        # Only look at wildcard patterns
         wildcard_patterns = [p for p in patterns if "*" in p]
         for pattern in wildcard_patterns:
             if pattern.endswith("*"):
@@ -113,21 +111,17 @@ class Sampler:
             return self.sample_rate  # Fall back to global rate for unknown operations
 
         if op_type == "endpoint":
-            # Check if endpoint should be ignored
             if name in self.ignore_endpoints:
                 return 0
 
-            # Find matching endpoint pattern
             matching_pattern = self._get_matching_pattern(name, self.sample_endpoints)
             if matching_pattern:
                 return self.sample_endpoints[matching_pattern]
 
         else:  # op_type == 'job'
-            # Check if job should be ignored
             if name in self.ignore_jobs:
                 return 0
 
-            # Find matching job pattern
             matching_pattern = self._get_matching_pattern(name, self.sample_jobs)
             if matching_pattern:
                 logger.debug(f"Matching job pattern: {matching_pattern}")
@@ -148,11 +142,4 @@ class Sampler:
         Returns:
             Boolean indicating whether to sample this operation
         """
-        rate = self.get_effective_sample_rate(operation)
-        rand = random.randint(1, 100)
-        result = rand <= rate
-
-        logger.debug(
-            f"Sampling decision for {operation}: {result} rand: {rand} (rate: {rate})"
-        )
-        return result
+        return random.randint(1, 100) <= self.get_effective_sample_rate(operation)
