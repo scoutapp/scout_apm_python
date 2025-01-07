@@ -73,3 +73,16 @@ def test_should_sample_unknown_operation(sampler):
         assert sampler.should_sample("Unknown/operation") is True
     with mock.patch("random.randint", return_value=60):
         assert sampler.should_sample("Unknown/operation") is False
+
+
+def test_should_sample_no_sampling_enabled(config):
+    config.set(
+        sample_rate=100,  # Return config to defaults
+        sample_endpoints={},
+        sample_jobs={},
+        ignore_endpoints=[],
+        ignore_jobs=[],
+    )
+    sampler = Sampler(config)
+    assert sampler.should_sample("Controller/any_endpoint") is True
+    assert sampler.should_sample("Job/any_job") is True
