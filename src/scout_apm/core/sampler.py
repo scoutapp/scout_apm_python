@@ -35,6 +35,21 @@ class Sampler:
         self.ignore_endpoints = set(config.value("ignore_endpoints"))
         self.ignore_jobs = set(config.value("ignore_jobs"))
 
+    def _any_sampling(self):
+        """
+        Check if any sampling is enabled.
+
+        Returns:
+            Boolean indicating if any sampling is enabled
+        """
+        return (
+            self.sample_rate < 100
+            or self.sample_endpoints
+            or self.sample_jobs
+            or self.ignore_endpoints
+            or self.ignore_jobs
+        )
+
     def _get_matching_pattern(
         self, name: str, patterns: Dict[str, float]
     ) -> Optional[str]:
@@ -128,6 +143,7 @@ class Sampler:
     def should_sample(self, operation: str) -> bool:
         """
         Determines if an operation should be sampled.
+        If no sampling is enabled, always return True.
 
         Args:
             operation: The operation string (e.g. "Controller/users/show"
@@ -136,4 +152,6 @@ class Sampler:
         Returns:
             Boolean indicating whether to sample this operation
         """
+        if not self._any_sampling():
+            return True
         return random.randint(1, 100) <= self.get_effective_sample_rate(operation)
