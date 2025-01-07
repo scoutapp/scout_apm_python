@@ -16,6 +16,12 @@ from tests.tools import (
 )
 
 
+@pytest.fixture(autouse=True)
+def clear_sampler():
+    """Reset the sampler before each test"""
+    TrackedRequest._sampler = None
+
+
 @pytest.fixture
 def reset_config():
     """
@@ -26,6 +32,8 @@ def reset_config():
     finally:
         # Reset Scout configuration.
         scout_config.reset_all()
+        # Clear the sampler
+        TrackedRequest._sampler = None
 
 
 def test_tracked_request_repr(tracked_request):
@@ -358,3 +366,46 @@ def test_request_only_sent_once(tracked_request, caplog):
         len([log_tuple for log_tuple in caplog.record_tuples if log_tuple == info_log])
         == 2
     )
+
+
+def test_sampler_behavior(tracked_request):
+    """Test that sampler is only created when first needed and shared across requests"""
+    assert TrackedRequest._sampler is None
+    sampler1 = TrackedRequest.get_sampler()
+
+    assert TrackedRequest._sampler is not None
+
+    # Should get the same sampler instance
+    sampler2 = TrackedRequest.get_sampler()
+    assert sampler1 is sampler2
+
+    # Test that all TrackedRequests share the same sampler
+    request1 = TrackedRequest()
+    request2 = TrackedRequest()
+
+    sampler1 = request1.get_sampler()
+    sampler2 = request2.get_sampler()
+
+    assert sampler1 is sampler2
+
+
+@pytest.mark.parametrize(
+    "operation,is_real,expected_calls",
+    [
+        ("Controller/test", True, 1),  # Should check sampling
+        ("Controller/test", False, 0),  # Shouldn't check sampling if not real
+    ],
+)
+def test_finish_sampling_behavior(tracked_request, operation, is_real, expected_calls):
+    """Test that sampling only occurs under the right conditions"""
+    mock_sampler = mock.Mock()
+    mock_sampler.should_sample.return_value = True
+    TrackedRequest._sampler = mock_sampler
+
+    tracked_request.operation = operation
+    tracked_request.is_real_request = is_real
+    tracked_request.sent = False
+
+    tracked_request.finish()
+
+    assert mock_sampler.should_sample.call_count == expected_calls
