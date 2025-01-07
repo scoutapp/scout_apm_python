@@ -24,6 +24,14 @@ class TrackedRequest(object):
     their keyname
     """
 
+    _sampler = None
+
+    @classmethod
+    def get_sampler(cls):
+        if cls._sampler is None:
+            cls._sampler = Sampler(scout_config)
+        return cls._sampler
+
     __slots__ = (
         "sampler",
         "request_id",
@@ -50,7 +58,6 @@ class TrackedRequest(object):
         return context.get_tracked_request()
 
     def __init__(self):
-        self.sampler = Sampler(scout_config)
         self.request_id = "req-" + str(uuid4())
         self.start_time = dt.datetime.now(dt.timezone.utc)
         self.end_time = None
@@ -153,12 +160,10 @@ class TrackedRequest(object):
             self.end_time = dt.datetime.now(dt.timezone.utc)
 
         if self.is_real_request:
-            # Use the sampler to determine if the request should be sampled
-            logger.debug("Checking if request should be sampled")
             if (
                 not self.is_ignored()
                 and not self.sent
-                and self.sampler.should_sample(self.operation)
+                and self.get_sampler().should_sample(self.operation)
             ):
                 self.tag("mem_delta", self._get_mem_delta())
                 self.sent = True
