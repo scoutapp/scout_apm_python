@@ -34,6 +34,8 @@ class Sampler:
         self.sample_jobs = config.value("sample_jobs")
         self.ignore_endpoints = set(config.value("ignore_endpoints"))
         self.ignore_jobs = set(config.value("ignore_jobs"))
+        self.sample_endpoint_rate = config.value("sample_endpoint_rate")
+        self.sample_job_rate = config.value("sample_job_rate")
 
     def _any_sampling(self):
         """
@@ -50,37 +52,24 @@ class Sampler:
             or self.ignore_jobs
         )
 
-    def _get_matching_pattern(
+    def _find_matching_rate(
         self, name: str, patterns: Dict[str, float]
     ) -> Optional[str]:
         """
-        Find the most specific matching pattern for an operation name.
+        Finds the matching sample rate for a given operation name.
 
         Args:
             name: The operation name to match
             patterns: Dictionary of pattern to sample rate mappings
 
         Returns:
-            The matching pattern or None if no match found
+            The sample rate for the matching pattern or None if no match found
         """
 
-        # First check for exact match
-        if name in patterns:
-            return name
-
-        # Then check for wildcard patterns, prioritizing longest match
-        matching_pattern = None
-        longest_match = 0
-
-        wildcard_patterns = [p for p in patterns if "*" in p]
-        for pattern in wildcard_patterns:
-            if pattern.endswith("*"):
-                prefix = pattern[:-1]
-                if name.startswith(prefix) and len(prefix) > longest_match:
-                    longest_match = len(prefix)
-                    matching_pattern = pattern
-
-        return matching_pattern
+        for pattern, rate in patterns.items():
+            if name.startswith(pattern):
+                return rate
+        return None
 
     def _get_operation_type_and_name(
         self, operation: str
@@ -125,17 +114,21 @@ class Sampler:
             if name in self.ignore_endpoints:
                 return 0
 
-            matching_pattern = self._get_matching_pattern(name, self.sample_endpoints)
-            if matching_pattern:
-                return self.sample_endpoints[matching_pattern]
+            matching_rate = self._find_matching_rate(name, self.sample_endpoints)
+            if matching_rate is not None:
+                return matching_rate
+            if self.sample_endpoint_rate is not None:
+                return self.sample_endpoint_rate
 
         else:  # op_type == 'job'
             if name in self.ignore_jobs:
                 return 0
 
-            matching_pattern = self._get_matching_pattern(name, self.sample_jobs)
-            if matching_pattern:
-                return self.sample_jobs[matching_pattern]
+            matching_rate = self._find_matching_rate(name, self.sample_jobs)
+            if matching_rate is not None:
+                return matching_rate
+            if self.sample_job_rate is not None:
+                return self.sample_job_rate
 
         # Fall back to global sample rate
         return self.sample_rate
