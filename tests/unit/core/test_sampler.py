@@ -15,15 +15,17 @@ def config():
         sample_rate=50,  # 50% global sampling
         sample_endpoints={
             "users": 100,  # Always sample
-            "test/*": 20,  # 20% sampling for test endpoints
-            "health/*": 0,  # Never sample health checks
+            "test": 20,  # 20% sampling for test endpoints
+            "health": 0,  # Never sample health checks
         },
         sample_jobs={
             "critical-job": 100,  # Always sample
-            "batch-*": 30,  # 30% sampling for batch jobs
+            "batch": 30,  # 30% sampling for batch jobs
         },
         ignore_endpoints=["metrics", "ping"],
         ignore_jobs=["test-job"],
+        sample_endpoint_rate=70,  # 70% sampling for unspecified endpoints
+        sample_job_rate=40,  # 40% sampling for unspecified jobs
     )
     yield config
     ScoutConfig.reset_all()
@@ -86,3 +88,35 @@ def test_should_sample_no_sampling_enabled(config):
     sampler = Sampler(config)
     assert sampler.should_sample("Controller/any_endpoint") is True
     assert sampler.should_sample("Job/any_job") is True
+
+
+def test_should_sample_endpoint_default_rate(sampler):
+    with mock.patch("random.randint", return_value=60):
+        assert sampler.should_sample("Controller/unspecified") is True
+    with mock.patch("random.randint", return_value=80):
+        assert sampler.should_sample("Controller/unspecified") is False
+
+
+def test_should_sample_job_default_rate(sampler):
+    with mock.patch("random.randint", return_value=30):
+        assert sampler.should_sample("Job/unspecified-job") is True
+    with mock.patch("random.randint", return_value=50):
+        assert sampler.should_sample("Job/unspecified-job") is False
+
+
+def test_should_sample_endpoint_fallback_to_global_rate(config):
+    config.set(sample_endpoint_rate=None)
+    sampler = Sampler(config)
+    with mock.patch("random.randint", return_value=40):
+        assert sampler.should_sample("Controller/unspecified") is True
+    with mock.patch("random.randint", return_value=60):
+        assert sampler.should_sample("Controller/unspecified") is False
+
+
+def test_should_sample_job_fallback_to_global_rate(config):
+    config.set(sample_job_rate=None)
+    sampler = Sampler(config)
+    with mock.patch("random.randint", return_value=40):
+        assert sampler.should_sample("Job/unspecified-job") is True
+    with mock.patch("random.randint", return_value=60):
+        assert sampler.should_sample("Job/unspecified-job") is False

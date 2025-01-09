@@ -87,10 +87,10 @@ class ScoutConfig(object):
         "name",
         "revision_sha",
         "sample_rate",
-        "endpoint_sample_rate",
+        "sample_endpoint_rate",
         "sample_endpoints",
         "sample_jobs",
-        "job_sample_rate",
+        "sample_job_rate",
         "scm_subdirectory",
         "shutdown_message_enabled",
         "shutdown_timeout_seconds",
@@ -252,9 +252,9 @@ class Defaults(object):
             "revision_sha": self._git_revision_sha(),
             "sample_rate": 100,
             "sample_endpoints": [],
-            "endpoint_sample_rate": None,
+            "sample_endpoint_rate": None,
             "sample_jobs": [],
-            "job_sample_rate": None,
+            "sample_job_rate": None,
             "scm_subdirectory": "",
             "shutdown_message_enabled": True,
             "shutdown_timeout_seconds": 2.0,
@@ -303,10 +303,13 @@ def convert_to_float(value: Any) -> float:
         return 0.0
 
 
-def convert_sample_rate(value: Any) -> int:
+def convert_sample_rate(value: Any) -> Optional[int]:
     """
-    Converts sample rate to integer, ensuring it's between 0 and 100
+    Converts sample rate to integer, ensuring it's between 0 and 100.
+    Allows None as a valid value.
     """
+    if value is None:
+        return None
     try:
         rate = int(value)
         if not (0 <= rate <= 100):
@@ -378,9 +381,9 @@ CONVERSIONS = {
     "monitor": convert_to_bool,
     "sample_rate": convert_sample_rate,
     "sample_endpoints": convert_endpoint_sampling,
-    "endpoint_sample_rate": convert_sample_rate,
+    "sample_endpoint_rate": convert_sample_rate,
     "sample_jobs": convert_endpoint_sampling,
-    "job_sample_rate": convert_sample_rate,
+    "sample_job_rate": convert_sample_rate,
     "shutdown_message_enabled": convert_to_bool,
     "shutdown_timeout_seconds": convert_to_float,
 }
