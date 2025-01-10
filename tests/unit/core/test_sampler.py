@@ -24,8 +24,8 @@ def config():
         },
         ignore_endpoints=["metrics", "ping"],
         ignore_jobs=["test-job"],
-        sample_endpoint_rate=70,  # 70% sampling for unspecified endpoints
-        sample_job_rate=40,  # 40% sampling for unspecified jobs
+        endpoint_sample_rate=70,  # 70% sampling for unspecified endpoints
+        job_sample_rate=40,  # 40% sampling for unspecified jobs
     )
     yield config
     ScoutConfig.reset_all()
@@ -105,7 +105,7 @@ def test_should_sample_job_default_rate(sampler):
 
 
 def test_should_sample_endpoint_fallback_to_global_rate(config):
-    config.set(sample_endpoint_rate=None)
+    config.set(endpoint_sample_rate=None)
     sampler = Sampler(config)
     with mock.patch("random.randint", return_value=40):
         assert sampler.should_sample("Controller/unspecified") is True
@@ -114,7 +114,7 @@ def test_should_sample_endpoint_fallback_to_global_rate(config):
 
 
 def test_should_sample_job_fallback_to_global_rate(config):
-    config.set(sample_job_rate=None)
+    config.set(job_sample_rate=None)
     sampler = Sampler(config)
     with mock.patch("random.randint", return_value=40):
         assert sampler.should_sample("Job/unspecified-job") is True

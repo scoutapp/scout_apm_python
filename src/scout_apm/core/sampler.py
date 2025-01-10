@@ -34,8 +34,8 @@ class Sampler:
         self.sample_jobs = config.value("sample_jobs")
         self.ignore_endpoints = set(config.value("ignore_endpoints"))
         self.ignore_jobs = set(config.value("ignore_jobs"))
-        self.sample_endpoint_rate = config.value("sample_endpoint_rate")
-        self.sample_job_rate = config.value("sample_job_rate")
+        self.endpoint_sample_rate = config.value("endpoint_sample_rate")
+        self.job_sample_rate = config.value("job_sample_rate")
 
     def _any_sampling(self):
         """
@@ -117,8 +117,8 @@ class Sampler:
             matching_rate = self._find_matching_rate(name, self.sample_endpoints)
             if matching_rate is not None:
                 return matching_rate
-            if self.sample_endpoint_rate is not None:
-                return self.sample_endpoint_rate
+            if self.endpoint_sample_rate is not None:
+                return self.endpoint_sample_rate
 
         else:  # op_type == 'job'
             if name in self.ignore_jobs:
@@ -127,8 +127,8 @@ class Sampler:
             matching_rate = self._find_matching_rate(name, self.sample_jobs)
             if matching_rate is not None:
                 return matching_rate
-            if self.sample_job_rate is not None:
-                return self.sample_job_rate
+            if self.job_sample_rate is not None:
+                return self.job_sample_rate
 
         # Fall back to global sample rate
         return self.sample_rate
