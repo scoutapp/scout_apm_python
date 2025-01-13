@@ -22,7 +22,7 @@ def config():
             "critical-job": 100,  # Always sample
             "batch": 30,  # 30% sampling for batch jobs
         },
-        ignore_endpoints=["metrics", "ping"],
+        ignore_endpoints=["metrics", "ping", "users/test"],
         ignore_jobs=["test-job"],
         endpoint_sample_rate=70,  # 70% sampling for unspecified endpoints
         job_sample_rate=40,  # 40% sampling for unspecified jobs
@@ -61,6 +61,7 @@ def test_should_sample_job_always(sampler):
 
 def test_should_sample_job_never(sampler):
     assert sampler.should_sample("Job/test-job") is False
+    assert sampler.should_sample("users/test") is False
 
 
 def test_should_sample_job_partial(sampler):
@@ -84,6 +85,8 @@ def test_should_sample_no_sampling_enabled(config):
         sample_jobs={},
         ignore_endpoints=[],
         ignore_jobs=[],
+        endpoint_sample_rate=None,
+        job_sample_rate=None,
     )
     sampler = Sampler(config)
     assert sampler.should_sample("Controller/any_endpoint") is True
