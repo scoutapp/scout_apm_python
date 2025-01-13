@@ -61,7 +61,7 @@ def test_should_sample_job_always(sampler):
 
 def test_should_sample_job_never(sampler):
     assert sampler.should_sample("Job/test-job") is False
-    assert sampler.should_sample("users/test") is False
+    assert sampler.should_sample("Controller/users/test") is False
 
 
 def test_should_sample_job_partial(sampler):
