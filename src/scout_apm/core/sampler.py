@@ -50,6 +50,8 @@ class Sampler:
             or self.sample_jobs
             or self.ignore_endpoints
             or self.ignore_jobs
+            or self.endpoint_sample_rate is not None
+            or self.job_sample_rate is not None
         )
 
     def _find_matching_rate(
