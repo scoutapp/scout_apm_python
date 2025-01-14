@@ -47,7 +47,7 @@ def test_should_sample_endpoint_never(sampler):
 
 
 def test_should_sample_endpoint_ignored(sampler):
-    assert sampler.should_sample("Controller/metrics", False) is False
+    assert sampler.should_sample("Controller/metrics/some/more", False) is False
 
 
 def test_should_sample_endpoint_partial(sampler):
