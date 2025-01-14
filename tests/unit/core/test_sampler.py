@@ -6,7 +6,6 @@ import pytest
 
 from scout_apm.core.config import ScoutConfig
 from scout_apm.core.sampler import Sampler
-from scout_apm.core.tracked_request import TrackedRequest
 
 
 @pytest.fixture
@@ -37,63 +36,49 @@ def sampler(config):
     return Sampler(config)
 
 
-@pytest.fixture
-def tracked_request():
-    return TrackedRequest()
+def test_should_sample_endpoint_always(sampler):
+    assert sampler.should_sample("Controller/users", False) is True
 
 
-def test_should_sample_endpoint_always(sampler, tracked_request):
-    tracked_request.operation = "Controller/users"
-    assert sampler.should_sample(tracked_request) is True
+def test_should_sample_endpoint_never(sampler):
+    assert sampler.should_sample("Controller/health/check", False) is False
+    assert sampler.should_sample("Controller/users/test", False) is False
 
 
-def test_should_sample_endpoint_never(sampler, tracked_request):
-    tracked_request.operation = "Controller/health/check"
-    assert sampler.should_sample(tracked_request) is False
-    tracked_request.operation = "Controller/users/test"
-    assert sampler.should_sample(tracked_request) is False
+def test_should_sample_endpoint_ignored(sampler):
+    assert sampler.should_sample("Controller/metrics", False) is False
 
 
-def test_should_sample_endpoint_ignored(sampler, tracked_request):
-    tracked_request.operation = "Controller/metrics"
-    assert sampler.should_sample(tracked_request) is False
-
-
-def test_should_sample_endpoint_partial(sampler, tracked_request):
-    tracked_request.operation = "Controller/test/endpoint"
+def test_should_sample_endpoint_partial(sampler):
     with mock.patch("random.randint", return_value=10):
-        assert sampler.should_sample(tracked_request) is True
+        assert sampler.should_sample("Controller/test/endpoint", False) is True
     with mock.patch("random.randint", return_value=30):
-        assert sampler.should_sample(tracked_request) is False
+        assert sampler.should_sample("Controller/test/endpoint", False) is False
 
 
-def test_should_sample_job_always(sampler, tracked_request):
-    tracked_request.operation = "Job/critical-job"
-    assert sampler.should_sample(tracked_request) is True
+def test_should_sample_job_always(sampler):
+    assert sampler.should_sample("Job/critical-job", False) is True
 
 
-def test_should_sample_job_never(sampler, tracked_request):
-    tracked_request.operation = "Job/test-job"
-    assert sampler.should_sample(tracked_request) is False
+def test_should_sample_job_never(sampler):
+    assert sampler.should_sample("Job/test-job", False) is False
 
 
-def test_should_sample_job_partial(sampler, tracked_request):
-    tracked_request.operation = "Job/batch-process"
+def test_should_sample_job_partial(sampler):
     with mock.patch("random.randint", return_value=10):
-        assert sampler.should_sample(tracked_request) is True
+        assert sampler.should_sample("Job/batch-process", False) is True
     with mock.patch("random.randint", return_value=40):
-        assert sampler.should_sample(tracked_request) is False
+        assert sampler.should_sample("Job/batch-process", False) is False
 
 
-def test_should_sample_unknown_operation(sampler, tracked_request):
-    tracked_request.operation = "Unknown/operation"
+def test_should_sample_unknown_operation(sampler):
     with mock.patch("random.randint", return_value=10):
-        assert sampler.should_sample(tracked_request) is True
+        assert sampler.should_sample("Unknown/operation", False) is True
     with mock.patch("random.randint", return_value=60):
-        assert sampler.should_sample(tracked_request) is False
+        assert sampler.should_sample("Unknown/operation", False) is False
 
 
-def test_should_sample_no_sampling_enabled(config, tracked_request):
+def test_should_sample_no_sampling_enabled(config):
     config.set(
         sample_rate=100,  # Return config to defaults
         sample_endpoints={},
@@ -104,49 +89,43 @@ def test_should_sample_no_sampling_enabled(config, tracked_request):
         job_sample_rate=None,
     )
     sampler = Sampler(config)
-    tracked_request.operation = "Controller/any_endpoint"
-    assert sampler.should_sample(tracked_request) is True
-    tracked_request.operation = "Job/any_job"
-    assert sampler.should_sample(tracked_request) is True
+    assert sampler.should_sample("Controller/any_endpoint", False) is True
+    assert sampler.should_sample("Job/any_job", False) is True
 
 
-def test_should_sample_endpoint_default_rate(sampler, tracked_request):
-    tracked_request.operation = "Controller/unspecified"
+def test_should_sample_endpoint_default_rate(sampler):
     with mock.patch("random.randint", return_value=60):
-        assert sampler.should_sample(tracked_request) is True
+        assert sampler.should_sample("Controller/unspecified", False) is True
     with mock.patch("random.randint", return_value=80):
-        assert sampler.should_sample(tracked_request) is False
+        assert sampler.should_sample("Controller/unspecified", False) is False
 
 
-def test_should_sample_job_default_rate(sampler, tracked_request):
-    tracked_request.operation = "Job/unspecified-job"
+def test_should_sample_job_default_rate(sampler):
     with mock.patch("random.randint", return_value=30):
-        assert sampler.should_sample(tracked_request) is True
+        assert sampler.should_sample("Job/unspecified-job", False) is True
     with mock.patch("random.randint", return_value=50):
-        assert sampler.should_sample(tracked_request) is False
+        assert sampler.should_sample("Job/unspecified-job", False) is False
 
 
-def test_should_sample_endpoint_fallback_to_global_rate(config, tracked_request):
+def test_should_sample_endpoint_fallback_to_global_rate(config):
     config.set(endpoint_sample_rate=None)
     sampler = Sampler(config)
-    tracked_request.operation = "Controller/unspecified"
     with mock.patch("random.randint", return_value=40):
-        assert sampler.should_sample(tracked_request) is True
+        assert sampler.should_sample("Controller/unspecified", False) is True
     with mock.patch("random.randint", return_value=60):
-        assert sampler.should_sample(tracked_request) is False
+        assert sampler.should_sample("Controller/unspecified", False) is False
 
 
-def test_should_sample_job_fallback_to_global_rate(config, tracked_request):
+def test_should_sample_job_fallback_to_global_rate(config):
     config.set(job_sample_rate=None)
     sampler = Sampler(config)
-    tracked_request.operation = "Job/unspecified-job"
     with mock.patch("random.randint", return_value=40):
-        assert sampler.should_sample(tracked_request) is True
+        assert sampler.should_sample("Job/unspecified-job", False) is True
     with mock.patch("random.randint", return_value=60):
-        assert sampler.should_sample(tracked_request) is False
+        assert sampler.should_sample("Job/unspecified-job", False) is False
 
 
-def test_should_handle_legacy_ignore_with_specific_sampling(config, tracked_request):
+def test_should_handle_legacy_ignore_with_specific_sampling(config):
     """Test that specific sampling rates override legacy ignore patterns."""
     config.set(
         ignore=["foo"],
@@ -157,18 +136,16 @@ def test_should_handle_legacy_ignore_with_specific_sampling(config, tracked_requ
     sampler = Sampler(config)
 
     # foo/bar should be sampled at 50%
-    tracked_request.operation = "Controller/foo/bar"
     with mock.patch("random.randint", return_value=40):
-        assert sampler.should_sample(tracked_request) is True
+        assert sampler.should_sample("Controller/foo/bar", False) is True
     with mock.patch("random.randint", return_value=60):
-        assert sampler.should_sample(tracked_request) is False
+        assert sampler.should_sample("Controller/foo/bar", False) is False
 
     # foo/other should be ignored (0% sampling)
-    tracked_request.operation = "Controller/foo/other"
-    assert sampler.should_sample(tracked_request) is False
+    assert sampler.should_sample("Controller/foo/other", False) is False
 
 
-def test_prefix_matching_precedence(config, tracked_request):
+def test_prefix_matching_precedence(config):
     """Test that longer prefix matches take precedence."""
     config.set(
         sample_endpoints={
@@ -180,16 +157,13 @@ def test_prefix_matching_precedence(config, tracked_request):
     sampler = Sampler(config)
 
     # Regular API endpoint should be ignored
-    tracked_request.operation = "Controller/api/status"
-    assert sampler.should_sample(tracked_request) is False
+    assert sampler.should_sample("Controller/api/status", False) is False
 
     # Users API should be sampled at 50%
-    tracked_request.operation = "Controller/api/users/list"
     with mock.patch("random.randint", return_value=40):
-        assert sampler.should_sample(tracked_request) is True
+        assert sampler.should_sample("Controller/api/users/list", False) is True
     with mock.patch("random.randint", return_value=60):
-        assert sampler.should_sample(tracked_request) is False
+        assert sampler.should_sample("Controller/api/users/list", False) is False
 
     # VIP users API should always be sampled
-    tracked_request.operation = "Controller/api/users/vip/list"
-    assert sampler.should_sample(tracked_request) is True
+    assert sampler.should_sample("Controller/api/users/vip/list", False) is True
