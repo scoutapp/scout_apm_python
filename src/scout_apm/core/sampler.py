@@ -1,10 +1,7 @@
 # coding=utf-8
 
-import logging
 import random
 from typing import Dict, Optional, Tuple
-
-logger = logging.getLogger(__name__)
 
 
 class Sampler:
@@ -32,11 +29,12 @@ class Sampler:
         self.sample_rate = config.value("sample_rate")
         self.sample_endpoints = config.value("sample_endpoints")
         self.sample_jobs = config.value("sample_jobs")
-        self.ignore_endpoints = set(config.value("ignore_endpoints"))
+        self.ignore_endpoints = set(
+            config.value("ignore_endpoints") + config.value("ignore")
+        )
         self.ignore_jobs = set(config.value("ignore_jobs"))
         self.endpoint_sample_rate = config.value("endpoint_sample_rate")
         self.job_sample_rate = config.value("job_sample_rate")
-        self.legacy_ignore = config.value("ignore")
 
     def _any_sampling(self):
         """
@@ -55,11 +53,11 @@ class Sampler:
             or self.job_sample_rate is not None
         )
 
-    def _find_exact_match(
+    def _find_matching_rate(
         self, name: str, patterns: Dict[str, float]
-    ) -> Optional[float]:
+    ) -> Optional[str]:
         """
-        Finds the exact sample rate for a given operation name.
+        Finds the matching sample rate for a given operation name.
 
         Args:
             name: The operation name to match
@@ -68,25 +66,11 @@ class Sampler:
         Returns:
             The sample rate for the matching pattern or None if no match found
         """
-        return patterns.get(name)
 
-    def _find_prefix_match(
-        self, name: str, patterns: Dict[str, float]
-    ) -> Optional[float]:
-        """Find the longest matching prefix in sample configurations."""
-        matching_prefixes = [
-            (prefix, rate)
-            for prefix, rate in patterns.items()
-            if name.startswith(prefix)
-        ]
-        if not matching_prefixes:
-            return None
-        # Return rate for longest matching prefix
-        return max(matching_prefixes, key=lambda x: len(x[0]))[1]
-
-    def _is_legacy_ignored(self, name: str) -> bool:
-        """Check if path matches any legacy ignore patterns."""
-        return any(name.startswith(ignored) for ignored in self.legacy_ignore)
+        for pattern, rate in patterns.items():
+            if name.startswith(pattern):
+                return rate
+        return None
 
     def _get_operation_type_and_name(
         self, operation: str
@@ -108,51 +92,45 @@ class Sampler:
         else:
             return None, None
 
-    def get_effective_sample_rate(
-        self, operation: str, is_ignored: bool = False
-    ) -> int:
+    def get_effective_sample_rate(self, operation: str, is_ignored: bool) -> int:
         """
         Determines the effective sample rate for a given operation.
+
+        Prioritization:
+        1. Sampling rate for specific endpoint or job
+        2. Specified ignore pattern or flag for operation
+        3. Global endpoint or job sample rate
+        4. Global sample rate
+
+        Args:
+            operation: The operation string (e.g. "Controller/users/show")
+            is_ignored: boolean for if the specific transaction is ignored
+
+        Returns:
+            Integer between 0 and 100 representing sample rate
         """
         op_type, name = self._get_operation_type_and_name(operation)
-
         if not op_type or not name:
-            return self.sample_rate
+            return self.sample_rate  # Fall back to global rate for unknown operations
 
-        patterns = self.sample_endpoints if op_type == "endpoint" else self.sample_jobs
-        ignored_set = (
-            self.ignore_endpoints if op_type == "endpoint" else self.ignore_jobs
-        )
-        default_rate = (
-            self.endpoint_sample_rate if op_type == "endpoint" else self.job_sample_rate
-        )
+        if op_type == "endpoint":
+            matching_rate = self._find_matching_rate(name, self.sample_endpoints)
+            if matching_rate is not None:
+                return matching_rate
+            if name in self.ignore_endpoints or is_ignored:
+                return 0
+            if self.endpoint_sample_rate is not None:
+                return self.endpoint_sample_rate
 
-        # Check for exact match in sampling patterns
-        exact_rate = self._find_exact_match(name, patterns)
-        if exact_rate is not None:
-            return exact_rate
+        else:  # op_type == 'job'
+            if name in self.ignore_jobs:
+                return 0
 
-        # Check for exact endpoint/job ignores
-        if name in ignored_set:
-            return 0
-
-        # Check for prefix match in sampling patterns
-        prefix_rate = self._find_prefix_match(name, patterns)
-        if prefix_rate is not None:
-            return prefix_rate
-
-        # Check legacy ignore patterns
-        if self._is_legacy_ignored(name):
-            return 0
-
-        # Check if request is explicitly ignored via the
-        # is_ignored() tracked_request method.
-        if is_ignored:
-            return 0
-
-        # Use operation-specific default rate if available
-        if default_rate is not None:
-            return default_rate
+            matching_rate = self._find_matching_rate(name, self.sample_jobs)
+            if matching_rate is not None:
+                return matching_rate
+            if self.job_sample_rate is not None or is_ignored:
+                return self.job_sample_rate
 
         # Fall back to global sample rate
         return self.sample_rate

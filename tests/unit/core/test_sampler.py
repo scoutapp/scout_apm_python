@@ -14,6 +14,7 @@ def config():
     ScoutConfig.set(
         sample_rate=50,  # 50% global sampling
         sample_endpoints={
+            "users/test": 0,  # Never sample specific endpoint
             "users": 100,  # Always sample
             "test": 20,  # 20% sampling for test endpoints
             "health": 0,  # Never sample health checks
@@ -22,7 +23,7 @@ def config():
             "critical-job": 100,  # Always sample
             "batch": 30,  # 30% sampling for batch jobs
         },
-        ignore_endpoints=["metrics", "ping", "users/test"],
+        ignore_endpoints=["metrics", "ping"],
         ignore_jobs=["test-job"],
         endpoint_sample_rate=70,  # 70% sampling for unspecified endpoints
         job_sample_rate=40,  # 40% sampling for unspecified jobs
@@ -128,9 +129,9 @@ def test_should_sample_job_fallback_to_global_rate(config):
 def test_should_handle_legacy_ignore_with_specific_sampling(config):
     """Test that specific sampling rates override legacy ignore patterns."""
     config.set(
-        ignore=["foo"],
         sample_endpoints={
-            "foo/bar": 50  # Should override the ignore pattern for specific endpoint
+            "foo/bar": 50,  # Should override the ignore pattern for specific endpoint
+            "foo": 0,  # Ignore all other foo endpoints
         },
     )
     sampler = Sampler(config)
@@ -149,9 +150,9 @@ def test_prefix_matching_precedence(config):
     """Test that longer prefix matches take precedence."""
     config.set(
         sample_endpoints={
-            "api": 0,  # Ignore all API endpoints by default
-            "api/users": 50,  # Sample 50% of user endpoints
             "api/users/vip": 100,  # Sample all VIP user endpoints
+            "api/users": 50,  # Sample 50% of user endpoints
+            "api": 0,  # Ignore all API endpoints by default
         }
     )
     sampler = Sampler(config)
