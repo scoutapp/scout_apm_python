@@ -4,8 +4,6 @@ import logging
 import random
 from typing import Dict, Optional, Tuple
 
-from scout_apm.core.tracked_request import TrackedRequest
-
 logger = logging.getLogger(__name__)
 
 
@@ -110,20 +108,12 @@ class Sampler:
         else:
             return None, None
 
-    def get_effective_sample_rate(self, request: TrackedRequest) -> int:
+    def get_effective_sample_rate(
+        self, operation: str, is_ignored: bool = False
+    ) -> int:
         """
         Determines the effective sample rate for a given operation.
-
-        Priority order (highest to lowest):
-        1. Exact matches in sample_endpoints/sample_jobs
-        2. Exact matches in ignore lists (returns 0)
-        3. Prefix matches in sample_endpoints/sample_jobs
-        4. Legacy ignore patterns (returns 0)
-        5. Request-level ignore (returns 0)
-        6. Operation-specific default rate
-        7. Global sample rate
         """
-        operation = request.operation
         op_type, name = self._get_operation_type_and_name(operation)
 
         if not op_type or not name:
@@ -155,8 +145,9 @@ class Sampler:
         if self._is_legacy_ignored(name):
             return 0
 
-        # Check if request is explicitly ignored via tag
-        if request.is_ignored():
+        # Check if request is explicitly ignored via the
+        # is_ignored() tracked_request method.
+        if is_ignored:
             return 0
 
         # Use operation-specific default rate if available
@@ -166,7 +157,7 @@ class Sampler:
         # Fall back to global sample rate
         return self.sample_rate
 
-    def should_sample(self, request: TrackedRequest) -> bool:
+    def should_sample(self, operation: str, is_ignored: bool) -> bool:
         """
         Determines if an operation should be sampled.
         If no sampling is enabled, always return True.
@@ -180,4 +171,6 @@ class Sampler:
         """
         if not self._any_sampling():
             return True
-        return random.randint(1, 100) <= self.get_effective_sample_rate(request)
+        return random.randint(1, 100) <= self.get_effective_sample_rate(
+            operation, is_ignored
+        )
