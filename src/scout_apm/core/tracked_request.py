@@ -160,10 +160,8 @@ class TrackedRequest(object):
             self.end_time = dt.datetime.now(dt.timezone.utc)
 
         if self.is_real_request:
-            if (
-                not self.is_ignored()
-                and not self.sent
-                and self.get_sampler().should_sample(self.operation)
+            if not self.sent and self.get_sampler().should_sample(
+                self.operation, self.is_ignored()
             ):
                 self.tag("mem_delta", self._get_mem_delta())
                 self.sent = True

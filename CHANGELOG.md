@@ -8,7 +8,7 @@
 ## [3.3.0] 2025-01-07
 ### Added
 - Added support for down-sampling via Scout configuration.
-  - Sample rates can be set globally, for specific jobs/endpoints, or with wildcard selectors.
+  - Sample rates can be set globally or for specific jobs/endpoints
   - Check out our [documentation](https://scoutapm.com/docs/python/configuration#sampling) for more information and example usage.
 
 ## [3.2.0] 2024-09-12
