@@ -121,8 +121,9 @@ class Sampler:
         matching_rate = self._find_matching_rate(name, patterns)
         if matching_rate is not None:
             return matching_rate
-        if name in ignores or is_ignored:
-            return 0
+        for prefix in ignores:
+            if name.startswith(prefix) or is_ignored:
+                return 0
         if default_operation_rate is not None:
             return default_operation_rate
 
