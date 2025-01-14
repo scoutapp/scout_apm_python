@@ -110,27 +110,21 @@ class Sampler:
             Integer between 0 and 100 representing sample rate
         """
         op_type, name = self._get_operation_type_and_name(operation)
+        patterns = self.sample_endpoints if op_type == "endpoint" else self.sample_jobs
+        ignores = self.ignore_endpoints if op_type == "endpoint" else self.ignore_jobs
+        default_operation_rate = (
+            self.endpoint_sample_rate if op_type == "endpoint" else self.job_sample_rate
+        )
+
         if not op_type or not name:
-            return self.sample_rate  # Fall back to global rate for unknown operations
-
-        if op_type == "endpoint":
-            matching_rate = self._find_matching_rate(name, self.sample_endpoints)
-            if matching_rate is not None:
-                return matching_rate
-            if name in self.ignore_endpoints or is_ignored:
-                return 0
-            if self.endpoint_sample_rate is not None:
-                return self.endpoint_sample_rate
-
-        else:  # op_type == 'job'
-            if name in self.ignore_jobs:
-                return 0
-
-            matching_rate = self._find_matching_rate(name, self.sample_jobs)
-            if matching_rate is not None:
-                return matching_rate
-            if self.job_sample_rate is not None or is_ignored:
-                return self.job_sample_rate
+            return self.sample_rate
+        matching_rate = self._find_matching_rate(name, patterns)
+        if matching_rate is not None:
+            return matching_rate
+        if name in ignores or is_ignored:
+            return 0
+        if default_operation_rate is not None:
+            return default_operation_rate
 
         # Fall back to global sample rate
         return self.sample_rate
