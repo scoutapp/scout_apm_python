@@ -288,7 +288,7 @@ class Null(object):
 
 
 def _strip_leading_slash(path: str) -> str:
-    return path.lstrip("/").strip()
+    return path.lstrip(" /").strip()
 
 
 def convert_to_bool(value: Any) -> bool:
