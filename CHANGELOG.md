@@ -5,6 +5,12 @@
 - Change to tz-aware dates internally (Issue #799)
 - psutil dependency un-pin (#790)
 
+## [3.3.0] 2025-01-07
+### Added
+- Added support for down-sampling via Scout configuration.
+  - Sample rates can be set globally or for specific jobs/endpoints
+  - Check out our [documentation](https://scoutapm.com/docs/python/configuration#sampling) for more information and example usage.
+
 ## [3.2.0] 2024-09-12
 ### Added
 - "Operation" attribute added to TrackedRequest class to better support development of [scout_apm_python_logging](https://github.com/scoutapp/scout_apm_python_logging)
