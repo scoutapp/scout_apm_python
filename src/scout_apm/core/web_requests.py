@@ -96,7 +96,7 @@ def filter_element(key, value):
 def ignore_path(path):
     ignored_paths = scout_config.value("ignore")
     for ignored in ignored_paths:
-        if path.startswith(ignored):
+        if path.lstrip(" /").startswith(ignored):
             return True
     return False
 

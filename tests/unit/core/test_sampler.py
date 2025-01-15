@@ -15,15 +15,15 @@ def config():
         sample_rate=50,  # 50% global sampling
         sample_endpoints={
             "users/test": 0,  # Never sample specific endpoint
-            "users": 100,  # Always sample
+            "/users": 100,  # Always sample
             "test": 20,  # 20% sampling for test endpoints
-            "health": 0,  # Never sample health checks
+            "/health": 0,  # Never sample health checks
         },
         sample_jobs={
             "critical-job": 100,  # Always sample
-            "batch": 30,  # 30% sampling for batch jobs
+            "/batch": 30,  # 30% sampling for batch jobs
         },
-        ignore_endpoints=["metrics", "ping"],
+        ignore_endpoints=["/metrics", "ping"],
         ignore_jobs=["test-job"],
         endpoint_sample_rate=70,  # 70% sampling for unspecified endpoints
         job_sample_rate=40,  # 40% sampling for unspecified jobs

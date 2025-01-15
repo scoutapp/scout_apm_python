@@ -71,7 +71,7 @@ def app_with_scout(celery_config=None, app=None, config=None):
 def test_configuration_copied():
     celery_config = SimpleNamespace(SCOUT_IGNORE=["/foobar/"])
     with app_with_scout(celery_config=celery_config):
-        assert scout_config.value("ignore") == ["/foobar/"]
+        assert scout_config.value("ignore") == ["foobar/"]
 
 
 def test_hello_eager(tracked_requests):

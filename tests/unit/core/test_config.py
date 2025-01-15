@@ -266,17 +266,17 @@ def test_sample_rate_conversion_from_python(original, converted):
 def test_endpoint_sampling_conversion_from_env():
     config = ScoutConfig()
     with mock.patch.dict(
-        os.environ, {"SCOUT_SAMPLE_ENDPOINTS": "/endpoint:40,/test:0"}
+        os.environ, {"SCOUT_SAMPLE_ENDPOINTS": " /endpoint:40,/test:0"}
     ):
         value = config.value("sample_endpoints")
     assert isinstance(value, dict)
-    assert value == {"/endpoint": 40, "/test": 0}
+    assert value == {"endpoint": 40, "test": 0}
 
 
 @pytest.mark.parametrize(
     "original, converted",
     [
-        ("/endpoint:40,/test:0", {"/endpoint": 40, "/test": 0}),
+        ("/endpoint:40,/test:0", {"endpoint": 40, "test": 0}),
         ({"endpoint": 40, "test": 0}, {"endpoint": 40, "test": 0}),
         ("", {}),
         (object(), {}),

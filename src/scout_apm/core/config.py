@@ -287,6 +287,10 @@ class Null(object):
         return None
 
 
+def _strip_leading_slash(path: str) -> str:
+    return path.lstrip(" /").strip()
+
+
 def convert_to_bool(value: Any) -> bool:
     if isinstance(value, bool):
         return value
@@ -339,6 +343,14 @@ def convert_to_list(value: Any) -> List[Any]:
     return []
 
 
+def convert_ignore_paths(value: Any) -> List[str]:
+    """
+    Removes leading slashes from paths and returns a list of strings.
+    """
+    raw_paths = convert_to_list(value)
+    return [_strip_leading_slash(path) for path in raw_paths]
+
+
 def convert_endpoint_sampling(value: Union[str, Dict[str, Any]]) -> Dict[str, int]:
     """
     Converts endpoint sampling configuration from string or dict format
@@ -346,7 +358,7 @@ def convert_endpoint_sampling(value: Union[str, Dict[str, Any]]) -> Dict[str, in
     Example: '/endpoint:40,/test:0' -> {'/endpoint': 40, '/test': 0}
     """
     if isinstance(value, dict):
-        return {k: int(v) for k, v in value.items()}
+        return {_strip_leading_slash(k): int(v) for k, v in value.items()}
     if isinstance(value, str):
         if not value.strip():
             return {}
@@ -362,7 +374,7 @@ def convert_endpoint_sampling(value: Union[str, Dict[str, Any]]) -> Dict[str, in
                         "Must be between 0 and 100."
                     )
                     continue
-                result[endpoint.strip()] = rate_int
+                result[_strip_leading_slash(endpoint)] = rate_int
             except ValueError:
                 logger.warning(f"Invalid sampling configuration: {pair}")
                 continue
@@ -375,9 +387,9 @@ CONVERSIONS = {
     "core_agent_download": convert_to_bool,
     "core_agent_launch": convert_to_bool,
     "disabled_instruments": convert_to_list,
-    "ignore": convert_to_list,
-    "ignore_endpoints": convert_to_list,
-    "ignore_jobs": convert_to_list,
+    "ignore": convert_ignore_paths,
+    "ignore_endpoints": convert_ignore_paths,
+    "ignore_jobs": convert_ignore_paths,
     "monitor": convert_to_bool,
     "sample_rate": convert_sample_rate,
     "sample_endpoints": convert_endpoint_sampling,
