@@ -60,7 +60,7 @@ setup(
     install_requires=[
         "asgiref",
         "psutil>=5",
-        "urllib3~=2.2.0",
+        "urllib3",
         "certifi",
         "wrapt>=1.10,<2.0",
     ],
