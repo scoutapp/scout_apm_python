@@ -168,3 +168,30 @@ def test_prefix_matching_precedence(config):
 
     # VIP users API should always be sampled
     assert sampler.should_sample("Controller/api/users/vip/list", False) is True
+
+
+def test_should_sample_with_legacy_ignore(config):
+    """Test that sampling works correctly when only legacy 'ignore' config is set."""
+    config.set(
+        sample_rate=100,  # Return config to defaults
+        sample_endpoints={},
+        sample_jobs={},
+        ignore_endpoints=[],  # No explicit ignore_endpoints
+        ignore_jobs=[],
+        ignore=["metrics", "health"],  # Only set legacy ignore patterns
+        endpoint_sample_rate=None,
+        job_sample_rate=None,
+    )
+    sampler = Sampler(config)
+
+    # Legacy ignored endpoints should not be sampled
+    assert sampler.should_sample("Controller/metrics/stats", False) is False
+    assert sampler.should_sample("Controller/health/check", False) is False
+
+    # Legacy ignore should be combined with ignore_endpoints
+    assert "metrics" in sampler.ignore_endpoints
+    assert "health" in sampler.ignore_endpoints
+
+    # Non-ignored endpoints and jobs should be sampled
+    assert sampler.should_sample("Controller/users/list", False) is True
+    assert sampler.should_sample("Job/process_data", False) is True
