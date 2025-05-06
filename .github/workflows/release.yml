@@ -98,7 +98,7 @@ jobs:
           SCOUT_DISABLE_EXTENSIONS: "1"
         run: python setup.py bdist_wheel
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: dist/*.whl
 
