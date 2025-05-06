@@ -18,7 +18,7 @@ jobs:
         python: ['3.10']
         manylinux_image: [ manylinux2014, manylinux_2_28 ]
         # Disable for platforms where pure Python wheels would be generated
-        cibw_skip: [ "pp310-* pp311-* pp312-* pp313-*" ]
+        cibw_skip: [ "pp38-* pp39-* pp310-* pp311-* pp312-* pp313-*" ]
     steps:
       - uses: actions/checkout@v4
 
@@ -78,7 +78,7 @@ jobs:
 
   build_pure_wheels:
     name: Build pure python wheels
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         python: [3.9]
@@ -122,7 +122,7 @@ jobs:
 
   upload_pypi:
     needs: [cibuildwheel_py38plus, build_pure_wheels, build_sdist, build_macos_wheels]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Download distributions for publishing.
         uses: actions/download-artifact@v4
