@@ -32,7 +32,6 @@ class Sampler:
         self.ignore_endpoints = set(
             config.value("ignore_endpoints") + config.value("ignore")
         )
-        self.legacy_ignore = set(config.value("ignore"))
         self.ignore_jobs = set(config.value("ignore_jobs"))
         self.endpoint_sample_rate = config.value("endpoint_sample_rate")
         self.job_sample_rate = config.value("job_sample_rate")
@@ -49,7 +48,6 @@ class Sampler:
             or self.sample_endpoints
             or self.sample_jobs
             or self.ignore_endpoints
-            or self.legacy_ignore
             or self.ignore_jobs
             or self.endpoint_sample_rate is not None
             or self.job_sample_rate is not None
