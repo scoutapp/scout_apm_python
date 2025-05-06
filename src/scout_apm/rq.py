@@ -73,6 +73,8 @@ def wrap_perform(wrapped, instance, args, kwargs):
     # assumption here.
     if instance.enqueued_at.tzinfo is None:
         queued_at = instance.enqueued_at.replace(tzinfo=dt.timezone.utc)
+    else:
+        queued_at = instance.enqueued_at
     queue_time = (dt.datetime.now(dt.timezone.utc) - queued_at).total_seconds()
     tracked_request.tag("queue_time", queue_time)
     operation = "Job/{}".format(instance.func_name)
