@@ -2,8 +2,10 @@
 
 import logging
 
-import httpretty
 import pytest
+from mocket import Mocketizer
+from mocket.mockhttp import Entry
+from mocket.plugins.httpretty import httprettified, httpretty
 
 from scout_apm.compat import urllib3_cert_pool_manager
 from scout_apm.instruments.urllib3 import ensure_installed
@@ -70,13 +72,12 @@ def test_install_fail_no_urlopen_attribute(caplog):
     )
 
 
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 def test_request(tracked_request):
     ensure_installed()
-    with httpretty.enabled(allow_net_connect=False):
-        httpretty.register_uri(
-            httpretty.GET, "https://example.com/", body="Hello World!"
-        )
+    Entry.single_register(Entry.GET, "https://example.com/", body="Hello World!")
 
+    with Mocketizer(strict_mode=True):
         http = urllib3_cert_pool_manager()
         response = http.request("GET", "https://example.com")
 
@@ -101,15 +102,16 @@ def test_request_type_error(tracked_request):
     assert span.tags["url"] == "https://example.com:443/"
 
 
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+@httprettified
 def test_request_ignore_errors_host(tracked_request):
     ensure_installed()
-    with httpretty.enabled(allow_net_connect=False):
-        httpretty.register_uri(
-            httpretty.POST, "https://errors.scoutapm.com", body="Hello World!"
-        )
+    httpretty.register_uri(
+        httpretty.POST, "https://errors.scoutapm.com", body="Hello World!"
+    )
 
-        http = urllib3_cert_pool_manager()
-        response = http.request("POST", "https://errors.scoutapm.com")
+    http = urllib3_cert_pool_manager()
+    response = http.request("POST", "https://errors.scoutapm.com")
 
     assert response.status == 200
     assert response.data == b"Hello World!"
