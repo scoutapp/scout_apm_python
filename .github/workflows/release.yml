@@ -127,6 +127,8 @@ jobs:
   upload_pypi:
     needs: [cibuildwheel_py38plus, build_pure_wheels, build_sdist, build_macos_wheels]
     runs-on: ubuntu-24.04
+    permissions:
+      id-token: write
     steps:
       - name: Download distributions for publishing.
         uses: actions/download-artifact@v4
@@ -139,7 +141,7 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.TEST_TWINE_PASSWORD }}
-          repository_url: https://test.pypi.org/legacy/
+          repository-url: https://test.pypi.org/legacy/
           skip_existing: true
 
       - name: Publish distributions to PyPI
@@ -147,4 +149,3 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
-          password: ${{ secrets.TWINE_PASSWORD }}
