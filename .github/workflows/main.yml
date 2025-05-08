@@ -19,7 +19,6 @@ jobs:
       fail-fast: false
       matrix:
         python-version:
-        - "3.8"
         - "3.9"
         - "3.10"
         - "3.11"
@@ -50,57 +49,8 @@ jobs:
       REDIS_URL: redis://localhost:6379/0
 
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Upgrade packaging tools
-      run: python -m pip install --upgrade pip setuptools importlib_metadata virtualenv
-    - name: Install dependencies
-      run: python -m pip install --upgrade tox
-    - name: Run tox targets for ${{ matrix.python-version }}
-      run: |
-        ENV_PREFIX=$(tr -C -d "0-9" <<< "${{ matrix.python-version }}" | cut -c -3)
-        TOXENV=$(tox --listenvs | grep "^py$ENV_PREFIX" | tr '\n' ',') python -m tox
-
-  tests-ubuntu-20:
-    name: Python ${{ matrix.python-version }} Ubuntu 20
-    runs-on: ubuntu-20.04
-
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version:
-        - "3.8"
-        - "3.9"
-
-    services:
-      elasticsearch:
-        image: elasticsearch:7.10.1
-        ports:
-        - 9200:9200
-        env:
-          discovery.type: single-node
-          xpack.security.enabled: false
-
-      mongodb:
-        image: mongo:4
-        ports:
-        - 27017:27017
-
-      redis:
-        image: redis:6
-        ports:
-        - 6379:6379
-
-    env:
-      ELASTICSEARCH_URL: http://localhost:9200/
-      MONGODB_URL: mongodb://localhost:27017/
-      REDIS_URL: redis://localhost:6379/0
-
-    steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     - name: Upgrade packaging tools

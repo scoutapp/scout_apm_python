@@ -6,8 +6,9 @@ import os
 from datetime import datetime, timezone
 from time import sleep
 
-import httpretty
 import pytest
+from mocket import Mocketizer
+from mocket.plugins.httpretty import httpretty
 
 from scout_apm.core.config import scout_config
 from scout_apm.core.error_service import ErrorServiceThread
@@ -32,6 +33,7 @@ def error_monitor_errors(error_monitor_errors):
     return error_monitor_errors
 
 
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 @pytest.mark.parametrize(
     "config, decoded_body, expected_headers, expected_uri",
     [
@@ -73,7 +75,7 @@ def test_send(
     scout_config.set(**config)
 
     try:
-        with httpretty.enabled(allow_net_connect=False):
+        with Mocketizer():
             httpretty.register_uri(
                 httpretty.POST,
                 expected_uri,
@@ -82,16 +84,18 @@ def test_send(
             ErrorServiceThread.send(error={"foo": "BØØM!"})
             ErrorServiceThread.wait_until_drained()
 
-            request = httpretty.last_request()
-            assert (
-                json.loads(gzip_decompress(request.body).decode("utf-8"))
-                == decoded_body
-            )
-            assert request.headers.get("X-Error-Count") == "1"
+            # TODO - this is a hack to get the request body
+            request = httpretty.last_request
+            _ = request.event
+            raw_body = httpretty.last_request._parser.next_event().data
+
+            assert json.loads(gzip_decompress(raw_body).decode("utf-8")) == decoded_body
+            assert request.headers.get("x-error-count") == "1"
     finally:
         scout_config.reset_all()
 
 
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 def test_send_batch(error_service_thread):
     decompressed_body = {
         "notifier": "scout_apm_python",
@@ -100,7 +104,7 @@ def test_send_batch(error_service_thread):
         "problems": [{"foo": 0}, {"foo": 1}, {"foo": 2}, {"foo": 3}, {"foo": 4}],
     }
     try:
-        with httpretty.enabled(allow_net_connect=False):
+        with Mocketizer():
             httpretty.register_uri(
                 httpretty.POST,
                 "https://errors.scoutapm.com/apps/error.scout",
@@ -110,19 +114,23 @@ def test_send_batch(error_service_thread):
                 ErrorServiceThread.send(error={"foo": i})
             ErrorServiceThread.wait_until_drained()
 
-            request = httpretty.last_request()
+            # TODO - this is a hack to get the request body
+            request = httpretty.last_request
+            _ = request.event
+            raw_body = httpretty.last_request._parser.next_event().data
             assert (
-                json.loads(gzip_decompress(request.body).decode("utf-8"))
+                json.loads(gzip_decompress(raw_body).decode("utf-8"))
                 == decompressed_body
             )
-            assert request.headers.get("X-Error-Count") == "5"
+            assert request.headers.get("x-error-count") == "5"
     finally:
         scout_config.reset_all()
 
 
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 def test_send_api_error(error_service_thread, caplog):
     try:
-        with httpretty.enabled(allow_net_connect=False):
+        with Mocketizer():
             httpretty.register_uri(
                 httpretty.POST,
                 "https://errors.scoutapm.com/apps/error.scout",
@@ -140,8 +148,9 @@ def test_send_api_error(error_service_thread, caplog):
     )
 
 
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 def test_send_unserializable_data(error_service_thread, caplog):
-    with httpretty.enabled(allow_net_connect=False):
+    with Mocketizer():
         ErrorServiceThread.send(error={"value": datetime.now(tz=timezone.utc)})
         ErrorServiceThread.wait_until_drained()
 
