@@ -2,14 +2,18 @@
 
 ## Pending
 
-- Change to tz-aware dates internally (Issue #799)
-- psutil dependency un-pin (#790)
+## [3.4.0] 2025-05-08
+### Fixed
+- urllib3 dependency un-pin (#810)
+- Support `rq` now having tz-aware times
 
 ## [3.3.0] 2025-01-07
 ### Added
 - Added support for down-sampling via Scout configuration.
   - Sample rates can be set globally or for specific jobs/endpoints
   - Check out our [documentation](https://scoutapm.com/docs/python/configuration#sampling) for more information and example usage.
+- Change to tz-aware dates internally (Issue #799)
+- psutil dependency un-pin (#790)
 
 ## [3.2.0] 2024-09-12
 ### Added
