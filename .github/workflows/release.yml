@@ -83,7 +83,7 @@ jobs:
     runs-on: ubuntu-24.04
     strategy:
       matrix:
-        python: [3.8, 3.9]
+        python: [3.9]
     steps:
       - uses: actions/checkout@v4
 
@@ -142,7 +142,7 @@ jobs:
           user: __token__
           password: ${{ secrets.TEST_TWINE_PASSWORD }}
           repository-url: https://test.pypi.org/legacy/
-          skip_existing: true
+          skip-existing: true
 
       - name: Publish distributions to PyPI
         if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
