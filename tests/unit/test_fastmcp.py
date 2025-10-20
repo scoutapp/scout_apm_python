@@ -7,6 +7,11 @@ import pytest
 
 from scout_apm.core.tracked_request import TrackedRequest
 
+# Skip all fastMCP tests for Python < 3.10 since fastMCP requires Python 3.10+
+pytestmark = pytest.mark.skipif(
+    sys.version_info < (3, 10), reason="fastMCP requires Python 3.10 or higher"
+)
+
 
 class TestScoutMiddleware:
     """Unit tests for ScoutMiddleware without requiring fastmcp."""

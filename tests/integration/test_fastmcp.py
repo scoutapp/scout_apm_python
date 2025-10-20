@@ -1,5 +1,6 @@
 # coding=utf-8
 
+import sys
 from contextlib import contextmanager
 
 import pytest
@@ -7,6 +8,11 @@ from fastmcp import FastMCP
 
 from scout_apm.api import Config
 from scout_apm.fastmcp import ScoutMiddleware
+
+# Skip all fastMCP tests for Python < 3.10 since fastMCP requires Python 3.10+
+pytestmark = pytest.mark.skipif(
+    sys.version_info < (3, 10), reason="fastMCP requires Python 3.10 or higher"
+)
 
 
 @contextmanager
@@ -51,7 +57,7 @@ def test_basic_tool_instrumentation(tracked_requests):
         assert tools_list[0].name == "add_numbers"
 
         # Simulate tool execution
-        result = mcp.call_tool("add_numbers", {"a": 5, "b": 3})
+        result = mcp._call_tool("add_numbers", {"a": 5, "b": 3})
         assert result == 8
 
     # Verify tracking
@@ -73,7 +79,7 @@ def test_async_tool_instrumentation(tracked_requests):
             return a * b
 
         # Simulate tool execution
-        result = mcp.call_tool("async_multiply", {"a": 4, "b": 7})
+        result = mcp._call_tool("async_multiply", {"a": 4, "b": 7})
         assert result == 28
 
     # Verify tracking
@@ -106,7 +112,7 @@ def test_tool_with_metadata(tracked_requests):
         mcp.list_tools()
 
         # Execute tool
-        result = mcp.call_tool("search_db", {"query": "test"})
+        result = mcp._call_tool("search_db", {"query": "test"})
         assert len(result) == 1
 
     # Verify metadata tags
@@ -134,7 +140,7 @@ def test_tool_with_arguments(tracked_requests):
             return {"processed": True, "length": len(data)}
 
         # Execute tool with sensitive parameter
-        result = mcp.call_tool(
+        result = mcp._call_tool(
             "process_data", {"data": "test data", "password": "secret123", "count": 5}
         )
         assert result["processed"] is True
@@ -167,7 +173,7 @@ def test_tool_error_tracking(tracked_requests):
 
         # Execute tool that raises an error
         with pytest.raises(ValueError, match="Division by zero"):
-            mcp.call_tool("divide_numbers", {"a": 10, "b": 0})
+            mcp._call_tool("divide_numbers", {"a": 10, "b": 0})
 
     # Verify error tracking
     assert len(tracked_requests) == 1
@@ -186,9 +192,9 @@ def test_multiple_tool_calls(tracked_requests):
             return message
 
         # Execute multiple times
-        mcp.call_tool("echo", {"message": "first"})
-        mcp.call_tool("echo", {"message": "second"})
-        mcp.call_tool("echo", {"message": "third"})
+        mcp._call_tool("echo", {"message": "first"})
+        mcp._call_tool("echo", {"message": "second"})
+        mcp._call_tool("echo", {"message": "third"})
 
     # Should have 3 separate tracked requests
     assert len(tracked_requests) == 3
@@ -206,7 +212,7 @@ def test_no_monitor(tracked_requests):
             """This should not be tracked."""
             return "result"
 
-        result = mcp.call_tool("monitored_tool", {})
+        result = mcp._call_tool("monitored_tool", {})
         assert result == "result"
 
     # Should not track when monitor is disabled
@@ -223,7 +229,7 @@ def test_tool_without_metadata_cache(tracked_requests):
             return value * 2
 
         # Call tool without listing first (no metadata cache)
-        result = mcp.call_tool("uncached_tool", {"value": 21})
+        result = mcp._call_tool("uncached_tool", {"value": 21})
         assert result == 42
 
     # Should still track the execution
