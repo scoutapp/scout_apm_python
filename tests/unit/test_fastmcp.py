@@ -200,9 +200,7 @@ class TestScoutMiddleware:
         mock_tool2.name = "tool_two"
         mock_tool2.description = "Second tool"
 
-        # Mock result with tools
-        mock_result = mock.Mock()
-        mock_result.tools = [mock_tool1, mock_tool2]
+        mock_result = [mock_tool1, mock_tool2]
 
         mock_context = mock.Mock()
 
@@ -217,24 +215,3 @@ class TestScoutMiddleware:
         assert middleware._tool_cache["tool_one"] == mock_tool1
         assert middleware._tool_cache["tool_two"] == mock_tool2
         assert result == mock_result
-
-    @pytest.mark.asyncio
-    async def test_on_list_tools_handles_missing_tools_attribute(self):
-        """Test that on_list_tools handles results without tools attribute."""
-        from scout_apm.fastmcp import ScoutMiddleware
-
-        middleware = ScoutMiddleware()
-        middleware._do_nothing = False
-
-        # Mock result without tools attribute
-        mock_result = mock.Mock(spec=[])
-        mock_context = mock.Mock()
-
-        async def mock_call_next(ctx):
-            return mock_result
-
-        # Should not raise exception
-        result = await middleware.on_list_tools(mock_context, mock_call_next)
-
-        assert result == mock_result
-        assert len(middleware._tool_cache) == 0

@@ -45,11 +45,9 @@ class ScoutMiddleware(Middleware if Middleware is not None else object):
         result = await call_next(context)
 
         # Cache tool objects with full metadata
-        if hasattr(result, "tools"):
-            for tool in result.tools:
-                if hasattr(tool, "name"):
-                    self._tool_cache[tool.name] = tool
-                    logger.debug("Cached metadata for tool: %s", tool.name)
+        for tool in result:
+            if hasattr(tool, "name"):
+                self._tool_cache[tool.name] = tool
 
         return result
 
@@ -68,7 +66,7 @@ class ScoutMiddleware(Middleware if Middleware is not None else object):
         tracked_request.is_real_request = True
 
         # Get tool name from execution context
-        tool_name = context.params.get("name", "unknown")
+        tool_name = getattr(context.message, "name", "unknown")
         operation = f"Endpoint/{tool_name}"
         tracked_request.operation = operation
 
@@ -78,7 +76,7 @@ class ScoutMiddleware(Middleware if Middleware is not None else object):
             self._tag_tool_metadata(tracked_request, tool)
 
         # Tag tool arguments (filtered for sensitive data)
-        arguments = context.params.get("arguments", {})
+        arguments = getattr(context.message, "arguments", {})
         if arguments:
             filtered_args = filter_element("", arguments)
             # Convert to string representation for tagging

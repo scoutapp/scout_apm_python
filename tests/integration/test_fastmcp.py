@@ -5,6 +5,7 @@ from contextlib import contextmanager
 
 import pytest
 from fastmcp import FastMCP
+from fastmcp.exceptions import ToolError
 
 from scout_apm.api import Config
 from scout_apm.fastmcp import ScoutMiddleware
@@ -42,7 +43,7 @@ def server_with_scout(scout_config=None):
         Config.reset_all()
 
 
-def test_basic_tool_instrumentation(tracked_requests):
+async def test_basic_tool_instrumentation(tracked_requests):
     """Test that basic tool execution is tracked."""
     with server_with_scout() as mcp:
 
@@ -52,13 +53,16 @@ def test_basic_tool_instrumentation(tracked_requests):
             return a + b
 
         # Simulate tool list request (caches metadata)
-        tools_list = mcp.list_tools()
+        tools_list = await mcp._list_tools()
         assert len(tools_list) == 1
-        assert tools_list[0].name == "add_numbers"
+        assert tools_list[0].key == "add_numbers"
 
-        # Simulate tool execution
-        result = mcp._call_tool("add_numbers", {"a": 5, "b": 3})
-        assert result == 8
+        # Simulate tool execution using the MCP protocol method
+        result = await mcp._mcp_call_tool("add_numbers", {"a": 5, "b": 3})
+        # result is a tuple: (content_blocks, metadata)
+        content_blocks, metadata = result
+        assert len(content_blocks) == 1
+        assert content_blocks[0].text == "8"
 
     # Verify tracking
     assert len(tracked_requests) == 1
@@ -69,7 +73,7 @@ def test_basic_tool_instrumentation(tracked_requests):
     assert tracked_request.complete_spans[0].operation == "Endpoint/add_numbers"
 
 
-def test_async_tool_instrumentation(tracked_requests):
+async def test_async_tool_instrumentation(tracked_requests):
     """Test that async tool execution is tracked."""
     with server_with_scout() as mcp:
 
@@ -79,8 +83,8 @@ def test_async_tool_instrumentation(tracked_requests):
             return a * b
 
         # Simulate tool execution
-        result = mcp._call_tool("async_multiply", {"a": 4, "b": 7})
-        assert result == 28
+        result, metadata = await mcp._mcp_call_tool("async_multiply", {"a": 4, "b": 7})
+        assert result[0].text == "28"
 
     # Verify tracking
     assert len(tracked_requests) == 1
@@ -89,7 +93,7 @@ def test_async_tool_instrumentation(tracked_requests):
     assert tracked_request.is_real_request is True
 
 
-def test_tool_with_metadata(tracked_requests):
+async def test_tool_with_metadata(tracked_requests):
     """Test that tool metadata (tags, annotations, meta) is captured."""
     with server_with_scout() as mcp:
 
@@ -109,10 +113,10 @@ def test_tool_with_metadata(tracked_requests):
             return [{"id": 1, "name": "result"}]
 
         # Cache metadata by listing tools
-        mcp.list_tools()
+        await mcp._list_tools()
 
         # Execute tool
-        result = mcp._call_tool("search_db", {"query": "test"})
+        result, metadata = await mcp._mcp_call_tool("search_db", {"query": "test"})
         assert len(result) == 1
 
     # Verify metadata tags
@@ -130,7 +134,7 @@ def test_tool_with_metadata(tracked_requests):
     assert tags.get("tool_meta") == "{'version': '1.0', 'author': 'test-team'}"
 
 
-def test_tool_with_arguments(tracked_requests):
+async def test_tool_with_arguments(tracked_requests):
     """Test that tool arguments are captured and filtered."""
     with server_with_scout() as mcp:
 
@@ -140,10 +144,14 @@ def test_tool_with_arguments(tracked_requests):
             return {"processed": True, "length": len(data)}
 
         # Execute tool with sensitive parameter
-        result = mcp._call_tool(
+        result, metadata = await mcp._mcp_call_tool(
             "process_data", {"data": "test data", "password": "secret123", "count": 5}
         )
-        assert result["processed"] is True
+        # FastMCP returns list of ContentBlock, need to parse the JSON
+        import json
+
+        result_data = json.loads(result[0].text)
+        assert result_data["processed"] is True
 
     # Verify arguments are tagged
     assert len(tracked_requests) == 1
@@ -160,7 +168,7 @@ def test_tool_with_arguments(tracked_requests):
     assert "test data" in args_str
 
 
-def test_tool_error_tracking(tracked_requests):
+async def test_tool_error_tracking(tracked_requests):
     """Test that tool errors are tracked properly."""
     with server_with_scout() as mcp:
 
@@ -172,8 +180,8 @@ def test_tool_error_tracking(tracked_requests):
             return a / b
 
         # Execute tool that raises an error
-        with pytest.raises(ValueError, match="Division by zero"):
-            mcp._call_tool("divide_numbers", {"a": 10, "b": 0})
+        with pytest.raises(ToolError, match="Division by zero"):
+            await mcp._mcp_call_tool("divide_numbers", {"a": 10, "b": 0})
 
     # Verify error tracking
     assert len(tracked_requests) == 1
@@ -182,7 +190,7 @@ def test_tool_error_tracking(tracked_requests):
     assert tracked_request.tags.get("error") == "true"
 
 
-def test_multiple_tool_calls(tracked_requests):
+async def test_multiple_tool_calls(tracked_requests):
     """Test that multiple tool calls create separate tracked requests."""
     with server_with_scout() as mcp:
 
@@ -192,9 +200,9 @@ def test_multiple_tool_calls(tracked_requests):
             return message
 
         # Execute multiple times
-        mcp._call_tool("echo", {"message": "first"})
-        mcp._call_tool("echo", {"message": "second"})
-        mcp._call_tool("echo", {"message": "third"})
+        await mcp._mcp_call_tool("echo", {"message": "first"})
+        await mcp._mcp_call_tool("echo", {"message": "second"})
+        await mcp._mcp_call_tool("echo", {"message": "third"})
 
     # Should have 3 separate tracked requests
     assert len(tracked_requests) == 3
@@ -203,7 +211,7 @@ def test_multiple_tool_calls(tracked_requests):
         assert tracked_request.is_real_request is True
 
 
-def test_no_monitor(tracked_requests):
+async def test_no_monitor(tracked_requests):
     """Test that instrumentation is disabled when monitor=False."""
     with server_with_scout(scout_config={"monitor": False}) as mcp:
 
@@ -212,14 +220,14 @@ def test_no_monitor(tracked_requests):
             """This should not be tracked."""
             return "result"
 
-        result = mcp._call_tool("monitored_tool", {})
-        assert result == "result"
+        result, metadata = await mcp._mcp_call_tool("monitored_tool", {})
+        assert result[0].text == "result"
 
     # Should not track when monitor is disabled
     assert len(tracked_requests) == 0
 
 
-def test_tool_without_metadata_cache(tracked_requests):
+async def test_tool_without_metadata_cache(tracked_requests):
     """Test that tools work even if metadata hasn't been cached."""
     with server_with_scout() as mcp:
 
@@ -229,8 +237,8 @@ def test_tool_without_metadata_cache(tracked_requests):
             return value * 2
 
         # Call tool without listing first (no metadata cache)
-        result = mcp._call_tool("uncached_tool", {"value": 21})
-        assert result == 42
+        result, metadata = await mcp._mcp_call_tool("uncached_tool", {"value": 21})
+        assert result[0].text == "42"
 
     # Should still track the execution
     assert len(tracked_requests) == 1
