@@ -79,7 +79,6 @@ class ScoutMiddleware(Middleware if Middleware is not None else object):
         arguments = getattr(context.message, "arguments", {})
         if arguments:
             filtered_args = filter_element("", arguments)
-            # Convert to string representation for tagging
             tracked_request.tag("arguments", str(filtered_args))
 
         with tracked_request.span(operation=operation, should_capture_backtrace=False):
@@ -88,7 +87,6 @@ class ScoutMiddleware(Middleware if Middleware is not None else object):
                 return result
             except Exception as exc:
                 tracked_request.tag("error", "true")
-                # Send detailed error information if errors are enabled
                 if scout_config.value("errors_enabled"):
                     from scout_apm.core.error import ErrorMonitor
 
@@ -107,18 +105,16 @@ class ScoutMiddleware(Middleware if Middleware is not None else object):
         as tags for filtering and analysis in Scout APM.
         https://gofastmcp.com/servers/tools#decorator-arguments
         """
-        # Add tool description (truncated to avoid excessive tag size)
+        # Add tool description (truncated)
         if hasattr(tool, "description") and tool.description:
             tracked_request.tag("tool_description", str(tool.description)[:200])
 
-        # Add user-defined tags for categorization
         if hasattr(tool, "tags") and tool.tags:
             tracked_request.tag("tool_tags", ",".join(sorted(tool.tags)))
 
-        # Add behavioral annotations
+        # Add behavioral annotations (dict and object-style)
         if hasattr(tool, "annotations") and tool.annotations:
             annotations = tool.annotations
-            # Handle both dict and object-style access
             if isinstance(annotations, dict):
                 tracked_request.tag("read_only", annotations.get("readOnlyHint", False))
                 tracked_request.tag(
@@ -139,6 +135,5 @@ class ScoutMiddleware(Middleware if Middleware is not None else object):
                 if hasattr(annotations, "openWorldHint"):
                     tracked_request.tag("external", annotations.openWorldHint)
 
-        # Add custom metadata as a single tag
         if hasattr(tool, "meta") and tool.meta:
             tracked_request.tag("tool_meta", str(tool.meta))
