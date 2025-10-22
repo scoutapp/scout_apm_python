@@ -67,10 +67,10 @@ async def test_basic_tool_instrumentation(tracked_requests):
     # Verify tracking
     assert len(tracked_requests) == 1
     tracked_request = tracked_requests[0]
-    assert tracked_request.operation == "Endpoint/add_numbers"
+    assert tracked_request.operation == "Controller/add_numbers"
     assert tracked_request.is_real_request is True
     assert len(tracked_request.complete_spans) == 1
-    assert tracked_request.complete_spans[0].operation == "Endpoint/add_numbers"
+    assert tracked_request.complete_spans[0].operation == "Controller/add_numbers"
 
 
 async def test_async_tool_instrumentation(tracked_requests):
@@ -89,7 +89,7 @@ async def test_async_tool_instrumentation(tracked_requests):
     # Verify tracking
     assert len(tracked_requests) == 1
     tracked_request = tracked_requests[0]
-    assert tracked_request.operation == "Endpoint/async_multiply"
+    assert tracked_request.operation == "Controller/async_multiply"
     assert tracked_request.is_real_request is True
 
 
@@ -122,7 +122,7 @@ async def test_tool_with_metadata(tracked_requests):
     # Verify metadata tags
     assert len(tracked_requests) == 1
     tracked_request = tracked_requests[0]
-    assert tracked_request.operation == "Endpoint/search_db"
+    assert tracked_request.operation == "Controller/search_db"
 
     tags = tracked_request.tags
     assert "tool_description" in tags
@@ -186,7 +186,7 @@ async def test_tool_error_tracking(tracked_requests):
     # Verify error tracking
     assert len(tracked_requests) == 1
     tracked_request = tracked_requests[0]
-    assert tracked_request.operation == "Endpoint/divide_numbers"
+    assert tracked_request.operation == "Controller/divide_numbers"
     assert tracked_request.tags.get("error") == "true"
 
 
@@ -207,7 +207,7 @@ async def test_multiple_tool_calls(tracked_requests):
     # Should have 3 separate tracked requests
     assert len(tracked_requests) == 3
     for tracked_request in tracked_requests:
-        assert tracked_request.operation == "Endpoint/echo"
+        assert tracked_request.operation == "Controller/echo"
         assert tracked_request.is_real_request is True
 
 
@@ -243,6 +243,6 @@ async def test_tool_without_metadata_cache(tracked_requests):
     # Should still track the execution
     assert len(tracked_requests) == 1
     tracked_request = tracked_requests[0]
-    assert tracked_request.operation == "Endpoint/uncached_tool"
+    assert tracked_request.operation == "Controller/uncached_tool"
     # Metadata tags won't be present, but basic tracking should work
     assert "tool_tags" not in tracked_request.tags

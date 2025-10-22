@@ -67,7 +67,7 @@ class ScoutMiddleware(Middleware if Middleware is not None else object):
 
         # Get tool name from execution context
         tool_name = getattr(context.message, "name", "unknown")
-        operation = f"Endpoint/{tool_name}"
+        operation = f"Controller/{tool_name}"
         tracked_request.operation = operation
 
         # Add rich metadata from cached tool object
