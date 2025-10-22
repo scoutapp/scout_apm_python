@@ -2,6 +2,15 @@
 
 ## Pending
 
+## [3.5.0] 2025-10-22
+### Added
+- FastMCP instrumentation for Model Context Protocol servers via fastmcp.ScoutMiddleware class(requires FastMCP 2.9.0+)
+  - Automatic tracking of tool executions with performance metrics
+  - Rich metadata capture (tags, annotations, descriptions, custom metadata)
+  - Argument filtering for sensitive data (passwords, tokens, API keys)
+  - Error tracking with full context
+  - Support for both sync and async tools
+
 ## [3.4.0] 2025-05-08
 ### Fixed
 - urllib3 dependency un-pin (#810)
