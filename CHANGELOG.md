@@ -10,6 +10,10 @@
   - Argument filtering for sensitive data (passwords, tokens, API keys)
   - Error tracking with full context
   - Support for both sync and async tools
+- Formal support for Python 3.13 and 3.14
+- Formal support for Django 5.1 and 5.2
+### Removed
+- Dropped support for Python 3.9
 
 ## [3.4.0] 2025-05-08
 ### Fixed
