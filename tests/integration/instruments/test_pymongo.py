@@ -20,7 +20,11 @@ def pymongo_client():
     ensure_installed()
     if "MONGODB_URL" not in os.environ:
         raise pytest.skip("MongoDB isn't available")
-    yield pymongo.MongoClient(os.environ["MONGODB_URL"])
+    client = pymongo.MongoClient(os.environ["MONGODB_URL"])
+    try:
+        yield client
+    finally:
+        client.close()
 
 
 def test_all_collection_attributes_accounted_for():

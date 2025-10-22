@@ -224,7 +224,14 @@ def test_server_error(tracked_requests):
     assert tracked_request.tags["error"] == "true"
     spans = tracked_requests[0].complete_spans
     operations = [s.operation for s in spans]
-    if django.VERSION >= (1, 9):
+    if django.VERSION >= (5, 0):
+        # Django 5.0+ changed internal error page rendering to bypass
+        # the Template instrumentation, so template operations are no longer tracked
+        expected_operations = [
+            "Controller/tests.integration.django_app.crash",
+            "Middleware",
+        ]
+    elif django.VERSION >= (1, 9):
         # Changed in Django 1.9 or later (we only test 1.8 and 1.11 at time of
         # writing)
         expected_operations = [
