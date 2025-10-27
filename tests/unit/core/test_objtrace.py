@@ -78,8 +78,16 @@ def test_get_counts_reallocations():
 
 @skip_if_objtrace_not_extension
 def test_get_counts_frees():
+    import gc
+
     objtrace.enable()
-    for x in (1, 2, 3):
-        y = x  # noqa: F841
+    # Create actual objects that will be allocated and freed
+    for i in range(10):
+        temp = [i] * 10  # noqa: F841
+
+    # Force garbage collection to ensure objects are freed
+    # This is needed for Python 3.14's incremental GC
+    gc.collect()
+
     counts = objtrace.get_counts()
     assert counts[3] > 0
