@@ -232,7 +232,8 @@ class CoreAgentDownloader(object):
 
     def untar(self):
         t = tarfile.open(self.package_location, "r")
-        t.extractall(self.destination)
+        logger.info(f"Extracting {self.package_location} to {self.destination}")
+        t.extractall(path=self.destination)
 
     def full_url(self):
         return "{root_url}/{core_agent_full_name}.tgz".format(
