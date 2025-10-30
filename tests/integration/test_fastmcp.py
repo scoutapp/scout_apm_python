@@ -4,15 +4,32 @@ import sys
 from contextlib import contextmanager
 
 import pytest
-from fastmcp import FastMCP
-from fastmcp.exceptions import ToolError
 
 from scout_apm.api import Config
-from scout_apm.fastmcp import ScoutMiddleware
 
-# Skip all fastMCP tests for Python < 3.10 since fastMCP requires Python 3.10+
+
+def parse_version(v):
+    """Parse a semantic version string into a tuple of integers."""
+    return tuple(int(x) for x in v.split(".")[:3])
+
+
+# Try to import fastMCP and check version
+try:
+    from fastmcp import FastMCP
+    from fastmcp import __version__ as fastmcp_version
+    from fastmcp.exceptions import ToolError
+
+    from scout_apm.fastmcp import ScoutMiddleware
+except (ImportError, TypeError):
+    # fastmcp has compatibility issues with version <2.13.0
+    # This is due to us using internal methods to test the middleware hooks
+    # These internal methods were renamed in 2.13.0
+    fastmcp_version = "0.0.0"
+    pass
+
 pytestmark = pytest.mark.skipif(
-    sys.version_info < (3, 10), reason="fastMCP requires Python 3.10 or higher"
+    parse_version(fastmcp_version) < (2, 13, 0) or sys.version_info < (3, 10),
+    reason="These tests require fastMCP 2.13.0+ and Python 3.10+",
 )
 
 

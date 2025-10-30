@@ -3,7 +3,7 @@
 import logging
 
 import scout_apm.core
-from scout_apm.core.config import scout_config
+from scout_apm.core.error import ErrorMonitor
 from scout_apm.core.tracked_request import TrackedRequest
 from scout_apm.core.web_requests import filter_element
 
@@ -87,14 +87,11 @@ class ScoutMiddleware(Middleware if Middleware is not None else object):
                 return result
             except Exception as exc:
                 tracked_request.tag("error", "true")
-                if scout_config.value("errors_enabled"):
-                    from scout_apm.core.error import ErrorMonitor
-
-                    ErrorMonitor.send(
-                        (type(exc), exc, exc.__traceback__),
-                        custom_controller=f"MCP-Tool/{tool_name}",
-                        custom_params={"tool": tool_name, "arguments": arguments},
-                    )
+                ErrorMonitor.send(
+                    (type(exc), exc, exc.__traceback__),
+                    custom_controller=operation,
+                    custom_params={"tool": tool_name, "arguments": arguments},
+                )
                 raise
 
     def _tag_tool_metadata(self, tracked_request, tool):
@@ -113,6 +110,7 @@ class ScoutMiddleware(Middleware if Middleware is not None else object):
             tracked_request.tag("tool_tags", ",".join(sorted(tool.tags)))
 
         # Add behavioral annotations (dict and object-style)
+        # https://gofastmcp.com/servers/tools#param-annotations
         if hasattr(tool, "annotations") and tool.annotations:
             annotations = tool.annotations
             if isinstance(annotations, dict):
