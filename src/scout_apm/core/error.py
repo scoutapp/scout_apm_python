@@ -36,6 +36,13 @@ class ErrorMonitor(object):
 
         tracked_request = TrackedRequest.instance()
 
+        # If monitoring is disabled, we need to clean up the tracked request
+        # to avoid leaking it (since the middleware won't finish it)
+        if not scout_config.value("monitor"):
+            # Finish the request immediately to prevent leaks
+            tracked_request.finish()
+            return
+
         context = {}
         context.update(tracked_request.tags)
 
@@ -56,28 +63,32 @@ class ErrorMonitor(object):
             "message": str(exc_value),
             "request_id": tracked_request.request_id,
             "request_uri": request_path,
-            "request_params": filter_element("", request_params)
-            if request_params
-            else None,
+            "request_params": (
+                filter_element("", request_params) if request_params else None
+            ),
             "request_session": filter_element("", session) if session else None,
             "environment": filter_element("", environment) if environment else None,
             "trace": [
                 "{file}:{line}:in {function}".format(
-                    file=os.path.join(scm_subdirectory, frame["file"])
-                    if scm_subdirectory
-                    else frame["file"],
+                    file=(
+                        os.path.join(scm_subdirectory, frame["file"])
+                        if scm_subdirectory
+                        else frame["file"]
+                    ),
                     line=frame["line"],
                     function=frame["function"],
                 )
                 for frame in capture_stacktrace(traceback)
             ],
-            "request_components": {
-                "module": request_components.module,
-                "controller": request_components.controller,
-                "action": request_components.action,
-            }
-            if request_components
-            else None,
+            "request_components": (
+                {
+                    "module": request_components.module,
+                    "controller": request_components.controller,
+                    "action": request_components.action,
+                }
+                if request_components
+                else None
+            ),
             "context": context,
             "host": scout_config.value("hostname"),
             "revision_sha": scout_config.value("revision_sha"),

@@ -19,6 +19,7 @@ Scout APM has integrations for the following frameworks:
 * Django 3.2+
 * Dramatiq 1.0+
 * Falcon 2.0+
+* FastMCP 2.9.0+
 * Flask 0.10+
 * Huey 2.0+
 * Hug 2.5.1+
