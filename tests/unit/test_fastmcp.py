@@ -155,14 +155,11 @@ class TestScoutMiddleware:
         with mock.patch(
             "scout_apm.fastmcp.TrackedRequest.instance", return_value=mock_tracked
         ):
-            with mock.patch("scout_apm.fastmcp.scout_config") as mock_config:
-                mock_config.value.return_value = False  # errors_enabled = False
+            with pytest.raises(ValueError, match="Tool failed"):
+                await middleware.on_call_tool(mock_context, failing_call_next)
 
-                with pytest.raises(ValueError, match="Tool failed"):
-                    await middleware.on_call_tool(mock_context, failing_call_next)
-
-                # Verify error was tagged
-                mock_tracked.tag.assert_any_call("error", "true")
+            # Verify error was tagged
+            mock_tracked.tag.assert_any_call("error", "true")
 
     @pytest.mark.asyncio
     async def test_on_call_tool_skips_when_disabled(self):
