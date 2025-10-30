@@ -84,10 +84,19 @@ def test_send(
             ErrorServiceThread.send(error={"foo": "BØØM!"})
             ErrorServiceThread.wait_until_drained()
 
+            # Wait for httpretty to capture the request (with retry for CI timing)
+            request = None
+            for _ in range(20):  # Retry up to 1 second (20 * 0.05s)
+                request = httpretty.last_request
+                if request is not None:
+                    break
+                sleep(0.05)
+
+            assert request is not None, "HTTP request was not captured by httpretty"
+
             # TODO - this is a hack to get the request body
-            request = httpretty.last_request
             _ = request.event
-            raw_body = httpretty.last_request._parser.next_event().data
+            raw_body = request._parser.next_event().data
 
             assert json.loads(gzip_decompress(raw_body).decode("utf-8")) == decoded_body
             assert request.headers.get("x-error-count") == "1"
@@ -114,10 +123,19 @@ def test_send_batch(error_service_thread):
                 ErrorServiceThread.send(error={"foo": i})
             ErrorServiceThread.wait_until_drained()
 
+            # Wait for httpretty to capture the request (with retry for CI timing)
+            request = None
+            for _ in range(20):  # Retry up to 1 second (20 * 0.05s)
+                request = httpretty.last_request
+                if request is not None:
+                    break
+                sleep(0.05)
+
+            assert request is not None, "HTTP request was not captured by httpretty"
+
             # TODO - this is a hack to get the request body
-            request = httpretty.last_request
             _ = request.event
-            raw_body = httpretty.last_request._parser.next_event().data
+            raw_body = request._parser.next_event().data
             assert (
                 json.loads(gzip_decompress(raw_body).decode("utf-8"))
                 == decompressed_body

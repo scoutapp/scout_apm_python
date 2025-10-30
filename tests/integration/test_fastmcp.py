@@ -53,12 +53,12 @@ async def test_basic_tool_instrumentation(tracked_requests):
             return a + b
 
         # Simulate tool list request (caches metadata)
-        tools_list = await mcp._list_tools()
+        tools_list = await mcp._list_tools_mcp()
         assert len(tools_list) == 1
-        assert tools_list[0].key == "add_numbers"
+        assert tools_list[0].name == "add_numbers"
 
         # Simulate tool execution using the MCP protocol method
-        result = await mcp._mcp_call_tool("add_numbers", {"a": 5, "b": 3})
+        result = await mcp._call_tool_mcp("add_numbers", {"a": 5, "b": 3})
         # result is a tuple: (content_blocks, metadata)
         content_blocks, metadata = result
         assert len(content_blocks) == 1
@@ -83,7 +83,7 @@ async def test_async_tool_instrumentation(tracked_requests):
             return a * b
 
         # Simulate tool execution
-        result, metadata = await mcp._mcp_call_tool("async_multiply", {"a": 4, "b": 7})
+        result, metadata = await mcp._call_tool_mcp("async_multiply", {"a": 4, "b": 7})
         assert result[0].text == "28"
 
     # Verify tracking
@@ -113,10 +113,10 @@ async def test_tool_with_metadata(tracked_requests):
             return [{"id": 1, "name": "result"}]
 
         # Cache metadata by listing tools
-        await mcp._list_tools()
+        await mcp._list_tools_mcp()
 
         # Execute tool
-        result, metadata = await mcp._mcp_call_tool("search_db", {"query": "test"})
+        result, metadata = await mcp._call_tool_mcp("search_db", {"query": "test"})
         assert len(result) == 1
 
     # Verify metadata tags
@@ -131,7 +131,10 @@ async def test_tool_with_metadata(tracked_requests):
     assert tags.get("read_only") is True
     assert tags.get("idempotent") is True
     assert tags.get("external") is False
-    assert tags.get("tool_meta") == "{'version': '1.0', 'author': 'test-team'}"
+    assert tags.get("tool_meta") == (
+        "{'version': '1.0', 'author': 'test-team', "
+        "'_fastmcp': {'tags': ['database', 'search']}}"
+    )
 
 
 async def test_tool_with_arguments(tracked_requests):
@@ -144,7 +147,7 @@ async def test_tool_with_arguments(tracked_requests):
             return {"processed": True, "length": len(data)}
 
         # Execute tool with sensitive parameter
-        result, metadata = await mcp._mcp_call_tool(
+        result, metadata = await mcp._call_tool_mcp(
             "process_data", {"data": "test data", "password": "secret123", "count": 5}
         )
         # FastMCP returns list of ContentBlock, need to parse the JSON
@@ -181,7 +184,7 @@ async def test_tool_error_tracking(tracked_requests):
 
         # Execute tool that raises an error
         with pytest.raises(ToolError, match="Division by zero"):
-            await mcp._mcp_call_tool("divide_numbers", {"a": 10, "b": 0})
+            await mcp._call_tool_mcp("divide_numbers", {"a": 10, "b": 0})
 
     # Verify error tracking
     assert len(tracked_requests) == 1
@@ -200,9 +203,9 @@ async def test_multiple_tool_calls(tracked_requests):
             return message
 
         # Execute multiple times
-        await mcp._mcp_call_tool("echo", {"message": "first"})
-        await mcp._mcp_call_tool("echo", {"message": "second"})
-        await mcp._mcp_call_tool("echo", {"message": "third"})
+        await mcp._call_tool_mcp("echo", {"message": "first"})
+        await mcp._call_tool_mcp("echo", {"message": "second"})
+        await mcp._call_tool_mcp("echo", {"message": "third"})
 
     # Should have 3 separate tracked requests
     assert len(tracked_requests) == 3
@@ -220,7 +223,7 @@ async def test_no_monitor(tracked_requests):
             """This should not be tracked."""
             return "result"
 
-        result, metadata = await mcp._mcp_call_tool("monitored_tool", {})
+        result, metadata = await mcp._call_tool_mcp("monitored_tool", {})
         assert result[0].text == "result"
 
     # Should not track when monitor is disabled
@@ -237,7 +240,7 @@ async def test_tool_without_metadata_cache(tracked_requests):
             return value * 2
 
         # Call tool without listing first (no metadata cache)
-        result, metadata = await mcp._mcp_call_tool("uncached_tool", {"value": 21})
+        result, metadata = await mcp._call_tool_mcp("uncached_tool", {"value": 21})
         assert result[0].text == "42"
 
     # Should still track the execution

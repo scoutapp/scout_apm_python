@@ -224,9 +224,8 @@ def test_server_error(tracked_requests):
     assert tracked_request.tags["error"] == "true"
     spans = tracked_requests[0].complete_spans
     operations = [s.operation for s in spans]
-    if django.VERSION >= (1, 9):
-        # Changed in Django 1.9 or later (we only test 1.8 and 1.11 at time of
-        # writing)
+    if django.VERSION < (5, 1):
+        # These extra operations are present in django 5.0a
         expected_operations = [
             "Template/Compile/<Unknown Template>",
             "Template/Render/<Unknown Template>",
