@@ -231,9 +231,14 @@ class CoreAgentDownloader(object):
         return True
 
     def untar(self):
-        t = tarfile.open(self.package_location, "r")
-        logger.info(f"Extracting {self.package_location} to {self.destination}")
-        t.extractall(path=self.destination)
+        try:
+            t = tarfile.open(self.package_location, "r")
+            # https://docs.python.org/3.12/library/tarfile.html#extraction-filters
+            t.extractall(path=self.destination, filter="data")
+        except Exception as e:
+            logger.error(
+                f"Error extracting {self.package_location} to {self.destination}: {e}"
+            )
 
     def full_url(self):
         return "{root_url}/{core_agent_full_name}.tgz".format(
