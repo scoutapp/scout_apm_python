@@ -2,6 +2,16 @@
 
 ## Pending
 
+## [3.5.0] 2025-10-31
+### Added
+- Instrumentation for [FastMCP](https://github.com/jlowin/fastmcp) via `fastmcp.ScoutMiddleware` (#818)
+- Formal support for Python 3.13 and 3.14 (#819)
+- Formal support for Django 5.1 and 5.2
+- Use strict data filter for tar extraction (#820)
+
+### Removed
+- Formal Python 3.9 support.
+
 ## [3.4.0] 2025-05-08
 ### Fixed
 - urllib3 dependency un-pin (#810)
