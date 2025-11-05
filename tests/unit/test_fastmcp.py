@@ -147,12 +147,8 @@ class TestScoutMiddleware:
             raise ValueError("Tool failed")
 
         # Mock TrackedRequest
-        mock_span = mock.Mock()
-        mock_span.__enter__ = mock.Mock(return_value=mock_span)
-        mock_span.__exit__ = mock.Mock(return_value=False)
-
         mock_tracked = mock.Mock(spec=TrackedRequest)
-        mock_tracked.span.return_value = mock_span
+        mock_tracked.span.return_value = mock.MagicMock()
 
         with mock.patch(
             "scout_apm.fastmcp.TrackedRequest.instance", return_value=mock_tracked
@@ -215,12 +211,8 @@ class TestScoutMiddleware:
             return {"result": "success"}
 
         # Mock TrackedRequest
-        mock_span = mock.Mock()
-        mock_span.__enter__ = mock.Mock(return_value=mock_span)
-        mock_span.__exit__ = mock.Mock(return_value=False)
-
         mock_tracked = mock.Mock(spec=TrackedRequest)
-        mock_tracked.span.return_value = mock_span
+        mock_tracked.span.return_value = mock.MagicMock()
 
         with mock.patch(
             "scout_apm.fastmcp.TrackedRequest.instance", return_value=mock_tracked
