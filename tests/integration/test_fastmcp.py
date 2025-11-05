@@ -69,7 +69,7 @@ async def test_basic_tool_instrumentation(tracked_requests):
             """Add two numbers together."""
             return a + b
 
-        # Simulate tool list request (caches metadata)
+        # Verify tool is registered
         tools_list = await mcp._list_tools_mcp()
         assert len(tools_list) == 1
         assert tools_list[0].name == "add_numbers"
@@ -129,9 +129,6 @@ async def test_tool_with_metadata(tracked_requests):
             """Search implementation."""
             return [{"id": 1, "name": "result"}]
 
-        # Cache metadata by listing tools
-        await mcp._list_tools_mcp()
-
         # Execute tool
         result, metadata = await mcp._call_tool_mcp("search_db", {"query": "test"})
         assert len(result) == 1
@@ -148,10 +145,7 @@ async def test_tool_with_metadata(tracked_requests):
     assert tags.get("read_only") is True
     assert tags.get("idempotent") is True
     assert tags.get("external") is False
-    assert tags.get("tool_meta") == (
-        "{'version': '1.0', 'author': 'test-team', "
-        "'_fastmcp': {'tags': ['database', 'search']}}"
-    )
+    assert tags.get("tool_meta") == "{'version': '1.0', 'author': 'test-team'}"
 
 
 async def test_tool_with_arguments(tracked_requests):
@@ -245,24 +239,3 @@ async def test_no_monitor(tracked_requests):
 
     # Should not track when monitor is disabled
     assert len(tracked_requests) == 0
-
-
-async def test_tool_without_metadata_cache(tracked_requests):
-    """Test that tools work even if metadata hasn't been cached."""
-    with server_with_scout() as mcp:
-
-        @mcp.tool
-        def uncached_tool(value: int) -> int:
-            """This tool is called without listing first."""
-            return value * 2
-
-        # Call tool without listing first (no metadata cache)
-        result, metadata = await mcp._call_tool_mcp("uncached_tool", {"value": 21})
-        assert result[0].text == "42"
-
-    # Should still track the execution
-    assert len(tracked_requests) == 1
-    tracked_request = tracked_requests[0]
-    assert tracked_request.operation == "Controller/uncached_tool"
-    # Metadata tags won't be present, but basic tracking should work
-    assert "tool_tags" not in tracked_request.tags
