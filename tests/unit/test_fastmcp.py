@@ -136,9 +136,11 @@ class TestScoutMiddleware:
         middleware = ScoutMiddleware()
         middleware._do_nothing = False
 
-        # Mock context
         mock_context = mock.Mock()
-        mock_context.params = {"name": "failing_tool", "arguments": {"arg": "value"}}
+        mock_context.message = mock.Mock()
+        mock_context.message.name = "failing_tool"
+        mock_context.message.arguments = {"arg": "value"}
+        mock_context.fastmcp_context = None  # No metadata fetching needed for this test
 
         # Mock call_next to raise an exception
         async def failing_call_next(ctx):
@@ -181,34 +183,54 @@ class TestScoutMiddleware:
         assert result == expected_result
 
     @pytest.mark.asyncio
-    async def test_on_list_tools_caches_metadata(self):
-        """Test that on_list_tools caches tool metadata."""
+    async def test_on_call_tool_fetches_metadata_from_context(self):
+        """Test that on_call_tool fetches tool metadata from context."""
         from scout_apm.fastmcp import ScoutMiddleware
 
         middleware = ScoutMiddleware()
         middleware._do_nothing = False
 
-        # Mock tool objects
-        mock_tool1 = mock.Mock()
-        mock_tool1.name = "tool_one"
-        mock_tool1.description = "First tool"
+        # Mock tool with metadata
+        mock_tool = mock.Mock()
+        mock_tool.description = "Test tool"
+        mock_tool.tags = {"tag1", "tag2"}
+        mock_tool.annotations = None
+        mock_tool.meta = None
 
-        mock_tool2 = mock.Mock()
-        mock_tool2.name = "tool_two"
-        mock_tool2.description = "Second tool"
+        # Mock fastmcp.get_tool to return our tool
+        mock_fastmcp = mock.Mock()
+        mock_fastmcp.get_tool = mock.AsyncMock(return_value=mock_tool)
 
-        mock_result = [mock_tool1, mock_tool2]
+        # Mock context with fastmcp_context
+        mock_fastmcp_context = mock.Mock()
+        mock_fastmcp_context.fastmcp = mock_fastmcp
 
         mock_context = mock.Mock()
+        mock_context.fastmcp_context = mock_fastmcp_context
+        mock_context.message = mock.Mock()
+        mock_context.message.name = "test_tool"
+        mock_context.message.arguments = {}
 
         async def mock_call_next(ctx):
-            return mock_result
+            return {"result": "success"}
 
-        result = await middleware.on_list_tools(mock_context, mock_call_next)
+        # Mock TrackedRequest
+        mock_span = mock.Mock()
+        mock_span.__enter__ = mock.Mock(return_value=mock_span)
+        mock_span.__exit__ = mock.Mock(return_value=False)
 
-        # Verify tools were cached
-        assert "tool_one" in middleware._tool_cache
-        assert "tool_two" in middleware._tool_cache
-        assert middleware._tool_cache["tool_one"] == mock_tool1
-        assert middleware._tool_cache["tool_two"] == mock_tool2
-        assert result == mock_result
+        mock_tracked = mock.Mock(spec=TrackedRequest)
+        mock_tracked.span.return_value = mock_span
+
+        with mock.patch(
+            "scout_apm.fastmcp.TrackedRequest.instance", return_value=mock_tracked
+        ):
+            await middleware.on_call_tool(mock_context, mock_call_next)
+
+        # Verify get_tool was called
+        mock_fastmcp.get_tool.assert_called_once_with("test_tool")
+
+        # Verify metadata was tagged
+        tag_calls = [call[0] for call in mock_tracked.tag.call_args_list]
+        assert any("tool_description" in call for call in tag_calls)
+        assert any("tool_tags" in call for call in tag_calls)

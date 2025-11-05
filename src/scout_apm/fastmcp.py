@@ -27,29 +27,8 @@ class ScoutMiddleware(Middleware if Middleware is not None else object):
     def __init__(self):
         if Middleware is not None:
             super().__init__()
-        self._tool_cache = {}  # Cache tool metadata from on_list_tools
         installed = scout_apm.core.install()
         self._do_nothing = not installed
-
-    async def on_list_tools(self, context, call_next):
-        """
-        Cache tool metadata for later use during execution.
-
-        This hook is called when clients request the list of available tools.
-        We use it to cache tool metadata (tags, annotations, descriptions)
-        that we'll reference during tool execution.
-        """
-        if self._do_nothing:
-            return await call_next(context)
-
-        result = await call_next(context)
-
-        # Cache tool objects with full metadata
-        for tool in result:
-            if hasattr(tool, "name"):
-                self._tool_cache[tool.name] = tool
-
-        return result
 
     async def on_call_tool(self, context, call_next):
         """
@@ -70,10 +49,13 @@ class ScoutMiddleware(Middleware if Middleware is not None else object):
         operation = f"Controller/{tool_name}"
         tracked_request.operation = operation
 
-        # Add rich metadata from cached tool object
-        if tool_name in self._tool_cache:
-            tool = self._tool_cache[tool_name]
+        # Add rich metadata from tool object via context
+        try:
+            tool = await context.fastmcp_context.fastmcp.get_tool(tool_name)
             self._tag_tool_metadata(tracked_request, tool)
+        except Exception as exc:
+            # Tool not found or other error - continue without metadata
+            logger.warning(f"Unable to fetch tool metadata for {tool_name}: {exc}")
 
         # Tag tool arguments (filtered for sensitive data)
         arguments = getattr(context.message, "arguments", {})
