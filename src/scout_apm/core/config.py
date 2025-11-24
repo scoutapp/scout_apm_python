@@ -250,7 +250,7 @@ class Defaults(object):
             "monitor": False,
             "name": "Python App",
             "revision_sha": self._git_revision_sha(),
-            "sample_rate": 100,
+            "sample_rate": 1,
             "sample_endpoints": [],
             "endpoint_sample_rate": None,
             "sample_jobs": [],
@@ -307,28 +307,54 @@ def convert_to_float(value: Any) -> float:
         return 0.0
 
 
-def convert_sample_rate(value: Any) -> Optional[int]:
+def _coerce_rate_to_float(value: Any, context: str = "") -> float:
     """
-    Converts sample rate to integer, ensuring it's between 0 and 100.
+    Helper to convert a rate value to float between 0 and 1.
+    For backwards compatibility, values > 1 are treated as percentages
+    and converted to decimals (e.g., 80 -> 0.80).
+
+    Args:
+        value: The value to convert
+        context: Optional context string for better error messages
+            (e.g., "endpoint /users")
+
+    Returns:
+        Float between 0.0 and 1.0
+
+    Raises:
+        ValueError: If value cannot be converted to float
+    """
+    rate = float(value)
+    # Anything above 1 is assumed a percentage for backwards compat
+    if rate > 1:
+        rate = rate / 100
+    # Clamp between 0 and 1
+    if rate < 0 or rate > 1:
+        context_str = f"For {context}, you" if context else "You"
+        logger.warning(
+            f"Sample rates must be between 0 and 1. {context_str} passed in {value}, "
+            f"which we interpreted as {rate}. Clamping."
+        )
+        rate = max(0.0, min(1.0, rate))
+    return rate
+
+
+def convert_sample_rate(value: Any) -> Optional[float]:
+    """
+    Converts sample rate to float, ensuring it's between 0 and 1.
+    For backwards compatibility, values > 1 are treated as percentages
+    and converted to decimals (e.g., 80 -> 0.80).
     Allows None as a valid value.
     """
     if value is None:
         return None
     try:
-        rate = int(value)
-        if not (0 <= rate <= 100):
-            logger.warning(
-                f"Invalid sample rate {rate}. Must be between 0 and 100. "
-                "Defaulting to 100."
-            )
-            return 100
-        return rate
+        return _coerce_rate_to_float(value)
     except (TypeError, ValueError):
         logger.warning(
-            f"Invalid sample rate {value}. Must be a number between 0 and 100. "
-            "Defaulting to 100."
+            f"Invalid sample rate {value}. Must be a number. Defaulting to 1.0."
         )
-        return 100
+        return 1.0
 
 
 def convert_to_list(value: Any) -> List[Any]:
@@ -351,14 +377,25 @@ def convert_ignore_paths(value: Any) -> List[str]:
     return [_strip_leading_slash(path) for path in raw_paths]
 
 
-def convert_endpoint_sampling(value: Union[str, Dict[str, Any]]) -> Dict[str, int]:
+def convert_endpoint_sampling(value: Union[str, Dict[str, Any]]) -> Dict[str, float]:
     """
     Converts endpoint sampling configuration from string or dict format
     to a normalized dict.
-    Example: '/endpoint:40,/test:0' -> {'/endpoint': 40, '/test': 0}
+    For backwards compatibility, values > 1 are treated as percentages
+    and converted to decimals (e.g., 80 -> 0.80).
+    Example: '/endpoint:40,/test:0' -> {'/endpoint': 0.40, '/test': 0.0}
     """
     if isinstance(value, dict):
-        return {_strip_leading_slash(k): int(v) for k, v in value.items()}
+        result = {}
+        for k, v in value.items():
+            try:
+                result[_strip_leading_slash(k)] = _coerce_rate_to_float(
+                    v, context=f"endpoint {k}"
+                )
+            except (TypeError, ValueError):
+                logger.warning(f"Invalid sampling rate for endpoint {k}: {v}")
+                continue
+        return result
     if isinstance(value, str):
         if not value.strip():
             return {}
@@ -366,15 +403,10 @@ def convert_endpoint_sampling(value: Union[str, Dict[str, Any]]) -> Dict[str, in
         pairs = [pair.strip() for pair in value.split(",")]
         for pair in pairs:
             try:
-                endpoint, rate = pair.split(":")
-                rate_int = int(rate)
-                if not (0 <= rate_int <= 100):
-                    logger.warning(
-                        f"Invalid sampling rate {rate} for endpoint {endpoint}. "
-                        "Must be between 0 and 100."
-                    )
-                    continue
-                result[_strip_leading_slash(endpoint)] = rate_int
+                endpoint, rate_str = pair.split(":")
+                result[_strip_leading_slash(endpoint)] = _coerce_rate_to_float(
+                    rate_str, context=f"endpoint {endpoint}"
+                )
             except ValueError:
                 logger.warning(f"Invalid sampling configuration: {pair}")
                 continue
