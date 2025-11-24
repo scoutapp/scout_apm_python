@@ -85,7 +85,7 @@ def test_hello(tracked_requests):
 def test_fail(tracked_requests):
     with app_with_scout() as app:
         app.fail.send()
-        app.broker.join(app.fail.queue_name)
+        app.broker.join(app.fail.queue_name, fail_fast=False)
         app.worker.join()
 
     assert len(tracked_requests) == 1
