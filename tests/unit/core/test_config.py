@@ -246,13 +246,30 @@ def test_sample_rate_conversion_from_env():
     config = ScoutConfig()
     with mock.patch.dict(os.environ, {"SCOUT_SAMPLE_RATE": "50"}):
         value = config.value("sample_rate")
-    assert isinstance(value, int)
-    assert value == 50
+    assert isinstance(value, float)
+    assert value == 0.50  # 50 is converted to 0.50 for backwards compatibility
 
 
 @pytest.mark.parametrize(
     "original, converted",
-    [("0", 0), ("50", 50), ("100", 100), ("x", 100)],
+    [
+        # Float values (0-1 range)
+        ("0", 0.0),
+        ("0.5", 0.5),
+        ("1", 1.0),
+        ("0.001", 0.001),
+        # Integer percentages (> 1, backwards compatibility)
+        ("50", 0.50),
+        ("100", 1.0),
+        ("1", 1.0),
+        ("1.5", 0.015),  # 1.5% -> 0.015
+        # Edge cases
+        ("x", 1.0),  # Invalid defaults to 1.0
+        (None, None),  # None is preserved
+        # Clamping
+        ("-2.5", 0.0),  # Negative values clamped to 0
+        ("150", 1.0),  # > 100% clamped to 1.0
+    ],
 )
 def test_sample_rate_conversion_from_python(original, converted):
     ScoutConfig.set(sample_rate=original)
@@ -270,14 +287,21 @@ def test_endpoint_sampling_conversion_from_env():
     ):
         value = config.value("sample_endpoints")
     assert isinstance(value, dict)
-    assert value == {"endpoint": 40, "test": 0}
+    assert value == {"endpoint": 0.40, "test": 0.0}  # Converted to floats
 
 
 @pytest.mark.parametrize(
     "original, converted",
     [
-        ("/endpoint:40,/test:0", {"endpoint": 40, "test": 0}),
-        ({"endpoint": 40, "test": 0}, {"endpoint": 40, "test": 0}),
+        # String format with percentages (backwards compat)
+        ("/endpoint:40,/test:0", {"endpoint": 0.40, "test": 0.0}),
+        # Dict format with percentages (backwards compat)
+        ({"endpoint": 40, "test": 0}, {"endpoint": 0.40, "test": 0.0}),
+        # Dict format with floats
+        ({"endpoint": 0.40, "test": 0.0}, {"endpoint": 0.40, "test": 0.0}),
+        # String format with floats
+        ("/endpoint:0.5,/test:0.001", {"endpoint": 0.5, "test": 0.001}),
+        # Empty
         ("", {}),
         (object(), {}),
     ],
@@ -296,14 +320,21 @@ def test_job_sampling_conversion_from_env():
     with mock.patch.dict(os.environ, {"SCOUT_SAMPLE_JOBS": "job1:30,job2:70"}):
         value = config.value("sample_jobs")
     assert isinstance(value, dict)
-    assert value == {"job1": 30, "job2": 70}
+    assert value == {"job1": 0.30, "job2": 0.70}  # Converted to floats
 
 
 @pytest.mark.parametrize(
     "original, converted",
     [
-        ("job1:30,job2:70", {"job1": 30, "job2": 70}),
-        ({"job1": 30, "job2": 70}, {"job1": 30, "job2": 70}),
+        # String format with percentages (backwards compat)
+        ("job1:30,job2:70", {"job1": 0.30, "job2": 0.70}),
+        # Dict format with percentages (backwards compat)
+        ({"job1": 30, "job2": 70}, {"job1": 0.30, "job2": 0.70}),
+        # Dict format with floats
+        ({"job1": 0.30, "job2": 0.70}, {"job1": 0.30, "job2": 0.70}),
+        # String format with floats
+        ("job1:0.5,job2:0.001", {"job1": 0.5, "job2": 0.001}),
+        # Empty
         ("", {}),
         (object(), {}),
     ],
@@ -313,5 +344,46 @@ def test_job_sampling_conversion_from_python(original, converted):
     config = ScoutConfig()
     try:
         assert config.value("sample_jobs") == converted
+    finally:
+        ScoutConfig.reset_all()
+
+
+# Additional tests for nullable sample rates
+@pytest.mark.parametrize(
+    "original, converted",
+    [
+        (None, None),
+        ("0", 0.0),
+        ("0.5", 0.5),
+        ("50", 0.50),
+        ("100", 1.0),
+    ],
+)
+def test_endpoint_sample_rate_nullable(original, converted):
+    """Test that endpoint_sample_rate allows None and converts other values."""
+    ScoutConfig.set(endpoint_sample_rate=original)
+    config = ScoutConfig()
+    try:
+        assert config.value("endpoint_sample_rate") == converted
+    finally:
+        ScoutConfig.reset_all()
+
+
+@pytest.mark.parametrize(
+    "original, converted",
+    [
+        (None, None),
+        ("0", 0.0),
+        ("0.5", 0.5),
+        ("50", 0.50),
+        ("100", 1.0),
+    ],
+)
+def test_job_sample_rate_nullable(original, converted):
+    """Test that job_sample_rate allows None and converts other values."""
+    ScoutConfig.set(job_sample_rate=original)
+    config = ScoutConfig()
+    try:
+        assert config.value("job_sample_rate") == converted
     finally:
         ScoutConfig.reset_all()

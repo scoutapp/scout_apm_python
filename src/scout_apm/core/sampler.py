@@ -44,7 +44,7 @@ class Sampler:
             Boolean indicating if any sampling is enabled
         """
         return (
-            self.sample_rate < 100
+            self.sample_rate < 1
             or self.sample_endpoints
             or self.sample_jobs
             or self.ignore_endpoints
@@ -92,7 +92,7 @@ class Sampler:
         else:
             return None, None
 
-    def get_effective_sample_rate(self, operation: str, is_ignored: bool) -> int:
+    def get_effective_sample_rate(self, operation: str, is_ignored: bool) -> float:
         """
         Determines the effective sample rate for a given operation.
 
@@ -107,7 +107,7 @@ class Sampler:
             is_ignored: boolean for if the specific transaction is ignored
 
         Returns:
-            Integer between 0 and 100 representing sample rate
+            Float between 0 and 1 representing sample rate
         """
         op_type, name = self._get_operation_type_and_name(operation)
         patterns = self.sample_endpoints if op_type == "endpoint" else self.sample_jobs
@@ -144,6 +144,4 @@ class Sampler:
         """
         if not self._any_sampling():
             return True
-        return random.randint(1, 100) <= self.get_effective_sample_rate(
-            operation, is_ignored
-        )
+        return random.random() <= self.get_effective_sample_rate(operation, is_ignored)
