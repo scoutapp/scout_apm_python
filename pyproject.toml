@@ -1,16 +1,86 @@
-[tool.poetry]
-name="scout_apm_python"
-description = "Scout APM Python Agent"
-readme = "README.md"
-version = "0.1.0"
-authors = ["Developers <dev@scoutapm.com>"]
-
 [build-system]
-requires = ["setuptools >= 40.6.0", "wheel"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "scout_apm"
+version = "3.5.0"
+description = "Scout Application Performance Monitoring Agent"
+readme = "README.md"
+license = "MIT"
+authors = [
+    { name = "Scout", email = "support@scoutapm.com" }
+]
+requires-python = ">=3.8, <4"
+keywords = ["apm", "performance monitoring", "development"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Framework :: Bottle",
+    "Framework :: Django",
+    "Framework :: Django :: 3.2",
+    "Framework :: Django :: 4.0",
+    "Framework :: Django :: 4.1",
+    "Framework :: Django :: 4.2",
+    "Framework :: Flask",
+    "Intended Audience :: Developers",
+    "Topic :: System :: Monitoring",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "asgiref",
+    "psutil>=5",
+    "urllib3",
+    "certifi",
+    "wrapt>=1.10,<2.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/scoutapp/scout_apm_python"
+Documentation = "https://docs.scoutapm.com/#python-agent"
+Changelog = "https://github.com/scoutapp/scout_apm_python/blob/master/CHANGELOG.md"
+
+[project.scripts]
+core-agent-manager = "scout_apm.core.cli.core_agent_manager:main"
+
+[tool.setuptools]
+zip-safe = false
+package-dir = { "" = "src" }
+ext-modules = [
+    { name = "scout_apm.core._objtrace", sources = ["src/scout_apm/core/_objtrace.c"], optional = true }
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.black]
 target-version = ["py311"]
 
 [tool.isort]
 profile = "black"
+
+[tool.check-manifest]
+ignore = [
+    ".python-version",
+    "CHANGELOG.md",
+    "ci*",
+    "pytest.ini",
+    "tests*",
+    "tox.ini",
+]
+
+[tool.coverage.run]
+branch = true
+
+[tool.flake8]
+max-line-length = 80
+select = ["C", "E", "F", "W", "B", "B950", "I", "T", "YTT"]
+ignore = ["E203", "E501", "W503"]
+accept-encodings = "utf-8"
+ban-relative-imports = true
