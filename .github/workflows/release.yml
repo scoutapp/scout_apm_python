@@ -18,7 +18,7 @@ jobs:
         python: ["3.14"]
         manylinux_image: [ manylinux2014, manylinux_2_28 ]
         # Disable for platforms where pure Python wheels would be generated
-        cibw_skip: [ "pp38-* pp39-* pp310-* pp311-* pp312-* pp313-* pp314-*" ]
+        cibw_skip: [ "pp38-* pp39-* pp310-* pp311-*" ]
     steps:
       - uses: actions/checkout@v4
 
@@ -68,7 +68,7 @@ jobs:
           python -m pip install --upgrade pip cibuildwheel
       - name: Build binary wheels
         env:
-          CIBW_SKIP: "pp38-* pp39-* pp310-* pp311-* pp312-* pp313-* pp314-*"
+          CIBW_SKIP: "pp38-* pp39-* pp310-* pp311-*"
           CIBW_BUILD_VERBOSITY: 1
           CIBW_ARCHS_MACOS: "x86_64 arm64"
         run: python -m cibuildwheel
