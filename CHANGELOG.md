@@ -1,6 +1,8 @@
 # Changelog
 
 ## Pending
+### Fixed
+- Attach `transaction_id` to error context to support querying for matching logs in errors service.
 
 ## [3.5.0] 2025-10-31
 ### Added

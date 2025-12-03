@@ -74,7 +74,7 @@ def test_monitor_ignore_exceptions(error_monitor_errors):
                 "request_session": None,
                 "environment": None,
                 "request_components": None,
-                "context": {"spam": "foo"},
+                "context": {"spam": "foo", "transaction_id": "sample_id"},
                 "host": None,
                 "revision_sha": "",
             },
@@ -101,7 +101,7 @@ def test_monitor_ignore_exceptions(error_monitor_errors):
                     "controller": "test-controller",
                     "action": None,
                 },
-                "context": {"spam": "foo"},
+                "context": {"spam": "foo", "transaction_id": "sample_id"},
                 "host": None,
                 "revision_sha": "",
             },
@@ -128,7 +128,7 @@ def test_monitor_ignore_exceptions(error_monitor_errors):
                     "controller": "DataView",
                     "action": "detail",
                 },
-                "context": {"spam": "foo"},
+                "context": {"spam": "foo", "transaction_id": "sample_id"},
                 "host": None,
                 "revision_sha": "",
             },
@@ -155,7 +155,11 @@ def test_monitor_ignore_exceptions(error_monitor_errors):
                     "controller": "test-controller",
                     "action": "detail",
                 },
-                "context": {"spam": "foo", "custom_params": {"baz": 3}},
+                "context": {
+                    "spam": "foo",
+                    "transaction_id": "sample_id",
+                    "custom_params": {"baz": 3},
+                },
                 "host": None,
                 "revision_sha": "",
             },
@@ -247,7 +251,7 @@ def test_monitor_with_logged_payload(
     assert "ZeroDivisionError" in actual_message
     assert "division by zero" in actual_message
     assert (
-        "tests/unit/core/test_error.py:227:in test_monitor_with_logged_payload"
+        "tests/unit/core/test_error.py:231:in test_monitor_with_logged_payload"
         in actual_message
     )
     assert "sample.app" in actual_message
