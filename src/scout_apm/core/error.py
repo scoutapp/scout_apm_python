@@ -45,6 +45,7 @@ class ErrorMonitor(object):
 
         context = {}
         context.update(tracked_request.tags)
+        context["transaction_id"] = tracked_request.request_id
 
         if custom_params:
             context["custom_params"] = custom_params
