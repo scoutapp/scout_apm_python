@@ -2,6 +2,10 @@
 
 ## Pending
 
+## [3.5.2] 2025-12-15
+### Changed
+- Update deprecated macos-13 runner image
+
 ## [3.5.1] 2025-12-04
 ### Fixed
 - Attach `transaction_id` to error context to support querying for matching logs in errors service.
