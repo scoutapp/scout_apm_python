@@ -3,7 +3,7 @@
 import datetime as dt
 import logging
 
-from psutil._common import pcputimes
+import psutil
 
 from scout_apm.core.samplers.cpu import Cpu
 from tests.compat import mock
@@ -27,9 +27,12 @@ def test_run_negative_time_elapsed(caplog):
 
 def test_run_negative_last_cpu_times(caplog):
     cpu = Cpu()
-    cpu.last_cpu_times = pcputimes(
-        user=1e12, system=1e12, children_user=0.0, children_system=0.0
+    # Create a mock cpu_times with very large values for user and system
+    # Use _replace() to maintain compatibility across different platforms
+    mock_cpu_times = psutil.Process().cpu_times()._replace(
+        user=1e12, system=1e12
     )
+    cpu.last_cpu_times = mock_cpu_times
 
     result = cpu.run()
 
