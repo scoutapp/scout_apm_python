@@ -2,6 +2,10 @@
 
 ## Pending
 
+## [3.5.3] 2026-02-12
+- Update core agent version to v1.5.1
+  - Adds SQL scrubbing for IN queries containing many arguments
+
 ## [3.5.2] 2025-12-15
 ### Changed
 - Update deprecated macos-13 runner image
