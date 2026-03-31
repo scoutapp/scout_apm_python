@@ -58,8 +58,9 @@ def ensure_job_instrumented():
     Job.perform = wrap_perform(Job.perform)
 
     try:
-        from rq.serializers import DefaultSerializer
         import pickle
+
+        from rq.serializers import DefaultSerializer
 
         if getattr(DefaultSerializer, "dumps", None) is pickle.dumps:
             logger.warning(
