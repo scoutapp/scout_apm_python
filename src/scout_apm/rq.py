@@ -57,6 +57,20 @@ def ensure_job_instrumented():
     job_instrumented = True
     Job.perform = wrap_perform(Job.perform)
 
+    try:
+        from rq.serializers import DefaultSerializer
+        import pickle
+
+        if getattr(DefaultSerializer, "dumps", None) is pickle.dumps:
+            logger.warning(
+                "RQ is using the default pickle serializer, which is vulnerable to "
+                "Remote Code Execution (RCE) via Redis (CWE-502). Consider switching "
+                "to a safer serializer like rq.serializers.JSONSerializer. "
+                "See https://github.com/rq/rq/issues/2389 for details."
+            )
+    except Exception:
+        pass
+
 
 @wrapt.decorator
 def wrap_perform(wrapped, instance, args, kwargs):
