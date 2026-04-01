@@ -66,7 +66,7 @@ def wrap_perform(wrapped, instance, args, kwargs):
 
     tracked_request = TrackedRequest.instance()
     tracked_request.is_real_request = True
-    tracked_request.tag("task_id", instance.get_id())
+    tracked_request.tag("task_id", instance.id)
     tracked_request.tag("queue", instance.origin)
     # rq strips tzinfo from enqueued_at during serde in at least some cases
     # internally everything uses UTC naive datetimes, so we operate on that
