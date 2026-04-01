@@ -1,10 +1,5 @@
 # coding=utf-8
 
-# Security note (redis-py 7.4.0, see https://github.com/scoutapp/scout_apm_python/issues/841):
-# redis-py < 7.4.0 leaked passwords in ConnectionPool.__repr__().
-# Scout APM is NOT affected: we only wrap Redis.execute_command() and
-# Pipeline.execute() and never call or log ConnectionPool.__repr__().
-
 import logging
 
 import wrapt
