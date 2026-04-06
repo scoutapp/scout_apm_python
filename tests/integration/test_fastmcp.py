@@ -21,16 +21,37 @@ try:
 
     from scout_apm.fastmcp import ScoutMiddleware
 except (ImportError, TypeError):
-    # fastmcp has compatibility issues with version <2.13.0
-    # This is due to us using internal methods to test the middleware hooks
-    # These internal methods were renamed in 2.13.0
     fastmcp_version = "0.0.0"
-    pass
+
+_fastmcp_version = parse_version(fastmcp_version)
 
 pytestmark = pytest.mark.skipif(
-    parse_version(fastmcp_version) < (2, 13, 0) or sys.version_info < (3, 10),
+    _fastmcp_version < (2, 13, 0) or sys.version_info < (3, 10),
     reason="These tests require fastMCP 2.13.0+ and Python 3.10+",
 )
+
+
+async def _call_tool(mcp, name, arguments):
+    """
+    Call a tool on a FastMCP server, compatible with both 2.x and 3.x.
+
+    Returns (content_blocks, metadata) for uniform access.
+    """
+    if _fastmcp_version >= (3,):
+        result = await mcp.call_tool(name, arguments)
+        return result.content, result.meta
+    else:
+        return await mcp._call_tool_mcp(name, arguments)
+
+
+async def _list_tools(mcp):
+    """
+    List tools on a FastMCP server, compatible with both 2.x and 3.x.
+    """
+    if _fastmcp_version >= (3,):
+        return await mcp.list_tools()
+    else:
+        return await mcp._list_tools_mcp()
 
 
 @contextmanager
@@ -70,14 +91,14 @@ async def test_basic_tool_instrumentation(tracked_requests):
             return a + b
 
         # Verify tool is registered
-        tools_list = await mcp._list_tools_mcp()
+        tools_list = await _list_tools(mcp)
         assert len(tools_list) == 1
         assert tools_list[0].name == "add_numbers"
 
         # Simulate tool execution using the MCP protocol method
-        result = await mcp._call_tool_mcp("add_numbers", {"a": 5, "b": 3})
-        # result is a tuple: (content_blocks, metadata)
-        content_blocks, metadata = result
+        content_blocks, metadata = await _call_tool(
+            mcp, "add_numbers", {"a": 5, "b": 3}
+        )
         assert len(content_blocks) == 1
         assert content_blocks[0].text == "8"
 
@@ -100,8 +121,10 @@ async def test_async_tool_instrumentation(tracked_requests):
             return a * b
 
         # Simulate tool execution
-        result, metadata = await mcp._call_tool_mcp("async_multiply", {"a": 4, "b": 7})
-        assert result[0].text == "28"
+        content_blocks, metadata = await _call_tool(
+            mcp, "async_multiply", {"a": 4, "b": 7}
+        )
+        assert content_blocks[0].text == "28"
 
     # Verify tracking
     assert len(tracked_requests) == 1
@@ -130,8 +153,8 @@ async def test_tool_with_metadata(tracked_requests):
             return [{"id": 1, "name": "result"}]
 
         # Execute tool
-        result, metadata = await mcp._call_tool_mcp("search_db", {"query": "test"})
-        assert len(result) == 1
+        content_blocks, metadata = await _call_tool(mcp, "search_db", {"query": "test"})
+        assert len(content_blocks) == 1
 
     # Verify metadata tags
     assert len(tracked_requests) == 1
@@ -158,13 +181,15 @@ async def test_tool_with_arguments(tracked_requests):
             return {"processed": True, "length": len(data)}
 
         # Execute tool with sensitive parameter
-        result, metadata = await mcp._call_tool_mcp(
-            "process_data", {"data": "test data", "password": "secret123", "count": 5}
+        content_blocks, metadata = await _call_tool(
+            mcp,
+            "process_data",
+            {"data": "test data", "password": "secret123", "count": 5},
         )
         # FastMCP returns list of ContentBlock, need to parse the JSON
         import json
 
-        result_data = json.loads(result[0].text)
+        result_data = json.loads(content_blocks[0].text)
         assert result_data["processed"] is True
 
     # Verify arguments are tagged
@@ -195,7 +220,7 @@ async def test_tool_error_tracking(tracked_requests):
 
         # Execute tool that raises an error
         with pytest.raises(ToolError, match="Division by zero"):
-            await mcp._call_tool_mcp("divide_numbers", {"a": 10, "b": 0})
+            await _call_tool(mcp, "divide_numbers", {"a": 10, "b": 0})
 
     # Verify error tracking
     assert len(tracked_requests) == 1
@@ -214,9 +239,9 @@ async def test_multiple_tool_calls(tracked_requests):
             return message
 
         # Execute multiple times
-        await mcp._call_tool_mcp("echo", {"message": "first"})
-        await mcp._call_tool_mcp("echo", {"message": "second"})
-        await mcp._call_tool_mcp("echo", {"message": "third"})
+        await _call_tool(mcp, "echo", {"message": "first"})
+        await _call_tool(mcp, "echo", {"message": "second"})
+        await _call_tool(mcp, "echo", {"message": "third"})
 
     # Should have 3 separate tracked requests
     assert len(tracked_requests) == 3
@@ -234,8 +259,8 @@ async def test_no_monitor(tracked_requests):
             """This should not be tracked."""
             return "result"
 
-        result, metadata = await mcp._call_tool_mcp("monitored_tool", {})
-        assert result[0].text == "result"
+        content_blocks, metadata = await _call_tool(mcp, "monitored_tool", {})
+        assert content_blocks[0].text == "result"
 
     # Should not track when monitor is disabled
     assert len(tracked_requests) == 0

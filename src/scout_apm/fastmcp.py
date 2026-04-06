@@ -52,7 +52,8 @@ class ScoutMiddleware(Middleware if Middleware is not None else object):
         # Add rich metadata from tool object via context
         try:
             tool = await context.fastmcp_context.fastmcp.get_tool(tool_name)
-            self._tag_tool_metadata(tracked_request, tool)
+            if tool is not None:
+                self._tag_tool_metadata(tracked_request, tool)
         except Exception as exc:
             # Tool not found or other error - continue without metadata
             logger.warning(f"Unable to fetch tool metadata for {tool_name}: {exc}")
