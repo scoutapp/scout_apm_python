@@ -18,15 +18,22 @@ else:
         from redis import StrictRedis as Redis
         from redis.client import BasePipeline as Pipeline
 
+    try:
+        from redis.cluster import RedisCluster
+    except ImportError:
+        RedisCluster = None
+
 logger = logging.getLogger(__name__)
 
 
 have_patched_redis_execute_command = False
 have_patched_pipeline_execute = False
+have_patched_redis_cluster_execute_command = False
 
 
 def ensure_installed():
     global have_patched_redis_execute_command, have_patched_pipeline_execute
+    global have_patched_redis_cluster_execute_command
 
     logger.debug("Instrumenting redis.")
 
@@ -54,6 +61,20 @@ def ensure_installed():
                 )
             else:
                 have_patched_pipeline_execute = True
+
+        if RedisCluster is not None and not have_patched_redis_cluster_execute_command:
+            try:
+                RedisCluster.execute_command = wrapped_execute_command(
+                    RedisCluster.execute_command
+                )
+            except Exception as exc:
+                logger.warning(
+                    "Failed to instrument redis.RedisCluster.execute_command: %r",
+                    exc,
+                    exc_info=exc,
+                )
+            else:
+                have_patched_redis_cluster_execute_command = True
 
     return True
 

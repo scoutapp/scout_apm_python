@@ -58,6 +58,9 @@ def app_with_scout(*, middleware=None, scout_config=None):
     async def return_error(request):
         return PlainTextResponse("Something went wrong", status_code=503)
 
+    async def return_unauthorized(request):
+        return PlainTextResponse("Unauthorized", status_code=401)
+
     async def background_jobs(request):
         def sync_noop():
             pass
@@ -85,6 +88,7 @@ def app_with_scout(*, middleware=None, scout_config=None):
         Route("/sync-hello/", endpoint=SyncHelloEndpoint),
         Route("/crash/", endpoint=crash),
         Route("/return-error/", endpoint=return_error),
+        Route("/return-unauthorized/", endpoint=return_unauthorized),
         Route("/background-jobs/", endpoint=background_jobs),
         Route("/instance-app/", endpoint=InstanceApp()),
     ]
@@ -474,3 +478,31 @@ async def test_instance_app(tracked_requests):
         "Controller/tests.integration.test_starlette."
         + "app_with_scout.<locals>.InstanceApp"
     )
+
+
+@pytest.mark.asyncio
+async def test_return_unauthorized_not_tagged_as_error(tracked_requests):
+    """
+    Verify that a 401 Unauthorized response is tracked but NOT tagged as an
+    error. Only 5xx responses should be tagged as errors. This is the correct
+    behavior when, for example, a FastAPI OAuth2 dependency rejects an empty
+    bearer token: the 401 is a normal client error, not a server error.
+
+    See: https://github.com/scoutapp/scout_apm_python/issues/838
+    """
+    with app_with_scout() as app:
+        communicator = ApplicationCommunicator(
+            app, asgi_http_scope(path="/return-unauthorized/")
+        )
+        await communicator.send_input({"type": "http.request"})
+        response_start = await communicator.receive_output()
+        await communicator.receive_output()
+
+    assert response_start["type"] == "http.response.start"
+    assert response_start["status"] == 401
+    assert len(tracked_requests) == 1
+    tracked_request = tracked_requests[0]
+    assert len(tracked_request.complete_spans) == 1
+    assert tracked_request.tags["path"] == "/return-unauthorized/"
+    # 401 must NOT be tagged as an error — only 5xx responses are errors
+    assert "error" not in tracked_request.tags
