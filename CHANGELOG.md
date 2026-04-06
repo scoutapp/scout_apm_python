@@ -7,9 +7,7 @@
 - Add Redis Cluster instrumentation support (#844)
 - Verify Starlette 1.0.0 compatibility (#846)
 - Drop Python 3.8/3.9 support, add 3.13/3.14 classifiers (#847)
-- Verify `redis-py` 7.4.0 password leak does not affect Scout (#848)
 - Verify 401 responses are not tagged as errors (#849)
-- Verify Celery 5.6.3 compatibility (#850)
 
 ## [3.5.3] 2026-02-12
 - Update core agent version to v1.5.1
