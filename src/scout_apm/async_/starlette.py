@@ -32,15 +32,25 @@ class ScoutMiddleware:
 
         def grab_extra_data():
             if "endpoint" in scope:
-                # Rename top span
-                endpoint = scope["endpoint"]
-                if not hasattr(endpoint, "__qualname__"):
-                    endpoint = endpoint.__class__
-                controller_span.operation = "Controller/{}.{}".format(
-                    endpoint.__module__,
-                    endpoint.__qualname__,
+                # Rename top span — unless something downstream (e.g. the
+                # Ariadne extension in scout_apm.instruments.ariadne)
+                # has already set a more specific operation name. Without
+                # this guard the endpoint-derived name would overwrite
+                # GraphQL/<Type>/<field>, making every GraphQL request
+                # report as the same Starlette/FastAPI endpoint.
+                already_set = (
+                    tracked_request.operation
+                    and not tracked_request.operation.startswith("Controller/")
                 )
-                tracked_request.operation = controller_span.operation
+                if not already_set:
+                    endpoint = scope["endpoint"]
+                    if not hasattr(endpoint, "__qualname__"):
+                        endpoint = endpoint.__class__
+                    controller_span.operation = "Controller/{}.{}".format(
+                        endpoint.__module__,
+                        endpoint.__qualname__,
+                    )
+                    tracked_request.operation = controller_span.operation
             else:
                 # Mark the request as not real
                 tracked_request.is_real_request = False
