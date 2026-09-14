@@ -69,6 +69,7 @@ class CoreAgentManager(object):
                         + self.log_file()
                         + self.config_file()
                         + self.socket_path()
+                        + self.ca_cert()
                     ),
                     close_fds=True,
                     stdout=devnull,
@@ -126,6 +127,14 @@ class CoreAgentManager(object):
 
         if path is not None:
             return ["--config-file", path]
+        else:
+            return []
+
+    def ca_cert(self):
+        path = scout_config.value("core_agent_ca_cert")
+
+        if path is not None:
+            return ["--ca-cert", path]
         else:
             return []
 
