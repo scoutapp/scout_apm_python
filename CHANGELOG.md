@@ -1,6 +1,7 @@
 # Changelog
 
 ## Pending
+- Add `core_agent_ca_cert` config option to pass `--ca-cert` to the Core Agent
 - Fix `rq` instrumentation: use `Job.id` property instead of removed `get_id()` (#851)
 - Support FastMCP 3.x while maintaining 2.x backwards compatibility (#852)
 - Add security warning for RQ pickle serializer (CWE-502) (#843)

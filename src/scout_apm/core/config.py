@@ -63,6 +63,7 @@ class ScoutConfig(object):
         "app_server",
         "application_root",
         "collect_remote_ip",
+        "core_agent_ca_cert",
         "core_agent_config_file",
         "core_agent_dir",
         "core_agent_download",

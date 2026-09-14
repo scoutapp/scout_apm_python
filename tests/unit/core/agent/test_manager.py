@@ -93,6 +93,21 @@ class TestCoreAgentManager(object):
 
         assert result == ["--config-file", "foo"]
 
+    def test_ca_cert(self):
+        scout_config.set(core_agent_ca_cert="foo")
+
+        try:
+            result = CoreAgentManager().ca_cert()
+        finally:
+            scout_config.reset_all()
+
+        assert result == ["--ca-cert", "foo"]
+
+    def test_ca_cert_not_set(self):
+        result = CoreAgentManager().ca_cert()
+
+        assert result == []
+
 
 class TestParseManifest(object):
     def test_fail_does_not_exist(self, caplog, tmp_path):
