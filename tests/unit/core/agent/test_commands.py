@@ -203,28 +203,28 @@ def make_tracked_request_instance_deterministic(tracked_request):
     Override values in a TrackedRequest instance to make tests determistic.
 
     """
-    assert type(tracked_request.request_id) == type(REQUEST_ID)
+    assert isinstance(tracked_request.request_id, type(REQUEST_ID))
     tracked_request.request_id = REQUEST_ID
 
-    assert type(tracked_request.start_time) == type(START_TIME)
+    assert isinstance(tracked_request.start_time, type(START_TIME))
     tracked_request.start_time = START_TIME
 
     if tracked_request.end_time is not None:
-        assert type(tracked_request.end_time) == type(END_TIME)
+        assert isinstance(tracked_request.end_time, type(END_TIME))
         tracked_request.end_time = END_TIME
 
     for span in tracked_request.active_spans + tracked_request.complete_spans:
-        assert type(span.request_id) == type(REQUEST_ID)
+        assert isinstance(span.request_id, type(REQUEST_ID))
         span.request_id = REQUEST_ID
 
-        assert type(span.span_id) == type(SPAN_ID)
+        assert isinstance(span.span_id, type(SPAN_ID))
         span.span_id = SPAN_ID
 
-        assert type(span.start_time) == type(START_TIME)
+        assert isinstance(span.start_time, type(START_TIME))
         span.start_time = START_TIME
 
         if span.end_time is not None:
-            assert type(span.end_time) == type(END_TIME)
+            assert isinstance(span.end_time, type(END_TIME))
             span.end_time = END_TIME
 
         if "allocations" in span.tags:

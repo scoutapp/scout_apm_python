@@ -63,18 +63,20 @@ class TestScoutMiddleware:
         assert ("external", False) in calls
         assert ("tool_meta", "{'version': '2.0', 'author': 'test-author'}") in calls
 
-    def test_tag_tool_metadata_with_object_annotations(self):
-        """Test _tag_tool_metadata with object-style annotations."""
+    def test_tag_tool_metadata_with_object_annotations_camelcase(self):
+        """Object-style annotations, camelCase fields (MCP SDK v1 / FastMCP 2.x-3.x)."""
         from scout_apm.fastmcp import ScoutMiddleware
 
         middleware = ScoutMiddleware()
         tracked_request = mock.Mock(spec=TrackedRequest)
 
-        # Create mock tool with object-style annotations
+        # spec= so ONLY the camelCase hint attributes exist (no snake_case leak)
         mock_tool = mock.Mock()
         mock_tool.description = "Another test"
         mock_tool.tags = set()
-        mock_annotations = mock.Mock()
+        mock_annotations = mock.Mock(
+            spec=["readOnlyHint", "destructiveHint", "idempotentHint", "openWorldHint"]
+        )
         mock_annotations.readOnlyHint = False
         mock_annotations.destructiveHint = True
         mock_annotations.idempotentHint = False
@@ -84,12 +86,48 @@ class TestScoutMiddleware:
 
         middleware._tag_tool_metadata(tracked_request, mock_tool)
 
-        # Verify object-style access worked
         calls = [call[0] for call in tracked_request.tag.call_args_list]
         assert ("read_only", False) in calls
         assert ("destructive", True) in calls
         assert ("idempotent", False) in calls
         assert ("external", True) in calls
+
+    def test_tag_tool_metadata_with_object_annotations_snakecase(self):
+        """Object-style annotations, snake_case fields (MCP SDK v2 / FastMCP 4.x).
+
+        In v2 the camelCase aliases raise on access, so the instrumentation must
+        prefer snake_case. We model that by spec-ing ONLY the snake_case fields.
+        """
+        from scout_apm.fastmcp import ScoutMiddleware
+
+        middleware = ScoutMiddleware()
+        tracked_request = mock.Mock(spec=TrackedRequest)
+
+        mock_tool = mock.Mock()
+        mock_tool.description = "Snake test"
+        mock_tool.tags = set()
+        mock_annotations = mock.Mock(
+            spec=[
+                "read_only_hint",
+                "destructive_hint",
+                "idempotent_hint",
+                "open_world_hint",
+            ]
+        )
+        mock_annotations.read_only_hint = True
+        mock_annotations.destructive_hint = False
+        mock_annotations.idempotent_hint = True
+        mock_annotations.open_world_hint = False
+        mock_tool.annotations = mock_annotations
+        mock_tool.meta = {}
+
+        middleware._tag_tool_metadata(tracked_request, mock_tool)
+
+        calls = [call[0] for call in tracked_request.tag.call_args_list]
+        assert ("read_only", True) in calls
+        assert ("destructive", False) in calls
+        assert ("idempotent", True) in calls
+        assert ("external", False) in calls
 
     def test_tag_tool_metadata_with_missing_fields(self):
         """Test _tag_tool_metadata handles missing fields gracefully."""

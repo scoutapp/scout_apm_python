@@ -28,7 +28,6 @@ def ensure_scout_installed():
 
 class WorkerMixin(object):
     def __init__(self, *args, **kwargs):
-        global installed
         ensure_scout_installed()
         if installed:
             ensure_job_instrumented()
@@ -75,7 +74,6 @@ def ensure_job_instrumented():
 
 @wrapt.decorator
 def wrap_perform(wrapped, instance, args, kwargs):
-    global installed
     if not installed:
         return wrapped(*args, **kwargs)
 

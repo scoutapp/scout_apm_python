@@ -3,6 +3,7 @@
 ## Pending
 - Fix `rq` instrumentation: use `Job.id` property instead of removed `get_id()` (#851)
 - Support FastMCP 3.x while maintaining 2.x backwards compatibility (#852)
+- Fix FastMCP tool annotation tags (`read_only`/`idempotent`/`external`/`destructive`) under FastMCP 4.x (MCP SDK v2), which renamed the `ToolAnnotations` hint fields from camelCase to snake_case; reads now try snake_case then camelCase, keeping FastMCP 2.x/3.x support
 - Add security warning for RQ pickle serializer (CWE-502) (#843)
 - Add Redis Cluster instrumentation support (#844)
 - Verify Starlette 1.0.0 compatibility (#846)
