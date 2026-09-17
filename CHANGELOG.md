@@ -1,6 +1,6 @@
 # Changelog
 
-## Pending
+## [3.5.5] 2026-09-15
 - Bumped core-agent to 1.6.0
 - Add `core_agent_ca_cert` config option to pass `--ca-cert` to the Core Agent
 
