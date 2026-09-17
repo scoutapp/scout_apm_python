@@ -1,10 +1,13 @@
 # Changelog
 
-## Pending
+## [3.6.0] 2026-09-17
 - Bumped core-agent to 1.6.0
 - Add `core_agent_ca_cert` config option to pass `--ca-cert` to the Core Agent
 
 ## [3.5.4] 2026-09-15
+
+NOTE: 3.5.4 was unreleased. These changes went out with the 3.6.0 release.
+
 - Fix FastMCP tool annotation tags (`read_only`/`idempotent`/`external`/`destructive`) under FastMCP 4.x (MCP SDK v2), which renamed the `ToolAnnotations` hint fields from camelCase to snake_case; reads now try snake_case then camelCase, keeping FastMCP 2.x/3.x support
 - Bump flake8 pre-commit hook to 7.3.0 for Python 3.12+ compatibility (pyflakes no longer crashes on `ast.Str`)
 - Fix `rq` instrumentation: use `Job.id` property instead of removed `get_id()` (#851)
