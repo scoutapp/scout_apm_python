@@ -1,11 +1,10 @@
 # Changelog
 
-## Pending
-- Add `core_agent_ca_cert` config option to pass `--ca-cert` to the Core Agent
-
-## [3.5.4] 2026-09-15
-- Fix FastMCP tool annotation tags (`read_only`/`idempotent`/`external`/`destructive`) under FastMCP 4.x (MCP SDK v2), which renamed the `ToolAnnotations` hint fields from camelCase to snake_case; reads now try snake_case then camelCase, keeping FastMCP 2.x/3.x support
-- Bump flake8 pre-commit hook to 7.3.0 for Python 3.12+ compatibility (pyflakes no longer crashes on `ast.Str`)
+## [4.0.0] 2026-09-17
+- Bumped core-agent to 1.6.0 (#860)
+- Add `core_agent_ca_cert` config option to pass `--ca-cert` to the Core Agent (#855)
+- Fix FastMCP tool annotation tags (`read_only`/`idempotent`/`external`/`destructive`) under FastMCP 4.x (MCP SDK v2), which renamed the `ToolAnnotations` hint fields from camelCase to snake_case; reads now try snake_case then camelCase, keeping FastMCP 2.x/3.x support (#858)
+- Bump flake8 pre-commit hook to 7.3.0 for Python 3.12+ compatibility (pyflakes no longer crashes on `ast.Str`) (#858)
 - Fix `rq` instrumentation: use `Job.id` property instead of removed `get_id()` (#851)
 - Support FastMCP 3.x while maintaining 2.x backwards compatibility (#852)
 - Add security warning for RQ pickle serializer (CWE-502) (#843)
@@ -13,6 +12,9 @@
 - Verify Starlette 1.0.0 compatibility (#846)
 - Drop Python 3.8/3.9 support, add 3.13/3.14 classifiers (#847)
 - Verify 401 responses are not tagged as errors (#849)
+
+## [3.5.4] 2026-09-15
+This version was skipped.
 
 ## [3.5.3] 2026-02-12
 - Update core agent version to v1.5.1
