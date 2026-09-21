@@ -9,7 +9,9 @@ Monitor the performance of Python Django apps, Flask apps, and Celery workers wi
 
 ## Requirements
 
-Python 3.8+.
+Python 3.10+.
+
+For Python 3.8 and 3.9, pin scout-apm to <=3.5.3.
 For legacy Python versions, including 2.7 and 3.4+, pin scout-apm to <=2.26.1.
 
 Scout APM has integrations for the following frameworks:
