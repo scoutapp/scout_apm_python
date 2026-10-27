@@ -103,9 +103,16 @@ def test_get_python_packages_versions_broken_distributions(tmp_path):
     (tmp_path / "no_version-1.0.dist-info" / "METADATA").write_text(
         "Name: no-version\n"
     )
+    (tmp_path / "latin1-1.0.dist-info").mkdir()
+    (tmp_path / "latin1-1.0.dist-info" / "METADATA").write_bytes(
+        b"Name: latin1\nVersion: 1.0\nAuthor: Jos\xe9\n"
+    )
 
     with mock.patch("sys.path", [str(tmp_path)] + sys.path):
         packages = get_python_packages_versions()
 
+    names = [name for name, _ in packages]
+    assert all(names)
+    assert "latin1" not in names
     assert ("no-version", "Unknown") in packages
     assert ("pytest", pytest.__version__) in packages

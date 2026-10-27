@@ -1,12 +1,15 @@
 # coding=utf-8
 
 import datetime as dt
+import logging
 import sys
 from os import getpid
 
 from scout_apm.core.agent.commands import ApplicationEvent, format_dt_for_core_agent
 from scout_apm.core.agent.socket import CoreAgentSocketThread
 from scout_apm.core.config import scout_config
+
+logger = logging.getLogger(__name__)
 
 
 def report_app_metadata():
@@ -55,14 +58,22 @@ def get_python_packages_versions():
     for distribution in distributions():
         try:
             metadata = distribution.metadata
-        except OSError:
-            # Python 3.15+ raises MetadataNotFound (a FileNotFoundError) for
-            # distributions without a METADATA or PKG-INFO file in their
-            # distribution directory, or with an empty one.
+        except Exception as exc:
+            # Deliberately broad: one broken distribution shouldn't stop the
+            # app from starting. Known cases are MetadataNotFound (a
+            # FileNotFoundError) on Python 3.15+ for a missing or empty
+            # METADATA/PKG-INFO file, UnicodeDecodeError for a non-UTF-8 one,
+            # and whatever custom distribution finders may raise.
+            logger.debug(
+                "Skipping distribution with unreadable metadata: %r",
+                exc,
+                exc_info=exc,
+            )
             continue
-        # Use .get() since Python 3.15+ raises KeyError for missing headers,
-        # where earlier versions returned None. Skip distributions without a
-        # name, which can happen with a malformed metadata file.
+        # Use .get() since Python 3.15+ raises KeyError for missing headers.
+        # Python 3.12-3.14 return None but emit a DeprecationWarning, which
+        # fails under -W error. Skip distributions without a name, which can
+        # happen with a malformed metadata file.
         name = metadata.get("Name")
         if not name:
             continue
