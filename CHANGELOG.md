@@ -2,6 +2,7 @@
 
 ## Pending
 - Fix crash on Python 3.15 when reporting app metadata with an installed distribution that has a malformed or missing metadata file (#865)
+- Add Python 3.15 to the CI test matrix and package classifiers (#866)
 
 ## [4.0.0] 2026-09-17
 - Bumped core-agent to 1.6.0 (#860)
