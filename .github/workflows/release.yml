@@ -9,8 +9,8 @@ on:
   pull_request:
 
 jobs:
-  cibuildwheel_py38plus:
-    name: Build python 3.8+ ${{ matrix.manylinux_image }} wheels
+  build_linux_wheels:
+    name: Build Linux ${{ matrix.manylinux_image }} wheels
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -42,7 +42,6 @@ jobs:
           platforms: all
       - name: Build binary wheels
         env:
-          CIBW_SKIP: ${{ matrix.cibw_skip }}
           CIBW_BUILD_VERBOSITY: 1
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_MANYLINUX_AARCH64_IMAGE: ${{ matrix.manylinux_image }}
@@ -55,7 +54,7 @@ jobs:
           path: ./wheelhouse/*.whl
 
   build_macos_wheels:
-    name: Build macos wheels (cross-compiles arm64)
+    name: Build macOS wheels (cross-compiles arm64)
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
@@ -80,18 +79,15 @@ jobs:
           path: ./wheelhouse/*.whl
 
   build_pure_wheels:
-    name: Build pure python wheels
+    name: Build pure Python wheel
     runs-on: ubuntu-24.04
-    strategy:
-      matrix:
-        python: ["3.14"]
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: ${{ matrix.python }}
+          python-version: "3.14"
       - name: Install packaging tools
         run: |
           python -m pip install --upgrade pip build
@@ -103,7 +99,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: pp${{ matrix.python }}
+          name: pure
           path: dist/*.whl
 
   build_sdist:
@@ -130,7 +126,7 @@ jobs:
           path: dist/*.tar.gz
 
   upload_pypi:
-    needs: [cibuildwheel_py38plus, build_pure_wheels, build_sdist, build_macos_wheels]
+    needs: [build_linux_wheels, build_pure_wheels, build_sdist, build_macos_wheels]
     runs-on: ubuntu-24.04
     permissions:
       id-token: write
