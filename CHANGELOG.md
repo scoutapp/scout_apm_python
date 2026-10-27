@@ -1,7 +1,7 @@
 # Changelog
 
 ## Pending
-- Fix crash on Python 3.15 when reporting app metadata with an installed distribution that has a malformed or missing metadata file (#864)
+- Fix crash on Python 3.15 when reporting app metadata with an installed distribution that has a malformed or missing metadata file (#865)
 
 ## [4.0.0] 2026-09-17
 - Bumped core-agent to 1.6.0 (#860)
