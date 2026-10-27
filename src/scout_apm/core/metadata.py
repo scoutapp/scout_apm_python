@@ -54,28 +54,36 @@ def get_python_packages_versions():
         # For some reason it is unavailable
         return []
 
+    # Errors are deliberately caught broadly here: a broken installed package
+    # shouldn't stop the app from starting.
     packages = []
-    for distribution in distributions():
-        try:
-            metadata = distribution.metadata
-        except Exception as exc:
-            # Deliberately broad: one broken distribution shouldn't stop the
-            # app from starting. Known cases are MetadataNotFound (a
-            # FileNotFoundError) on Python 3.15+ for a missing or empty
-            # METADATA/PKG-INFO file, UnicodeDecodeError for a non-UTF-8 one,
-            # and whatever custom distribution finders may raise.
-            logger.debug(
-                "Skipping distribution with unreadable metadata: %r",
-                exc,
-                exc_info=exc,
-            )
-            continue
-        # Use .get() since Python 3.15+ raises KeyError for missing headers.
-        # Python 3.12-3.14 return None but emit a DeprecationWarning, which
-        # fails under -W error. Skip distributions without a name, which can
-        # happen with a malformed metadata file.
-        name = metadata.get("Name")
-        if not name:
-            continue
-        packages.append((name, metadata.get("Version") or "Unknown"))
+    try:
+        for distribution in distributions():
+            try:
+                metadata = distribution.metadata
+                # Use .get() since Python 3.15+ raises KeyError for missing
+                # headers. Python 3.12-3.14 return None but emit a
+                # DeprecationWarning, which fails under -W error.
+                name = metadata.get("Name")
+                version = metadata.get("Version")
+            except Exception as exc:
+                # Known cases are MetadataNotFound (a FileNotFoundError) on
+                # Python 3.15+ for a missing or empty METADATA/PKG-INFO file,
+                # UnicodeDecodeError for a non-UTF-8 one, and whatever custom
+                # Distribution classes may raise.
+                logger.debug(
+                    "Skipping distribution with unreadable metadata: %r",
+                    exc,
+                    exc_info=exc,
+                )
+                continue
+            # Skip distributions without a name, which can happen with a
+            # malformed metadata file.
+            if not name:
+                continue
+            packages.append((name, version or "Unknown"))
+    except Exception as exc:
+        # Listing distributions can itself fail, e.g. a custom finder on
+        # sys.meta_path raising. Report what was found before the error.
+        logger.debug("Error listing installed distributions: %r", exc, exc_info=exc)
     return sorted(packages)

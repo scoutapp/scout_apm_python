@@ -116,3 +116,33 @@ def test_get_python_packages_versions_broken_distributions(tmp_path):
     assert "latin1" not in names
     assert ("no-version", "Unknown") in packages
     assert ("pytest", pytest.__version__) in packages
+
+
+def test_get_python_packages_versions_metadata_without_get():
+    # PackageMetadata only gained get() in Python 3.12, so third-party
+    # Distribution classes may return objects without it.
+    target = "importlib.metadata.distributions"
+
+    def yielding_no_get():
+        yield SimpleNamespace(metadata={"Name": "first-package", "Version": "1.0.0"})
+        yield SimpleNamespace(metadata=object())
+
+    with mock.patch(target, new=yielding_no_get):
+        packages = get_python_packages_versions()
+
+    assert packages == [("first-package", "1.0.0")]
+
+
+def test_get_python_packages_versions_broken_finder():
+    class BrokenFinder:
+        def find_spec(self, *args, **kwargs):
+            return None
+
+        def find_distributions(self, *args, **kwargs):
+            raise RuntimeError("boom")
+
+    with mock.patch("sys.meta_path", sys.meta_path + [BrokenFinder()]):
+        packages = get_python_packages_versions()
+
+    # Distributions from finders before the broken one are still reported.
+    assert ("pytest", pytest.__version__) in packages
