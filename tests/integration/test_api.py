@@ -1,5 +1,7 @@
 # coding=utf-8
 
+import sys
+
 import pytest
 
 from scout_apm.api import BackgroundTransaction, WebTransaction, instrument
@@ -50,8 +52,15 @@ async def test_instrument_decorator_async_misconfigured(tracked_request):
     await example()
 
     assert len(tracked_request.active_spans) == 0
-    assert len(tracked_request.complete_spans) == 1
-    assert tracked_request.complete_spans[0].operation == "Custom/Bar"
+    if sys.version_info >= (3, 15):
+        # Python 3.15's ContextDecorator wraps coroutine functions, so the
+        # span stays open while the coroutine runs, same as with .async_.
+        assert len(tracked_request.complete_spans) == 2
+        assert tracked_request.complete_spans[0].operation == "Custom/Foo"
+        assert tracked_request.complete_spans[1].operation == "Custom/Bar"
+    else:
+        assert len(tracked_request.complete_spans) == 1
+        assert tracked_request.complete_spans[0].operation == "Custom/Bar"
 
 
 @pytest.mark.asyncio
@@ -182,8 +191,15 @@ async def test_web_transaction_decorator_async_misconfigured(tracked_request):
     await my_transaction()
 
     assert len(tracked_request.active_spans) == 0
-    assert len(tracked_request.complete_spans) == 1
-    assert tracked_request.complete_spans[0].operation == "Controller/Bar"
+    if sys.version_info >= (3, 15):
+        # Python 3.15's ContextDecorator wraps coroutine functions, so the
+        # span stays open while the coroutine runs, same as with .async_.
+        assert len(tracked_request.complete_spans) == 2
+        assert tracked_request.complete_spans[0].operation == "Custom/Foo"
+        assert tracked_request.complete_spans[1].operation == "Controller/Bar"
+    else:
+        assert len(tracked_request.complete_spans) == 1
+        assert tracked_request.complete_spans[0].operation == "Controller/Bar"
     assert tracked_request.operation == "Controller/Bar"
 
 
@@ -233,8 +249,15 @@ async def test_background_transaction_decorator_async_misconfigured(tracked_requ
     await my_transaction()
 
     assert len(tracked_request.active_spans) == 0
-    assert len(tracked_request.complete_spans) == 1
-    assert tracked_request.complete_spans[0].operation == "Job/Bar"
+    if sys.version_info >= (3, 15):
+        # Python 3.15's ContextDecorator wraps coroutine functions, so the
+        # span stays open while the coroutine runs, same as with .async_.
+        assert len(tracked_request.complete_spans) == 2
+        assert tracked_request.complete_spans[0].operation == "Custom/Foo"
+        assert tracked_request.complete_spans[1].operation == "Job/Bar"
+    else:
+        assert len(tracked_request.complete_spans) == 1
+        assert tracked_request.complete_spans[0].operation == "Job/Bar"
     assert tracked_request.operation == "Job/Bar"
 
 
