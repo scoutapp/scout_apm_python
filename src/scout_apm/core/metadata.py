@@ -51,16 +51,20 @@ def get_python_packages_versions():
         # For some reason it is unavailable
         return []
 
-    return sorted(
-        (
-            distribution.metadata["Name"],
-            (distribution.metadata["Version"] or "Unknown"),
-        )
-        for distribution in distributions()
-        # Filter out distributions wtih None for name or value. This can be the
-        # case for packages without a METADATA or PKG-INFO file in their relevant
-        # distribution directory. According to comments in importlib.metadata
-        # internals this is possible for certain old packages, but I could only
-        # recreate it by deliberately deleting said files.
-        if distribution.metadata["Name"]
-    )
+    packages = []
+    for distribution in distributions():
+        try:
+            metadata = distribution.metadata
+        except OSError:
+            # Python 3.15+ raises MetadataNotFound (a FileNotFoundError) for
+            # distributions without a METADATA or PKG-INFO file in their
+            # distribution directory, or with an empty one.
+            continue
+        # Use .get() since Python 3.15+ raises KeyError for missing headers,
+        # where earlier versions returned None. Skip distributions without a
+        # name, which can happen with a malformed metadata file.
+        name = metadata.get("Name")
+        if not name:
+            continue
+        packages.append((name, metadata.get("Version") or "Unknown"))
+    return sorted(packages)

@@ -1,5 +1,6 @@
 # coding=utf-8
 
+import sys
 from types import SimpleNamespace
 
 import pytest
@@ -53,3 +54,58 @@ def test_get_python_packages_versions_None_package():
         packages = get_python_packages_versions()
 
     assert packages == [("first-package", "1.0.0"), ("second-package", "Unknown")]
+
+
+def test_get_python_packages_versions_missing_keys():
+    # Python 3.15+ raises KeyError for missing metadata headers.
+    target = "importlib.metadata.distributions"
+
+    def yielding_missing_keys():
+        yield SimpleNamespace(metadata={"Name": "first-package", "Version": "1.0.0"})
+        yield SimpleNamespace(metadata={"Name": "second-package"})
+        yield SimpleNamespace(metadata={"Version": "3.0.0"})
+
+    with mock.patch(target, new=yielding_missing_keys):
+        packages = get_python_packages_versions()
+
+    assert packages == [("first-package", "1.0.0"), ("second-package", "Unknown")]
+
+
+def test_get_python_packages_versions_metadata_not_found():
+    # Python 3.15+ raises MetadataNotFound, a FileNotFoundError subclass, for
+    # distributions without a metadata file.
+    target = "importlib.metadata.distributions"
+
+    class NoMetadataDistribution:
+        @property
+        def metadata(self):
+            raise FileNotFoundError("No package metadata was found.")
+
+    def yielding_no_metadata():
+        yield SimpleNamespace(metadata={"Name": "first-package", "Version": "1.0.0"})
+        yield NoMetadataDistribution()
+
+    with mock.patch(target, new=yielding_no_metadata):
+        packages = get_python_packages_versions()
+
+    assert packages == [("first-package", "1.0.0")]
+
+
+def test_get_python_packages_versions_broken_distributions(tmp_path):
+    (tmp_path / "no_name-1.0.dist-info").mkdir()
+    (tmp_path / "no_name-1.0.dist-info" / "METADATA").write_text("Version: 1.0\n")
+    (tmp_path / "blank-1.0.dist-info").mkdir()
+    (tmp_path / "blank-1.0.dist-info" / "METADATA").write_text("\n")
+    (tmp_path / "empty-1.0.dist-info").mkdir()
+    (tmp_path / "empty-1.0.dist-info" / "METADATA").write_text("")
+    (tmp_path / "missing-1.0.dist-info").mkdir()
+    (tmp_path / "no_version-1.0.dist-info").mkdir()
+    (tmp_path / "no_version-1.0.dist-info" / "METADATA").write_text(
+        "Name: no-version\n"
+    )
+
+    with mock.patch("sys.path", [str(tmp_path)] + sys.path):
+        packages = get_python_packages_versions()
+
+    assert ("no-version", "Unknown") in packages
+    assert ("pytest", pytest.__version__) in packages
