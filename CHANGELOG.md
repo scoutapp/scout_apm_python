@@ -1,5 +1,8 @@
 # Changelog
 
+## Pending
+- Fix crash on Python 3.15 when reporting app metadata with an installed distribution that has a malformed or missing metadata file (#865)
+
 ## [4.0.0] 2026-09-17
 - Bumped core-agent to 1.6.0 (#860)
 - Add `core_agent_ca_cert` config option to pass `--ca-cert` to the Core Agent (#855)

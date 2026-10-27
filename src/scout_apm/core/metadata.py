@@ -1,12 +1,15 @@
 # coding=utf-8
 
 import datetime as dt
+import logging
 import sys
 from os import getpid
 
 from scout_apm.core.agent.commands import ApplicationEvent, format_dt_for_core_agent
 from scout_apm.core.agent.socket import CoreAgentSocketThread
 from scout_apm.core.config import scout_config
+
+logger = logging.getLogger(__name__)
 
 
 def report_app_metadata():
@@ -51,16 +54,36 @@ def get_python_packages_versions():
         # For some reason it is unavailable
         return []
 
-    return sorted(
-        (
-            distribution.metadata["Name"],
-            (distribution.metadata["Version"] or "Unknown"),
-        )
-        for distribution in distributions()
-        # Filter out distributions wtih None for name or value. This can be the
-        # case for packages without a METADATA or PKG-INFO file in their relevant
-        # distribution directory. According to comments in importlib.metadata
-        # internals this is possible for certain old packages, but I could only
-        # recreate it by deliberately deleting said files.
-        if distribution.metadata["Name"]
-    )
+    # Errors are deliberately caught broadly here: a broken installed package
+    # shouldn't stop the app from starting.
+    packages = []
+    try:
+        for distribution in distributions():
+            try:
+                metadata = distribution.metadata
+                # Use .get() since Python 3.15+ raises KeyError for missing
+                # headers. Python 3.12-3.14 return None but emit a
+                # DeprecationWarning, which fails under -W error.
+                name = metadata.get("Name")
+                version = metadata.get("Version")
+            except Exception as exc:
+                # Known cases are MetadataNotFound (a FileNotFoundError) on
+                # Python 3.15+ for a missing or empty METADATA/PKG-INFO file,
+                # UnicodeDecodeError for a non-UTF-8 one, and whatever custom
+                # Distribution classes may raise.
+                logger.debug(
+                    "Skipping distribution with unreadable metadata: %r",
+                    exc,
+                    exc_info=exc,
+                )
+                continue
+            # Skip distributions without a name, which can happen with a
+            # malformed metadata file.
+            if not name:
+                continue
+            packages.append((name, version or "Unknown"))
+    except Exception as exc:
+        # Listing distributions can itself fail, e.g. a custom finder on
+        # sys.meta_path raising. Report what was found before the error.
+        logger.debug("Error listing installed distributions: %r", exc, exc_info=exc)
+    return sorted(packages)
