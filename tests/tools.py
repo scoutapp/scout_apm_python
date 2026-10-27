@@ -25,6 +25,17 @@ skip_if_missing_context_vars = pytest.mark.skipif(
     ContextVar is None, reason="Requires ContextVars"
 )
 
+# Python 3.15's contextlib.ContextDecorator wraps coroutine functions, so a
+# plain (non-.async_) decorator keeps its span open while the coroutine runs.
+skip_if_context_decorator_wraps_coroutines = pytest.mark.skipif(
+    sys.version_info >= (3, 15),
+    reason="ContextDecorator wraps coroutine functions on Python 3.15+",
+)
+skip_unless_context_decorator_wraps_coroutines = pytest.mark.skipif(
+    sys.version_info < (3, 15),
+    reason="Requires ContextDecorator to wrap coroutine functions (Python 3.15+)",
+)
+
 
 @contextmanager
 def delete_attributes(obj, *attributes):
