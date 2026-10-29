@@ -1,6 +1,6 @@
 # Changelog
 
-## Pending
+## [4.1.0] 2026-10-27
 - Fix crash on Python 3.15 when reporting app metadata with an installed distribution that has a malformed or missing metadata file (#865)
 - Add Python 3.15 to the CI test matrix and package classifiers (#866)
 - On Python 3.15+, a plain `@instrument` decorator (and `@WebTransaction` / `@BackgroundTransaction`) now correctly instruments async functions, timing the whole coroutine. On earlier Python versions, `.async_` (e.g. `@instrument.async_("Foo")`) is still required, since the span otherwise closes as soon as the coroutine is created. This comes from `contextlib.ContextDecorator` supporting coroutine functions as of Python 3.15 (#866)
