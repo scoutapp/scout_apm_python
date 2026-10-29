@@ -14,6 +14,8 @@ from scout_apm.api import Config
 from scout_apm.compat import kwargs_only
 from scout_apm.instruments.redis import ensure_installed
 
+RQ_MAJOR_VERSION = int(VERSION.split(".")[0])
+
 
 @pytest.fixture(scope="module")
 def redis_conn():
@@ -69,6 +71,16 @@ def get_job_result(job):
     return job.return_value()
 
 
+def expected_span_operations(job_operation):
+    """
+    rq < 3.0 calls PERSIST on the job key inside Job.perform, so it's captured
+    within the job span. rq 3.0 moved it into the worker's pipeline.
+    """
+    if RQ_MAJOR_VERSION < 3:
+        return ["Redis/PERSIST", job_operation]
+    return [job_operation]
+
+
 def test_hello(redis_conn, tracked_requests):
     with app_with_scout(redis_conn=redis_conn) as app:
         job = app.queue.enqueue(hello)
@@ -82,12 +94,9 @@ def test_hello(redis_conn, tracked_requests):
     assert isinstance(task_id, str) and len(task_id) == 36
     assert tracked_request.tags["queue"] == "myqueue"
     assert 0.0 < tracked_request.tags["queue_time"] < 60.0
-    assert len(tracked_request.complete_spans) == 2
-    assert tracked_request.complete_spans[0].operation == "Redis/PERSIST"
-    assert (
-        tracked_request.complete_spans[1].operation
-        == "Job/tests.integration.test_rq.hello"
-    )
+    assert [
+        span.operation for span in tracked_request.complete_spans
+    ] == expected_span_operations("Job/tests.integration.test_rq.hello")
     assert tracked_request.operation == "Job/tests.integration.test_rq.hello"
 
 
@@ -102,12 +111,9 @@ def test_fail(redis_conn, tracked_requests):
     assert tracked_request.tags["queue"] == "myqueue"
     assert 0.0 < tracked_request.tags["queue_time"] < 60.0
     assert tracked_request.tags["error"] == "true"
-    assert len(tracked_request.complete_spans) == 2
-    assert tracked_request.complete_spans[0].operation == "Redis/PERSIST"
-    assert (
-        tracked_request.complete_spans[1].operation
-        == "Job/tests.integration.test_rq.fail"
-    )
+    assert [
+        span.operation for span in tracked_request.complete_spans
+    ] == expected_span_operations("Job/tests.integration.test_rq.fail")
     assert tracked_request.operation == "Job/tests.integration.test_rq.fail"
 
 
